@@ -21,8 +21,8 @@
          группа PMO и владельцы сайта — полный доступ. Цепочка руководителей берётся из Entra ID.
          Отчёты и риски проекта получают тот же круг, комментарии и журнал — только чтение.
       6. (-SendReminders) письмо каждому PM со списком его активных проектов без свежего отчёта.
-      7. Показатели портфеля для главной (список «Показники портфеля»): строка «Поточний» — активные
-         проекты по общему состоянию, семь срезов раз в две недели — динамика. Строки обновляются на месте
+      7. Показатели портфеля для главной (список «Показники портфеля», одна строка «Поточний»): активные
+         проекты по общему состоянию и семь срезов раз в две недели — динамика. Строка обновляется на месте
          и только при изменении. Числа видны всем, кто открывает главную, — без названий проектов.
       8. «Пов'язані записи і доступ» в карточке: ссылки на отчёты, риски, журнал и комментарии проекта
          и список, кто имеет доступ. Архивный проект — только чтение для всех, кроме PMO и владельцев сайта.
@@ -192,30 +192,24 @@ function Update-Stats {
             if ($p.Values.pmStatus -eq "Архівний" -and $p.Values.pmArchivedAt -and $tt -gt $p.Values.pmArchivedAt) { continue }
             $c[$rs[-1].Rag]++
         }
-        $snaps += [ordered]@{ Title = ([datetime]$tt).ToString("dd.MM"); psKind = "Зріз"; psDate = $tt
-            psGreen = $c["Зелений"]; psYellow = $c["Жовтий"]; psRed = $c["Червоний"]; psNone = 0; psTotal = ($c.Values | Measure-Object -Sum).Sum; psMax = 0 }
+        $snaps += [pscustomobject]@{ D = ([datetime]$tt).ToString("dd.MM"); G = $c["Зелений"]; Y = $c["Жовтий"]; R = $c["Червоний"] }
     }
-    $max = [Math]::Max(1, ($snaps | ForEach-Object { $_.psTotal } | Measure-Object -Maximum).Maximum)
-    foreach ($x in $snaps) { $x.psMax = $max }
-    $rows += $snaps
-    Log ("Показники: зараз {0} активних (З {1} · Ж {2} · Ч {3} · — {4}); зрізи {5}" -f $rows[0].psTotal, $rows[0].psGreen, $rows[0].psYellow, $rows[0].psRed, $rows[0].psNone,
-        (($snaps | ForEach-Object { "$($_.Title)=$($_.psTotal)" }) -join ", "))
+    # срезы — в той же строке «Поточний»: ps1G…ps7G / ps…Y / ps…R / подписи ps…D, psMax — высота шкалы
+    $row = $rows[0]
+    for ($i = 0; $i -lt $snaps.Count; $i++) { $n = $i + 1; $row["ps${n}G"] = $snaps[$i].G; $row["ps${n}Y"] = $snaps[$i].Y; $row["ps${n}R"] = $snaps[$i].R; $row["ps${n}D"] = $snaps[$i].D }
+    $row.psMax = [Math]::Max(1, ($snaps | ForEach-Object { $_.G + $_.Y + $_.R } | Measure-Object -Maximum).Maximum)
+    Log ("Показники: зараз {0} активних (З {1} · Ж {2} · Ч {3} · — {4}); зрізи {5}" -f $row.psTotal, $row.psGreen, $row.psYellow, $row.psRed, $row.psNone,
+        (($snaps | ForEach-Object { "$($_.D)=$($_.G + $_.Y + $_.R)" }) -join ", "))
 
-    # строки обновляются на месте: «Поточний» — одна, срезов — семь (по порядку дат); удалений нет
-    $have = @(Get-PnPListItem -List $L_STAT -PageSize 100)
-    $cur = @($have | Where-Object { $_["psKind"] -eq "Поточний" } | Select-Object -First 1)
-    $old = @($have | Where-Object { $_["psKind"] -eq "Зріз" } | Sort-Object { $_["psDate"] }, { $_.Id })
-    $targets = @(@{ Row = $rows[0]; Item = $cur[0] }) + @(for ($i = 0; $i -lt $snaps.Count; $i++) { @{ Row = $snaps[$i]; Item = $(if ($i -lt $old.Count) { $old[$i] }) } })
-    foreach ($t in $targets) {
-        $v = $t.Row; $it = $t.Item
-        $same = $it -and ((@($v.Keys | Where-Object { $_ -ne "psDate" }) | Where-Object { [string]$it[$_] -ne [string]$v[$_] }).Count -eq 0) -and ((DateOnly $it["psDate"]) -eq $v.psDate)
-        if ($same) { continue }
-        $stats.stats++
-        if ($DryRun) { continue }
-        $w = @{}; foreach ($k in $v.Keys) { $w[$k] = if ($k -eq "psDate") { ToSpDate $v[$k] } else { $v[$k] } }
-        if ($it) { Set-PnPListItem -List $L_STAT -Identity $it.Id -Values $w -UpdateType SystemUpdate | Out-Null }
-        else     { Add-PnPListItem -List $L_STAT -Values $w | Out-Null }
-    }
+    # одна строка «Поточний», обновляется на месте и только при изменении
+    $it = Get-PnPListItem -List $L_STAT -PageSize 100 | Where-Object { $_["psKind"] -eq "Поточний" } | Select-Object -First 1
+    $same = $it -and ((@($row.Keys | Where-Object { $_ -ne "psDate" }) | Where-Object { [string]$it[$_] -ne [string]$row[$_] }).Count -eq 0) -and ((DateOnly $it["psDate"]) -eq $row.psDate)
+    if ($same) { return }
+    $stats.stats++
+    if ($DryRun) { return }
+    $w = @{}; foreach ($k in $row.Keys) { $w[$k] = if ($k -eq "psDate") { ToSpDate $row[$k] } else { $row[$k] } }
+    if ($it) { Set-PnPListItem -List $L_STAT -Identity $it.Id -Values $w -UpdateType SystemUpdate | Out-Null }
+    else     { Add-PnPListItem -List $L_STAT -Values $w | Out-Null }
 }
 function Update-CardInfo($acl) {
     $site = $SiteUrl.TrimEnd('/'); $enc = { param($x) [uri]::EscapeDataString([string]$x) }

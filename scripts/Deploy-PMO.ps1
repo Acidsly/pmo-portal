@@ -383,7 +383,20 @@ foreach ($x in @(@("psGreen","Зелений","Green","Зелёный"), @("psYe
                  @("psNone","Не оцінено","Not rated","Не оценено"), @("psTotal","Усього","Total","Всего"), @("psMax","Максимум шкали","Scale maximum","Максимум шкалы"))) {
     F $S $x[0] Number $x[1] $x[2] $x[3] "Decimals='0'" "<Default>0</Default>"
 }
+# семь срезов динамики — в той же строке «Поточний» (одна строка = одна карточка на главной)
+# имена вида psG1 SharePoint принимает за адрес ячейки и кодирует (_x0070_sG1) — номер среза стоит в середине: ps1G
+foreach ($i in 1..7) {
+    F $S "ps${i}G" Number "Зріз ${i}: зелений" "Snapshot ${i}: green" "Срез ${i}: зелёный" "Decimals='0'" "<Default>0</Default>"
+    F $S "ps${i}Y" Number "Зріз ${i}: жовтий" "Snapshot ${i}: yellow" "Срез ${i}: жёлтый" "Decimals='0'" "<Default>0</Default>"
+    F $S "ps${i}R" Number "Зріз ${i}: червоний" "Snapshot ${i}: red" "Срез ${i}: красный" "Decimals='0'" "<Default>0</Default>"
+    F $S "ps${i}D" Text "Зріз ${i}: дата" "Snapshot ${i}: date" "Срез ${i}: дата" "MaxLength='10'"
+}
 $script:Loc += , @($S, "Title", "Зріз", "Snapshot", "Срез")
+# Миграция: предварительная версия создала поля срезов с закодированными именами (_x0070_sG1 …).
+# В них только производные числа — синхронизация пересчитывает их каждый запуск и пишет в ps1G…; поля убираем.
+$stray = @(Get-PnPField -List $S | Where-Object { $_.InternalName -match '^_x0070_s[GYRD][1-7]$' })
+foreach ($f in $stray) { Remove-PnPField -List $S -Identity $f.Id -Force }
+if ($stray) { Write-Host "  миграция: убраны поля срезов с закодированными именами ($($stray.Count))" }
 
 # ---------------------------------------------------------------------------
 # Подсказки в формах (как в прототипе)
@@ -600,59 +613,929 @@ $fmtScore = @'
     "background-color": "=if(@currentField >= 15, '#c62828', if(@currentField >= 8, '#f2a900', '#2e7d32'))" } }
 '@
 
-# Главная: «Портфель за станом» — представление «Стан» списка «Показники портфеля» (одна строка «Поточний»)
+# Главная: «Портфель за станом» — кольцо (дуги path + stroke-dasharray: элемент circle в форматировании запрещён) и легенда в карточке.
+# Представление «Стан» списка «Показники портфеля», строка «Поточний».
 $fmtStatsNow = @'
-{ "$schema": "https://developer.microsoft.com/json-schemas/sp/v2/view-formatting.schema.json",
-  "hideSelection": true, "hideColumnHeader": true,
-  "rowFormatter": {
-    "elmType": "div", "style": { "display": "flex", "flex-direction": "column", "width": "100%", "padding": "8px 4px 16px", "box-sizing": "border-box" },
+{
+ "$schema": "https://developer.microsoft.com/json-schemas/sp/v2/view-formatting.schema.json",
+ "hideSelection": true,
+ "hideColumnHeader": true,
+ "rowFormatter": {
+  "elmType": "div",
+  "style": {
+   "padding": "20px",
+   "border": "1px solid #edebe9",
+   "border-radius": "12px",
+   "background-color": "#ffffff",
+   "box-shadow": "0 1.6px 3.6px rgba(0,0,0,.10), 0 0.3px 0.9px rgba(0,0,0,.08)",
+   "box-sizing": "border-box",
+   "width": "100%",
+   "min-height": "250px",
+   "display": "flex",
+   "align-items": "center",
+   "justify-content": "center",
+   "flex-wrap": "wrap"
+  },
+  "children": [
+   {
+    "elmType": "div",
+    "style": {
+     "position": "relative",
+     "width": "190px",
+     "height": "190px",
+     "margin-right": "36px"
+    },
     "children": [
-      { "elmType": "div", "style": { "display": "flex", "align-items": "center", "flex-wrap": "wrap" },
-        "children": [
-          { "elmType": "div", "style": { "display": "flex", "flex-direction": "column", "align-items": "center", "margin-right": "28px", "min-width": "90px" },
-            "children": [
-              { "elmType": "span", "txtContent": "[$psTotal]", "style": { "font-size": "44px", "font-weight": "600", "line-height": "1.1", "color": "#323130" } },
-              { "elmType": "span", "txtContent": "активних", "style": { "font-size": "13px", "color": "#605e5c" } } ] },
-          { "elmType": "div", "style": { "display": "flex", "flex-wrap": "wrap", "flex-grow": "1" },
-            "children": [
-              { "elmType": "div", "style": { "display": "flex", "align-items": "center", "padding": "8px 14px", "margin": "4px", "border-radius": "8px", "background-color": "#e6f4ea", "min-width": "110px" },
-                "children": [ { "elmType": "span", "txtContent": "[$psGreen]", "style": { "font-size": "24px", "font-weight": "600", "color": "#1e6b2b", "margin-right": "8px" } },
-                              { "elmType": "span", "txtContent": "Зелений", "style": { "color": "#1e6b2b" } } ] },
-              { "elmType": "div", "style": { "display": "flex", "align-items": "center", "padding": "8px 14px", "margin": "4px", "border-radius": "8px", "background-color": "#fff4ce", "min-width": "110px" },
-                "children": [ { "elmType": "span", "txtContent": "[$psYellow]", "style": { "font-size": "24px", "font-weight": "600", "color": "#8a5a00", "margin-right": "8px" } },
-                              { "elmType": "span", "txtContent": "Жовтий", "style": { "color": "#8a5a00" } } ] },
-              { "elmType": "div", "style": { "display": "flex", "align-items": "center", "padding": "8px 14px", "margin": "4px", "border-radius": "8px", "background-color": "#fde7e9", "min-width": "110px" },
-                "children": [ { "elmType": "span", "txtContent": "[$psRed]", "style": { "font-size": "24px", "font-weight": "600", "color": "#a4262c", "margin-right": "8px" } },
-                              { "elmType": "span", "txtContent": "Червоний", "style": { "color": "#a4262c" } } ] },
-              { "elmType": "div", "style": { "display": "=if([$psNone] > 0, 'flex', 'none')", "align-items": "center", "padding": "8px 14px", "margin": "4px", "border-radius": "8px", "background-color": "#f3f2f1", "min-width": "110px" },
-                "children": [ { "elmType": "span", "txtContent": "[$psNone]", "style": { "font-size": "24px", "font-weight": "600", "color": "#605e5c", "margin-right": "8px" } },
-                              { "elmType": "span", "txtContent": "не оцінено", "style": { "color": "#605e5c" } } ] } ] } ] },
-      { "elmType": "div", "style": { "display": "flex", "width": "100%", "height": "12px", "border-radius": "6px", "overflow": "hidden", "margin-top": "14px", "background-color": "#edebe9" },
-        "children": [
-          { "elmType": "div", "style": { "height": "100%", "background-color": "#2e7d32", "width": "=if([$psTotal] == 0, '0%', ([$psGreen] / [$psTotal] * 100) + '%')" } },
-          { "elmType": "div", "style": { "height": "100%", "background-color": "#f2a900", "width": "=if([$psTotal] == 0, '0%', ([$psYellow] / [$psTotal] * 100) + '%')" } },
-          { "elmType": "div", "style": { "height": "100%", "background-color": "#c62828", "width": "=if([$psTotal] == 0, '0%', ([$psRed] / [$psTotal] * 100) + '%')" } },
-          { "elmType": "div", "style": { "height": "100%", "background-color": "#bdbdbd", "width": "=if([$psTotal] == 0, '0%', ([$psNone] / [$psTotal] * 100) + '%')" } } ] } ] } }
+     {
+      "elmType": "svg",
+      "attributes": {
+       "viewBox": "0 0 200 200"
+      },
+      "style": {
+       "width": "190px",
+       "height": "190px"
+      },
+      "children": [
+       {
+        "elmType": "path",
+        "attributes": {
+         "d": "M100,24 a76,76 0 1,1 0,152 a76,76 0 1,1 0,-152"
+        },
+        "style": {
+         "fill": "none",
+         "stroke": "#edebe9",
+         "stroke-width": "24"
+        }
+       },
+       {
+        "elmType": "path",
+        "attributes": {
+         "d": "M100,24 a76,76 0 1,1 0,152 a76,76 0 1,1 0,-152"
+        },
+        "style": {
+         "fill": "none",
+         "stroke": "#2e7d32",
+         "stroke-width": "24",
+         "stroke-dasharray": "=if([$psTotal] == 0, '0 477.5', (477.5 * [$psGreen] / [$psTotal]) + ' 477.5')",
+         "stroke-dashoffset": "0"
+        }
+       },
+       {
+        "elmType": "path",
+        "attributes": {
+         "d": "M100,24 a76,76 0 1,1 0,152 a76,76 0 1,1 0,-152"
+        },
+        "style": {
+         "fill": "none",
+         "stroke": "#f2a900",
+         "stroke-width": "24",
+         "stroke-dasharray": "=if([$psTotal] == 0, '0 477.5', (477.5 * [$psYellow] / [$psTotal]) + ' 477.5')",
+         "stroke-dashoffset": "=0 - ((477.5 * [$psGreen] / [$psTotal]))"
+        }
+       },
+       {
+        "elmType": "path",
+        "attributes": {
+         "d": "M100,24 a76,76 0 1,1 0,152 a76,76 0 1,1 0,-152"
+        },
+        "style": {
+         "fill": "none",
+         "stroke": "#c62828",
+         "stroke-width": "24",
+         "stroke-dasharray": "=if([$psTotal] == 0, '0 477.5', (477.5 * [$psRed] / [$psTotal]) + ' 477.5')",
+         "stroke-dashoffset": "=0 - ((477.5 * [$psGreen] / [$psTotal]) + (477.5 * [$psYellow] / [$psTotal]))"
+        }
+       },
+       {
+        "elmType": "path",
+        "attributes": {
+         "d": "M100,24 a76,76 0 1,1 0,152 a76,76 0 1,1 0,-152"
+        },
+        "style": {
+         "fill": "none",
+         "stroke": "#bdbdbd",
+         "stroke-width": "24",
+         "stroke-dasharray": "=if([$psTotal] == 0, '0 477.5', (477.5 * [$psNone] / [$psTotal]) + ' 477.5')",
+         "stroke-dashoffset": "=0 - ((477.5 * [$psGreen] / [$psTotal]) + (477.5 * [$psYellow] / [$psTotal]) + (477.5 * [$psRed] / [$psTotal]))"
+        }
+       }
+      ]
+     },
+     {
+      "elmType": "div",
+      "style": {
+       "position": "absolute",
+       "top": "0",
+       "left": "0",
+       "width": "190px",
+       "height": "190px",
+       "display": "flex",
+       "flex-direction": "column",
+       "align-items": "center",
+       "justify-content": "center"
+      },
+      "children": [
+       {
+        "elmType": "span",
+        "txtContent": "[$psTotal]",
+        "style": {
+         "font-size": "40px",
+         "font-weight": "600",
+         "color": "#323130",
+         "line-height": "1.1"
+        }
+       },
+       {
+        "elmType": "span",
+        "txtContent": "активних",
+        "style": {
+         "font-size": "13px",
+         "color": "#605e5c"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "elmType": "div",
+    "children": [
+     {
+      "elmType": "div",
+      "style": {
+       "display": "flex",
+       "align-items": "center",
+       "margin": "6px 0",
+       "font-size": "14px",
+       "color": "#323130"
+      },
+      "children": [
+       {
+        "elmType": "span",
+        "style": {
+         "width": "10px",
+         "height": "10px",
+         "border-radius": "50%",
+         "background-color": "#2e7d32",
+         "margin-right": "10px"
+        }
+       },
+       {
+        "elmType": "span",
+        "txtContent": "[$psGreen]",
+        "style": {
+         "font-weight": "600",
+         "min-width": "22px"
+        }
+       },
+       {
+        "elmType": "span",
+        "txtContent": "Зелений"
+       }
+      ]
+     },
+     {
+      "elmType": "div",
+      "style": {
+       "display": "flex",
+       "align-items": "center",
+       "margin": "6px 0",
+       "font-size": "14px",
+       "color": "#323130"
+      },
+      "children": [
+       {
+        "elmType": "span",
+        "style": {
+         "width": "10px",
+         "height": "10px",
+         "border-radius": "50%",
+         "background-color": "#f2a900",
+         "margin-right": "10px"
+        }
+       },
+       {
+        "elmType": "span",
+        "txtContent": "[$psYellow]",
+        "style": {
+         "font-weight": "600",
+         "min-width": "22px"
+        }
+       },
+       {
+        "elmType": "span",
+        "txtContent": "Жовтий"
+       }
+      ]
+     },
+     {
+      "elmType": "div",
+      "style": {
+       "display": "flex",
+       "align-items": "center",
+       "margin": "6px 0",
+       "font-size": "14px",
+       "color": "#323130"
+      },
+      "children": [
+       {
+        "elmType": "span",
+        "style": {
+         "width": "10px",
+         "height": "10px",
+         "border-radius": "50%",
+         "background-color": "#c62828",
+         "margin-right": "10px"
+        }
+       },
+       {
+        "elmType": "span",
+        "txtContent": "[$psRed]",
+        "style": {
+         "font-weight": "600",
+         "min-width": "22px"
+        }
+       },
+       {
+        "elmType": "span",
+        "txtContent": "Червоний"
+       }
+      ]
+     },
+     {
+      "elmType": "div",
+      "style": {
+       "display": "=if([$psNone] > 0, 'flex', 'none')",
+       "align-items": "center",
+       "margin": "6px 0",
+       "font-size": "14px",
+       "color": "#323130"
+      },
+      "children": [
+       {
+        "elmType": "span",
+        "style": {
+         "width": "10px",
+         "height": "10px",
+         "border-radius": "50%",
+         "background-color": "#bdbdbd",
+         "margin-right": "10px"
+        }
+       },
+       {
+        "elmType": "span",
+        "txtContent": "[$psNone]",
+        "style": {
+         "font-weight": "600",
+         "min-width": "22px"
+        }
+       },
+       {
+        "elmType": "span",
+        "txtContent": "не оцінено"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
 '@
 
-# Главная: «Динаміка стану портфеля» — галерея «Динаміка»: плитка = срез, цветной сложенный столбец (высота — от psMax)
+# Главная: «Динаміка стану портфеля» — семь срезов из той же строки (ps1G…ps7G, ps…Y, ps…R, подписи ps…D), цветные сложенные столбцы в карточке
 $fmtStatsDyn = @'
-{ "tileProps": { "height": 236, "width": 64, "hideSelection": true, "fillHorizontally": false,
-  "formatter": {
-    "elmType": "div", "style": { "display": "flex", "flex-direction": "column", "align-items": "center", "justify-content": "flex-end", "height": "228px", "box-sizing": "border-box" },
-    "attributes": { "title": "='Зелений ' + [$psGreen] + ' · Жовтий ' + [$psYellow] + ' · Червоний ' + [$psRed]" },
+{
+ "$schema": "https://developer.microsoft.com/json-schemas/sp/v2/view-formatting.schema.json",
+ "hideSelection": true,
+ "hideColumnHeader": true,
+ "rowFormatter": {
+  "elmType": "div",
+  "style": {
+   "padding": "20px",
+   "border": "1px solid #edebe9",
+   "border-radius": "12px",
+   "background-color": "#ffffff",
+   "box-shadow": "0 1.6px 3.6px rgba(0,0,0,.10), 0 0.3px 0.9px rgba(0,0,0,.08)",
+   "box-sizing": "border-box",
+   "width": "100%",
+   "min-height": "250px",
+   "display": "flex",
+   "flex-direction": "column",
+   "justify-content": "flex-end"
+  },
+  "children": [
+   {
+    "elmType": "div",
+    "style": {
+     "display": "flex",
+     "align-items": "flex-end",
+     "width": "100%"
+    },
     "children": [
-      { "elmType": "div", "style": { "display": "flex", "flex-direction": "column", "justify-content": "flex-end", "width": "30px", "height": "172px" },
+     {
+      "elmType": "div",
+      "style": {
+       "display": "flex",
+       "flex-direction": "column",
+       "align-items": "center",
+       "justify-content": "flex-end",
+       "flex": "1 1 0",
+       "min-width": "34px"
+      },
+      "attributes": {
+       "title": "='Зелений ' + [$ps1G] + ' · Жовтий ' + [$ps1Y] + ' · Червоний ' + [$ps1R]"
+      },
+      "children": [
+       {
+        "elmType": "div",
+        "style": {
+         "display": "flex",
+         "flex-direction": "column",
+         "justify-content": "flex-end",
+         "width": "60%",
+         "max-width": "36px",
+         "height": "160px"
+        },
         "children": [
-          { "elmType": "div", "txtContent": "=if([$psRed] == 0, '', [$psRed])",
-            "style": { "height": "=if([$psMax] == 0, '0px', ([$psRed] / [$psMax] * 150) + 'px')", "background-color": "#c62828", "color": "#ffffff", "font-size": "11px", "font-weight": "600", "text-align": "center", "border-radius": "5px", "margin-top": "2px", "overflow": "hidden" } },
-          { "elmType": "div", "txtContent": "=if([$psYellow] == 0, '', [$psYellow])",
-            "style": { "height": "=if([$psMax] == 0, '0px', ([$psYellow] / [$psMax] * 150) + 'px')", "background-color": "#f2a900", "color": "#ffffff", "font-size": "11px", "font-weight": "600", "text-align": "center", "border-radius": "5px", "margin-top": "2px", "overflow": "hidden" } },
-          { "elmType": "div", "txtContent": "=if([$psGreen] == 0, '', [$psGreen])",
-            "style": { "height": "=if([$psMax] == 0, '0px', ([$psGreen] / [$psMax] * 150) + 'px')", "background-color": "#2e7d32", "color": "#ffffff", "font-size": "11px", "font-weight": "600", "text-align": "center", "border-radius": "5px", "margin-top": "2px", "overflow": "hidden" } } ] },
-      { "elmType": "div", "txtContent": "[$Title]", "style": { "font-size": "11px", "color": "#605e5c", "margin-top": "6px", "white-space": "nowrap" } } ] } } }
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps1R] == 0, '', [$ps1R])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps1R] / [$psMax] * 150) + 'px')",
+           "background-color": "#c62828",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         },
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps1Y] == 0, '', [$ps1Y])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps1Y] / [$psMax] * 150) + 'px')",
+           "background-color": "#f2a900",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         },
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps1G] == 0, '', [$ps1G])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps1G] / [$psMax] * 150) + 'px')",
+           "background-color": "#2e7d32",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         }
+        ]
+       },
+       {
+        "elmType": "div",
+        "txtContent": "[$ps1D]",
+        "style": {
+         "font-size": "11px",
+         "color": "#605e5c",
+         "margin-top": "6px",
+         "white-space": "nowrap"
+        }
+       }
+      ]
+     },
+     {
+      "elmType": "div",
+      "style": {
+       "display": "flex",
+       "flex-direction": "column",
+       "align-items": "center",
+       "justify-content": "flex-end",
+       "flex": "1 1 0",
+       "min-width": "34px"
+      },
+      "attributes": {
+       "title": "='Зелений ' + [$ps2G] + ' · Жовтий ' + [$ps2Y] + ' · Червоний ' + [$ps2R]"
+      },
+      "children": [
+       {
+        "elmType": "div",
+        "style": {
+         "display": "flex",
+         "flex-direction": "column",
+         "justify-content": "flex-end",
+         "width": "60%",
+         "max-width": "36px",
+         "height": "160px"
+        },
+        "children": [
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps2R] == 0, '', [$ps2R])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps2R] / [$psMax] * 150) + 'px')",
+           "background-color": "#c62828",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         },
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps2Y] == 0, '', [$ps2Y])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps2Y] / [$psMax] * 150) + 'px')",
+           "background-color": "#f2a900",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         },
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps2G] == 0, '', [$ps2G])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps2G] / [$psMax] * 150) + 'px')",
+           "background-color": "#2e7d32",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         }
+        ]
+       },
+       {
+        "elmType": "div",
+        "txtContent": "[$ps2D]",
+        "style": {
+         "font-size": "11px",
+         "color": "#605e5c",
+         "margin-top": "6px",
+         "white-space": "nowrap"
+        }
+       }
+      ]
+     },
+     {
+      "elmType": "div",
+      "style": {
+       "display": "flex",
+       "flex-direction": "column",
+       "align-items": "center",
+       "justify-content": "flex-end",
+       "flex": "1 1 0",
+       "min-width": "34px"
+      },
+      "attributes": {
+       "title": "='Зелений ' + [$ps3G] + ' · Жовтий ' + [$ps3Y] + ' · Червоний ' + [$ps3R]"
+      },
+      "children": [
+       {
+        "elmType": "div",
+        "style": {
+         "display": "flex",
+         "flex-direction": "column",
+         "justify-content": "flex-end",
+         "width": "60%",
+         "max-width": "36px",
+         "height": "160px"
+        },
+        "children": [
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps3R] == 0, '', [$ps3R])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps3R] / [$psMax] * 150) + 'px')",
+           "background-color": "#c62828",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         },
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps3Y] == 0, '', [$ps3Y])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps3Y] / [$psMax] * 150) + 'px')",
+           "background-color": "#f2a900",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         },
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps3G] == 0, '', [$ps3G])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps3G] / [$psMax] * 150) + 'px')",
+           "background-color": "#2e7d32",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         }
+        ]
+       },
+       {
+        "elmType": "div",
+        "txtContent": "[$ps3D]",
+        "style": {
+         "font-size": "11px",
+         "color": "#605e5c",
+         "margin-top": "6px",
+         "white-space": "nowrap"
+        }
+       }
+      ]
+     },
+     {
+      "elmType": "div",
+      "style": {
+       "display": "flex",
+       "flex-direction": "column",
+       "align-items": "center",
+       "justify-content": "flex-end",
+       "flex": "1 1 0",
+       "min-width": "34px"
+      },
+      "attributes": {
+       "title": "='Зелений ' + [$ps4G] + ' · Жовтий ' + [$ps4Y] + ' · Червоний ' + [$ps4R]"
+      },
+      "children": [
+       {
+        "elmType": "div",
+        "style": {
+         "display": "flex",
+         "flex-direction": "column",
+         "justify-content": "flex-end",
+         "width": "60%",
+         "max-width": "36px",
+         "height": "160px"
+        },
+        "children": [
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps4R] == 0, '', [$ps4R])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps4R] / [$psMax] * 150) + 'px')",
+           "background-color": "#c62828",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         },
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps4Y] == 0, '', [$ps4Y])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps4Y] / [$psMax] * 150) + 'px')",
+           "background-color": "#f2a900",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         },
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps4G] == 0, '', [$ps4G])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps4G] / [$psMax] * 150) + 'px')",
+           "background-color": "#2e7d32",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         }
+        ]
+       },
+       {
+        "elmType": "div",
+        "txtContent": "[$ps4D]",
+        "style": {
+         "font-size": "11px",
+         "color": "#605e5c",
+         "margin-top": "6px",
+         "white-space": "nowrap"
+        }
+       }
+      ]
+     },
+     {
+      "elmType": "div",
+      "style": {
+       "display": "flex",
+       "flex-direction": "column",
+       "align-items": "center",
+       "justify-content": "flex-end",
+       "flex": "1 1 0",
+       "min-width": "34px"
+      },
+      "attributes": {
+       "title": "='Зелений ' + [$ps5G] + ' · Жовтий ' + [$ps5Y] + ' · Червоний ' + [$ps5R]"
+      },
+      "children": [
+       {
+        "elmType": "div",
+        "style": {
+         "display": "flex",
+         "flex-direction": "column",
+         "justify-content": "flex-end",
+         "width": "60%",
+         "max-width": "36px",
+         "height": "160px"
+        },
+        "children": [
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps5R] == 0, '', [$ps5R])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps5R] / [$psMax] * 150) + 'px')",
+           "background-color": "#c62828",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         },
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps5Y] == 0, '', [$ps5Y])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps5Y] / [$psMax] * 150) + 'px')",
+           "background-color": "#f2a900",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         },
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps5G] == 0, '', [$ps5G])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps5G] / [$psMax] * 150) + 'px')",
+           "background-color": "#2e7d32",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         }
+        ]
+       },
+       {
+        "elmType": "div",
+        "txtContent": "[$ps5D]",
+        "style": {
+         "font-size": "11px",
+         "color": "#605e5c",
+         "margin-top": "6px",
+         "white-space": "nowrap"
+        }
+       }
+      ]
+     },
+     {
+      "elmType": "div",
+      "style": {
+       "display": "flex",
+       "flex-direction": "column",
+       "align-items": "center",
+       "justify-content": "flex-end",
+       "flex": "1 1 0",
+       "min-width": "34px"
+      },
+      "attributes": {
+       "title": "='Зелений ' + [$ps6G] + ' · Жовтий ' + [$ps6Y] + ' · Червоний ' + [$ps6R]"
+      },
+      "children": [
+       {
+        "elmType": "div",
+        "style": {
+         "display": "flex",
+         "flex-direction": "column",
+         "justify-content": "flex-end",
+         "width": "60%",
+         "max-width": "36px",
+         "height": "160px"
+        },
+        "children": [
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps6R] == 0, '', [$ps6R])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps6R] / [$psMax] * 150) + 'px')",
+           "background-color": "#c62828",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         },
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps6Y] == 0, '', [$ps6Y])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps6Y] / [$psMax] * 150) + 'px')",
+           "background-color": "#f2a900",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         },
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps6G] == 0, '', [$ps6G])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps6G] / [$psMax] * 150) + 'px')",
+           "background-color": "#2e7d32",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         }
+        ]
+       },
+       {
+        "elmType": "div",
+        "txtContent": "[$ps6D]",
+        "style": {
+         "font-size": "11px",
+         "color": "#605e5c",
+         "margin-top": "6px",
+         "white-space": "nowrap"
+        }
+       }
+      ]
+     },
+     {
+      "elmType": "div",
+      "style": {
+       "display": "flex",
+       "flex-direction": "column",
+       "align-items": "center",
+       "justify-content": "flex-end",
+       "flex": "1 1 0",
+       "min-width": "34px"
+      },
+      "attributes": {
+       "title": "='Зелений ' + [$ps7G] + ' · Жовтий ' + [$ps7Y] + ' · Червоний ' + [$ps7R]"
+      },
+      "children": [
+       {
+        "elmType": "div",
+        "style": {
+         "display": "flex",
+         "flex-direction": "column",
+         "justify-content": "flex-end",
+         "width": "60%",
+         "max-width": "36px",
+         "height": "160px"
+        },
+        "children": [
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps7R] == 0, '', [$ps7R])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps7R] / [$psMax] * 150) + 'px')",
+           "background-color": "#c62828",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         },
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps7Y] == 0, '', [$ps7Y])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps7Y] / [$psMax] * 150) + 'px')",
+           "background-color": "#f2a900",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         },
+         {
+          "elmType": "div",
+          "txtContent": "=if([$ps7G] == 0, '', [$ps7G])",
+          "style": {
+           "height": "=if([$psMax] == 0, '0px', ([$ps7G] / [$psMax] * 150) + 'px')",
+           "background-color": "#2e7d32",
+           "color": "#ffffff",
+           "font-size": "11px",
+           "font-weight": "600",
+           "text-align": "center",
+           "border-radius": "5px",
+           "margin-top": "2px",
+           "overflow": "hidden"
+          }
+         }
+        ]
+       },
+       {
+        "elmType": "div",
+        "txtContent": "[$ps7D]",
+        "style": {
+         "font-size": "11px",
+         "color": "#605e5c",
+         "margin-top": "6px",
+         "white-space": "nowrap"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "elmType": "div",
+    "txtContent": "Стан кожного проєкту за останнім статус-звітом на дату зрізу.",
+    "style": {
+     "font-size": "12px",
+     "color": "#605e5c",
+     "margin-top": "12px"
+    }
+   }
+  ]
+ }
+}
 '@
-
 @(
     @($P,"pmRAG",$fmtDot), @($P,"pmPriority",$fmtPrio), @($P,"pmType",$fmtStar), @($P,"pmProgress",$fmtProgress), @($P,"pmLastUpdate",$fmtFreshness),
     @($P,"pmPlanEnd",$fmtPlanEnd), @($P,"pmLastReport",$fmtLong), @($P,"pmLastComment",$fmtLong), @($P,"pmLoop",$fmtLoop), @($P,"pmBudgetUse",$fmtBudgetUse),
@@ -751,10 +1634,10 @@ Invoke-PnPQuery
 # Показатели портфеля: «Стан» — плашки по состоянию, «Динаміка» — столбцы по срезам (оформление ниже, в fmtStats*)
 $vStatNow = Ensure-View $S "Стан" @("LinkTitle","psGreen","psYellow","psRed","psNone","psTotal") `
     "<Where><Eq><FieldRef Name='psKind'/><Value Type='Choice'>Поточний</Value></Eq></Where>"
-$vStatDyn = Ensure-View $S "Динаміка" @("LinkTitle","psDate","psGreen","psYellow","psRed","psNone","psTotal","psMax") `
-    "<OrderBy><FieldRef Name='psDate'/></OrderBy><Where><Eq><FieldRef Name='psKind'/><Value Type='Choice'>Зріз</Value></Eq></Where>"
+$vStatDyn = Ensure-View $S "Динаміка портфеля" (@("LinkTitle","psMax") + @(1..7 | ForEach-Object { "ps${_}G", "ps${_}Y", "ps${_}R", "ps${_}D" })) `
+    "<Where><Eq><FieldRef Name='psKind'/><Value Type='Choice'>Поточний</Value></Eq></Where>"
 Set-PnPView -List $S -Identity $vStatNow.Id -Values @{ CustomFormatter = $fmtStatsNow } | Out-Null
-Set-PnPView -List $S -Identity $vStatDyn.Id -Values @{ ViewType2 = "TILES"; CustomFormatter = $fmtStatsDyn.Replace('&', '\u0026') } | Out-Null
+Set-PnPView -List $S -Identity $vStatDyn.Id -Values @{ CustomFormatter = $fmtStatsDyn } | Out-Null
 
 # ===========================================================================
 # 10. Дашборд: ссылки «Новий проєкт / статус-звіт», показатели портфеля (плашки и динамика),
@@ -772,17 +1655,21 @@ if (-not $SkipPage) {
         "en/Dashboard" = @{ New = @("New project", "New status report"); T = @("Portfolio by health", "Portfolio health over time", "Projects at risk", "No recent status report", "Management decisions needed", "Open risks") }
         "ru/Dashboard" = @{ New = @("Новый проект", "Новый статус-отчёт"); T = @("Портфель по состоянию", "Динамика состояния портфеля", "Проблемные проекты", "Нет свежего статус-отчёта", "Требуют решения руководства", "Открытые риски") }
     }
+    # фон разделов (0 — нет, 1 — нейтральный серый, 2 — мягкий цвет темы): белые карточки показателей и списки — на сером фоне
+    $LAYOUT = @(0, 1, 1, 1, 1, 1)
     $parts = @(@($St, $vStatNow, 2, 1), @($St, $vStatDyn, 2, 2), @($Pr, $vProblem, 3, 1), @($Pr, $vStale, 4, 1), @($Re, $vDecision, 5, 1), @($Ri, $vRisks, 6, 1))
     function Build-Dashboard([string]$Name) {
         $d = $DASH[$Name]
         # пересобираем, только если состав страницы отличается (прежняя версия с Quick chart, другие заголовки)
-        $have = @(Get-PnPPageComponent -Page $Name | ForEach-Object { try { ($_.PropertiesJson | ConvertFrom-Json).listTitle } catch { $null } } | Where-Object { $_ })
-        if (($have -join "|") -eq ($d.T -join "|")) { return $false }
         $pg = Get-PnPPage -Identity $Name
+        $have = @(Get-PnPPageComponent -Page $Name | ForEach-Object { try { ($_.PropertiesJson | ConvertFrom-Json).listTitle } catch { $null } } | Where-Object { $_ })
+        $bands = @($pg.Sections | ForEach-Object { [int]$_.ZoneEmphasis })
+        if (($have -join "|") -eq ($d.T -join "|") -and ($bands -join ",") -eq ($LAYOUT -join ",")) { return $false }
         $pg.ClearPage()
         $pg.AddSection("OneColumn", 1)
         $pg.AddSection("TwoColumn", 2)
         3..6 | ForEach-Object { $pg.AddSection("OneColumn", $_) }
+        for ($i = 0; $i -lt $LAYOUT.Count; $i++) { $pg.Sections[$i].ZoneEmphasis = $LAYOUT[$i] }
         $null = $pg.Save()
         $base = $web.ServerRelativeUrl.TrimEnd('/')
         Add-PnPPageTextPart -Page $Name -Section 1 -Column 1 -Text ("<p><a href=""$base/Lists/Projects/NewForm.aspx""><strong>＋ $($d.New[0])</strong></a>&nbsp;&nbsp;&nbsp;&nbsp;" +
