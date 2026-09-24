@@ -11,7 +11,7 @@ import { Strat, Prio, Compass, Flag } from './Icons';
 /** Колонка = данные для движка таблицы + отрисовка (PDEF / RDEF / KDEF прототипа, строки 997–1072). */
 export interface Col<R> extends ColDef<R> { head?: JSX.Element; cell: (r: R) => React.ReactNode; cls?: string; flabel?: (v: string) => React.ReactNode; }
 export interface TableDefs<R> { lock: string; defaults: string[]; cols: Record<string, Col<R>>; }
-export interface DefsCtx { t(k: string): string; fl(k: string): string; today: string; byId: Record<number, Project>; comments: Comment[]; open(id: number): void; }
+export interface DefsCtx { t(k: string): string; fl(k: string): string; today: string; byId: Record<number, Project>; comments: Comment[]; open(id: number): void; openRisk(id: number, projectId: number): void; }
 
 const RAG_ORDER: Record<string, number> = { 'Червоний': 0, 'Жовтий': 1, 'Зелений': 2 };
 const STATUSES = ['Ініціація', 'Планування', 'Реалізація', 'Призупинено', 'Скасовано', 'Архівний'];
@@ -123,8 +123,7 @@ export function riskDefs(x: DefsCtx): TableDefs<Risk> {
     prio: { label: t('cPrio'), head: S.prioHead, cell: k => S.prioCell(P(k).priority), sort: k => P(k).priority, filter: k => P(k).priority, flabel: S.prioLabel, cls: 'w-ico' },
     strat: { label: t('cStrat'), head: S.stratHead, cell: k => S.stratCell(P(k).type), sort: k => (P(k).type === 'Стратегічний' ? 0 : 1), filter: k => P(k).type, flabel: S.stratLabel, cls: 'w-ico' },
     code: { label: t('cCode'), cell: k => P(k).code, sort: k => P(k).code },
-    // риск откроется в своей форме на этапе 3; пока — карточка проекта
-    title: { label: fl('kTitle'), cell: k => <button className="link clamp2" onClick={() => x.open(k.projectId)}>{k.title}</button>, sort: k => k.title, cls: 'w-wide' },
+    title: { label: fl('kTitle'), cell: k => <button className="link clamp2" onClick={() => x.openRisk(k.id, 0)}>{k.title}</button>, sort: k => k.title, cls: 'w-wide' },
     type: { label: fl('kType'), cell: k => k.type, sort: k => k.type, filter: k => k.type },
     score: { label: fl('kScore'), cell: k => <Score s={sc(k)} />, sort: k => -sc(k), filter: k => scoreBucket(sc(k)), flabel: v => t('sc' + v) },
     prob: { label: t('cProb'), cell: k => String(k.probability), sort: k => k.probability, filter: k => String(k.probability), cls: 'num' },

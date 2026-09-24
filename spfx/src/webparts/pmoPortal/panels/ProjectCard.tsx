@@ -8,6 +8,8 @@ import { ofProject } from '../logic/views';
 import { toEvents } from '../logic/changes';
 import { Avatar, RagPill, RagDot, Progress, Score, fmtDate, money, freshColor } from '../components/Bits';
 import { Plus } from '../components/Icons';
+import { commentBody } from '../data/write';
+import { Err } from '../components/fields';
 
 const fmtDT = (iso: string): string => { const d = new Date(iso); return isNaN(d.getTime()) ? '' : d.toLocaleDateString('uk-UA') + ' ' + d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }); };
 const byDateDesc = <T extends { date: string; id: number }>(a: T, b: T): number => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.id - a.id);
@@ -26,7 +28,18 @@ const Kv: React.FC<{ k: string; children?: React.ReactNode }> = ({ k, children }
 
 /** Карточка проекта — разделы и порядок projectPanel прототипа (строки 1289–1340), только чтение. */
 export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: SpRepo; onClose(): void }> = ({ project: p, data, repo, onClose }) => {
-  const { t, fl, today, webUrl } = React.useContext(AppCtx);
+  const c = React.useContext(AppCtx); const { t, fl, today } = c;
+  const [cm, setCm] = React.useState('');
+  const [cmErr, setCmErr] = React.useState('');
+  const [cmBusy, setCmBusy] = React.useState(false);
+  const addComment = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault();
+    if (!cm.trim()) { setCmErr(t('errCmt')); return; }
+    setCmBusy(true); setCmErr('');
+    try { await c.repo.create('ProjectComments', commentBody(p.id, cm)); setCm(''); await c.reload(); c.toast(t('cmtSaved')); }
+    catch (x) { setCmErr(String((x as Error).message || x)); }
+    setCmBusy(false);
+  };
   const [showCh, setShowCh] = React.useState(false);
   const [showCm, setShowCm] = React.useState(false);
   const [pmTitle, setPmTitle] = React.useState('');
@@ -55,10 +68,9 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
       <RagPill v={p.rag} notRated={t('notRated')} /><span className="badge">{p.status}</span><span className="badge">{p.priority}</span>
       {p.loop ? <a className="loop" href={p.loop} target="_blank" rel="noopener noreferrer">{t('openLoop')} ↗</a> : null}
     </div>
-    {/* формы — этап 3; до тех пор стандартные формы списков */}
     {edit ? <div className="actbar">
-      <a className="btn primary" href={`${webUrl}/Lists/StatusReports/NewForm.aspx`}><Plus />{t('addReport')}</a>
-      <a className="btn" href={`${webUrl}/Lists/Projects/EditForm.aspx?ID=${p.id}`}>{t('editProject')}</a></div>
+      <button className="btn primary" onClick={() => c.openForm('report', p.id)}><Plus />{t('addReport')}</button>
+      <button className="btn" onClick={() => c.openForm('edit', p.id)}>{t('editProject')}</button></div>
       : <p className="note lock">🔒 {isArch(p.status) ? t('archivedNote') : t('noEdit')}</p>}
     {p.pending ? <p className="note">{t('pendingNote')}</p> : null}
     {p.description ? <p className="desc">{p.description}</p> : null}
@@ -103,7 +115,11 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
       {cms.length ? <div className="cmts">{(showCm ? cms : cms.slice(0, 1)).map(c =>
         <div key={c.id} className="hist-c"><div className="who">{fmtDT(c.created)} · {c.author ? c.author.name : ''}</div><div>{c.text}</div></div>)}
         {cms.length > 1 ? <button className="more" onClick={() => setShowCm(!showCm)}>{showCm ? t('hideHistory') : `${t('showHistory')} (${cms.length})`}</button> : null}
-      </div> : <p className="empty">{t('noComments')}</p>}</div>
+      </div> : <p className="empty">{t('noComments')}</p>}
+      <form className="frow" style={{ marginTop: 12 }} noValidate={true} onSubmit={addComment}>
+        <label className="t" htmlFor="cm-t">{t('addComment')}</label><textarea id="cm-t" placeholder={t('cmtPh')} value={cm} onChange={e => setCm(e.target.value)} />
+        <Err msg={cmErr} /><div className="actions" style={{ marginTop: 10 }}><button type="submit" className="btn" disabled={cmBusy}>{t('addComment')}</button></div>
+      </form></div>
 
     <div className="sec"><h3>{t('secHistory')}</h3>
       {last8.length ? <div className="tablewrap"><table className="matrix"><thead><tr><th />{last8.map(r => <th key={r.id}>{fmtDate(r.date).slice(0, 5)}</th>)}</tr></thead>
@@ -122,8 +138,9 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
         {r.decisionText ? <p><span className="lbl">{t('needDecision')}:</span> {r.decisionText}</p> : null}
       </div>) : <p className="empty">{t('noReportsYet')}</p>}</div>
 
-    <div className="sec"><div className="sec-h"><h3>{t('secRisks')} ({risks.length})</h3></div>
-      {risks.length ? <div className="rlist">{risks.map(k => <div key={k.id} className="rrow"><Score s={riskScore(k.probability, k.impact)} />
-        <span className="rt">{k.title}</span><span className="muted">{k.type} · {k.status}</span></div>)}</div> : <p className="empty">{t('emptyRisks')}</p>}</div>
+    <div className="sec"><div className="sec-h"><h3>{t('secRisks')} ({risks.length})</h3>
+      {edit ? <button className="more" onClick={() => c.openForm('risk:new', p.id)}><Plus /> {t('addRisk')}</button> : null}</div>
+      {risks.length ? <div className="rlist">{risks.map(k => <button key={k.id} className="rrow" onClick={() => c.openForm('risk:' + k.id, p.id)}><Score s={riskScore(k.probability, k.impact)} />
+        <span className="rt">{k.title}</span><span className="muted">{k.type} · {k.status}</span></button>)}</div> : <p className="empty">{t('emptyRisks')}</p>}</div>
   </>;
 };

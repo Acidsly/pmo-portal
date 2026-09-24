@@ -15,8 +15,7 @@ export const Risks: React.FC<{ data: PortalData }> = ({ data }) => {
   const rows = data.risks.filter(k => x.byId[k.projectId] && !isArch(x.byId[k.projectId].status) && riskView(c.views.risks, k))
     .sort((a, b) => riskScore(b.probability, b.impact) - riskScore(a.probability, a.impact));
   const canAdd = data.projects.some(p => isActive(p.status) && p.canEdit);
-  // форма риска — этап 3; до тех пор стандартная форма списка
-  const add = canAdd ? <a className="cmd primary" href={`${c.webUrl}/Lists/RisksIssues/NewForm.aspx`}><Plus />{t('newRisk')}</a> : null;
+  const add = canAdd ? <button className="cmd primary" onClick={() => c.openForm('risk:new')}><Plus />{t('newRisk')}</button> : null;
   return <>
     <Hero title={t('navRisks')} />
     <div className="listcard"><DataTable tkey="risks" defs={riskDefs(x)} rows={rows} left={add}

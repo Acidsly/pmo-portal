@@ -7,10 +7,9 @@ import { Plus } from '../components/Icons';
 
 /** Заголовок страницы (hero прототипа): название, подзаголовок, кнопка «Новий проєкт». */
 export const Hero: React.FC<{ title: string; sub?: string; withNew?: boolean }> = p => {
-  const { t, webUrl } = React.useContext(AppCtx);
+  const { t, openForm } = React.useContext(AppCtx);
   return <div className="hero"><div><h1 className="page-title">{p.title}</h1>{p.sub ? <p className="page-sub">{p.sub}</p> : null}</div>
-    {/* форма нового проекта — этап 3; до тех пор стандартная форма списка */}
-    {p.withNew ? <a className="btn primary" href={`${webUrl}/Lists/Projects/NewForm.aspx`}><Plus />{t('newProject')}</a> : null}</div>;
+    {p.withNew ? <button className="btn primary" onClick={() => openForm('project')}><Plus />{t('newProject')}</button> : null}</div>;
 };
 
 /** Выбор представления (viewSel прототипа). */
@@ -24,5 +23,5 @@ export function useDefsCtx(data: PortalData): DefsCtx {
   const c = React.useContext(AppCtx);
   const byId: Record<number, Project> = {};
   data.projects.forEach(p => { byId[p.id] = p; });
-  return { t: c.t, fl: c.fl, today: c.today, byId, comments: data.comments, open: c.openProject };
+  return { t: c.t, fl: c.fl, today: c.today, byId, comments: data.comments, open: c.openProject, openRisk: (id, pid) => c.openForm('risk:' + id, pid) };
 }
