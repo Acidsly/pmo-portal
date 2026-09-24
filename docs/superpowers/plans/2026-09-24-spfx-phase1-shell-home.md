@@ -1,6 +1,6 @@
 # SPFx, этап 1: каркас и главная — план реализации
 
-> Ход работ: задачи 1–4 выполнены 2026-09-24 (ветка `change/spfx-phase1`, коммиты 776dfb8…c1d33a5). Следующая — задача 5.
+> Ход работ: задачи 1–6 выполнены 2026-09-24 (ветка `change/spfx-phase1`). Следующая — задача 7.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -577,7 +577,7 @@ class SpRepo { constructor(http: SPHttpClient, webUrl: string, webRelUrl: string
   loadAll(): Promise<{ projects: Project[]; reports: StatusReport[]; risks: Risk[] }> }   // projects уже с applyPending
 ```
 
-- [ ] **Step 1: Фикстуры** — ответ REST с `odata=nometadata`:
+- [x] **Step 1: Фикстуры** — ответ REST с `odata=nometadata`:
 
 `spfx/test/fixtures/project.json`:
 ```json
@@ -601,7 +601,7 @@ class SpRepo { constructor(http: SPHttpClient, webUrl: string, webRelUrl: string
   "Author": { "Id": 11, "Title": "Test Kovalenko", "EMail": "test.kovalenko@smarthr.kz" } }
 ```
 
-- [ ] **Step 2: Падающий тест** — `spfx/test/map.test.ts`:
+- [x] **Step 2: Падающий тест** — `spfx/test/map.test.ts`:
 ```ts
 import projectRaw from './fixtures/project.json';
 import reportRaw from './fixtures/report.json';
@@ -627,7 +627,7 @@ test('canEdit: бит EditListItems (0x4) в Low', () => {
 ```
 Run → FAIL.
 
-- [ ] **Step 3: Реализация** — `data/map.ts`:
+- [x] **Step 3: Реализация** — `data/map.ts`:
 ```ts
 import { Person, Project, StatusReport, Risk } from './types';
 import { dateOnly } from '../logic/dates';
@@ -708,8 +708,8 @@ export class SpRepo {
   }
 }
 ```
-- [ ] **Step 4:** `scripts/spfx.sh npm run test:unit` → PASS.
-- [ ] **Step 5: Commit** — «SPFx: сопоставление данных SharePoint и чтение списков …».
+- [x] **Step 4:** `scripts/spfx.sh npm run test:unit` → PASS.
+- [x] **Step 5: Commit** — «SPFx: сопоставление данных SharePoint и чтение списков …».
 
 ---
 
@@ -722,7 +722,7 @@ export class SpRepo {
 **Interfaces:**
 - Produces: `T`, `FLD`: `Record<string, [string, string, string]>`, `EXTRA` (строки приложения, которых нет в прототипе); `type Lang = 0 | 1 | 2` (uk, en, ru); `langFromCulture(name: string): Lang`; `makeT(lang: Lang): { t(k: string): string; fl(k: string): string }`; `readTheme(): 'light' | 'dark' | ''`; `saveTheme(v)`; `readLang(): Lang | null`; `saveLang(l)`. Корневой класс `.pmo-app`, атрибут `data-theme`.
 
-- [ ] **Step 1: Падающий тест** — `spfx/test/i18n-css.test.ts`:
+- [x] **Step 1: Падающий тест** — `spfx/test/i18n-css.test.ts`:
 ```ts
 import * as fs from 'fs';
 import * as path from 'path';
@@ -748,7 +748,7 @@ test('CSS изолирован под .pmo-app', () => {
 ```
 Run → FAIL.
 
-- [ ] **Step 2: Генератор** — `spfx/tools/extract-prototype.mjs`:
+- [x] **Step 2: Генератор** — `spfx/tools/extract-prototype.mjs`:
 ```js
 // Переносит словари (T, FLD) и CSS прототипа в приложение. Запуск: npm run extract. Результат коммитится.
 import fs from 'fs'; import path from 'path'; import { fileURLToPath } from 'url';
@@ -790,7 +790,7 @@ console.log('i18n/strings.ts и theme/prototype.scss обновлены');
 ```
 Run: `scripts/spfx.sh npm run extract` → Expected: два файла созданы.
 
-- [ ] **Step 3: `i18n/i18n.ts` и `theme/theme.ts`**
+- [x] **Step 3: `i18n/i18n.ts` и `theme/theme.ts`**
 ```ts
 // i18n/i18n.ts
 import { T, FLD, EXTRA } from './strings';
@@ -810,8 +810,8 @@ const KEY = 'pmo-theme';
 export const readTheme = (): 'light' | 'dark' | '' => { try { const v = localStorage.getItem(KEY); return v === 'light' || v === 'dark' ? v : ''; } catch (e) { return ''; } };
 export const saveTheme = (v: 'light' | 'dark'): void => { try { localStorage.setItem(KEY, v); } catch (e) { /* приватный режим */ } };
 ```
-- [ ] **Step 4:** `scripts/spfx.sh npm run test:unit` → PASS; `scripts/spfx.sh npm run build` → код 0 (SCSS компилируется).
-- [ ] **Step 5: Commit** — «SPFx: словари и CSS прототипа, язык и тема …».
+- [x] **Step 4:** `scripts/spfx.sh npm run test:unit` → PASS; `scripts/spfx.sh npm run build` → код 0 (SCSS компилируется).
+- [x] **Step 5: Commit** — «SPFx: словари и CSS прототипа, язык и тема …».
 
 ---
 
