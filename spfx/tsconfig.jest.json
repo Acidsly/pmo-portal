@@ -3,5 +3,5 @@
     "target": "es2019", "module": "commonjs", "moduleResolution": "node", "strict": true,
     "esModuleInterop": true, "resolveJsonModule": true, "jsx": "react", "types": ["jest", "node"], "skipLibCheck": true
   },
-  "include": ["test/**/*.ts", "src/webparts/pmoPortal/logic/**/*.ts", "src/webparts/pmoPortal/data/types.ts", "src/webparts/pmoPortal/data/map.ts", "src/webparts/pmoPortal/i18n/**/*.ts"]
+  "include": ["test/**/*.ts", "src/webparts/pmoPortal/logic/**/*.ts", "src/webparts/pmoPortal/data/types.ts", "src/webparts/pmoPortal/data/map.ts", "src/webparts/pmoPortal/data/write.ts", "src/webparts/pmoPortal/i18n/**/*.ts"]
 }

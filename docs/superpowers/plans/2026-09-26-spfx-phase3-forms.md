@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> Ход работ: задачи 1–2 выполнены 2026-09-26 (ветка `change/spfx-phase3` от `change/spfx-phase2`). Перед задачами 4–8 — кросс-ревью плана. Следующая — задача 3.
+
 **Goal:** В приложении на `pmo-test` работают формы прототипа: новый проект и правка карточки, статус-отчёт (подстановка показателей, живой расчёт стану, обязательная причина), риск (создание, правка, просмотр) и комментарий; сохранённое сразу видно на экране, а журнал и права обновляет синхронизация.
 
 **Architecture:** Проверки, «изменились ли ключевые показатели», следующий код `PRJ-###` и сборка тела запроса REST — чистые функции (`logic/forms.ts`, `data/write.ts`) с тестами. Запись — `SpRepo` от имени пользователя (POST / MERGE через `SPHttpClient`). Формы — панели с разметкой прототипа (`projectForm`, `reportForm`, `riskForm`, форма комментария в `projectPanel`). Правка карточки записывает «было / стало» в скрытое поле `pmEditLog`; синхронизация переносит его в журнал «Зміни показників» (вид «Редагування картки») и очищает поле.
@@ -61,7 +63,7 @@ export function validateRisk(d: RiskDraft): string | '';                        
 export function cardDiff(before: Project, d: ProjectDraft): { f: string; from: string; to: string }[];  // правка карточки, без описания
 ```
 
-- [ ] **Step 1: Падающий тест** — `spfx/test/forms.test.ts` (фабрика `P` — как в `views.test.ts`):
+- [x] **Step 1: Падающий тест** — `spfx/test/forms.test.ts` (фабрика `P` — как в `views.test.ts`):
 ```ts
 import { nextCode, reportFromProject, keyChanged, validateReport, validateProject, validateRisk, cardDiff } from '../src/webparts/pmoPortal/logic/forms';
 // … фабрика P(x: Partial<Project>) как в views.test.ts
@@ -101,7 +103,7 @@ test('правка карточки: изменения без описания'
 ```
 Run: `scripts/spfx.sh npm run test:unit` → FAIL.
 
-- [ ] **Step 2: Реализация** — `logic/forms.ts`:
+- [x] **Step 2: Реализация** — `logic/forms.ts`:
 ```ts
 import { Project, Person } from '../data/types';
 import { Rag } from './rag';
@@ -146,7 +148,7 @@ export function cardDiff(b: Project, d: ProjectDraft): { f: string; from: string
   return pairs.filter(x => x[1] !== x[2]).map(([f, from, to]) => ({ f, from, to }));
 }
 ```
-- [ ] **Step 3:** тесты PASS. **Step 4: Commit** — «SPFx: правила форм — проверки, подстановка, изменения карточки …».
+- [x] **Step 3:** тесты PASS. **Step 4: Commit** — «SPFx: правила форм — проверки, подстановка, изменения карточки …».
 
 ---
 
@@ -160,7 +162,7 @@ export function cardDiff(b: Project, d: ProjectDraft): { f: string; from: string
 export const spDate = (iso: string): string | null;                                   // '' -> null
 export function reportBody(d: ReportDraft, p: Project): Record<string, unknown>;       // пишет только изменённые ключевые показатели; srApplied=false
 export function projectBody(d: ProjectDraft, code: string): Record<string, unknown>;   // новый проект: pmStatus/pmType/даты задаются, pmProgress 0
-export function projectEditBody(d: ProjectDraft, diff: { f: string; from: string; to: string }[], who: string, reason: string): Record<string, unknown>; // без ключевых показателей; pmEditLog JSON
+export function projectEditBody(d: ProjectDraft, diff: { f: string; from: string; to: string }[], who: string, reason: string, prevLog: string): Record<string, unknown>; // без ключевых показателей; pmEditLog {entries:[…]} дописывается к prevLog; нет изменений — pmEditLog не трогается
 export function riskBody(d: RiskDraft): Record<string, unknown>;
 export function commentBody(projectId: number, text: string): Record<string, unknown>;
 // SpRepo
@@ -171,7 +173,7 @@ searchPeople(q: string): Promise<Person[]>;                                   //
 ```
 Поля «Користувач» пишутся как `<поле>Id` (один) или `<поле>Id: [..]` (несколько, `odata=nometadata`); подстановка проекта — `srProjectId` / `riProjectId` / `cmProjectId`.
 
-- [ ] **Step 1: Падающий тест** — `spfx/test/write.test.ts`:
+- [x] **Step 1: Падающий тест** — `spfx/test/write.test.ts`:
 ```ts
 import { reportBody, projectBody, projectEditBody, riskBody, commentBody, spDate } from '../src/webparts/pmoPortal/data/write';
 // … фабрика P и отчёт d из reportFromProject(p, '2026-09-26') с оценками и резюме
@@ -198,7 +200,7 @@ test('риск и комментарий', () => {
 });
 ```
 Run → FAIL. **Step 2:** реализовать `write.ts` по интерфейсам; `pmEditLog` = `JSON.stringify({ when: new Date().toISOString(), who, reason, diffs })`. `SpRepo.create/update` — `POST {web}/_api/web/GetList(@u)/items` с телом JSON и `Accept/Content-Type: application/json;odata=nometadata`; `update` — тот же адрес `/items(<id>)` с заголовками `X-HTTP-Method: MERGE`, `IF-MATCH: *`; ошибка — исключение с текстом ответа. `ensureUser` — `POST /_api/web/ensureuser` `{ logonName: 'i:0#.f|membership|<email>' }` → `Id`. `searchPeople` — `POST /_api/SP.UI.ApplicationPages.ClientPeoplePickerWebServiceInterface.clientPeoplePickerSearchUser` `{ queryParams: { QueryString: q, MaximumEntitySuggestions: 8, PrincipalType: 1, AllowEmailAddresses: true } }` → разобрать строку-JSON `value` в `Person[]` (`EntityData.Email`, `DisplayText`; `id: 0` до `ensureUser`).
-- [ ] **Step 3:** тесты PASS; сборка — код 0. **Step 4: Commit** — «SPFx: запись в SharePoint — тела запросов, создание, правка, люди …».
+- [x] **Step 3:** тесты PASS; сборка — код 0. **Step 4: Commit** — «SPFx: запись в SharePoint — тела запросов, создание, правка, люди …».
 
 ---
 
