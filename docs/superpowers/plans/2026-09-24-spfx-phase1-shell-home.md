@@ -1,5 +1,7 @@
 # SPFx, этап 1: каркас и главная — план реализации
 
+> Ход работ: задачи 1–4 выполнены 2026-09-24 (ветка `change/spfx-phase1`, коммиты 776dfb8…c1d33a5). Следующая — задача 5.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Приложение SPFx на `pmo-test` открывается главной страницей сайта на весь экран и показывает шапку (вкладки, UA/EN/RU, тема) и главную 1:1 с прототипом по данным пользователя.
@@ -55,12 +57,12 @@ spfx/                                         решение SPFx (сгенер�
 **Interfaces:**
 - Produces: `scripts/spfx.sh <команда>` — выполняет команду в `spfx/` под Node 22; `npm run test:unit` — Jest; `npm run build` — `.sppkg` в `spfx/sharepoint/solution/`.
 
-- [ ] **Step 1: Установить Node 22 рядом с текущим**
+- [x] **Step 1: Установить Node 22 рядом с текущим**
 
 Run: `brew install node@22` (keg-only, не меняет системный `node`).
 Expected: `"$(brew --prefix node@22)/bin/node" -v` → `v22.x`.
 
-- [ ] **Step 2: Обёртка `scripts/spfx.sh`**
+- [x] **Step 2: Обёртка `scripts/spfx.sh`**
 
 ```bash
 #!/usr/bin/env bash
@@ -76,7 +78,7 @@ exec "$@"
 
 Run: `chmod +x scripts/spfx.sh`
 
-- [ ] **Step 3: Сгенерировать решение во временной папке и перенести в `spfx/`**
+- [x] **Step 3: Сгенерировать решение во временной папке и перенести в `spfx/`**
 
 Сначала: `export PATH="$(brew --prefix node@22)/bin:$PATH"; npx --yes -p yo -p @microsoft/generator-sharepoint@1.23.2 -- yo @microsoft/sharepoint --help` — сверить имена флагов. Если генератор всё равно задаёт вопрос, отвечать: тип — WebPart, имя — PmoPortal, шаблон — React.
 
@@ -89,7 +91,7 @@ mkdir -p spfx && rsync -a "$T/pmo-portal/" spfx/ && rm -rf "$T"
 ```
 Expected: `spfx/package.json`, `spfx/src/webparts/pmoPortal/PmoPortalWebPart.ts`, `spfx/config/package-solution.json` существуют.
 
-- [ ] **Step 4: `.gitignore` для решения**
+- [x] **Step 4: `.gitignore` для решения**
 
 Добавить в корневой `.gitignore`:
 ```
@@ -105,7 +107,7 @@ spfx/sharepoint/solution/
 spfx/coverage/
 ```
 
-- [ ] **Step 5: Манифест — главная на весь экран и Teams**
+- [x] **Step 5: Манифест — главная на весь экран и Teams**
 
 В `PmoPortalWebPart.manifest.json` задать:
 ```json
@@ -116,7 +118,7 @@ spfx/coverage/
 
 В `config/package-solution.json`: `"name": "pmo-portal"`, `"skipFeatureDeployment": true`, `"isDomainIsolated": false`, версия `"1.0.0.0"`.
 
-- [ ] **Step 6: Jest вне сборки Heft**
+- [x] **Step 6: Jest вне сборки Heft**
 
 Run: `scripts/spfx.sh npm install --save-dev --save-exact jest@29.7.0 ts-jest@29.2.5 @types/jest@29.5.14`
 
@@ -148,7 +150,7 @@ module.exports = {
 test('jest работает', () => { expect(1 + 1).toBe(2); });
 ```
 
-- [ ] **Step 7: Установить и проверить сборку**
+- [x] **Step 7: Установить и проверить сборку**
 
 Run: `scripts/spfx.sh npm install` → затем `scripts/spfx.sh npm ls react react-dom` → Expected: ровно `17.0.1` (иначе `npm install --save-exact react@17.0.1 react-dom@17.0.1`).
 Run: `scripts/spfx.sh npm run test:unit` → Expected: `1 passed`.
@@ -156,7 +158,7 @@ Run: `scripts/spfx.sh npm run test:unit` → Expected: `1 passed`.
 Run: `scripts/spfx.sh npm run build`
 Expected: код выхода 0, файл `spfx/sharepoint/solution/pmo-portal.sppkg` существует. Если в `package.json` нет скрипта `build`, выполнить `scripts/spfx.sh npx heft test --clean --production` и `scripts/spfx.sh npx heft package-solution --production` и добавить `"build": "heft test --clean --production && heft package-solution --production"`.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git switch -c change/spfx-phase1
@@ -177,7 +179,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 **Interfaces:**
 - Produces: `type Rag = 'Зелений' | 'Жовтий' | 'Червоний' | ''`; `calcRag(s: Rag, b: Rag, r: Rag): Rag`; `dateOnly(value: string | null | undefined): string` (`'YYYY-MM-DD'` или `''`); `addDays(d: string, n: number): string`; `daysBetween(a: string, b: string): number` (b − a в днях); `todayIso(now?: Date): string`.
 
-- [ ] **Step 1: Тест-векторы**
+- [x] **Step 1: Тест-векторы**
 
 `tests/cases/rag.json`:
 ```json
@@ -201,7 +203,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ]
 ```
 
-- [ ] **Step 2: Падающий тест**
+- [x] **Step 2: Падающий тест**
 
 `spfx/test/rag-dates.test.ts`:
 ```ts
@@ -230,7 +232,7 @@ test('addDays / daysBetween / todayIso', () => {
 
 Run: `scripts/spfx.sh npm run test:unit` → Expected: FAIL «Cannot find module .../logic/rag».
 
-- [ ] **Step 3: Реализация**
+- [x] **Step 3: Реализация**
 
 `logic/rag.ts`:
 ```ts
@@ -273,11 +275,11 @@ export function todayIso(now: Date = new Date()): string {
 }
 ```
 
-- [ ] **Step 4: Тесты проходят**
+- [x] **Step 4: Тесты проходят**
 
 Run: `scripts/spfx.sh npm run test:unit` → Expected: PASS (все случаи).
 
-- [ ] **Step 5: `Test-Scripts.ps1` читает те же векторы**
+- [x] **Step 5: `Test-Scripts.ps1` читает те же векторы**
 
 В разделе 4 заменить массив `$cases = @(...)` и цикл на:
 ```powershell
@@ -296,7 +298,7 @@ foreach ($c in $dcases) {
 
 Run: `pwsh -NoLogo -File tests/Test-Scripts.ps1` → Expected: «Все проверки пройдены».
 
-- [ ] **Step 6: Commit** — `git add tests spfx/test spfx/src/webparts/pmoPortal/logic && git commit -m "SPFx: общий стан и даты; общие тест-векторы для PowerShell и Jest …"`
+- [x] **Step 6: Commit** — `git add tests spfx/test spfx/src/webparts/pmoPortal/logic && git commit -m "SPFx: общий стан и даты; общие тест-векторы для PowerShell и Jest …"`
 
 ---
 
@@ -321,7 +323,7 @@ riskScore(p: number, i: number): number; scoreLevel(score): 'r' | 'y' | 'g'  // 
 byOrder(a: {type,priority,title}, b): number               // стратегические, приоритет, название (uk)
 ```
 
-- [ ] **Step 1: Падающий тест** — `spfx/test/status.test.ts`:
+- [x] **Step 1: Падающий тест** — `spfx/test/status.test.ts`:
 ```ts
 import * as S from '../src/webparts/pmoPortal/logic/status';
 
@@ -360,7 +362,7 @@ test('порядок: стратегические, приоритет, назв
 ```
 Run: `scripts/spfx.sh npm run test:unit` → FAIL (модуль не найден).
 
-- [ ] **Step 2: Реализация** — `logic/status.ts`:
+- [x] **Step 2: Реализация** — `logic/status.ts`:
 ```ts
 import { daysBetween } from './dates';
 
@@ -387,8 +389,8 @@ export function byOrder(a: Orderable, b: Orderable): number {
   return (a.priority || '').localeCompare(b.priority || '') || a.title.localeCompare(b.title, 'uk');
 }
 ```
-- [ ] **Step 3:** `scripts/spfx.sh npm run test:unit` → PASS.
-- [ ] **Step 4: Commit** — `git add spfx && git commit -m "SPFx: правила статусов, свежести, сроков, бюджета и рисков …"`
+- [x] **Step 3:** `scripts/spfx.sh npm run test:unit` → PASS.
+- [x] **Step 4: Commit** — `git add spfx && git commit -m "SPFx: правила статусов, свежести, сроков, бюджета и рисков …"`
 
 ---
 
@@ -420,7 +422,7 @@ export interface Risk { id: number; projectId: number; title: string; type: stri
 ```
 - Produces (`logic`): `applyPending(p: Project, reports: StatusReport[]): Project`; `donutCounts(projects: Project[]): { g: number; y: number; r: number; none: number; total: number }`; `snapshots(projects: Project[], reports: StatusReport[], today: string): { date: string; g: number; y: number; r: number }[]` (7 точек, последняя — сегодня).
 
-- [ ] **Step 1: Падающий тест** — `spfx/test/overlay-dynamics.test.ts`:
+- [x] **Step 1: Падающий тест** — `spfx/test/overlay-dynamics.test.ts`:
 ```ts
 import { Project, StatusReport } from '../src/webparts/pmoPortal/data/types';
 import { applyPending } from '../src/webparts/pmoPortal/logic/overlay';
@@ -483,7 +485,7 @@ describe('кольцо и динамика — как в прототипе', ()
 ```
 Run: `scripts/spfx.sh npm run test:unit` → FAIL.
 
-- [ ] **Step 2: Реализация**
+- [x] **Step 2: Реализация**
 
 `data/types.ts` — интерфейсы из блока Interfaces (с `import { Rag } from '../logic/rag';`).
 
@@ -552,8 +554,8 @@ export function snapshots(projects: Project[], reports: StatusReport[], today: s
   return out;
 }
 ```
-- [ ] **Step 3:** `scripts/spfx.sh npm run test:unit` → PASS.
-- [ ] **Step 4: Commit** — «SPFx: модель, наложение неприменённых отчётов, кольцо и динамика …».
+- [x] **Step 3:** `scripts/spfx.sh npm run test:unit` → PASS.
+- [x] **Step 4: Commit** — «SPFx: модель, наложение неприменённых отчётов, кольцо и динамика …».
 
 ---
 
