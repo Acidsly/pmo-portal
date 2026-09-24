@@ -18,6 +18,7 @@ test('отчёт: только изменённые ключевые показ�
   expect(b).not.toHaveProperty('srStatus');
   expect(b).not.toHaveProperty('srActualCost');
   expect(b).not.toHaveProperty('srStart');
+  expect(reportBody(d, p).srProgress).toBe(40);   // % пишется и без изменения
 });
 test('новый проект', () => {
   expect(projectBody(draft({ stakeholders: [{ id: 6, name: 'A', email: 'a@x' }, { id: 7, name: 'B', email: 'b@x' }], loop: 'https://loop/x' }), 'PRJ-011'))

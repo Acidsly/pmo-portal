@@ -42,7 +42,7 @@ export const PeoplePicker: React.FC<{ id: string; value: Person[]; multi: boolea
   const add = (x: Person): void => { p.onChange(p.multi ? p.value.concat(x) : [x]); setQ(''); setFound([]); };
   const canAdd = p.multi || !p.value.length;
   return <div className="picker">
-    {p.value.map(x => <span key={x.email} className="person chip" title={x.email}><Avatar name={x.name} /><span className="pn"><b>{x.name}</b></span>
+    {p.value.map(x => <span key={x.email} className="person pchip" title={x.email}><Avatar name={x.name} /><span className="pn"><b>{x.name}</b></span>
       {p.disabled ? null : <button type="button" className="x-sm" aria-label="×" onClick={() => p.onChange(p.value.filter(v => v.email !== x.email))}>×</button>}</span>)}
     {canAdd && !p.disabled ? <input id={p.id} type="search" value={q} placeholder={p.placeholder} autoComplete="off" onChange={e => setQ(e.target.value)}
       onKeyDown={e => {

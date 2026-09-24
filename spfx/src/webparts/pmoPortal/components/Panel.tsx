@@ -1,7 +1,8 @@
 import * as React from 'react';
 
 /** Выдвижная панель прототипа: затемнение, Esc закрывает, фокус возвращается туда, откуда открыли. */
-export const Panel: React.FC<{ open: boolean; onClose(): void; label: string; children?: React.ReactNode }> = p => {
+/** view — что показано (карточка / форма): при смене панель прокручивается в начало. */
+export const Panel: React.FC<{ open: boolean; onClose(): void; label: string; view?: string; children?: React.ReactNode }> = p => {
   const ref = React.useRef<HTMLElement>(null);
   const back = React.useRef<HTMLElement | null>(null);
   React.useEffect(() => {
@@ -12,6 +13,7 @@ export const Panel: React.FC<{ open: boolean; onClose(): void; label: string; ch
     document.addEventListener('keydown', key);
     return () => { document.removeEventListener('keydown', key); if (back.current && back.current.focus) back.current.focus(); };
   }, [p.open]);
+  React.useEffect(() => { if (ref.current) ref.current.scrollTop = 0; }, [p.view]);
   return <>
     <div className={'pmo-scrim' + (p.open ? ' open' : '')} onClick={p.onClose} />
     <aside ref={ref} tabIndex={-1} className={'pmo-panel' + (p.open ? ' open' : '')} role="dialog" aria-modal="true" aria-hidden={!p.open} aria-label={p.label}>

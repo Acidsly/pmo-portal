@@ -83,7 +83,7 @@ export const App: React.FC<AppProps> = p => {
       <main className="pmo-main">
         {err ? <p className="empty">{tt.t('loadErr')}: {err}</p> : !data ? <p className="empty">…</p> : pageEl}
       </main>
-      <Panel open={panelOpen} label={project ? project.title : tt.t('siteTitle')} onClose={route.form && project ? back : close}>{panelEl}</Panel>
+      <Panel open={panelOpen} view={`${route.projectId}/${route.form}`} label={project ? project.title : tt.t('siteTitle')} onClose={route.form && project ? back : close}>{panelEl}</Panel>
       <Toast msg={toastMsg} />
     </div>
   </AppCtx.Provider>;

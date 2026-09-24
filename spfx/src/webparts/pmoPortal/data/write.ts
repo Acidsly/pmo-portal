@@ -7,14 +7,15 @@ type Body = Record<string, unknown>;
 export const spDate = (iso: string): string | null => (iso ? `${iso}T12:00:00Z` : null);
 const loop = (url: string): { Url: string; Description: string } | null => (url ? { Url: url, Description: 'Loop' } : null);
 
-/** Новый статус-отчёт. Ключевые показатели — только изменённые: синхронизация переносит в карточку лишь заполненные поля. */
+/** Новый статус-отчёт. Статус, тип, даты и затраты — только изменённые (синхронизация переносит лишь заполненные поля); % — всегда. */
 export function reportBody(d: ReportDraft, p: Project): Body {
   const b: Body = { Title: d.title.trim(), srProjectId: d.projectId, srDate: spDate(d.date), srPeriod: d.period,
     srSchedule: d.schedule, srBudget: d.budget, srResources: d.resources, srDone: d.done, srNext: d.next, srIssues: d.issues,
     srDecision: d.decision, srDecisionText: d.decision ? d.decisionText : '', srKeyReason: d.keyReason, srApplied: false };
   if (d.status !== p.status) b.srStatus = d.status;
   if (d.type !== p.type) b.srType = d.type;
-  if (d.progress !== p.progress) b.srProgress = Math.max(0, Math.min(100, d.progress));
+  // % выполнения — в каждом отчёте (матрица состояний в карточке); без изменения синхронизация журнал не пишет
+  b.srProgress = Math.max(0, Math.min(100, d.progress));
   if (d.actualCost !== p.actualCost) b.srActualCost = Math.max(0, d.actualCost);
   const dates: [keyof ReportDraft & keyof Project, string][] = [['start', 'srStart'], ['goLive', 'srGoLive'], ['planEnd', 'srPlanEnd'], ['forecastEnd', 'srForecastEnd']];
   dates.forEach(([k, f]) => { if ((d[k] || '') !== (p[k] || '')) b[f] = spDate(String(d[k] || '')); });
