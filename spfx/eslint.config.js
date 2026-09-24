@@ -9,6 +9,10 @@ module.exports = [
         tsconfigRootDir: __dirname,
         project: './tsconfig.json'
       }
+    },
+    rules: {
+      // REST SharePoint возвращает null для пустых полей — модель данных описывает это явно
+      '@rushstack/no-new-null': 'off'
     }
   }
 ];

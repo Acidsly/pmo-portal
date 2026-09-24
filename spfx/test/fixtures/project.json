@@ -1,0 +1,9 @@
+{ "Id": 7, "Title": "Портал", "pmCode": "PRJ-007", "pmType": "Стратегічний", "pmPriority": "1 — Високий",
+  "pmManager": { "Id": 11, "Title": "Test Kovalenko", "EMail": "test.kovalenko@smarthr.kz" },
+  "pmOwner": null, "pmStakeholders": [ { "Id": 12, "Title": "test burbega", "EMail": "test.burbega@fillin.kz" } ],
+  "pmDepartment": "ІТ", "pmStatus": "Реалізація", "pmRAG": "Червоний", "pmProgress": 35,
+  "pmStart": "2026-04-27T12:00:00Z", "pmGoLive": null, "pmPlanEnd": "2026-11-07T21:00:00Z", "pmForecastEnd": null, "pmArchivedAt": null,
+  "pmBudget": 1800000, "pmActualCost": 1350000, "pmLastUpdate": "2026-09-19T12:00:00Z",
+  "pmLastReport": "Інтеграція затримується", "pmLastComment": null,
+  "pmLoop": { "Url": "https://loop.cloud.microsoft/p/x", "Description": "Loop" }, "pmDescription": "Опис",
+  "EffectiveBasePermissions": { "High": "432", "Low": "1011028719" } }

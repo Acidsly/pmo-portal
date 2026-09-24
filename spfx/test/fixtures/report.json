@@ -1,0 +1,6 @@
+{ "Id": 3, "Title": "Звіт", "srProjectId": 7, "srDate": "2026-09-19T12:00:00Z", "srPeriod": "2 тижні",
+  "srSchedule": "Червоний", "srBudget": "Червоний", "srResources": "Жовтий", "srStatus": null, "srType": null,
+  "srProgress": 35, "srStart": null, "srGoLive": null, "srPlanEnd": null, "srForecastEnd": "2027-01-12T12:00:00Z",
+  "srActualCost": null, "srKeyReason": "Затримка", "srDone": "Зроблено", "srNext": null, "srIssues": null,
+  "srDecision": true, "srDecisionText": "Погодити бюджет", "srApplied": false,
+  "Author": { "Id": 11, "Title": "Test Kovalenko", "EMail": "test.kovalenko@smarthr.kz" } }
