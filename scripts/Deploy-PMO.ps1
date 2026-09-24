@@ -86,6 +86,9 @@ function Ensure-List([string]$Url, [string]$Uk, [string]$En, [string]$Ru) {
     return $l
 }
 
+# Список в текущем контексте PnP (объект, полученный раньше, мог остаться в прежнем контексте)
+function Fresh-List($List) { Get-PnPList -Identity $List.Id }
+
 function Test-Field($List, [string]$Name) {
     try { return Get-PnPField -List $List -Identity $Name -ErrorAction Stop } catch { return $null }
 }
@@ -109,12 +112,15 @@ function Choices([string[]]$Items, [string]$Default) {
 }
 
 function Set-FormVisibility($List, [string[]]$Names, [bool]$InNew, [bool]$InEdit) {
+    # CSOM в PowerShell 7.6 (.NET 10) не собирает пакет из нескольких вызовов методов с параметром bool
+    # («The node to be inserted is from a different document context»), поэтому каждый вызов — отдельным
+    # запросом. Update() не нужен: SetShowIn*Form применяются сразу.
+    $l = Fresh-List $List
     foreach ($n in $Names) {
-        $f = Get-PnPField -List $List -Identity $n
-        $f.SetShowInNewForm($InNew); $f.SetShowInEditForm($InEdit)
-        $f.Update()
+        $f = $l.Fields.GetByInternalNameOrTitle($n)
+        $f.SetShowInNewForm($InNew);   Invoke-PnPQuery
+        $f.SetShowInEditForm($InEdit); Invoke-PnPQuery
     }
-    Invoke-PnPQuery
 }
 
 function Ensure-View($List, [string]$Title, [string[]]$Fields, [string]$Query) {
@@ -334,13 +340,19 @@ Set-PnPField -List $M -Identity "Title" -Values @{ Required = $false } | Out-Nul
 # Переводы названий столбцов
 # ---------------------------------------------------------------------------
 Write-Host "  переводы названий столбцов"
-foreach ($x in $script:Loc) {
-    $f = Get-PnPField -List $x[0] -Identity $x[1]
-    $f.Title = $x[2]
-    Set-Loc $f $x[2] $x[3] $x[4]
-    $f.Update()
+# PnP.PowerShell 3.x: командлет, вызванный при неотправленных изменениях, переключается на новый контекст,
+# и объекты, полученные раньше, перестают с ним работать. Поэтому список берётся заново (Fresh-List),
+# поля меняются только через CSOM, а командлеты PnP в цикле не вызываются.
+foreach ($grp in ($script:Loc | Group-Object { $_[0].Id })) {
+    $l = Fresh-List $grp.Group[0][0]
+    foreach ($x in $grp.Group) {
+        $f = $l.Fields.GetByInternalNameOrTitle($x[1])
+        $f.Title = $x[2]
+        Set-Loc $f $x[2] $x[3] $x[4]
+        $f.Update()
+    }
+    Invoke-PnPQuery
 }
-Invoke-PnPQuery
 
 # ===========================================================================
 # 7. Формы и права уровня списков
@@ -510,7 +522,9 @@ $vTiles = Ensure-View $P "Плитки" $tileFields "$order<Where>$active</Where
 $tileJson = Get-Content -Raw -Path (Join-Path $here "gallery-view.json") -ErrorAction SilentlyContinue
 try {
     $vals = @{ ViewType2 = "TILES" }
-    if ($tileJson) { $vals.CustomFormatter = $tileJson }
+    # [string]: Get-Content возвращает строку в обёртке PSObject, PnP 3.x не может записать её в свойство вида.
+    # & -> \u0026: PnP 3.x передаёт JSON внутри XML без экранирования; для JSON это та же строка.
+    if ($tileJson) { $vals.CustomFormatter = ([string]$tileJson).Replace('&', '\u0026') }
     Set-PnPView -List $P -Identity $vTiles.Id -Values $vals | Out-Null
 } catch {
     Write-Warning "Режим галереи для «Плитки» не включён. Вручную: представление → «Галерея» → «Форматировать текущее представление» → вставьте gallery-view.json."
@@ -560,12 +574,18 @@ if (-not $SkipPage) {
     }
     try {
         Enable-PnPFeature -Identity "24611c05-ee19-45da-955f-6602264abaf8" -Scope Web -ErrorAction SilentlyContinue
-        $item = Get-PnPListItem -List "SitePages" -Fields "FileLeafRef" | Where-Object { $_["FileLeafRef"] -eq "Dashboard.aspx" }
-        Invoke-PnPSPRestMethod -Method Post -Url "/_api/sitepages/pages($($item.Id))/translations/create" `
-            -Content @{ LanguageCodes = @("en-us", "ru-ru") } | Out-Null
-        Write-Host "  + переводы страницы EN и RU"
+        # по полному пути: у переводов (SitePages/en/, SitePages/ru/) то же имя файла
+        $item = Get-PnPListItem -List "SitePages" -Fields "FileRef" | Where-Object { $_["FileRef"] -like "*/SitePages/Dashboard.aspx" } | Select-Object -First 1
+        # создаём только недостающие переводы: повторный create для существующего языка — ошибка
+        $tr = Invoke-PnPSPRestMethod -Method Get -Url "/_api/sitepages/pages($($item.Id))/translations"
+        $missing = @("en-us", "ru-ru") | Where-Object { $_ -in $tr.UntranslatedLanguages }
+        if ($missing) {
+            Invoke-PnPSPRestMethod -Method Post -Url "/_api/sitepages/pages($($item.Id))/translations/create" `
+                -Content @{ request = @{ LanguageCodes = @($missing) } } | Out-Null
+            Write-Host "  + переводы страницы: $($missing -join ', ')"
+        }
     } catch {
-        Write-Warning "Переводы страницы не созданы автоматически: страница → «Перевод» → «Создать» для English и Русский."
+        Write-Warning "Переводы страницы не созданы автоматически ($($_.Exception.Message)): страница → «Перевод» → «Создать» для English и Русский."
     }
 }
 
