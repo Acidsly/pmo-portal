@@ -6,11 +6,12 @@
 .EXAMPLE
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action deploy
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action sync-dryrun
+    pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action seed          # демонстрационные данные
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action deploy -ConfirmProduction
 #>
 param(
     [Parameter(Mandatory)][ValidateSet("test", "prod")][string]$Env,
-    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions")][string]$Action,
+    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed")][string]$Action,
     [switch]$ConfirmProduction
 )
 $ErrorActionPreference = "Stop"
@@ -44,7 +45,13 @@ function Get-Auth($section) {
 $siteUrl = "https://$($cfg.TenantName).sharepoint.com/sites/$($cfg.SiteAlias)"
 Write-Host "Окружение: $Env · $siteUrl · действие: $Action" -ForegroundColor Cyan
 
-if ($Action -eq "deploy") {
+if ($Action -eq "seed") {
+    # демонстрационные данные — только на тестовом сайте, с приложением развёртывания
+    if ($Env -ne "test") { throw "Действие «seed» доступно только для окружения test." }
+    $a = Get-Auth $cfg.Deploy
+    $a.SiteUrl = $siteUrl
+    & (Join-Path $PSScriptRoot "Seed-TestData.ps1") @a
+} elseif ($Action -eq "deploy") {
     # без сертификата Deploy-PMO.ps1 откроет браузер для входа (рекомендуется для прода)
     $a = Get-Auth $cfg.Deploy
     $a.TenantName = $cfg.TenantName; $a.SiteAlias = $cfg.SiteAlias; $a.Owner = $cfg.Owner

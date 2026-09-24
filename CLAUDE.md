@@ -11,6 +11,7 @@
 | `scripts/Invoke-PMOSync.ps1` | Логика по расписанию: отчёт → карточка, журнал, архив, комментарии, права по иерархии, напоминания |
 | `scripts/Register-PMOApps.ps1` | Регистрация приложений Entra ID (выполняет человек) |
 | `scripts/Invoke-Env.ps1` | **Единственный способ запускать скрипты против SharePoint**: берёт параметры из `config/environments.json` |
+| `scripts/Seed-TestData.ps1` | Демонстрационные данные для тестового сайта (`-Env test -Action seed`). На прод не запускается |
 | `scripts/gallery-view.json` | Оформление плиток (галерея) |
 | `tests/Test-Scripts.ps1` | Проверки без доступа к SharePoint. Запускай после каждого изменения |
 | `prototype/pmo-prototype.html` | Прототип интерфейса — эталон UX и ТЗ для будущего приложения SPFx |
@@ -27,6 +28,7 @@ pwsh -NoLogo -File tests/Test-Scripts.ps1
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action deploy
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action sync-dryrun
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action sync
+pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action seed          # демонстрационные данные, повторный запуск ничего не дублирует
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action sync-dryrun
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action deploy -ConfirmProduction   # только после подтверждения
 ```

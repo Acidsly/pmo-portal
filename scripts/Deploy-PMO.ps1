@@ -61,6 +61,7 @@ function Connect-Target([string]$Url) {
 # Вспомогательные функции
 # ===========================================================================
 $script:Loc = @()
+$script:ListNames = @{}   # Lists/<url> -> uk, en, ru — для пунктов меню сайта
 
 function Set-Loc($Obj, [string]$Uk, [string]$En, [string]$Ru) {
     $Obj.TitleResource.SetValueForUICulture("uk-UA", $Uk)
@@ -82,6 +83,7 @@ function Ensure-List([string]$Url, [string]$Uk, [string]$En, [string]$Ru) {
     }
     $l = Get-PnPList -Identity $Url
     Set-Loc $l $Uk $En $Ru
+    $script:ListNames[$Url] = @($Uk, $En, $Ru)
     $l.Update(); Invoke-PnPQuery
     return $l
 }
@@ -354,6 +356,16 @@ foreach ($grp in ($script:Loc | Group-Object { $_[0].Id })) {
     Invoke-PnPQuery
 }
 
+# Пункты меню сайта: New-PnPList создаёт их с украинским названием, переводы задаём явно
+Write-Host "  переводы пунктов меню"
+$ctx = Get-PnPContext
+$ql = $ctx.Web.Navigation.QuickLaunch; $ctx.Load($ql); Invoke-PnPQuery
+foreach ($nd in $ql) {
+    $key = $script:ListNames.Keys | Where-Object { $nd.Url -like "*/$_/*" } | Select-Object -First 1
+    if ($key) { $t = $script:ListNames[$key]; Set-Loc $nd $t[0] $t[1] $t[2]; $nd.Update() }
+}
+Invoke-PnPQuery
+
 # ===========================================================================
 # 7. Формы и права уровня списков
 # ===========================================================================
@@ -522,9 +534,14 @@ $vTiles = Ensure-View $P "Плитки" $tileFields "$order<Where>$active</Where
 $tileJson = Get-Content -Raw -Path (Join-Path $here "gallery-view.json") -ErrorAction SilentlyContinue
 try {
     $vals = @{ ViewType2 = "TILES" }
-    # [string]: Get-Content возвращает строку в обёртке PSObject, PnP 3.x не может записать её в свойство вида.
+    # gallery-view.json — в формате вставки через интерфейс («Галерея» → «Форматировать представление»);
+    # в свойство представления SharePoint принимает его вложенным в tileProps, иначе молча показывает стандартные карточки.
     # & -> \u0026: PnP 3.x передаёт JSON внутри XML без экранирования; для JSON это та же строка.
-    if ($tileJson) { $vals.CustomFormatter = ([string]$tileJson).Replace('&', '\u0026') }
+    if ($tileJson) {
+        $tile = [string]$tileJson | ConvertFrom-Json -AsHashtable
+        $tile.Remove('$schema')
+        $vals.CustomFormatter = (@{ tileProps = $tile } | ConvertTo-Json -Depth 64 -Compress).Replace('&', '\u0026')
+    }
     Set-PnPView -List $P -Identity $vTiles.Id -Values $vals | Out-Null
 } catch {
     Write-Warning "Режим галереи для «Плитки» не включён. Вручную: представление → «Галерея» → «Форматировать текущее представление» → вставьте gallery-view.json."
@@ -583,6 +600,15 @@ if (-not $SkipPage) {
             Invoke-PnPSPRestMethod -Method Post -Url "/_api/sitepages/pages($($item.Id))/translations/create" `
                 -Content @{ request = @{ LanguageCodes = @($missing) } } | Out-Null
             Write-Host "  + переводы страницы: $($missing -join ', ')"
+        }
+        # SharePoint создаёт перевод черновиком с заголовком-заглушкой («Перекласти мовою …»):
+        # задаём заголовок и публикуем. Уже переименованный перевод не трогаем — его мог править человек.
+        foreach ($t in @(@("en", "Project dashboard"), @("ru", "Панель проектов"))) {
+            $tp = Get-PnPPage -Identity "$($t[0])/Dashboard" -ErrorAction SilentlyContinue
+            if ($tp -and $tp.PageTitle -ne $t[1] -and $tp.PageTitle -like "*Панель проєктів*") {
+                Set-PnPPage -Identity "$($t[0])/Dashboard" -Title $t[1] -Publish | Out-Null
+                Write-Host "  + перевод $($t[0]): «$($t[1])», опубликован"
+            }
         }
     } catch {
         Write-Warning "Переводы страницы не созданы автоматически ($($_.Exception.Message)): страница → «Перевод» → «Создать» для English и Русский."
