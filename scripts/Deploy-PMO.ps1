@@ -618,5 +618,5 @@ if (-not $SkipPage) {
 Write-Host "`nГотово: $siteUrl" -ForegroundColor Yellow
 Write-Host "Дальше:" -ForegroundColor Yellow
 Write-Host "  1) добавьте участников в группу «$PMO_GROUP» и сотрудников компании — в участники сайта;"
-Write-Host "  2) настройте две диаграммы Quick chart на главной (источник — список «Проєкти»);"
+Write-Host "  2) диаграммы на главной заполнит синхронизация (или сразу: Invoke-Env.ps1 -Action charts);"
 Write-Host "  3) запустите Invoke-PMOSync.ps1 и поставьте его на расписание (см. README)."

@@ -21,6 +21,10 @@
          группа PMO и владельцы сайта — полный доступ. Цепочка руководителей берётся из Entra ID.
          Отчёты и риски проекта получают тот же круг, комментарии и журнал — только чтение.
       6. (-SendReminders) письмо каждому PM со списком его активных проектов без свежего отчёта.
+      7. Диаграммы Quick chart на главной (и её переводах EN / RU): «Портфель за станом» — активные
+         проекты по общему состоянию, «Проєкти за статусом» — по статусу. Quick chart не умеет считать
+         элементы списка, поэтому числа считает синхронизация; страница публикуется, только если числа
+         изменились. Числа видны всем, кто открывает главную, — без названий проектов.
 
 .PARAMETER SiteUrl          https://contoso.sharepoint.com/sites/pmo
 .PARAMETER ClientId         Client ID приложения синхронизации (Register-PMOApps.ps1)
@@ -31,6 +35,7 @@
 .PARAMETER RebuildPermissions  пересчитать права для всех элементов (после смены руководителей в Entra ID)
 .PARAMETER SendReminders    отправить напоминания PM (запускайте с этим ключом раз в неделю)
 .PARAMETER ReminderFrom     ящик-отправитель напоминаний, например pmo@contoso.com
+.PARAMETER ChartsOnly       только пересчитать диаграммы на главной (без Graph и прав; подходит приложение развёртывания)
 .PARAMETER DryRun           только показать, что будет сделано
 
 .EXAMPLE
@@ -51,6 +56,7 @@ param(
     [string]$ReminderFrom,
     [int]$ReminderDays = 7,
     [int]$MaxManagerDepth = 10,
+    [switch]$ChartsOnly,
     [switch]$DryRun
 )
 
@@ -58,7 +64,7 @@ $ErrorActionPreference = "Stop"
 $PMO_GROUP = "PMO-адміністратори"
 $L_PROJ = "Lists/Projects"; $L_REP = "Lists/StatusReports"; $L_RISK = "Lists/RisksIssues"
 $L_CHG  = "Lists/KeyChanges"; $L_CMT = "Lists/ProjectComments"
-$stats = [ordered]@{ reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; reminders = 0; warnings = 0 }
+$stats = [ordered]@{ reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; reminders = 0; charts = 0; warnings = 0 }
 
 function Log([string]$m, [string]$c = "Gray") { Write-Host ("{0:HH:mm:ss} {1}" -f (Get-Date), $m) -ForegroundColor $c }
 function Warn([string]$m) { $stats.warnings++; Write-Warning $m }
@@ -148,6 +154,63 @@ foreach ($it in $projects) {
     }
 }
 Log ("Проєктів: {0}, звітів: {1}, ризиків: {2}, коментарів: {3}" -f $projects.Count, $reports.Count, $risks.Count, $comments.Count)
+
+# ---------------------------------------------------------------------------
+# 7. Диаграммы на главной (вызывается в конце; с -ChartsOnly — сразу)
+# ---------------------------------------------------------------------------
+$QUICK_CHART = "91a50c94-865f-4f5c-8b4e-e49659e69772"
+$CHART_PAGES = [ordered]@{   # страница -> заголовки двух диаграмм и подпись «без оценки»
+    "Dashboard"    = @("Портфель за станом",    "Проєкти за статусом", "Без оцінки")
+    "en/Dashboard" = @("Portfolio by health",   "Projects by status",  "Not rated")
+    "ru/Dashboard" = @("Портфель по состоянию", "Проекты по статусу",  "Без оценки")
+}
+function Update-Charts {
+    # активные — как в представлениях: без Скасовано / Архівний / Завершено
+    $act = @($P.Values | Where-Object { $_.Values.pmStatus -notin @("Скасовано", "Архівний", "Завершено") })
+    $rag = [ordered]@{}
+    # цвета секторов Quick chart не настраиваются (палитра: синий, жёлтый, оранжевый, тёмно-красный) —
+    # порядок подобран под неё, и все четыре категории выводятся всегда, чтобы цвета не сдвигались
+    foreach ($k in @("Зелений", "Жовтий", "", "Червоний")) { $rag[$k] = @($act | Where-Object { $_.Values.pmRAG -eq $k }).Count }
+    $st = [ordered]@{}
+    foreach ($k in @("Ініціація", "Планування", "Реалізація", "Призупинено")) { $st[$k] = @($act | Where-Object { $_.Values.pmStatus -eq $k }).Count }
+    Log ("Діаграми: стан {0}; статус {1}" -f (($rag.Keys | ForEach-Object { "$(if ($_) { $_ } else { '—' })=$($rag[$_])" }) -join ", "), (($st.Keys | ForEach-Object { "$_=$($st[$_])" }) -join ", "))
+
+    foreach ($page in $CHART_PAGES.Keys) {
+        $t = $CHART_PAGES[$page]
+        $charts = @(Get-PnPPageComponent -Page $page -ErrorAction SilentlyContinue | Where-Object { $_.WebPartId -eq $QUICK_CHART } |
+                    Sort-Object { $_.Section.Order }, { $_.Column.Order }, { $_.Order })
+        if ($charts.Count -lt 2) { if ($page -eq "Dashboard") { Warn "На главной нет двух диаграмм Quick chart — диаграммы не обновлены" }; continue }
+        $specs = @(
+            @{ Type = 1; Title = $t[0]; Points = @($rag.Keys | ForEach-Object { [pscustomobject]@{ L = $(if ($_) { $_ } else { $t[2] }); V = $rag[$_] } }) }   # 1 — круговая
+            @{ Type = 0; Title = $t[1]; Points = @($st.Keys  | ForEach-Object { [pscustomobject]@{ L = $_; V = $st[$_] } }) }                                # 0 — столбцы
+        )
+        $changed = $false
+        for ($i = 0; $i -lt 2; $i++) {
+            $sp = $specs[$i]
+            $sig = "$($sp.Type)|$($sp.Title)|" + (($sp.Points | ForEach-Object { "$($_.L)=$($_.V)" }) -join ";")
+            $hash = [Convert]::ToHexString([System.Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($sig))).Substring(0, 16)
+            if ([string]$charts[$i].PropertiesJson -match [regex]::Escape("`"pmoHash`":`"$hash`"")) { continue }
+            $n = 0
+            $data = @($sp.Points | ForEach-Object { $n++; @{ id = ("{0:X8}-0000-4000-8000-000000000000" -f $n); label = $_.L; value = [string]$_.V; valueNumber = $_.V } })
+            # заголовок диаграммы хранится в serverProcessedContent, данные — в properties (dataSourceType 0 — ввод вручную)
+            $json = @{ properties = @{ data = $data; type = $sp.Type; isInitialState = $false; dataSourceType = 0; listItemOrderBy = 0; pmoHash = $hash }
+                       serverProcessedContent = @{ htmlStrings = @{}; searchablePlainTexts = @{ title = $sp.Title }; imageSources = @{}; links = @{} } } |
+                    ConvertTo-Json -Depth 8 -Compress
+            $changed = $true
+            if (-not $DryRun) { Set-PnPPageWebPart -Page $page -Identity $charts[$i].InstanceId -PropertiesJson $json }
+        }
+        if ($changed) {
+            $stats.charts++
+            Log "  діаграми оновлено: $page"
+            if (-not $DryRun) { Set-PnPPage -Identity $page -Publish | Out-Null }
+        }
+    }
+}
+if ($ChartsOnly) {
+    Update-Charts
+    Log ("Готово. Сторінок з оновленими діаграмами: {0}, попереджень: {1}" -f $stats.charts, $stats.warnings) "Green"
+    return
+}
 
 # ---------------------------------------------------------------------------
 # 1–2. Новые проекты -> «Створення» в журнале
@@ -348,5 +411,10 @@ if ($SendReminders) {
     }
 }
 
-Log ("Готово. Звітів: {0}, записів у журнал: {1}, нових проєктів: {2}, коментарів: {3}, типів: {4}, прав: {5}, нагадувань: {6}, попереджень: {7}" -f `
-    $stats.reports, $stats.changes, $stats.created, $stats.comments, $stats.types, $stats.acl, $stats.reminders, $stats.warnings) "Green"
+# ---------------------------------------------------------------------------
+# 7. Диаграммы на главной — по состоянию после всех изменений выше
+# ---------------------------------------------------------------------------
+try { Update-Charts } catch { Warn "Диаграммы на главной не обновлены: $($_.Exception.Message)" }
+
+Log ("Готово. Звітів: {0}, записів у журнал: {1}, нових проєктів: {2}, коментарів: {3}, типів: {4}, прав: {5}, нагадувань: {6}, діаграм: {7}, попереджень: {8}" -f `
+    $stats.reports, $stats.changes, $stats.created, $stats.comments, $stats.types, $stats.acl, $stats.reminders, $stats.charts, $stats.warnings) "Green"

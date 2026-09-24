@@ -9,7 +9,8 @@
     Идемпотентен: проекты помечены кодом TEST-NN; уже существующий проект и всё, что к нему относится, пропускается.
     Данные записываются так, как их оставила бы синхронизация: карточка проекта соответствует последнему отчёту,
     отчёты отмечены применёнными (srApplied), в журнале есть строки «Створення» и «Статус-звіт».
-    Поле pmoAcl не заполняется — права выдаст первая синхронизация.
+    В pmoAcl записывается заглушка «seed»: синхронизация не добавит повторную строку «Створення»
+    (она пишет её для проектов с пустым pmoAcl), а права выдаст, потому что заглушка не совпадёт с хэшем.
 
 .EXAMPLE
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action seed
@@ -168,7 +169,12 @@ $comments = @(
 # Запись
 # ---------------------------------------------------------------------------
 $existing = @{}
-Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "pmCode" | ForEach-Object { if ($_["pmCode"]) { $existing[[string]$_["pmCode"]] = $_.Id } }
+foreach ($it in (Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "pmCode","pmoAcl")) {
+    if (-not $it["pmCode"]) { continue }
+    $existing[[string]$it["pmCode"]] = $it.Id
+    # демо-проекты из прежней версии скрипта — без заглушки (см. описание)
+    if ([string]$it["pmCode"] -like "TEST-*" -and -not $it["pmoAcl"]) { Set-PnPListItem -List "Lists/Projects" -Identity $it.Id -Values @{ pmoAcl = "seed" } -UpdateType SystemUpdate | Out-Null }
+}
 $ids = @{}; $new = @{}
 $n = @{ projects = 0; reports = 0; risks = 0; comments = 0; changes = 0 }
 
@@ -188,7 +194,7 @@ foreach ($p in $projects) {
     $v = @{ Title = $p.Title; pmCode = $p.Code; pmType = $p.Type; pmPriority = $p.Priority; pmDepartment = $p.Dept
             pmManager = $pm; pmOwner = (Person $p.Owner); pmStatus = $(if ($first) { "Планування" } else { "Ініціація" })
             pmProgress = 0; pmStart = (SpDate $p.Start); pmGoLive = (SpDate $p.GoLive); pmPlanEnd = (SpDate $p.PlanEnd)
-            pmBudget = $p.Budget; pmDescription = $p.Desc }
+            pmBudget = $p.Budget; pmDescription = $p.Desc; pmoAcl = "seed" }
     if ($p.St) { $v.pmStakeholders = @($p.St | ForEach-Object { Person $_ } | Select-Object -Unique | Where-Object { $_ -ne $pm }) }
     if (-not $v.pmStakeholders) { $v.Remove("pmStakeholders") }
     $item = Add-PnPListItem -List "Lists/Projects" -Values $v
