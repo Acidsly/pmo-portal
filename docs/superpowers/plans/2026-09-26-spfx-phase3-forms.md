@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> Ход работ: задачи 1–2 выполнены 2026-09-26 (ветка `change/spfx-phase3` от `change/spfx-phase2`). Перед задачами 4–8 — кросс-ревью плана. Следующая — задача 3.
+> Ход работ: задачи 1–4 выполнены 2026-09-26 (ветка `change/spfx-phase3` от `change/spfx-phase2`), поле `pmEditLog` создано на `pmo-test`. Перед задачами 5–8 — кросс-ревью плана. Следующая — задача 5.
 
 **Goal:** В приложении на `pmo-test` работают формы прототипа: новый проект и правка карточки, статус-отчёт (подстановка показателей, живой расчёт стану, обязательная причина), риск (создание, правка, просмотр) и комментарий; сохранённое сразу видно на экране, а журнал и права обновляет синхронизация.
 
@@ -211,10 +211,10 @@ Run → FAIL. **Step 2:** реализовать `write.ts` по интерфе�
 **Interfaces:**
 - Produces: поле проекта `pmEditLog` (Note, `Hidden='TRUE'`, скрыто из форм); функция синхронизации `EditLogRows($json)` → строки журнала `{ field, from, to, who, reason, when }`; шаг синхронизации «Правки карточки»: для каждого проекта с непустым `pmEditLog` — строки в «Зміни показників» с видом «Редагування картки» (время — `when` из записи), затем `pmEditLog` очищается (`SystemUpdate`). Правка поверх необработанной — записи объединяются: приложение читает текущий `pmEditLog` и дописывает в массив `entries`.
 
-- [ ] **Step 1:** `tests/cases/card-edit.json` — вход `pmEditLog` (одна и две записи) и ожидаемые строки журнала; раздел `Test-Scripts.ps1` «4b. Правки карточки» вызывает `EditLogRows` (через AST, как `CalcRag`) и сравнивает. Run → FAIL.
-- [ ] **Step 2:** `Deploy-PMO.ps1`: `F $P pmEditLog Note "Службове: правки картки" "System: card edits" "Служебное: правки карточки" "Hidden='TRUE' NumLines='6' RichText='FALSE'"`; `Set-FormVisibility $P @("pmEditLog") $false $false`. `Invoke-PMOSync.ps1`: `EditLogRows` + шаг после «Отчёт → карточка»; `pmEditLog` добавить в загружаемые значения проекта; в `-DryRun` — только журнал в консоль. Формат `pmEditLog`: `{"entries":[{"when":"…","who":"e-mail","reason":"…","diffs":[{"f":"title","from":"А","to":"Б"}]}]}` — `write.ts` пишет этот же формат (обновить тест Task 2: `entries[0]`).
-- [ ] **Step 3:** `Test-Scripts.ps1` → «Все проверки пройдены»; `-Env test -Action deploy` → поле создано; `-Env test -Action sync-dryrun` (после регистрации PMO Sync) или проверка на копии, как на этапе 1.
-- [ ] **Step 4: Commit** — «Синхронизация: правки карточки из приложения -> журнал «Редагування картки» …».
+- [x] **Step 1:** `tests/cases/card-edit.json` — вход `pmEditLog` (одна и две записи) и ожидаемые строки журнала; раздел `Test-Scripts.ps1` «4b. Правки карточки» вызывает `EditLogRows` (через AST, как `CalcRag`) и сравнивает. Run → FAIL.
+- [x] **Step 2:** `Deploy-PMO.ps1`: `F $P pmEditLog Note "Службове: правки картки" "System: card edits" "Служебное: правки карточки" "Hidden='TRUE' NumLines='6' RichText='FALSE'"`; `Set-FormVisibility $P @("pmEditLog") $false $false`. `Invoke-PMOSync.ps1`: `EditLogRows` + шаг после «Отчёт → карточка»; `pmEditLog` добавить в загружаемые значения проекта; в `-DryRun` — только журнал в консоль. Формат `pmEditLog`: `{"entries":[{"when":"…","who":"e-mail","reason":"…","diffs":[{"f":"title","from":"А","to":"Б"}]}]}` — `write.ts` пишет этот же формат (обновить тест Task 2: `entries[0]`).
+- [x] **Step 3:** `Test-Scripts.ps1` → «Все проверки пройдены»; `-Env test -Action deploy` → поле создано; `-Env test -Action sync-dryrun` (после регистрации PMO Sync) или проверка на копии, как на этапе 1.
+- [x] **Step 4: Commit** — «Синхронизация: правки карточки из приложения -> журнал «Редагування картки» …».
 
 ---
 
@@ -234,7 +234,7 @@ Toast: React.FC<{ msg: string }> + useToast(): [msg, show(m)]                   
 ```
 Разметка и классы — `frow`, `fgrid2`, `ragpick`, `segPick`, `check`, `err`, `actions`, `btn primary` прототипа (`projectForm` / `reportForm` / `riskForm`, строки 1353–1550). `PeoplePicker` — классы `person`, `pav`, `pop-list`/`pop-row` (выпадающий список под полем).
 
-- [ ] **Step 1:** реализовать; **Step 2:** сборка — код 0; **Step 3: Commit** — «SPFx: поля форм и сообщения …».
+- [x] **Step 1:** реализовать; **Step 2:** сборка — код 0; **Step 3: Commit** — «SPFx: поля форм и сообщения …».
 
 ---
 
