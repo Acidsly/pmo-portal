@@ -29,7 +29,11 @@ function Get-Auth($section) {
     elseif ($section.CertificatePath) {
         $pwdEnv = $section.CertificatePasswordEnv
         $plain = if ($pwdEnv) { [Environment]::GetEnvironmentVariable($pwdEnv) } else { $null }
-        if (-not $plain) { throw "Задайте пароль сертификата в переменной окружения $pwdEnv." }
+        # macOS: если переменной нет (приложение запущено не из терминала) — берём пароль из «Связки ключей»
+        if (-not $plain -and $pwdEnv -and $IsMacOS) {
+            $plain = (& security find-generic-password -a $env:USER -s $pwdEnv -w 2>$null)
+        }
+        if (-not $plain) { throw "Нет пароля сертификата: добавьте его в «Связку ключей» под именем $pwdEnv (security add-generic-password -a `"`$USER`" -s $pwdEnv -w) или в переменную окружения $pwdEnv." }
         $a.Tenant = $cfg.Tenant
         $a.CertificatePath = (Resolve-Path (Join-Path $root $section.CertificatePath)).Path
         $a.CertificatePassword = ConvertTo-SecureString $plain -AsPlainText -Force

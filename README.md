@@ -4,6 +4,7 @@
 
 - Как развернуть и как всё устроено — [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 - Как работает Claude Code с этим репозиторием — [CLAUDE.md](CLAUDE.md)
+- Подключение к Claude Code — [docs/SETUP-CLAUDE-CODE.md](docs/SETUP-CLAUDE-CODE.md)
 - Прототип интерфейса — [prototype/pmo-prototype.html](prototype/pmo-prototype.html)
 - История изменений — [CHANGELOG.md](CHANGELOG.md)
 
