@@ -3,7 +3,7 @@ import { ChangeEntry, ChangeEvent } from '../data/types';
 /** Внутреннее имя поля проекта -> ключ FLD прототипа (подпись в истории изменений). */
 export const FIELD_KEY: Record<string, string> = { Title: 'title', pmStatus: 'status', pmRAG: 'rag', pmType: 'type', pmProgress: 'progress',
   pmStart: 'start', pmGoLive: 'golive', pmPlanEnd: 'plan', pmForecastEnd: 'fc', pmActualCost: 'actual', pmPriority: 'prio', pmManager: 'pm',
-  pmOwner: 'owner', pmStakeholders: 'stakeholders', pmDepartment: 'dept', pmLoop: 'loop', pmCode: 'code' };
+  pmOwner: 'owner', pmStakeholders: 'stakeholders', pmDepartment: 'dept', pmLoop: 'loop', pmCode: 'code', pmBudget: 'budget' };
 const KIND: Record<string, ChangeEvent['kind']> = { 'Створення': 'create', 'Статус-звіт': 'report', 'Редагування картки': 'edit' };
 
 /** Журнал «Зміни показників» (строка на поле) -> события истории прототипа, новые сверху. */

@@ -12,6 +12,8 @@ export interface Project {
   canEdit: boolean;
   /** На экране учтён неприменённый отчёт — синхронизация ещё не записала его в карточку. */
   pending: boolean;
+  /** Необработанные синхронизацией правки карточки (pmEditLog) — приложение дописывает к ним новые. */
+  editLog?: string;
 }
 
 export interface StatusReport {

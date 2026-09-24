@@ -65,7 +65,7 @@ $ErrorActionPreference = "Stop"
 $PMO_GROUP = "PMO-адміністратори"
 $L_PROJ = "Lists/Projects"; $L_REP = "Lists/StatusReports"; $L_RISK = "Lists/RisksIssues"
 $L_CHG  = "Lists/KeyChanges"; $L_CMT = "Lists/ProjectComments"; $L_STAT = "Lists/PortfolioStats"
-$stats = [ordered]@{ reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; reminders = 0; stats = 0; cards = 0; warnings = 0 }
+$stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; reminders = 0; stats = 0; cards = 0; warnings = 0 }
 
 function Log([string]$m, [string]$c = "Gray") { Write-Host ("{0:HH:mm:ss} {1}" -f (Get-Date), $m) -ForegroundColor $c }
 function Warn([string]$m) { $stats.warnings++; Write-Warning $m }
@@ -136,10 +136,30 @@ $MAP = [ordered]@{
 }
 $DATE_FIELDS = @("pmStart","pmGoLive","pmPlanEnd","pmForecastEnd","pmLastUpdate","pmArchivedAt")
 
+# Правки карточки из приложения SPFx (поле pmEditLog): ключ прототипа -> внутреннее имя, подпись строки журнала
+$EDIT_DISPLAY = @{ Title = "Назва проєкту"; pmCode = "Код проєкту"; pmDepartment = "Напрям"; pmLoop = "Посилання на картку в Loop"; pmPriority = "Пріоритет"
+                   pmManager = "PM"; pmOwner = "Власник"; pmStakeholders = "Стейкхолдери"; pmBudget = "Бюджет (план)" }
+function EditLogRows([string]$json) {
+    # {"entries":[{"when","who","reason","diffs":[{"f","from","to"}]}]} -> строки журнала; повреждённое содержимое — пусто
+    $key = @{ title = "Title"; code = "pmCode"; dept = "pmDepartment"; loop = "pmLoop"; prio = "pmPriority"; pm = "pmManager"
+              owner = "pmOwner"; stakeholders = "pmStakeholders"; budget = "pmBudget" }
+    if (-not $json) { return @() }
+    try { $log = $json | ConvertFrom-Json -ErrorAction Stop } catch { return @() }
+    $rows = @()
+    foreach ($e in @($log.entries)) {
+        # ConvertFrom-Json превращает ISO-время в DateTime — возвращаем в ISO UTC
+        $when = if ($e.when -is [datetime]) { $e.when.ToUniversalTime().ToString("o") } else { [string]$e.when }
+        foreach ($d in @($e.diffs)) {
+            $f = $key[[string]$d.f]; if (-not $f) { $f = [string]$d.f }
+            $rows += [pscustomobject]@{ field = $f; from = [string]$d.from; to = [string]$d.to; who = [string]$e.who; reason = [string]$e.reason; when = $when }
+        }
+    }
+    return $rows
+}
 function Add-Change($projectId, [string]$field, [string]$from, [string]$to, [string]$kind, [string]$who, [string]$reason, [string]$when) {
     $stats.changes++
     if ($DryRun) { Log "    журнал: [$kind] $($DISPLAY[$field] ?? $field): $from -> $to"; return }
-    $vals = @{ Title = ($DISPLAY[$field] ?? "Проєкт"); kcProject = $projectId; kcDate = ($when ?? (Get-Date).ToUniversalTime().ToString("o"))
+    $vals = @{ Title = ($DISPLAY[$field] ?? $EDIT_DISPLAY[$field] ?? "Проєкт"); kcProject = $projectId; kcDate = ($when ?? (Get-Date).ToUniversalTime().ToString("o"))
                kcKind = $kind; kcField = $field; kcFrom = $from; kcTo = $to; kcReason = $reason }
     if ($who) { $vals.kcChangedBy = $who }
     try { Add-PnPListItem -List $L_CHG -Values $vals | Out-Null }
@@ -310,6 +330,17 @@ foreach ($r in $pending) {
 }
 
 # ---------------------------------------------------------------------------
+# 2a. Правки карточки из приложения SPFx -> журнал «Редагування картки», поле очищается
+# ---------------------------------------------------------------------------
+foreach ($p in $PROJ.Values) {
+    $rows = @(EditLogRows ([string]$p.Item["pmEditLog"]))
+    if (-not [string]$p.Item["pmEditLog"]) { continue }
+    foreach ($r in $rows) { Add-Change $p.Item.Id $r.field $r.from $r.to "Редагування картки" $r.who $r.reason $r.when; $stats.edits++ }
+    Log "  правки картки «$($p.Item["Title"])»: $($rows.Count)"
+    if (-not $DryRun) { Set-PnPListItem -List $L_PROJ -Identity $p.Item.Id -Values @{ pmEditLog = "" } -UpdateType SystemUpdate | Out-Null }
+}
+
+# ---------------------------------------------------------------------------
 # 3. «Останній коментар»
 # ---------------------------------------------------------------------------
 $latest = @{}
@@ -462,5 +493,6 @@ if ($SendReminders) {
 try { Update-Stats } catch { Warn "Показатели портфеля не обновлены: $($_.Exception.Message)" }
 try { Update-CardInfo $ACLS } catch { Warn "«Пов'язані записи» не обновлены: $($_.Exception.Message)" }
 
+Log ("Правок картки: {0}" -f $stats.edits)
 Log ("Готово. Звітів: {0}, записів у журнал: {1}, нових проєктів: {2}, коментарів: {3}, типів: {4}, прав: {5}, нагадувань: {6}, показників: {7}, карток: {8}, попереджень: {9}" -f `
     $stats.reports, $stats.changes, $stats.created, $stats.comments, $stats.types, $stats.acl, $stats.reminders, $stats.stats, $stats.cards, $stats.warnings) "Green"

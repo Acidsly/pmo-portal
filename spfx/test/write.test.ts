@@ -1,6 +1,7 @@
 import { reportBody, projectBody, projectEditBody, riskBody, commentBody, spDate } from '../src/webparts/pmoPortal/data/write';
 import { reportFromProject, ProjectDraft } from '../src/webparts/pmoPortal/logic/forms';
 import { Project } from '../src/webparts/pmoPortal/data/types';
+import editCases from '../../tests/cases/card-edit.json';
 
 const P = (x: Partial<Project>): Project => ({ id: 1, code: '', title: 'P', type: 'Звичайний', priority: '', manager: null, owner: null, stakeholders: [],
   department: '', status: 'Реалізація', rag: '', progress: 0, start: '', goLive: '', planEnd: '', forecastEnd: '', archivedAt: '', budget: 0,
@@ -38,4 +39,12 @@ test('риск и комментарий', () => {
     .toEqual({ riProjectId: 1, Title: 'Р', riType: 'Ризик', riProbability: 4, riImpact: 5, riOwnerId: 9, riStatus: 'Відкрито', riDue: null, riMitigation: '' });
   expect(commentBody(1, 'Текст')).toEqual({ cmProjectId: 1, cmText: 'Текст' });
   expect(spDate('')).toBeNull(); expect(spDate('2026-03-05')).toBe('2026-03-05T12:00:00Z');
+});
+
+test('формат pmEditLog совпадает с тем, что разбирает синхронизация (tests/cases/card-edit.json)', () => {
+  const ours = JSON.parse(String(projectEditBody(draft({ title: 'Б' }), [{ f: 'title', from: 'А', to: 'Б' }], 'pm@x.ua', '', '').pmEditLog));
+  const theirs = JSON.parse(editCases[0].log);
+  expect(Object.keys(ours)).toEqual(Object.keys(theirs));
+  expect(Object.keys(ours.entries[0]).sort()).toEqual(Object.keys(theirs.entries[0]).sort());
+  expect(Object.keys(ours.entries[0].diffs[0]).sort()).toEqual(Object.keys(theirs.entries[0].diffs[0]).sort());
 });

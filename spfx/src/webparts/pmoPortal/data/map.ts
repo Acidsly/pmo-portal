@@ -8,7 +8,7 @@ const people = (...fields: string[]): string[] => fields.reduce<string[]>((a, f)
 
 export const PROJECT_SELECT = ['Id', 'Title', 'pmCode', 'pmType', 'pmPriority', 'pmDepartment', 'pmStatus', 'pmRAG', 'pmProgress',
   'pmStart', 'pmGoLive', 'pmPlanEnd', 'pmForecastEnd', 'pmArchivedAt', 'pmBudget', 'pmActualCost', 'pmLastUpdate', 'pmLastReport',
-  'pmLastComment', 'pmLoop', 'pmDescription', 'EffectiveBasePermissions', ...people('pmManager', 'pmOwner', 'pmStakeholders')].join(',');
+  'pmLastComment', 'pmLoop', 'pmDescription', 'pmEditLog', 'EffectiveBasePermissions', ...people('pmManager', 'pmOwner', 'pmStakeholders')].join(',');
 export const PROJECT_EXPAND = 'pmManager,pmOwner,pmStakeholders';
 export const REPORT_SELECT = ['Id', 'Title', 'srProjectId', 'srDate', 'srPeriod', 'srSchedule', 'srBudget', 'srResources', 'srStatus', 'srType',
   'srProgress', 'srStart', 'srGoLive', 'srPlanEnd', 'srForecastEnd', 'srActualCost', 'srKeyReason', 'srDone', 'srNext', 'srIssues',
@@ -38,7 +38,7 @@ export function mapProject(r: any): Project {
     start: dateOnly(r.pmStart), goLive: dateOnly(r.pmGoLive), planEnd: dateOnly(r.pmPlanEnd), forecastEnd: dateOnly(r.pmForecastEnd),
     archivedAt: dateOnly(r.pmArchivedAt), budget: n(r.pmBudget), actualCost: n(r.pmActualCost), lastUpdate: dateOnly(r.pmLastUpdate),
     lastReport: s(r.pmLastReport), lastComment: s(r.pmLastComment), loop: r.pmLoop ? s(r.pmLoop.Url) : '', description: s(r.pmDescription),
-    canEdit: canEdit(r.EffectiveBasePermissions), pending: false };
+    canEdit: canEdit(r.EffectiveBasePermissions), pending: false, editLog: s(r.pmEditLog) };
 }
 
 export function mapReport(r: any): StatusReport {

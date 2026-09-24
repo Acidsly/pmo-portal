@@ -28,7 +28,7 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("scripts/gallery-view.json", "config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json")) {
+foreach ($f in @("scripts/gallery-view.json", "config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
@@ -62,6 +62,17 @@ foreach ($c in $dcases) {
 # ToSpDate -> DateOnly без сдвига
 $r = DateOnly ([datetime]::Parse((ToSpDate "2026-03-05"), [cultureinfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AdjustToUniversal))
 if ($r -eq "2026-03-05") { Ok "ToSpDate -> DateOnly: $r" } else { Bad "ToSpDate -> DateOnly: $r, ожидалось 2026-03-05" }
+
+Write-Host "4b. Правки карточки из приложения -> журнал (Invoke-PMOSync.ps1: EditLogRows)"
+$fn = $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "EditLogRows" }, $true) | Select-Object -First 1
+Invoke-Expression $fn.Extent.Text
+foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/card-edit.json") | ConvertFrom-Json)) {
+    $got = @(EditLogRows $c.log) | ForEach-Object { "$($_.field)|$($_.from)|$($_.to)|$($_.who)|$($_.reason)|$($_.when)" }
+    # ConvertFrom-Json превращает ISO-время ожидаемых строк в DateTime — возвращаем в ISO UTC, как EditLogRows
+    $want = @($c.rows) | ForEach-Object { $w = if ($_.when -is [datetime]) { $_.when.ToUniversalTime().ToString("o") } else { $_.when }
+        "$($_.field)|$($_.from)|$($_.to)|$($_.who)|$($_.reason)|$w" }
+    if ((@($got) -join "`n") -eq (@($want) -join "`n")) { Ok $c.note } else { Bad "$($c.note): получено $(@($got) -join '; ')" }
+}
 
 Write-Host "5. Прототип"
 $html = Get-Content -Raw (Join-Path $root "prototype/pmo-prototype.html")

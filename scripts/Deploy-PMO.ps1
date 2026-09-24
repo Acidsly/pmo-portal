@@ -247,6 +247,8 @@ F $P pmKMoney      Calculated "Бюджет і звіт"    "Budget and report" 
              @("pmActualCost","pmBudget","pmLastUpdate"))
 # Ссылки на отчёты, риски, журнал и комментарии проекта и список доступа — заполняет синхронизация
 F $P pmCardInfo    Note     "Пов'язані записи і доступ" "Related records and access" "Связанные записи и доступ" "NumLines='6' RichText='TRUE' RichTextMode='FullHtml'"
+# Правки карточки из приложения SPFx: «было / стало» до переноса в журнал синхронизацией (она же очищает поле)
+F $P pmEditLog     Note     "Службове: правки картки" "System: card edits" "Служебное: правки карточки" "Hidden='TRUE' NumLines='6' RichText='FALSE'"
 $script:Loc += , @($P, "Title", "Назва проєкту", "Project name", "Название проекта")
 
 # Миграция из ранних версий: «Product» (один пользователь) -> «Стейкхолдери» (несколько)
