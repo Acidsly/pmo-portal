@@ -1,0 +1,34 @@
+{
+  "test": {
+    "TenantName": "contoso",
+    "Tenant": "contoso.onmicrosoft.com",
+    "SiteAlias": "pmo-test",
+    "Owner": "yurii@contoso.com",
+    "ReminderFrom": "pmo@contoso.com",
+    "Deploy": {
+      "ClientId": "00000000-0000-0000-0000-000000000000",
+      "CertificatePath": "certs/PMO Automation.pfx",
+      "CertificatePasswordEnv": "PMO_AUTOMATION_CERT_PASSWORD"
+    },
+    "Sync": {
+      "ClientId": "00000000-0000-0000-0000-000000000000",
+      "CertificatePath": "certs/PMO Sync.pfx",
+      "CertificatePasswordEnv": "PMO_SYNC_CERT_PASSWORD"
+    }
+  },
+  "prod": {
+    "TenantName": "contoso",
+    "Tenant": "contoso.onmicrosoft.com",
+    "SiteAlias": "pmo",
+    "Owner": "yurii@contoso.com",
+    "ReminderFrom": "pmo@contoso.com",
+    "Deploy": {
+      "ClientId": "00000000-0000-0000-0000-000000000000"
+    },
+    "Sync": {
+      "ClientId": "00000000-0000-0000-0000-000000000000",
+      "CertificatePath": "certs/PMO Sync.pfx",
+      "CertificatePasswordEnv": "PMO_SYNC_CERT_PASSWORD"
+    }
+  }
+}

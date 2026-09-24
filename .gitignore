@@ -1,0 +1,14 @@
+# секреты и сертификаты — никогда не в git
+certs/
+*.pfx
+*.cer
+*.key
+.env
+.env.*
+config/environments.json
+# локальные настройки Claude Code
+.claude/settings.local.json
+# служебное
+.DS_Store
+Thumbs.db
+*.log

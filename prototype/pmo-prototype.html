@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Портфель проектов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap&amp;subset=cyrillic" rel="stylesheet">
+<style>:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+  --theme:#007aff; --theme-2:#0062cc; --theme-soft:rgba(0,122,255,.12);
+  --bg-page:#f5f5f7; --bg:#ffffff; --bg-alt:#f2f2f7; --bg-hover:rgba(0,0,0,.04);
+  --glass:rgba(255,255,255,.72); --glass-line:rgba(0,0,0,.08);
+  --text:#1d1d1f; --text-2:#6e6e73; --text-3:#aeaeb2;
+  --line:rgba(0,0,0,.08); --track:#e5e5ea;
+  --g:#34c759; --y:#ff9f0a; --r:#ff3b30; --na:#c7c7cc;
+  --strat-bg:rgba(175,82,222,.12); --strat:#8e44c9;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.06);
+  --shadow-hi:0 2px 6px rgba(0,0,0,.06),0 18px 40px rgba(0,0,0,.10);
+  --radius:20px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --theme:#0a84ff; --theme-2:#409cff; --theme-soft:rgba(10,132,255,.2);
+    --bg-page:#000000; --bg:#1c1c1e; --bg-alt:#2c2c2e; --bg-hover:rgba(255,255,255,.06);
+    --glass:rgba(22,22,24,.72); --glass-line:rgba(255,255,255,.1);
+    --text:#f5f5f7; --text-2:#98989d; --text-3:#636366;
+    --line:rgba(255,255,255,.1); --track:#3a3a3c;
+    --g:#30d158; --y:#ffd60a; --r:#ff453a; --na:#48484a;
+    --strat-bg:rgba(191,90,242,.2); --strat:#da8fff;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
+    --shadow-hi:0 2px 6px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --theme:#0a84ff; --theme-2:#409cff; --theme-soft:rgba(10,132,255,.2);
+  --bg-page:#000000; --bg:#1c1c1e; --bg-alt:#2c2c2e; --bg-hover:rgba(255,255,255,.06);
+  --glass:rgba(22,22,24,.72); --glass-line:rgba(255,255,255,.1);
+  --text:#f5f5f7; --text-2:#98989d; --text-3:#636366;
+  --line:rgba(255,255,255,.1); --track:#3a3a3c;
+  --g:#30d158; --y:#ffd60a; --r:#ff453a; --na:#48484a;
+  --strat-bg:rgba(191,90,242,.2); --strat:#da8fff;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
+  --shadow-hi:0 2px 6px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.5);
+}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 120px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:15px;line-height:1.47;color:var(--text);background:var(--bg-page);-webkit-font-smoothing:antialiased;transition:background-color .25s,color .25s}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--theme-soft);outline-offset:2px;border-radius:10px}
+.muted{color:var(--text-2)}
+
+/* Frosted header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--glass);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--glass-line)}
+.top-in{max-width:1280px;margin:0 auto;padding:14px 32px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;margin-right:auto}
+.logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(145deg,#0a84ff,#5e5ce6);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px;flex:none}
+.brand-name{font-weight:600;font-size:17px;letter-spacing:-.01em;line-height:1.2}
+.brand-sub{font-size:12px;color:var(--text-2)}
+.nav{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:12px;overflow-x:auto;max-width:100%}
+.nav button{border:0;background:none;padding:7px 16px;border-radius:9px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text-2);white-space:nowrap;transition:background-color .2s,color .2s}
+.nav button:hover{color:var(--text)}
+.nav button[aria-current="page"]{background:var(--bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.controls{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap}
+.seg{display:inline-flex;background:var(--bg-alt);padding:3px;border-radius:10px;gap:2px}
+.seg button{border:0;background:none;padding:5px 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-2);display:inline-flex;align-items:center;gap:6px;min-height:28px}
+.seg button[aria-pressed="true"]{background:var(--bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.viewas{display:inline-flex;align-items:center;gap:8px;background:var(--bg-alt);border-radius:10px;padding:3px 4px 3px 10px;font-size:13px;color:var(--text-2)}
+.viewas select{border:0;background:var(--bg);border-radius:8px;padding:5px 8px;font-weight:600;font-size:13px;box-shadow:0 1px 3px rgba(0,0,0,.12);max-width:200px}
+@media (max-width:1100px){.top-in{gap:12px}.nav{order:3;width:100%}.controls{margin-left:0}}
+
+main{max-width:1280px;margin:0 auto;padding:40px 32px 96px}
+@media (max-width:720px){main,.top-in{padding-left:16px;padding-right:16px} main{padding-top:24px}}
+.hero{margin-bottom:28px}
+.page-title{font-size:40px;font-weight:700;letter-spacing:-.025em;line-height:1.1;margin:0}
+.page-sub{color:var(--text-2);font-size:17px;margin:8px 0 0}
+@media (max-width:720px){.page-title{font-size:30px}}
+.msgbar{display:flex;gap:10px;align-items:flex-start;background:var(--theme-soft);color:var(--text);border-radius:14px;padding:12px 16px;font-size:13px;margin-bottom:28px;max-width:900px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;margin-bottom:24px}
+.stack{margin-bottom:24px}
+@media (max-width:920px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.wp{background:var(--bg);border-radius:var(--radius);padding:24px 26px;min-width:0;box-shadow:var(--shadow)}
+.wp-h{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 16px;flex-wrap:wrap}
+.wp-h h2{font-size:20px;font-weight:600;letter-spacing:-.015em;margin:0}
+.wp-h > span{display:inline-flex;align-items:center;gap:12px}
+.more{background:none;border:0;color:var(--theme);cursor:pointer;padding:0;font-size:14px;font-weight:500;white-space:nowrap}
+.more:hover{text-decoration:underline}
+.hint{font-size:13px;color:var(--text-2);margin:12px 4px 0;max-width:820px}
+
+/* Lists */
+.tablewrap{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{text-align:left;font-weight:500;font-size:12px;color:var(--text-2);padding:8px 14px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:14px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+td.wrap{white-space:normal;min-width:220px}
+tbody tr.row td{transition:background-color .15s}
+tbody tr.row:hover td{background:var(--bg-hover)}
+tr.grp td{font-weight:600;cursor:pointer;user-select:none;padding-top:20px;font-size:13px;color:var(--text-2);border-bottom:1px solid var(--line)}
+tr.grp .chev{display:inline-block;width:18px;transition:transform .2s}
+tr.grp.collapsed .chev{transform:rotate(-90deg)}
+.link{background:none;border:0;padding:0;font-weight:600;cursor:pointer;text-align:left;color:var(--text)}
+.link:hover{color:var(--theme)}
+.empty{color:var(--text-2);padding:20px 0;margin:0}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+
+.rag{display:inline-flex;align-items:center;gap:8px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.dot.sm{width:8px;height:8px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:999px;font-size:12px;font-weight:600;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--text);white-space:nowrap}
+.pill .dot{background:var(--c)}
+.prog{display:inline-flex;align-items:center;gap:10px;min-width:130px}
+.prog .track{flex:1;height:6px;border-radius:3px;background:var(--track);overflow:hidden;min-width:70px}
+.prog .track i{display:block;height:100%;border-radius:3px}
+.prog b{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
+.late{color:var(--r);font-weight:600}
+.warn{color:var(--y);font-weight:600}
+.over{color:var(--r);font-weight:600}
+.chip{display:inline-block;min-width:30px;text-align:center;padding:2px 8px;border-radius:8px;color:#fff;font-weight:700;font-size:12px}
+.flag{display:inline-block;padding:3px 10px;border-radius:999px;background:var(--theme-soft);color:var(--theme);font-size:12px;font-weight:600}
+.strat{display:inline-block;padding:3px 10px;border-radius:999px;background:var(--strat-bg);color:var(--strat);font-weight:600;font-size:12px}
+.loop{color:var(--theme);font-weight:600;text-decoration:none;font-size:14px}
+.loop:hover{text-decoration:underline}
+
+.person{display:inline-flex;gap:10px;align-items:center;min-width:0}
+.pav{width:28px;height:28px;border-radius:50%;color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none;letter-spacing:.02em}
+.pav.lg{width:40px;height:40px;font-size:14px}
+.pn{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.pn b{font-weight:600}
+.pn small{color:var(--text-2);font-size:12px;overflow:hidden;text-overflow:ellipsis}
+
+.cmdbar{display:flex;align-items:center;gap:8px;padding:0 0 16px;flex-wrap:wrap}
+.cmd{background:var(--bg-alt);border:0;padding:8px 14px;cursor:pointer;display:inline-flex;gap:8px;align-items:center;border-radius:10px;white-space:nowrap;font-size:14px;font-weight:500}
+.cmd:hover{background:var(--track)}
+.cmd.primary{background:var(--theme);color:#fff}
+.cmd.primary:hover{background:var(--theme-2)}
+.spacer{flex:1}
+.viewsel{display:inline-flex;align-items:center;gap:8px;color:var(--text-2);font-size:13px}
+.viewsel select{border:0;background:var(--bg-alt);border-radius:10px;padding:8px 12px;min-width:200px;font-size:14px;font-weight:500}
+.listcard{background:var(--bg);border-radius:var(--radius);padding:22px 24px 12px;box-shadow:var(--shadow)}
+
+/* Tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+.tile{background:var(--bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;display:flex;flex-direction:column;gap:16px;cursor:pointer;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s;min-width:0}
+.tile:hover{transform:translateY(-3px);box-shadow:var(--shadow-hi)}
+.listcard .tiles{padding:4px 0 12px}
+.wp .tiles .tile{box-shadow:0 0 0 1px var(--line)}
+.wp .tiles .tile:hover{box-shadow:var(--shadow-hi)}
+.tile-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tile-top .code{font-size:12px;color:var(--text-2);font-weight:500;letter-spacing:.02em;margin-right:auto}
+.tile-t{font-size:19px;font-weight:600;line-height:1.28;letter-spacing:-.015em;margin:-4px 0 0}
+.tile-pm{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;background:var(--bg-alt)}
+.tile-prog .pl{display:flex;justify-content:space-between;font-size:13px;color:var(--text-2);margin-bottom:8px}
+.tile-prog .pl b{color:var(--text);font-variant-numeric:tabular-nums}
+.tile-prog .track{height:8px;border-radius:4px;background:var(--track);overflow:hidden}
+.tile-prog .track i{display:block;height:100%;border-radius:4px}
+.tile-upd{border-top:1px solid var(--line);padding-top:14px;flex:1}
+.tile-upd .ul{font-size:12px;color:var(--text-2);display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.tile-upd .tx{font-size:14px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.tile-f{display:flex;justify-content:flex-end;min-height:20px}
+
+/* Charts */
+.donut-wrap{display:flex;align-items:center;gap:36px;flex-wrap:wrap}
+.legend{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.legend li{display:flex;align-items:center;gap:10px;font-size:14px}
+.legend b{font-variant-numeric:tabular-nums;min-width:20px;display:inline-block;font-size:17px}
+svg text{font-family:inherit}
+.chart{width:100%;height:auto;max-width:560px;display:block}
+
+/* Sheet */
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.28);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .3s;z-index:19}
+#scrim.open{opacity:1;pointer-events:auto}
+#panel{position:fixed;top:0;right:0;bottom:0;width:min(680px,100%);background:var(--bg);box-shadow:var(--shadow-hi);border-radius:28px 0 0 28px;transform:translateX(104%);transition:transform .38s cubic-bezier(.2,.8,.2,1);overflow-y:auto;z-index:20;padding:calc(24px + env(safe-area-inset-top,0px)) 32px calc(40px + env(safe-area-inset-bottom,0px))}
+@media (max-width:680px){#panel{border-radius:0;padding-left:20px;padding-right:20px}}
+#panel.open{transform:none}
+.ph{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.ph h2{font-size:28px;font-weight:700;letter-spacing:-.02em;margin:4px 0 0;line-height:1.15}
+.x{background:var(--bg-alt);border:0;width:34px;height:34px;border-radius:50%;cursor:pointer;display:grid;place-items:center;flex:none;color:var(--text-2)}
+.x:hover{background:var(--track)}
+.badges{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;background:var(--bg-alt);font-size:12px;font-weight:600;color:var(--text-2)}
+.btn{border:0;background:var(--bg-alt);padding:10px 20px;border-radius:12px;cursor:pointer;font-weight:600;font-size:15px}
+.btn:hover{background:var(--track)}
+.btn.primary{background:var(--theme);color:#fff}
+.btn.primary:hover{background:var(--theme-2)}
+.sec{margin-top:28px}
+.sec h3{font-size:13px;font-weight:600;color:var(--text-2);margin:0 0 10px;letter-spacing:.01em}
+.group{background:var(--bg-alt);border-radius:16px;padding:4px 16px}
+.kv{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--line);min-height:48px}
+.kv:last-child{border-bottom:0}
+.kv .k{color:var(--text-2);font-size:14px}
+.kv .v{text-align:right;font-weight:500}
+.k{font-size:12px;color:var(--text-2)}
+.pmcard{display:flex;gap:14px;align-items:center;background:var(--bg-alt);border-radius:16px;padding:14px 16px}
+.pmcard .pn b{font-size:16px}
+.pmcard .role{margin-left:auto;font-size:12px;font-weight:600;color:var(--theme);background:var(--theme-soft);padding:3px 10px;border-radius:999px;white-space:nowrap}
+.people2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:10px}
+.people2 > div{background:var(--bg-alt);border-radius:16px;padding:12px 14px}
+@media (max-width:520px){.people2{grid-template-columns:minmax(0,1fr)}}
+.access{background:var(--bg-alt);border-radius:16px;padding:14px 16px;font-size:14px}
+.access ol{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:8px}
+.access li{display:flex;align-items:center;gap:10px}
+.access .lvl{margin-left:auto;font-size:12px;color:var(--text-2);white-space:nowrap}
+.access .arrow{color:var(--text-3);font-size:12px;padding-left:9px}
+.matrix td,.matrix th{padding:8px 8px;text-align:center;border-bottom:1px solid var(--line)}
+.matrix td:first-child,.matrix th:first-child{text-align:left;color:var(--text-2);font-weight:400}
+.rep{background:var(--bg-alt);border-radius:16px;padding:14px 16px;margin-bottom:10px}
+.rep-h{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.rep p{margin:4px 0;font-size:14px}
+.rep .lbl{color:var(--text-2)}
+.hist-c{padding:10px 0;border-bottom:1px solid var(--line)}
+.hist-c:last-of-type{border-bottom:0}
+.hist-c .who{font-size:12px;color:var(--text-2);margin-bottom:2px}
+.cmts{background:var(--bg-alt);border-radius:16px;padding:6px 16px 12px}
+.cmt{display:inline-flex;gap:8px;align-items:center;max-width:300px}
+.cmt span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cnt{background:var(--theme-soft);border:0;border-radius:999px;padding:1px 8px;font-size:12px;cursor:pointer;color:var(--theme);font-weight:700;flex:none}
+.note{font-size:12px;color:var(--text-2);margin:10px 4px 0}
+
+/* Form */
+form .frow{margin-bottom:16px}
+form label.t,form legend{display:block;font-weight:600;margin-bottom:6px;font-size:13px;padding:0;color:var(--text-2)}
+form input[type=text],form input[type=number],form input[type=date],form select,form textarea{width:100%;border:1px solid transparent;border-radius:12px;padding:10px 12px;background:var(--bg-alt);transition:border-color .15s,background-color .15s}
+form input:focus,form select:focus,form textarea:focus{outline:none;border-color:var(--theme);background:var(--bg)}
+form textarea{min-height:72px;resize:vertical}
+.fgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:520px){.fgrid{grid-template-columns:minmax(0,1fr)}}
+fieldset.ragpick{border:0;margin:0 0 14px;padding:0}
+.ragpick .opts{display:inline-flex;background:var(--bg-alt);padding:3px;border-radius:12px;gap:2px;flex-wrap:wrap}
+.ragpick label{display:inline-flex;align-items:center;gap:6px;border-radius:9px;padding:6px 14px;cursor:pointer;font-size:14px;font-weight:500}
+.ragpick input{position:absolute;opacity:0;pointer-events:none}
+.ragpick input:checked + label{background:var(--bg);box-shadow:0 1px 3px rgba(0,0,0,.14);font-weight:600}
+.ragpick input:focus-visible + label{outline:3px solid var(--theme-soft)}
+.dims{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 16px}
+@media (max-width:560px){.dims{grid-template-columns:minmax(0,1fr)}}
+.err{color:var(--r);font-weight:600;margin:8px 0}
+.actions{display:flex;gap:10px;margin-top:20px}
+.check{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14px}
+.check input{width:18px;height:18px;accent-color:var(--theme)}
+
+#toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--glass);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);color:var(--text);padding:14px 20px;border-radius:16px;box-shadow:var(--shadow-hi);border:1px solid var(--glass-line);opacity:0;pointer-events:none;transition:opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1);z-index:30;max-width:min(560px,calc(100% - 32px));font-size:14px}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px}
+.tile-f{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:28px;margin-top:auto}
+.tile-pm{display:inline-flex;align-items:center;gap:8px;margin-left:auto;min-width:0;background:none;padding:0}
+.tile-pm b{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile-upd{flex:0 1 auto}
+.actbar{display:flex;gap:8px;flex-wrap:wrap}
+.note.lock{background:var(--bg-alt);border-radius:12px;padding:10px 14px;margin:0;font-size:13px}
+.desc{margin:18px 0 0;color:var(--text-2);font-size:15px;max-width:60ch}
+.pav.sm{width:22px;height:22px;font-size:9px}
+.chg{padding:12px 0;border-bottom:1px solid var(--line)}
+.chg:last-of-type{border-bottom:0}
+.chg-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+.chg-k{margin-left:auto;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--bg);color:var(--text-2)}
+.chg-key{background:var(--theme-soft);color:var(--theme)}
+.chg-create{background:color-mix(in srgb,var(--g) 18%,transparent);color:var(--text)}
+.diffs{display:grid;gap:4px;margin:8px 0 0 30px}
+.diff{display:flex;justify-content:space-between;gap:12px;font-size:13px;flex-wrap:wrap}
+.df{color:var(--text-2)}
+.dv{display:inline-flex;align-items:center;gap:8px}
+.dv s{color:var(--text-2);text-decoration-color:var(--text-3)}
+.dv s .pill{opacity:.6}
+.arr{color:var(--text-3)}
+.chg-r{margin:8px 0 0 30px;font-size:13px;padding:6px 10px;border-left:2px solid var(--theme);background:var(--bg);border-radius:0 8px 8px 0}
+.fsec{font-size:15px;font-weight:600;margin:24px 0 12px}
+form .fsec:first-child{margin-top:0}
+.fgrid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media (max-width:520px){.fgrid2{grid-template-columns:minmax(0,1fr)}}
+.empty-state{display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;padding:56px 24px;color:var(--text-2)}
+.empty-state p{margin:0;max-width:46ch}
+.spinner{width:28px;height:28px;border-radius:50%;border:3px solid var(--track);border-top-color:var(--theme);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.foot{max-width:1280px;margin:0 auto;padding:0 32px calc(40px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--text-2)}
+.foot .src{display:inline-flex;align-items:center;gap:8px;max-width:760px}
+@media (max-width:720px){.foot{padding-left:16px;padding-right:16px}}
+main{padding-bottom:40px}
+/* v5 */
+.dash{display:grid;gap:24px}
+.dash td,.dash th{white-space:normal}
+.dash td.wide{width:45%}
+.c1{line-height:1.35}
+.c2{font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.35}
+.c2 .pill{font-size:11px}
+.clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.strat-t{color:var(--strat);font-weight:600}
+.dt table td{white-space:normal;vertical-align:top;padding:12px 14px}
+.dt table td .prog{margin-top:4px}
+.dt th{padding:6px 10px 10px;vertical-align:bottom}
+.dt td.w-title{min-width:220px}
+.dt td.w-wide{min-width:240px;max-width:380px}
+.dt td.w-mid{min-width:170px;max-width:260px}
+.th{display:inline-flex;align-items:center;gap:2px}
+.sortb{background:none;border:0;padding:4px 6px;border-radius:8px;cursor:pointer;font:inherit;font-size:12px;font-weight:500;color:var(--text-2);display:inline-flex;gap:4px;align-items:center;text-align:left}
+.sortb:hover{background:var(--bg-hover);color:var(--text)}
+.sortb.on{color:var(--text);font-weight:600}
+.sortb i{font-style:normal;color:var(--theme);min-width:8px}
+.fbtn{background:none;border:0;width:22px;height:22px;border-radius:6px;cursor:pointer;color:var(--text-3);display:grid;place-items:center;flex:none}
+.fbtn:hover{background:var(--bg-hover);color:var(--text)}
+.fbtn.on{color:#fff;background:var(--theme)}
+.dt-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0 0 10px;font-size:13px}
+.fchip{display:inline-flex;align-items:center;gap:6px;background:var(--theme-soft);color:var(--text);border-radius:999px;padding:3px 4px 3px 10px;font-size:12px;font-weight:500}
+.fchip .pill{padding:0 6px 0 4px;background:none}
+.fchip button{border:0;background:var(--bg);width:18px;height:18px;border-radius:50%;cursor:pointer;display:grid;place-items:center;font-size:13px;line-height:1;color:var(--text-2)}
+.iconbtn{border:0;background:var(--bg-alt);width:36px;height:36px;border-radius:10px;cursor:pointer;display:grid;place-items:center;color:var(--text-2)}
+.iconbtn:hover{background:var(--track);color:var(--text)}
+.dims4{display:inline-flex;gap:5px;margin-top:3px}
+#pop{position:fixed;z-index:40;background:var(--bg);border-radius:16px;box-shadow:var(--shadow-hi);border:1px solid var(--line);padding:12px;min-width:260px;max-width:340px;max-height:min(70vh,520px);overflow:auto}
+.pop-h{font-size:12px;font-weight:600;color:var(--text-2);padding:2px 6px 8px}
+.pop-q{width:100%;border:0;background:var(--bg-alt);border-radius:10px;padding:8px 10px;margin-bottom:6px}
+.pop-list{display:grid;gap:2px}
+.pop-row{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;cursor:pointer;font-size:14px;background:none;border:0;text-align:left;width:100%}
+.pop-row:hover{background:var(--bg-hover)}
+.pop-row input{width:16px;height:16px;accent-color:var(--theme);flex:none}
+.col-row{justify-content:space-between;cursor:default}
+.col-row label{display:flex;align-items:center;gap:10px;cursor:pointer;min-width:0}
+.mv{display:inline-flex;gap:2px}
+.mv button{border:0;background:var(--bg-alt);width:26px;height:26px;border-radius:7px;cursor:pointer;color:var(--text-2)}
+.mv button:disabled{opacity:.35;cursor:default}
+.pop-f{border-top:1px solid var(--line);margin-top:8px;padding:10px 6px 2px}
+.pop-me{display:flex;gap:12px;align-items:center;padding:6px 6px 12px}
+.pop-me .pn small{display:block}
+.pop-sep{font-size:11px;font-weight:600;color:var(--text-3);padding:10px 6px 4px;border-top:1px solid var(--line)}
+.me{border:0;background:none;padding:0;border-radius:50%;cursor:pointer;display:grid;place-items:center}
+.me .pav{width:34px;height:34px;font-size:12px;box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--line)}
+.keysec{background:var(--bg-alt);border-radius:16px;padding:16px 16px 4px;margin:6px 0 18px}
+.keysec input[type=date],.keysec input[type=number],.keysec select,.keysec textarea{background:var(--bg)}
+.keysec .ragpick .opts{background:var(--bg)}
+.keysec .ragpick input:checked + label{background:var(--bg-alt)}
+.dt table td{padding:12px 10px}
+.dt td.w-title{min-width:170px}
+.dt td.w-wide{min-width:180px;max-width:320px}
+.dt .prog{min-width:96px}
+.dt .prog .track{min-width:50px}
+.dt .person .pn small{display:none}
+.dt th{white-space:normal;min-width:80px}
+.dt .sortb{line-height:1.25}
+/* v6 */
+.dt td.w-ico,.dt th.w-ico{width:1%;text-align:center;padding-left:6px;padding-right:6px}
+.dt th.w-ico .th{justify-content:center}
+.ico{display:inline-grid;place-items:center;vertical-align:middle}
+.star{color:#f5b301}
+.ragdot{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:middle;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.ilabel{display:inline-flex;align-items:center;gap:8px}
+.ilabel .ragdot{width:12px;height:12px}
+.ragcalc{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--bg-alt);border-radius:12px;padding:10px 14px;margin:0 0 16px}
+.ragcalc .k{font-weight:600;font-size:13px;color:var(--text-2)}
+.ragcalc .note{margin:0;flex-basis:100%;font-size:12px}
+.fchip .ilabel svg{width:13px;height:13px}
+.dt th.w-ico{min-width:0}
+.dt th .th{gap:0}
+.dt .fbtn{width:20px;height:20px}
+.dt td{padding-left:8px;padding-right:8px}
+.dt .person{gap:8px}
+.dt .person .pav{width:24px;height:24px;font-size:10px}
+.dt .prog{min-width:88px;gap:6px}
+.dt th.w-ico .th{flex-direction:column;align-items:center;gap:2px}
+.dt th.w-ico .sortb{padding:2px 4px;font-size:11px;text-align:center}
+.dt th.w-ico .sortb i{min-width:0}
+.dt td.w-mid{min-width:140px}
+/* v7: single-line cells, aligned headers */
+.dt th{vertical-align:middle;white-space:nowrap}
+.dt th .th,.dt th.w-ico .th{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:2px;white-space:nowrap}
+.dt th.w-ico .th{justify-content:center}
+.dt th .sortb,.dt th.w-ico .sortb{padding:4px 4px;font-size:12px;white-space:nowrap}
+.dt th .fbtn{margin-left:0}
+.dt td{vertical-align:middle}
+.stratico{color:var(--strat)}
+.dash td.ico,.dash th.ico{width:1%;text-align:center}
+.dt th{white-space:normal;padding:6px 6px 10px}
+.dt th .th{align-items:center}
+.dt th .sortb{white-space:normal;text-align:left;line-height:1.25}
+.dt th.w-ico .sortb{font-size:11px;padding:4px 2px}
+.dt th .fbtn{flex:none}
+.dt .person b{white-space:normal}
+.dt td.w-wide{min-width:160px}
+.dt td.w-title{min-width:150px}
+.dt th.w-ico .sortb{white-space:normal;text-align:center}
+.dt .prog{min-width:76px}
+.dt .prog .track{min-width:36px}
+.dt td.w-ico{padding-left:4px;padding-right:4px}
+.dt th .sortb,.dt th.w-ico .sortb{font-size:12px}
+/* v8 */
+.stratico{color:var(--strat)}
+.dt th.w-gear,.dt td.w-gear{width:1%;padding-left:2px;padding-right:2px;text-align:right}
+.gearbtn{border:0;background:none;width:24px;height:24px;border-radius:7px;cursor:pointer;color:var(--text-3);display:inline-grid;place-items:center}
+.gearbtn:hover{background:var(--bg-hover);color:var(--text)}
+.dt-empty{display:flex;justify-content:space-between;align-items:center}
+.plist{display:inline-flex;align-items:center;gap:8px;min-width:0}
+.plist b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
+.astack{display:inline-flex}
+.astack .pav{width:24px;height:24px;font-size:10px;box-shadow:0 0 0 2px var(--bg)}
+.astack .pav + .pav{margin-left:-8px}
+.more-n{font-size:12px;font-weight:600;color:var(--text-2);background:var(--bg-alt);border-radius:999px;padding:1px 7px}
+.plist-v{display:grid;gap:8px;margin-top:4px}
+.pmulti{background:var(--bg-alt);border-radius:12px;padding:6px;max-height:220px;overflow:auto;display:grid;gap:2px}
+.lbl-t{display:block;font-weight:600;margin-bottom:6px;font-size:13px;color:var(--text-2)}
+.tile-top .ico{margin-left:2px}
+.dt th.w-gear{min-width:0;width:28px}
+.dt td{padding-left:6px;padding-right:6px}
+.dt th{padding-left:4px;padding-right:4px}
+.dt td.w-wide{min-width:140px}
+.dt td.w-title{min-width:140px}
+/* v9: dashboard alignment */
+.dash td,.dash th{vertical-align:middle}
+.dash td.c-ico,.dash th.c-ico{width:28px;padding-left:6px;padding-right:6px;text-align:center}
+.dash td.c-ico .ico,.dash td.c-ico .ragdot{vertical-align:middle}
+.grid2 > .wp{display:flex;flex-direction:column}
+.donut-wrap{flex:1;justify-content:center;align-items:center;gap:48px;padding:8px 0}
+.donut{width:200px;height:200px;flex:none}
+.legend{gap:14px}
+.legend li{font-size:15px}
+.legend b{font-size:20px;min-width:24px}
+.legend .dot{width:12px;height:12px}
+@media (max-width:520px){.donut{width:160px;height:160px}.donut-wrap{gap:24px}}
+/* v10 */
+.dt th .th{gap:0}
+.dt th .sortb{padding:4px 1px 4px 4px}
+.sortb i:empty{display:none}
+.dt th .fbtn{width:18px;height:18px;margin-left:1px}
+.gear-lg{width:40px;height:40px;border-radius:12px;margin-left:4px}
+.sec-h{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
+.sec-h h3{margin:0}
+.sec-h .more{display:inline-flex;align-items:center;gap:4px}
+.rlist{display:grid;gap:6px}
+.rrow{display:flex;align-items:center;gap:12px;background:var(--bg-alt);border:0;border-radius:12px;padding:10px 12px;cursor:pointer;text-align:left;width:100%}
+.rrow:hover{background:var(--track)}
+.rrow .rt{flex:1;font-weight:500}
+.rrow .muted{font-size:12px;white-space:nowrap}
+.scorecalc{background:var(--bg-alt);border-radius:16px;padding:14px 16px;margin:4px 0 16px}
+.scorecalc .frow{margin-bottom:10px}
+.opts.scale{display:inline-flex;background:var(--bg);padding:3px;border-radius:12px;gap:2px}
+.opts.scale input{position:absolute;opacity:0;pointer-events:none}
+.opts.scale label{min-width:40px;text-align:center;padding:6px 0;border-radius:9px;cursor:pointer;font-weight:600}
+.opts.scale input:checked + label{background:var(--theme);color:#fff}
+.opts.scale input:focus-visible + label{outline:3px solid var(--theme-soft)}
+.scale-d{margin:6px 2px 0;font-size:13px;color:var(--text-2)}
+.scorebox{display:flex;align-items:center;gap:10px;padding-top:10px;border-top:1px solid var(--line)}
+.scorebox .k{font-weight:600;font-size:13px;color:var(--text-2)}
+.fixed{padding:10px 12px;background:var(--bg-alt);border-radius:12px;font-weight:600}
+.link.clamp2{display:-webkit-box;font-weight:500}
+/* v11 */
+.hico{color:var(--text-2)}
+.dt th .sortb{padding-right:0}
+.dt th .fbtn{width:14px;height:18px;margin-left:0;border-radius:4px}
+.dt th .fbtn svg{width:11px;height:11px}
+.dt th.w-min,.dt td.w-min{width:1%;white-space:nowrap}
+.dt th.w-min .sortb{white-space:nowrap}
+.dt th.w-ico .sortb{white-space:nowrap}
+.dt td.w-upd{min-width:300px;width:34%}
+.dt td.w-upd .clamp2{-webkit-line-clamp:3}
+.dash th.c-ico .ico{display:inline-grid}
+.dt td.w-upd{min-width:270px;width:auto}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><div class="logo" aria-hidden="true">ПП</div><div><div class="brand-name" id="siteName"></div><div class="brand-sub" id="siteSub"></div></div></div>
+    <nav class="nav" aria-label="Navigation">
+      <button data-act="nav" data-page="home"></button><button data-act="nav" data-page="projects"></button>
+      <button data-act="nav" data-page="reports"></button><button data-act="nav" data-page="risks"></button><button data-act="nav" data-page="archive"></button>
+    </nav>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Мова / Language / Язык">
+        <button data-act="lang" data-i="0" lang="uk">UA</button><button data-act="lang" data-i="1" lang="en">EN</button><button data-act="lang" data-i="2" lang="ru">RU</button>
+      </div>
+      <div class="seg" role="group" aria-label="Theme">
+        <button data-act="theme" data-t="light"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1"/></svg></button><button data-act="theme" data-t="dark"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M13.5 10.2A6 6 0 0 1 5.8 2.5a6 6 0 1 0 7.7 7.7Z"/></svg></button>
+      </div>
+      <button class="me" id="me" data-act="me"></button>
+    </div>
+  </div>
+</header>
+<main id="main"></main>
+<footer class="foot" id="foot"></footer>
+<div id="scrim" data-act="close"></div>
+<aside id="panel" aria-hidden="true" role="dialog" aria-modal="true"></aside>
+<div id="pop" hidden></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>(function(){
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+const DAY = 864e5;
+const D = s => s ? new Date(String(s).length === 10 ? s + 'T00:00:00' : s) : null;
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const daysAgo = n => new Date(TODAY.getTime() - n * DAY);
+const age = d => Math.round((TODAY - d) / DAY);
+const fmt = d => d ? d.toLocaleDateString('uk-UA') : '';
+const fmtDT = d => d ? d.toLocaleDateString('uk-UA') + ' ' + d.toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'}) : '';
+const fmtShort = d => d.toLocaleDateString('uk-UA', {day:'2-digit', month:'2-digit'});
+const money = n => Math.round(n || 0).toLocaleString('uk-UA') + ' ₴';
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+/* ================= i18n ================= */
+const LANGS = ['uk','en','ru'];
+let LI = 2;
+const T = {
+ siteTitle:['Портфель проєктів','Project portfolio','Портфель проектов'],
+ navHome:['Головна','Home','Главная'], navProjects:['Проєкти','Projects','Проекты'],
+ navReports:['Статус-звіти','Status reports','Статус-отчёты'], navRisks:['Ризики та проблеми','Risks and issues','Риски и проблемы'],
+ dash:['Панель проєктів','Project dashboard','Панель проектов'],
+ wpHealth:['Портфель за станом','Portfolio by health','Портфель по состоянию'],
+ wpDyn:['Динаміка стану портфеля','Portfolio health over time','Динамика состояния портфеля'],
+ wpActive:['Активні проєкти','Active projects','Активные проекты'],
+ wpProblem:['Проблемні проєкти','Projects at risk','Проблемные проекты'],
+ wpStale:['Немає свіжого статус-звіту','No recent status report','Нет свежего статус-отчёта'],
+ wpDecision:['Потребують рішення керівництва','Management decisions needed','Требуют решения руководства'],
+ wpRisks:['Відкриті ризики','Open risks','Открытые риски'],
+ showAll:['Показати все','See all','Показать все'],
+ active:['активних','active','активных'], notRated:['не оцінено','not rated','не оценено'], noReports:['немає звітів','no reports','нет отчётов'],
+ dynHint:['Стан кожного проєкту за останнім статус-звітом на дату зрізу.','Each project’s health from its latest status report as of the snapshot date.','Состояние каждого проекта по последнему статус-отчёту на дату среза.'],
+ today:['сьогодні','today','сегодня'],
+ empty:['У цьому поданні немає елементів.','There are no items in this view.','В этом представлении нет элементов.'],
+ emptyProblem:['Проблемних проєктів немає.','No projects at risk.','Проблемных проектов нет.'],
+ emptyStale:['Усі активні проєкти звітували за останні 14 днів.','All active projects reported in the last 14 days.','Все активные проекты отчитались за последние 14 дней.'],
+ emptyDecision:['Відкритих запитів на рішення немає.','No open decision requests.','Открытых запросов на решение нет.'],
+ emptyRisks:['Ризиків не зареєстровано.','No risks registered.','Рисков не зарегистрировано.'],
+ newProject:['Новий проєкт','New project','Новый проект'], newReport:['Новий статус-звіт','New status report','Новый статус-отчёт'],
+ view:['Подання','View','Представление'], list:['Список','List','Список'], tiles:['Плитки','Tiles','Плитки'],
+ viewsNote:['Назви подань SharePoint не перекладає.','SharePoint doesn’t translate view names.','Названия представлений SharePoint не переводит.'],
+ hintProjects:['Червона дата завершення — термін минув, а проєкт не закрито. Світлофор звіту: зелений — до 8 днів, жовтий — 8–14, червоний — понад 14.','Red completion date means the deadline has passed and the project is still open. Report light: green up to 8 days, yellow 8–14, red over 14.','Красная дата завершения — срок прошёл, а проект не закрыт. Светофор отчёта: зелёный — до 8 дней, жёлтый — 8–14, красный — старше 14.'],
+ hintRisks:['Оцінка = ймовірність × вплив. Від 15 — червоний, від 8 — жовтий.','Score = probability × impact. 15+ red, 8+ yellow.','Оценка = вероятность × влияние. От 15 — красный, от 8 — жёлтый.'],
+ addReport:['Додати статус-звіт','Add status report','Добавить статус-отчёт'],
+ changeKey:['Змінити ключові показники','Change key indicators','Изменить ключевые показатели'],
+ editProject:['Редагувати','Edit','Редактировать'],
+ noEdit:['Змінювати проєкт можуть PM, власник, керівники PM і PMO. Вам доступні перегляд і коментарі.','PM, owner, the PM’s managers and PMO can change this project. You can view and comment.','Изменять проект могут PM, собственник, руководители PM и PMO. Вам доступны просмотр и комментарии.'],
+ secPeople:['Учасники','Stakeholders','Участники'], secDates:['Терміни','Timeline','Сроки'], secMoney:['Бюджет і виконання','Budget and progress','Бюджет и выполнение'],
+ secHistory:['Історія станів','Health history','История состояний'], secChanges:['Історія змін','Change history','История изменений'],
+ secReports:['Статус-звіти','Status reports','Статус-отчёты'], secRisks:['Ризики та проблеми','Risks and issues','Риски и проблемы'],
+ noReportsYet:['Статус-звітів ще немає. Перший звіт задасть стан проєкту.','No status reports yet. The first report sets the project health.','Статус-отчётов пока нет. Первый отчёт задаст состояние проекта.'],
+ noChanges:['Змін ще не було.','No changes yet.','Изменений пока не было.'],
+ done:['Зроблено','Done','Сделано'], plan:['План','Plan','План'], issues:['Проблеми','Issues','Проблемы'],
+ needDecision:['Потрібне рішення','Decision needed','Требуется решение'], days:['дн.','days','дн.'],
+ openLoop:['Відкрити в Loop','Open in Loop','Открыть в Loop'],
+ showHistory:['Показати всю історію','Show full history','Показать всю историю'], hideHistory:['Згорнути','Collapse','Свернуть'],
+ addComment:['Додати коментар','Add comment','Добавить комментарий'], cmtPh:['Що змінилося?','What changed?','Что изменилось?'],
+ noComments:['Коментарів ще немає.','No comments yet.','Комментариев пока нет.'],
+ save:['Зберегти','Save','Сохранить'], cancel:['Скасувати','Cancel','Отмена'],
+ summaryPh:['Наприклад: етап інтеграції завершено, відставань немає','For example: integration stage finished, no delays','Например: этап интеграции завершён, отставаний нет'],
+ reason:['Причина зміни','Reason for change','Причина изменения'],
+ reasonPh:['Наприклад: перенесення запуску через затримку інтеграції з 1С','For example: go-live moved due to 1C integration delay','Например: перенос запуска из-за задержки интеграции с 1С'],
+ keyHint:['Кожна зміна потрапляє в історію: що було, що стало, хто і коли змінив, причина.','Every change is logged: old value, new value, who, when and why.','Каждое изменение попадает в историю: что было, что стало, кто и когда изменил, причина.'],
+ errRag:['Оберіть загальний стан проєкту.','Choose the project’s overall health.','Выберите общее состояние проекта.'],
+ errSum:['Заповніть резюме одним рядком.','Fill in the one-line summary.','Заполните резюме одной строкой.'],
+ errDate:['Вкажіть дату звіту.','Enter the report date.','Укажите дату отчёта.'],
+ errCmt:['Введіть текст коментаря.','Enter the comment text.','Введите текст комментария.'],
+ errTitle:['Вкажіть назву проєкту.','Enter the project name.','Укажите название проекта.'],
+ errPM:['Оберіть відповідального PM.','Choose the responsible PM.','Выберите ответственного PM.'],
+ errReason:['Вкажіть причину зміни.','Enter the reason for the change.','Укажите причину изменения.'],
+ errNothing:['Жоден показник не змінено.','No indicator was changed.','Ни один показатель не изменён.'],
+ savedReport:['Статус-звіт збережено, картку проєкту оновлено.','Status report saved, project card updated.','Статус-отчёт сохранён, карточка проекта обновлена.'],
+ savedProject:['Проєкт створено.','Project created.','Проект создан.'],
+ savedEdit:['Зміни збережено.','Changes saved.','Изменения сохранены.'],
+ savedKey:['Показники оновлено, зміну записано в історію.','Indicators updated and logged to history.','Показатели обновлены, изменение записано в историю.'],
+ cmtSaved:['Коментар додано.','Comment added.','Комментарий добавлен.'],
+ saveErr:['Не вдалося зберегти зміну. Оновіть сторінку та повторіть.','Couldn’t save the change. Reload the page and try again.','Не удалось сохранить изменение. Обновите страницу и повторите.'],
+ listLabel:['список','list','список'], close:['Закрити','Close','Закрыть'], latestUpd:['Останній апдейт','Latest update','Последний апдейт'],
+ viewAs:['Перегляд як','View as','Просмотр как'],
+ viewAsNote:['Лише для прототипу: імітує вхід різних користувачів.','Prototype only: simulates different users signing in.','Только для прототипа: имитирует вход разных пользователей.'],
+ themeLight:['Світла тема','Light theme','Светлая тема'], themeDark:['Темна тема','Dark theme','Тёмная тема'], themeAuto:['Як у системі','Match system','Как в системе'],
+ pmRole:['PM','PM','PM'],
+ visible:['Доступних вам проєктів: ','Projects available to you: ','Доступных вам проектов: '],
+ accessTitle:['Доступ до картки','Card access','Доступ к карточке'],
+ accessDesc:['Права задаються автоматично за учасниками проєкту та їхніми керівниками з Entra ID.','Permissions are set automatically from the project participants and their managers in Entra ID.','Права назначаются автоматически по участникам проекта и их руководителям из Entra ID.'],
+ lvlEdit:['редагування','can edit','редактирование'], lvlRead:['перегляд і коментарі','view and comment','просмотр и комментарии'], lvlFull:['повний доступ','full control','полный доступ'],
+ pmoGroup:['Група «PMO — адміністратори»','Group “PMO — administrators”','Группа «PMO — администраторы»'],
+ m365:['Користувач Microsoft 365','Microsoft 365 user','Пользователь Microsoft 365'],
+ notSet:['— не вказано —','— not set —','— не указано —'],
+ accessRecalc:['Після зміни учасників права доступу буде перераховано.','Access will be recalculated after participants change.','После смены участников права доступа будут пересчитаны.'],
+ kCreate:['Проєкт створено','Project created','Проект создан'], kKey:['Зміна ключових показників','Key indicators changed','Изменение ключевых показателей'],
+ kEdit:['Редагування картки','Card edited','Редактирование карточки'], kReport:['Оновлено статус-звітом','Updated by status report','Обновлено статус-отчётом'],
+ loading:['Завантаження даних зі списків…','Loading data from lists…','Загрузка данных из списков…'],
+ emptyDb:['Список «Проєкти» порожній. Створіть перший проєкт або завантажте демо-дані.','The Projects list is empty. Create the first project or load demo data.','Список «Проекты» пуст. Создайте первый проект или загрузите демо-данные.'],
+ seed:['Завантажити демо-дані','Load demo data','Загрузить демо-данные'], seeding:['Завантаження…','Loading…','Загрузка…'],
+ srcDb:['Дані зберігаються в спільній базі прототипу і доступні після перезавантаження та іншим користувачам — так само, як на робочому сайті в списках SharePoint.','Data is stored in the prototype’s shared database and survives reloads — just as the live site stores it in SharePoint lists.','Данные хранятся в общей базе прототипа и сохраняются после перезагрузки — так же, как рабочий сайт хранит их в списках SharePoint.'],
+ srcLocal:['База недоступна в цьому перегляді: зміни діють до перезавантаження сторінки.','The database isn’t available in this view: changes last until the page reloads.','База недоступна в этом просмотре: изменения действуют до перезагрузки страницы.'],
+ reset:['Скинути до демо-даних','Reset to demo data','Сбросить к демо-данным'],
+ resetConfirm:['Усі зміни в базі буде видалено й замінено демо-даними. Продовжити?','All changes in the database will be deleted and replaced with demo data. Continue?','Все изменения в базе будут удалены и заменены демо-данными. Продолжить?'],
+ fGeneral:['Основне','General','Основное'], fPeople:['Учасники','Stakeholders','Участники'], fDates:['Терміни','Timeline','Сроки'],
+ codeAuto:['Буде присвоєно автоматично','Assigned automatically','Будет присвоен автоматически'],
+ navArchive:['Архів','Archive','Архив'],
+ archiveSub:['Завершені проєкти. Лише перегляд.','Completed projects. View only.','Завершённые проекты. Только просмотр.'],
+ archivedNote:['Проєкт в архіві: доступні перегляд і коментарі.','This project is archived: view and comment only.','Проект в архиве: доступны просмотр и комментарии.'],
+ archivedAt:['Дата архівації','Archived on','Дата архивации'],
+ cols:['Поля та порядок','Columns and order','Поля и порядок'], colsReset:['Як за замовчуванням','Reset to default','Как по умолчанию'],
+ filter:['Фільтр','Filter','Фильтр'], clear:['Очистити','Clear','Очистить'], search:['Пошук','Search','Поиск'],
+ shown:['Показано','Shown','Показано'], of:['з','of','из'], yes:['Так','Yes','Да'], no:['Ні','No','Нет'],
+ sortBy:['Сортувати','Sort','Сортировать'],
+ signedIn:['Ви увійшли як','Signed in as','Вы вошли как'],
+ switchUser:['Прототип: увійти як інший користувач','Prototype: sign in as another user','Прототип: войти как другой пользователь'],
+ keySec:['Ключові показники','Key indicators','Ключевые показатели'],
+ keySecHint:['Змінюються лише через статус-звіт. Кожна зміна потрапляє в історію.','Changed only through a status report. Every change is logged.','Меняются только через статус-отчёт. Каждое изменение попадает в историю.'],
+ keyReason:['Причина зміни показників','Reason for changing indicators','Причина изменения показателей'],
+ errKeyReason:['Ви змінили статус, тип або дати — вкажіть причину.','You changed status, type or dates — enter a reason.','Вы изменили статус, тип или даты — укажите причину.'],
+ completeArch:['Завершено — перенести в архів','Completed — move to archive','Завершено — перенести в архив'],
+ completeHint:['Після збереження проєкт отримає статус «Архівний» і перейде у вкладку «Архів».','After saving, the project gets the “Архівний” status and moves to the Archive tab.','После сохранения проект получит статус «Архівний» и перейдёт во вкладку «Архив».'],
+ savedArch:['Статус-звіт збережено, проєкт перенесено в архів.','Status report saved, project moved to archive.','Статус-отчёт сохранён, проект перенесён в архив.'],
+ cStake:['Власник / Product','Owner / Product','Собственник / Product'], cStart:['Старт / запуск','Start / go-live','Старт / запуск'],
+ cFinish:['Завершення: план / прогноз','Completion: plan / forecast','Завершение: план / прогноз'], cBudget:['Бюджет / факт','Budget / actual','Бюджет / факт'],
+ cStatus:['Статус / пріоритет','Status / priority','Статус / приоритет'], cRag:['Стан / звіт','Health / report','Состояние / отчёт'],
+ cNext:['План / проблеми','Plan / issues','План / проблемы'], cDecision:['Рішення керівництва','Management decision','Решение руководства'],
+ launchS:['запуск','go-live','запуск'], fcS:['прогноз','forecast','прогноз'], reportS:['звіт','report','отчёт'], factS:['факт','actual','факт'],
+ cStrat:['Стратегічний','Strategic','Стратегический'], cPrio:['Пріоритет','Priority','Приоритет'], cStatusOnly:['Статус','Status','Статус'],
+ cHealth:['Стан','Health','Состояние'], cRepDate:['Звіт','Report','Отчёт'], ago:['дн. тому','days ago','дн. назад'],
+ fr0:['до 8 днів','up to 8 days','до 8 дней'], fr1:['8–14 днів','8–14 days','8–14 дней'], fr2:['понад 14 днів','over 14 days','более 14 дней'], fr3:['немає звітів','no reports','нет отчётов'],
+ ragCalc:['Загальний стан (розраховується)','Overall health (calculated)','Общее состояние (рассчитывается)'],
+ ragRule:['Найгірша з оцінок: хоча б одна червона → червоний; хоча б одна жовта → жовтий; усі зелені → зелений.','The worst rating wins: any red → red; any yellow → yellow; all green → green.','Худшая из оценок: хотя бы одна красная → красный; хотя бы одна жёлтая → жёлтый; все зелёные → зелёный.'],
+ errDims:['Оцініть усі три показники: терміни, бюджет, ресурси.','Rate all three: schedule, budget, resources.','Оцените все три показателя: сроки, бюджет, ресурсы.'],
+ sc0:['Високий (15+)','High (15+)','Высокий (15+)'], sc1:['Середній (8–14)','Medium (8–14)','Средний (8–14)'], sc2:['Низький (до 8)','Low (under 8)','Низкий (до 8)'],
+ overdue:['прострочено','overdue','просрочено'],
+ cCode:['Код','Code','Код'], cOwner:['Власник','Owner','Собственник'], cGolive:['Запуск','Go-live','Запуск'], cPlan:['Завершення (план)','Completion (plan)','Завершение (план)'],
+ cFc:['Прогноз','Forecast','Прогноз'], cDev:['Відхилення, дн.','Deviation, days','Отклонение, дн.'], cBudgetP:['Бюджет','Budget','Бюджет'], cActual:['Факт','Actual','Факт'],
+ cUse:['Освоєння','Used','Освоение'], cRepAge:['Днів від звіту','Days since report','Дней с отчёта'], cCmtBy:['Автор коментаря','Comment author','Автор комментария'],
+ cPeriod:['Період','Period','Период'], cDone:['Зроблено','Done','Сделано'], cNextP:['План','Plan','План'], cIssues:['Проблеми','Issues','Проблемы'],
+ cStatusR:['Статус у звіті','Status in report','Статус в отчёте'], cDecFlag:['Рішення','Decision','Решение'], cDecText:['Яке рішення','Decision needed','Какое решение'],
+ cProb:['Ймовірність','Probability','Вероятность'], cImp:['Вплив','Impact','Влияние'], cStart2:['Старт','Start','Старт'],
+ newRisk:['Новий ризик','New risk','Новый риск'], addRisk:['Додати ризик','Add risk','Добавить риск'], riskCard:['Ризик / проблема','Risk / issue','Риск / проблема'],
+ riskHow:['Оцінка = ймовірність × вплив, кожне від 1 до 5. 15–25 — високий (червоний), 8–14 — середній (жовтий), 1–7 — низький (зелений).',
+   'Score = probability × impact, each from 1 to 5. 15–25 high (red), 8–14 medium (yellow), 1–7 low (green).',
+   'Оценка = вероятность × влияние, каждое от 1 до 5. 15–25 — высокий (красный), 8–14 — средний (жёлтый), 1–7 — низкий (зелёный).'],
+ p1:['1 — рідко (до 10%)','1 — rare (under 10%)','1 — редко (до 10%)'], p2:['2 — малоймовірно (10–30%)','2 — unlikely (10–30%)','2 — маловероятно (10–30%)'],
+ p3:['3 — можливо (30–60%)','3 — possible (30–60%)','3 — возможно (30–60%)'], p4:['4 — ймовірно (60–90%)','4 — likely (60–90%)','4 — вероятно (60–90%)'],
+ p5:['5 — майже напевно (понад 90%)','5 — almost certain (over 90%)','5 — почти наверняка (более 90%)'],
+ i1:['1 — незначний: не впливає на терміни та бюджет','1 — negligible: no effect on schedule or budget','1 — незначительное: не влияет на сроки и бюджет'],
+ i2:['2 — помірний: невелике відхилення, у межах резерву','2 — minor: small deviation within reserve','2 — умеренное: небольшое отклонение в пределах резерва'],
+ i3:['3 — суттєвий: зсув етапу або перевитрата до 10%','3 — moderate: stage slip or overspend up to 10%','3 — существенное: сдвиг этапа или перерасход до 10%'],
+ i4:['4 — значний: зсув запуску або перевитрата понад 10%','4 — major: go-live slip or overspend over 10%','4 — значительное: сдвиг запуска или перерасход более 10%'],
+ i5:['5 — критичний: зрив цілей проєкту','5 — critical: project goals fail','5 — критическое: срыв целей проекта'],
+ savedRisk:['Ризик збережено.','Risk saved.','Риск сохранён.'], errRiskTitle:['Опишіть ризик або проблему.','Describe the risk or issue.','Опишите риск или проблему.'],
+ readOnly:['Лише перегляд: змінювати ризики можуть PM, власник, керівники PM і PMO.','View only: PM, owner, the PM’s managers and PMO can change risks.','Только просмотр: изменять риски могут PM, собственник, руководители PM и PMO.'],
+ kMit:['Заходи реагування','Mitigation','Меры реагирования'],
+ noVisible:['У вас поки немає доступних проєктів.','You don’t have any available projects yet.','У вас пока нет доступных проектов.']
+};
+const FLD = {
+ title:['Назва проєкту','Project name','Название проекта'], loop:['Посилання на картку в Loop','Loop project card','Ссылка на карточку в Loop'],
+ code:['Код проєкту','Project code','Код проекта'], type:['Тип проєкту','Project type','Тип проекта'],
+ pm:['PM','PM','PM'], owner:['Власник','Owner','Собственник'], product:['Стейкхолдери','Stakeholders','Стейкхолдеры'], stakeholders:['Стейкхолдери','Stakeholders','Стейкхолдеры'],
+ dept:['Напрям','Area','Направление'], status:['Статус проєкту','Project status','Статус проекта'], prio:['Пріоритет','Priority','Приоритет'],
+ rag:['Загальний стан','Overall health','Общее состояние'], progress:['% виконання','% complete','% выполнения'],
+ start:['Дата старту','Start date','Дата старта'], golive:['Дата запуску (продакшн)','Go-live date (production)','Дата запуска (продакшн)'],
+ plan:['Дата завершення (план)','Planned completion','Дата завершения (план)'], fc:['Прогноз завершення','Forecast completion','Прогноз завершения'],
+ budget:['Бюджет (план)','Budget (plan)','Бюджет (план)'], actual:['Витрати (факт)','Actual cost','Затраты (факт)'], use:['Освоєння бюджету, %','Budget used, %','Освоение бюджета, %'],
+ last:['Останній статус-звіт','Last status report','Последний статус-отчёт'], lastReport:['Останній апдейт','Latest update','Последний апдейт'],
+ comments:['Коментарі','Comments','Комментарии'], desc:['Мета та опис','Goal and description','Цель и описание'],
+ rTitle:['Резюме одним рядком','One-line summary','Резюме одной строкой'], rProj:['Проєкт','Project','Проект'], rDate:['Дата звіту','Report date','Дата отчёта'],
+ rPeriod:['Період','Period','Период'], rSched:['Терміни','Schedule','Сроки'], rBudget:['Бюджет','Budget','Бюджет'], rScope:['Обсяг та якість','Scope and quality','Объём и качество'],
+ rRes:['Ресурси','Resources','Ресурсы'], rCost:['Витрати на дату','Cost to date','Затраты на дату'], rDone:['Зроблено за період','Done this period','Сделано за период'],
+ rNext:['План на наступний період','Plan for next period','План на следующий период'], rIssues:['Проблеми та ризики','Issues and risks','Проблемы и риски'],
+ rDec:['Потрібне рішення керівництва','Management decision needed','Требуется решение руководства'], rDecText:['Яке рішення потрібне','Decision required','Какое решение нужно'],
+ rAuthor:['Автор','Created by','Автор'],
+ kTitle:['Ризик / проблема','Risk / issue','Риск / проблема'], kType:['Тип','Type','Тип'], kScore:['Оцінка','Score','Оценка'], kPI:['Ймов. × вплив','Prob. × impact','Вер. × влияние'],
+ kOwner:['Власник ризику','Risk owner','Владелец риска'], kStatus:['Статус','Status','Статус'], kDue:['Термін','Due date','Срок']
+};
+const t = k => (T[k] || [k,k,k])[LI];
+const fl = k => (FLD[k] || [k,k,k])[LI];
+
+const RAGS = ['Зелений','Жовтий','Червоний'];
+const RL = {G:'Зелений', Y:'Жовтий', R:'Червоний'};
+const RC = {'Зелений':'var(--g)', 'Жовтий':'var(--y)', 'Червоний':'var(--r)'};
+/* Overall health formula: 2+ red -> red; 1 red or 2+ yellow -> yellow; otherwise green */
+const calcRag = r => { const v = [r.sched, r.budget, r.res]; if (v.some(x => !x)) return r.rag || '';
+  return v.includes('Червоний') ? 'Червоний' : v.includes('Жовтий') ? 'Жовтий' : 'Зелений'; };
+const STATUSES = ['Ініціація','Планування','Реалізація','Призупинено','Скасовано','Архівний'];
+const REPORT_STATUSES = ['Ініціація','Планування','Реалізація','Призупинено','Скасовано'];
+const TYPES = ['Стратегічний','Звичайний'];
+const PRIOS = ['1 — Високий','2 — Середній','3 — Низький'];
+const DEPTS = ['ІТ','HR та кадрове адміністрування','Розрахунок зарплати','Продажі','Фінанси','Операції','Юридичний'];
+const COLORS = ['#8764b8','#038387','#ca5010','#0078d4','#498205','#c239b3','#986f0b','#4f6bed'];
+const initials = n => n.split(' ').map(x => x[0]).join('').slice(0, 2);
+const pcolor = n => COLORS[[...n].reduce((a, c) => a + c.charCodeAt(0), 0) % COLORS.length];
+
+/* ================= Directory (Entra ID imitation) ================= */
+const ME = 'Юрій';
+const ORG = {
+ 'Сергій Литвиненко':{mgr:null, mail:'s.lytvynenko', role:['Генеральний директор','CEO','Генеральный директор']},
+ 'Юрій':{mgr:'Сергій Литвиненко', mail:'yurii', role:['Group CIO','Group CIO','Group CIO']},
+ 'Олександра Мороз':{mgr:'Юрій', mail:'o.moroz', role:['Керівник PMO','Head of PMO','Руководитель PMO'], pmo:true},
+ 'Андрій Мельник':{mgr:'Юрій', mail:'a.melnyk', role:['Керівник веброзробки','Head of web development','Руководитель веб-разработки']},
+ 'Олег Коваленко':{mgr:'Юрій', mail:'o.kovalenko', role:['Архітектор CRM','CRM architect','Архитектор CRM']},
+ 'Дмитро Савчук':{mgr:'Юрій', mail:'d.savchuk', role:['Product manager','Product manager','Product manager']},
+ 'Анна Лисенко':{mgr:'Юрій', mail:'a.lysenko', role:['Product manager','Product manager','Product manager']},
+ 'Олена Гнатюк':{mgr:'Сергій Литвиненко', mail:'o.hnatiuk', role:['Фінансовий директор','CFO','Финансовый директор']},
+ 'Наталія Шевчук':{mgr:'Олена Гнатюк', mail:'n.shevchuk', role:['Керівник розрахунку зарплати','Head of payroll','Руководитель расчёта зарплаты']},
+ 'Віктор Олійник':{mgr:'Сергій Литвиненко', mail:'v.oliinyk', role:['Операційний директор','COO','Операционный директор']},
+ 'Ірина Бондаренко':{mgr:'Віктор Олійник', mail:'i.bondarenko', role:['Керівник операційних проєктів','Operations project lead','Руководитель операционных проектов']},
+ 'Тетяна Кравець':{mgr:'Сергій Литвиненко', mail:'t.kravets', role:['HR-директор','HR director','HR-директор']},
+ 'Марина Ткаченко':{mgr:'Тетяна Кравець', mail:'m.tkachenko', role:['Керівник HR-проєктів','HR project lead','Руководитель HR-проектов']}
+};
+const email = n => ORG[n] ? ORG[n].mail + '@company.ua' : '';
+const roleOf = n => ORG[n] ? ORG[n].role[LI] : '';
+const chain = n => { const c = []; let m = ORG[n] && ORG[n].mgr; while (m){ c.push(m); m = ORG[m] && ORG[m].mgr; } return c; };
+let VIEWER = ME;
+const isPMO = () => !!(ORG[VIEWER] && ORG[VIEWER].pmo);
+const participants = p => [p.pm, p.owner].concat(p.stakeholders || []).filter(Boolean);
+const canSee = p => isPMO() || participants(p).some(x => x === VIEWER || chain(x).includes(VIEWER));
+const canEditP = p => isPMO() || p.pm === VIEWER || chain(p.pm).includes(VIEWER) || p.owner === VIEWER;
+
+/* ================= Demo seed ================= */
+function buildSeed(){
+ const P = [
+ {id:1,code:'PRJ-001',title:'Впровадження Twenty CRM',type:'Стратегічний',pm:ME,owner:'Сергій Литвиненко',product:'Дмитро Савчук',dept:'ІТ',status:'Реалізація',prio:'1 — Високий',progress:45,start:'2026-03-02',golive:'2026-12-01',plan:'2026-12-15',fc:'2027-01-29',budget:1800000,actual:950000,ago:3,hist:'GGYYYY',decision:'Затвердити перенесення запуску на кінець січня 2027',note:'Інтеграція з 1С відстає на 3 тижні, запуск у продакшн переноситься',
+  cm:[[62,'Олег Коваленко','Узгоджено перелік полів для міграції клієнтів'],[33,ME,'Підрядник підтвердив команду з 4 людей'],[3,ME,'Запит на перенесення go-live винесено на правління']],
+  ch:[[20,ME,'Затримка інтеграції з 1С',[['fc','2026-12-15','2027-01-29']]]]},
+ {id:2,code:'PRJ-002',title:'Міграція корпоративних сайтів на GitOps',type:'Звичайний',pm:'Андрій Мельник',owner:ME,product:'Анна Лисенко',dept:'ІТ',status:'Реалізація',prio:'2 — Середній',progress:30,start:'2026-05-04',golive:'2026-09-01',plan:'2026-09-15',fc:'2026-11-02',budget:250000,actual:272000,ago:16,hist:'GYYRR',decision:'Погодити додатковий бюджет на аудит безпеки',note:'Перевитрата бюджету, повторний злам двох сайтів',
+  cm:[[40,'Андрій Мельник','Перші три сайти перенесено'],[16,'Андрій Мельник','Два сайти зламано повторно до перенесення, відновлено з бекапу']],
+  ch:[[30,'Андрій Мельник','Повторні злами, потрібен аудит',[['fc','2026-09-15','2026-11-02']]]]},
+ {id:3,code:'PRJ-003',title:'Mini App обліку робочого часу',type:'Стратегічний',pm:'Ірина Бондаренко',owner:'Віктор Олійник',product:'Дмитро Савчук',dept:'Операції',status:'Реалізація',prio:'1 — Високий',progress:70,start:'2026-04-06',golive:'2026-10-15',plan:'2026-10-30',fc:'2026-10-30',budget:400000,actual:258000,ago:5,hist:'YGGGGG',note:'Пілот на трьох об’єктах клієнта пройшов успішно, готуємо запуск',
+  cm:[[20,'Ірина Бондаренко','Старт пілоту на об’єктах клієнта'],[5,'Ірина Бондаренко','Пілот завершено, 94% змін відмічено вчасно']],
+  ch:[[60,'Віктор Олійник','Рішення правління: проєкт стратегічний',[['type','Звичайний','Стратегічний'],['prio','2 — Середній','1 — Високий']]]]},
+ {id:4,code:'PRJ-004',title:'Оцінка Microsoft Fabric',type:'Звичайний',pm:ME,owner:'Олена Гнатюк',product:'Анна Лисенко',dept:'ІТ',status:'Планування',prio:'2 — Середній',progress:15,start:'2026-08-03',golive:'',plan:'2026-12-01',fc:'2026-12-01',budget:150000,actual:22000,ago:10,hist:'GYG',note:'Зібрано тестовий контур вивантаження з 1С',
+  cm:[[10,ME,'Тестовий контур готовий, чекаємо ліцензію на пробний період']],ch:[]},
+ {id:5,code:'PRJ-005',title:'Автоматизація розрахунку зарплати',type:'Стратегічний',pm:'Наталія Шевчук',owner:'Олена Гнатюк',product:'Дмитро Савчук',dept:'Розрахунок зарплати',status:'Реалізація',prio:'1 — Високий',progress:60,start:'2026-02-02',golive:'2026-11-01',plan:'2026-11-30',fc:'2026-12-18',budget:900000,actual:612000,ago:6,hist:'GGGYY',note:'Зміни законодавства потребують доопрацювання алгоритмів',
+  cm:[[48,'Наталія Шевчук','Паралельний розрахунок за липень збігся на 99,6%'],[6,'Наталія Шевчук','Потрібне доопрацювання під нову форму звітності']],ch:[]},
+ {id:6,code:'PRJ-006',title:'Ресертифікація ISO 27001',type:'Звичайний',pm:ME,owner:'Сергій Литвиненко',product:'',dept:'ІТ',status:'Ініціація',prio:'2 — Середній',progress:5,start:'2026-09-14',golive:'',plan:'2027-03-31',fc:'',budget:300000,actual:0,ago:null,hist:'',cm:[],ch:[]},
+ {id:7,code:'PRJ-007',title:'Портал самообслуговування працівників',type:'Звичайний',pm:'Марина Ткаченко',owner:'Тетяна Кравець',product:'Анна Лисенко',dept:'HR та кадрове адміністрування',status:'Призупинено',prio:'3 — Низький',progress:25,start:'2026-01-12',golive:'2026-09-01',plan:'2026-10-01',fc:'2027-04-30',budget:700000,actual:184000,ago:34,hist:'YRR',decision:'Вирішити: відновлювати проєкт чи закрити',note:'Призупинено до завершення впровадження CRM',
+  cm:[[34,'Марина Ткаченко','Призупинено рішенням власника до запуску CRM']],
+  ch:[[34,'Тетяна Кравець','Пріоритет — впровадження CRM',[['status','Реалізація','Призупинено'],['fc','2026-10-01','2027-04-30']]]]},
+ {id:8,code:'PRJ-008',title:'Електронний кадровий документообіг',type:'Звичайний',pm:'Марина Ткаченко',owner:'Тетяна Кравець',product:'Анна Лисенко',dept:'HR та кадрове адміністрування',status:'Архівний',prio:'2 — Середній',progress:100,start:'2025-11-03',golive:'2026-07-01',plan:'2026-08-31',fc:'2026-08-28',budget:500000,actual:478000,ago:27,hist:'GGGGGG',note:'Проєкт закрито, систему передано в експлуатацію',
+  cm:[[27,'Марина Ткаченко','Акт приймання підписано']],
+  ch:[[27,'Марина Ткаченко','Приймання підписано',[['status','Реалізація','Архівний'],['progress','95','100']]]], arch:27}
+ ];
+ const POOL = {G:['Роботи йдуть за планом','Контрольну точку пройдено вчасно','Етап прийнято замовником'],
+  Y:['Відставання з інтеграції на 1–2 тижні','Затримка погодження вимог','Бракує ресурсу розробника 1С'],
+  R:['Критичне відставання, потрібен перегляд термінів','Перевитрата бюджету етапу','Роботи зупинено']};
+ const DONE = ['Завершено тестування модуля','Проведено інтерв’ю з ключовими користувачами','Налаштовано обмін даними з 1С','Підготовлено документацію користувача','Навчено пілотну групу'];
+ const NEXT = ['Запуск пілоту на реальних даних','Навантажувальне тестування','Погодження плану впровадження','Перенесення довідників','Приймання етапу'];
+ const ISS = {G:'Суттєвих проблем немає',Y:'Залежність від суміжної команди 1С',R:'Потрібне рішення щодо термінів і бюджету'};
+ const RISKS = [
+  [1,'Нестабільний обмін даними з 1С','Ризик',4,4,'Олег Коваленко','В роботі','2026-10-15'],[1,'Опір менеджерів переходу на CRM','Ризик',3,3,ME,'Відкрито','2026-11-01'],
+  [2,'Повторний злам сайтів до завершення міграції','Проблема',5,4,'Андрій Мельник','В роботі','2026-09-30'],[5,'Зміна форми звітності з ЄСВ','Ризик',3,5,'Наталія Шевчук','Відкрито','2026-11-15'],
+  [3,'Низька активність працівників на об’єктах','Ризик',2,3,'Ірина Бондаренко','Відкрито','2026-10-20'],[4,'Ліцензії Fabric дорожчі за бюджет','Ризик',2,2,ME,'Відкрито','2026-11-10'],
+  [7,'Немає власника з боку HR','Проблема',4,3,'Марина Ткаченко','Відкрито','2026-10-05'],[8,'Недостатня якість скан-копій','Проблема',2,2,'Марина Ткаченко','Закрито','2026-07-30']];
+ return P.map(p => {
+  const h = p.hist.split('').filter(Boolean), n = h.length;
+  const reports = h.map((c, i) => {
+   const latest = i === n - 1, rag = RL[c];
+   const dm = {G:['Зелений','Зелений','Зелений','Зелений'], Y:['Жовтий','Зелений','Зелений','Жовтий'], R:['Червоний','Червоний','Зелений','Жовтий']}[c];
+   return {id:uid() + i, date:iso(daysAgo(p.ago + (n - 1 - i) * 14)), rag, sched:dm[0], budget:dm[1], res:dm[3], period:'2 тижні',
+    progress: Math.round(p.progress * (i + 1) / n), title: latest && p.note ? p.note : POOL[c][(p.id + i) % 3],
+    done: DONE[(p.id + i) % 5], next: NEXT[(p.id + i) % 5], issues: ISS[c], author: p.pm,
+    decision: !!(latest && p.decision), decisionText: latest && p.decision ? p.decision : ''};
+  });
+  const last = reports[reports.length - 1];
+  return {id:p.id, code:p.code, title:p.title, type:p.type, pm:p.pm, owner:p.owner, stakeholders:[p.product].concat(({1:['Олег Коваленко'],3:['Анна Лисенко'],5:['Віктор Олійник']})[p.id] || []).filter(Boolean), dept:p.dept, status:p.status, prio:p.prio,
+   progress:p.progress, start:p.start, golive:p.golive, plan:p.plan, fc:p.fc, budget:p.budget, actual:p.actual,
+   loop:'https://loop.cloud.microsoft/', desc:'', archivedAt: p.arch ? iso(daysAgo(p.arch)) : '',
+   rag: last ? last.rag : '', lastUpdate: last ? last.date : '', lastReport: last ? last.title : '',
+   reports,
+   comments: p.cm.map(([a, who, txt]) => ({id:uid(), date:daysAgo(a).toISOString(), who, txt})),
+   changes: [{id:uid(), date:D(p.start).toISOString(), who:p.pm, kind:'create', reason:'', diffs:[]}].concat(
+     p.ch.map(([a, who, reason, diffs]) => ({id:uid(), date:daysAgo(a).toISOString(), who, kind:'key', reason, diffs:diffs.map(([f, from, to]) => ({f, from, to}))}))),
+   risks: RISKS.filter(r => r[0] === p.id).map(([, title, type, pr, im, owner, status, due]) => ({id:uid(), title, type, p:pr, i:im, owner, status, due}))
+  };
+ });
+}
+
+/* ================= Data layer ================= */
+let PROJ = [];
+let MODE = 'loading';   // loading | db | empty | local
+let db = null;
+const queues = {};
+const parse = (o) => {
+  const p = Object.assign({}, JSON.parse(JSON.stringify(o)), {id:+o.id});
+  if (!Array.isArray(p.stakeholders)) p.stakeholders = p.product ? [p.product] : [];
+  delete p.product;
+  (p.reports || []).forEach(r => { r.rag = calcRag(r); });
+  const last = (p.reports || []).slice().sort((a, b) => String(a.date).localeCompare(String(b.date))).pop();
+  if (last) p.rag = last.rag;
+  return p;
+};
+function persist(p){
+  if (!db) return Promise.resolve();
+  const id = String(p.id), body = JSON.parse(JSON.stringify(p));
+  const prev = queues[id] || Promise.resolve();
+  const next = prev.then(() => db.doc('projects/' + id).set(body)).catch(e => { toast(t('saveErr')); console.error(e); });
+  queues[id] = next;
+  return next;
+}
+async function seed(){
+  const data = buildSeed();
+  if (!db){ PROJ = data.map(parse); MODE = 'local'; render(); return; }
+  for (const p of data){ await db.doc('projects/' + p.id).set(p); }
+}
+async function resetDemo(){
+  if (!confirm(t('resetConfirm'))) return;
+  if (db){ for (const p of PROJ){ await db.doc('projects/' + p.id).delete(); } await seed(); }
+  else { PROJ = buildSeed().map(parse); render(); }
+}
+async function initData(){
+  try { db = window.claude && typeof window.claude.use === 'function' ? await window.claude.use('db') : null; } catch(e) { db = null; }
+  if (!db){ MODE = 'local'; PROJ = buildSeed().map(parse); render(); return; }
+  db.collection('projects').onSnapshot(snap => {
+    if (snap.empty){ if (snap.metadata.fromCache) return; MODE = 'empty'; PROJ = []; }
+    else { MODE = 'db'; PROJ = snap.docs.map(d => parse(Object.assign({}, d.data(), {id:d.id})));
+      PROJ.filter(p => p.status === 'Завершено').forEach(p => { p.status = 'Архівний'; p.archivedAt = p.archivedAt || p.lastUpdate || iso(TODAY); persist(p); }); }
+    render();
+  }, err => { console.error(err); if (MODE === 'loading'){ db = null; MODE = 'local'; PROJ = buildSeed().map(parse); render(); } });
+}
+
+/* ================= Derived ================= */
+const pById = id => PROJ.find(p => p.id === id);
+const isArch = p => p.status === 'Архівний' || p.status === 'Завершено';
+const isActive = p => !isArch(p) && p.status !== 'Скасовано';
+const visAll = () => PROJ.filter(canSee);
+const visP = () => visAll().filter(p => !isArch(p));
+const visArch = () => visAll().filter(isArch);
+const repsOf = p => (p.reports || []).map(r => Object.assign({}, r, {pid:p.id, d:D(r.date), rag:calcRag(r)})).sort((a, b) => a.d - b.d);
+const visR = () => visAll().flatMap(repsOf);
+const visK = () => visP().flatMap(p => (p.risks || []).map(k => Object.assign({}, k, {pid:p.id})));
+const lastUpd = p => D(p.lastUpdate);
+const byOrder = (a, b) => (a.type === b.type ? 0 : a.type === 'Стратегічний' ? -1 : 1) || a.prio.localeCompare(b.prio) || a.title.localeCompare(b.title);
+
+/* ================= Renderers ================= */
+const ragHtml = v => v ? `<span class="pill" style="--c:${RC[v]}"><span class="dot sm"></span>${v}</span>`
+  : `<span class="pill" style="--c:var(--na)"><span class="dot sm"></span>${t('notRated')}</span>`;
+const dotOnly = v => `<span class="dot sm" title="${v || '—'}" style="background:${v ? RC[v] : 'var(--na)'}"></span>`;
+const barHtml = v => `<span class="prog" role="img" aria-label="${v}%"><span class="track"><i style="width:${Math.min(v,100)}%;background:${v >= 100 ? 'var(--g)' : 'var(--theme)'}"></i></span><b>${v}%</b></span>`;
+const freshColor = d => !d ? 'var(--na)' : age(d) > 14 ? 'var(--r)' : age(d) > 8 ? 'var(--y)' : 'var(--g)';
+const freshHtml = p => { const d = lastUpd(p); return `<span class="rag"><span class="dot sm" style="background:${freshColor(d)}"></span>${d ? fmt(d) : `<span class="muted">${t('noReports')}</span>`}</span>`; };
+const planHtml = p => { const d = D(p.plan); if (!d) return ''; return d < TODAY && isActive(p) ? `<span class="late">${fmt(d)}</span>` : fmt(d); };
+const useHtml = p => { const u = p.budget ? Math.round(p.actual / p.budget * 100) : 0; return `<span class="${u > 100 ? 'over' : u > 90 ? 'warn' : ''}">${u}%</span>`; };
+const scoreHtml = s => `<span class="chip" style="background:${s >= 15 ? 'var(--r)' : s >= 8 ? 'var(--y)' : 'var(--g)'}">${s}</span>`;
+const typeHtml = v => v === 'Стратегічний' ? `<span class="strat">${v}</span>` : `<span class="badge">${esc(v)}</span>`;
+const loopHtml = p => p.loop ? `<a class="loop" href="${esc(p.loop)}" target="_blank" rel="noopener">Loop ↗</a>` : '';
+const pLink = p => `<button class="link" data-act="openp" data-id="${p.id}">${esc(p.title)}</button>`;
+const avatar = (n, cls) => `<span class="pav${cls ? ' ' + cls : ''}" style="background:${pcolor(n)}" aria-hidden="true">${initials(n)}</span>`;
+const person = (n, sub) => n ? `<span class="person" title="${esc(email(n))}">${avatar(n)}<span class="pn"><b>${esc(n)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span></span>` : '<span class="muted">—</span>';
+const cmtHtml = p => { const c = (p.comments || [])[p.comments.length - 1]; return c ? `<span class="cmt"><span title="${esc(c.txt)}">${esc(c.txt)}</span><button class="cnt" data-act="comments" data-id="${p.id}" aria-label="${t('showHistory')}">${p.comments.length}</button></span>` : ''; };
+const valFmt = (f, v) => {
+  if (Array.isArray(v)) return v.length ? esc(v.join(', ')) : '<span class="muted">—</span>';
+  if (v === '' || v == null) return '<span class="muted">—</span>';
+  if (['start','golive','plan','fc'].includes(f)) return fmt(D(v));
+  if (f === 'budget') return money(+v);
+  if (f === 'progress') return v + '%';
+  if (f === 'rag') return ragHtml(v);
+  return esc(v);
+};
+
+/* ================= Generic list ================= */
+let gSeq = 0;
+function table(cols, rows, opt = {}){
+  if (!rows.length) return `<p class="empty">${opt.empty || t('empty')}</p>`;
+  const head = `<thead><tr>${cols.map(c => `<th class="${c.cls || ''}">${c.l()}</th>`).join('')}</tr></thead>`;
+  const row = (r, gk, hid) => `<tr class="row"${gk ? ` data-gk="${gk}"` : ''}${hid ? ' hidden' : ''}>${cols.map(c => `<td class="${c.cls || ''}">${c.r(r)}</td>`).join('')}</tr>`;
+  let body = '';
+  if (opt.group){
+    const keys = [], map = {};
+    rows.forEach(r => { const k = opt.group(r); if (!map[k]){ map[k] = []; keys.push(k); } map[k].push(r); });
+    if (opt.order) keys.sort((a, b) => opt.order.indexOf(a) - opt.order.indexOf(b));
+    keys.forEach(k => { const g = 'g' + (++gSeq);
+      body += `<tr class="grp${opt.collapsed ? ' collapsed' : ''}" data-act="grp" data-g="${g}"><td colspan="${cols.length}"><span class="chev">▾</span>${esc(k)} <span class="muted">(${map[k].length})</span></td></tr>` + map[k].map(r => row(r, g, opt.collapsed)).join(''); });
+  } else body = rows.map(r => row(r)).join('');
+  return `<div class="tablewrap"><table>${head}<tbody>${body}</tbody></table></div>`;
+}
+const col = (k, r, cls) => ({l:() => fl(k), r, cls});
+const PC = {
+  title:col('title', pLink), loop:col('loop', loopHtml), type:col('type', p => typeHtml(p.type)),
+  pm:col('pm', p => person(p.pm)), status:col('status', p => esc(p.status)), rag:col('rag', p => ragHtml(p.rag)),
+  prog:col('progress', p => barHtml(p.progress)), start:col('start', p => fmt(D(p.start))), golive:col('golive', p => fmt(D(p.golive))),
+  plan:col('plan', planHtml), fc:col('fc', p => fmt(D(p.fc))), last:col('last', freshHtml), comments:col('comments', cmtHtml),
+  lastReport:{l:() => fl('lastReport'), cls:'wrap', r:p => esc(p.lastReport)}
+};
+const pcols = ks => ks.map(k => PC[k]);
+const RCOL = {
+  proj:col('rProj', r => pLink(pById(r.pid))), date:col('rDate', r => fmt(r.d)), title:col('rTitle', r => esc(r.title), 'wrap'),
+  rag:col('rag', r => ragHtml(r.rag)), sched:col('rSched', r => dotOnly(r.sched)), budget:col('rBudget', r => dotOnly(r.budget)),
+  res:col('rRes', r => dotOnly(r.res)), prog:col('progress', r => barHtml(r.progress)),
+  dec:col('rDec', r => r.decision ? `<span class="flag">${t('needDecision')}</span>` : ''), decText:col('rDecText', r => esc(r.decisionText), 'wrap'),
+  author:col('rAuthor', r => person(r.author))
+};
+const rcols = ks => ks.map(k => RCOL[k]);
+const KC = {
+  title:col('kTitle', k => esc(k.title), 'wrap'), proj:col('rProj', k => pLink(pById(k.pid))), type:col('kType', k => esc(k.type)),
+  score:col('kScore', k => scoreHtml(k.p * k.i)), pi:col('kPI', k => `<span class="muted">${k.p} × ${k.i}</span>`),
+  owner:col('kOwner', k => person(k.owner)), status:col('kStatus', k => esc(k.status)),
+  due:col('kDue', k => { const d = D(k.due); return d < TODAY && k.status !== 'Закрито' ? `<span class="late">${fmt(d)}</span>` : fmt(d); })
+};
+const kcols = ks => ks.map(k => KC[k]);
+
+const PV = {
+  all:{t:'Усі проєкти', f:() => true},
+  strat:{t:'Стратегічні', f:p => isActive(p) && p.type === 'Стратегічний'},
+  problem:{t:'Проблемні', f:p => isActive(p) && (p.rag === 'Червоний' || p.rag === 'Жовтий')},
+  mine:{t:'Мої проєкти', f:p => participants(p).includes(VIEWER)},
+  stale:{t:'Немає свіжого звіту', f:p => isActive(p) && (!lastUpd(p) || age(lastUpd(p)) > 14)}
+};
+const RV = {all:{t:'Усі звіти', f:() => true}, decision:{t:'Потребують рішення', f:r => r.decision}};
+const KV = {open:{t:'Відкриті', f:k => k.status !== 'Закрито'}, all:{t:'Усі елементи', f:() => true}};
+const state = {page:'home', pv:'all', rv:'all', kv:'open', homeMode:'tiles', projMode:'tiles', panel:null};
+
+/* ================= Tiles ================= */
+function tile(p){
+  const pc = p.progress >= 100 ? 'var(--g)' : 'var(--theme)', d = lastUpd(p);
+  return `<div class="tile" role="button" tabindex="0" data-act="openp" data-id="${p.id}">
+    <div class="tile-top"><span class="code">${esc(p.code)}</span>${p.type === 'Стратегічний' ? `<span class="ico" title="${p.type}" aria-label="${p.type}">${icoStar(true)}</span>` : ''}${ragHtml(p.rag)}</div>
+    <div class="tile-t">${esc(p.title)}</div>
+    <div class="tile-prog"><div class="pl"><span>${esc(p.status)}</span><b>${p.progress}%</b></div><div class="track"><i style="width:${Math.min(p.progress,100)}%;background:${pc}"></i></div></div>
+    <div class="tile-upd"><div class="ul"><span class="dot sm" style="background:${freshColor(d)}"></span>${t('latestUpd')} · ${d ? fmt(d) : t('noReports')}</div>
+      <div class="tx">${esc(p.lastReport) || '<span class="muted">—</span>'}</div></div>
+    <div class="tile-f">${p.loop ? `<a class="loop" href="${esc(p.loop)}" target="_blank" rel="noopener">Loop ↗</a>` : '<span></span>'}
+      <span class="tile-pm" title="${t('pmRole')}: ${esc(p.pm)} · ${esc(email(p.pm))}">${avatar(p.pm)}<b>${esc(p.pm)}</b></span></div>
+  </div>`;
+}
+const tiles = rows => rows.length ? `<div class="tiles">${rows.map(tile).join('')}</div>` : `<p class="empty">${t('empty')}</p>`;
+const iconList = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 3.5h9M5 8h9M5 12.5h9M2 3.5h.5M2 8h.5M2 12.5h.5"/></svg>';
+const iconTiles = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.5"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1.5"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1.5"/><rect x="9" y="9" width="5.5" height="5.5" rx="1.5"/></svg>';
+const iconPlus = '<svg width="14" height="14" viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 2.5v11M2.5 8h11"/></svg>';
+const iconEdit = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10.5 2.5l3 3L6 13H3v-3z"/></svg>';
+const iconKey = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 12.5h12M4 10V7M8 10V4M12 10V6"/></svg>';
+const modeSwitch = key => `<span class="seg" role="group">
+  <button data-act="mode" data-key="${key}" data-mode="list" aria-pressed="${state[key] === 'list'}">${iconList}${t('list')}</button>
+  <button data-act="mode" data-key="${key}" data-mode="tiles" aria-pressed="${state[key] === 'tiles'}">${iconTiles}${t('tiles')}</button></span>`;
+
+/* ================= Charts ================= */
+function donut(){
+  const act = visP().filter(isActive), c = {'Зелений':0,'Жовтий':0,'Червоний':0, none:0};
+  act.forEach(p => c[p.rag || 'none']++);
+  const segs = [['Зелений','var(--g)'],['Жовтий','var(--y)'],['Червоний','var(--r)'],['none','var(--na)']];
+  const R = 76, C = 2 * Math.PI * R, total = act.length || 1; let off = 0, arcs = '';
+  segs.forEach(([k, cl]) => { const len = c[k] / total * C;
+    if (len > 0) arcs += `<circle r="${R}" cx="100" cy="100" fill="none" stroke="${cl}" stroke-width="24" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-off}" transform="rotate(-90 100 100)"/>`; off += len; });
+  const legend = segs.filter(s => s[0] !== 'none' || c.none).map(([k, cl]) => `<li><span class="dot" style="background:${cl}"></span><b>${c[k]}</b>${k === 'none' ? t('notRated') : k}</li>`).join('');
+  return `<div class="donut-wrap"><svg class="donut" viewBox="0 0 200 200" role="img" aria-label="${t('wpHealth')}">
+    <circle r="${R}" cx="100" cy="100" fill="none" stroke="var(--track)" stroke-width="24"/>${arcs}
+    <text x="100" y="100" text-anchor="middle" font-size="40" font-weight="600" fill="var(--text)">${act.length}</text>
+    <text x="100" y="124" text-anchor="middle" font-size="14" fill="var(--text-2)">${t('active')}</text></svg><ul class="legend">${legend}</ul></div>`;
+}
+function dynamics(){
+  const pts = [];
+  for (let k = 6; k >= 0; k--){
+    const tt = daysAgo(k * 14), c = {'Зелений':0,'Жовтий':0,'Червоний':0};
+    visAll().forEach(p => { const rs = repsOf(p).filter(r => r.d <= tt); if (!rs.length) return;
+      if (isArch(p) && tt > lastUpd(p)) return; c[rs[rs.length - 1].rag]++; });
+    pts.push({tt, c});
+  }
+  const W = 500, H = 230, L = 30, B = 30, TP = 12;
+  const max = Math.max(1, ...pts.map(p => p.c['Зелений'] + p.c['Жовтий'] + p.c['Червоний']));
+  const slot = (W - L - 8) / pts.length, bw = slot * 0.5, y = v => H - B - v / max * (H - B - TP);
+  let g = '';
+  [0, Math.ceil(max / 2), max].forEach(v => { g += `<line x1="${L}" x2="${W - 4}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--text-2)">${v}</text>`; });
+  pts.forEach((p, i) => { const x = L + i * slot + (slot - bw) / 2; let base = 0;
+    RAGS.forEach(k => { const v = p.c[k]; if (!v) return; const y1 = y(base + v), h = y(base) - y1;
+      g += `<rect x="${x}" y="${y1}" width="${bw}" height="${Math.max(h - 2, 1)}" rx="5" fill="${RC[k]}"><title>${fmt(p.tt)}: ${k} — ${v}</title></rect>`;
+      if (h > 16) g += `<text x="${x + bw / 2}" y="${y1 + h / 2 + 3}" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">${v}</text>`; base += v; });
+    g += `<text x="${x + bw / 2}" y="${H - 10}" text-anchor="middle" font-size="11" fill="var(--text-2)">${i === pts.length - 1 ? t('today') : fmtShort(p.tt)}</text>`; });
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('wpDyn')}">${g}</svg><p class="hint">${t('dynHint')}</p>`;
+}
+
+/* ================= Data table: two-line rows, sort, filter, column chooser ================= */
+const TS = {}, TROWS = {}, TDEFS = {}, TDEFAULTS = {};
+function tState(key){
+  if (TS[key]) return TS[key];
+  let st = null;
+  try { st = JSON.parse(localStorage.getItem('pmo-table5-' + key)); } catch(e) {}
+  if (!st || !Array.isArray(st.cols)) st = {cols:TDEFAULTS[key].slice(), sort:null, filters:{}};
+  st.cols = st.cols.filter(c => TDEFS[key][c] && c !== '_lock');
+  if (!st.cols.includes(TDEFS[key]._lock)) st.cols.splice(Math.min(2, st.cols.length), 0, TDEFS[key]._lock);
+  st.filters = st.filters || {};
+  return (TS[key] = st);
+}
+function tSave(key){ try { localStorage.setItem('pmo-table5-' + key, JSON.stringify(TS[key])); } catch(e) {} }
+const two = (a, b) => `<div class="c1">${a}</div>${b ? `<div class="c2">${b}</div>` : ''}`;
+const ragOrder = v => ({'Червоний':0,'Жовтий':1,'Зелений':2}[v] ?? 3);
+const fvLabel = (def, v) => def.flabel ? def.flabel(v) : (v === '' ? t('notSet') : esc(v));
+const lastCm = p => (p.comments || [])[(p.comments || []).length - 1];
+
+const SHIELD_D = 'M12 2 4 5v6.2c0 4.9 3.4 9.3 8 10.8 4.6-1.5 8-5.9 8-10.8V5z';
+const SWORD_D = 'M12 4.6l.9 1.3v7.2h2.3v1.4h-2.3v2h.5v1.2h-2.8v-1.2h.5v-2H8.8v-1.4h2.3V5.9z';
+const icoStar = on => on ? `<svg class="stratico" width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="${SHIELD_D}" fill="currentColor"/><path d="${SWORD_D}" fill="#fff"/></svg>` : '';
+const PRIO_I = {
+  '1 — Високий':'<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--r)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8l4-4 4 4M4 12.5l4-4 4 4"/></svg>',
+  '2 — Середній':'<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--y)" stroke-width="2" stroke-linecap="round"><path d="M3.5 6h9M3.5 10h9"/></svg>',
+  '3 — Низький':'<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--theme)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>'};
+const prioIcon = v => `<span class="ico" title="${fl('prio')}: ${esc(v)}" aria-label="${esc(v)}">${PRIO_I[v] || ''}</span>`;
+const prioLabel = v => `<span class="ilabel">${PRIO_I[v] || ''}${esc(v)}</span>`;
+const stratCell = type => type === 'Стратегічний' ? `<span class="ico" title="${t('cStrat')}">${icoStar(true)}</span>` : '';
+const stratLabel = v => v === 'Стратегічний' ? `<span class="ilabel">${icoStar(true)}${v}</span>` : esc(v);
+const ragDot = v => `<span class="ragdot" title="${v || t('notRated')}" aria-label="${v || t('notRated')}" style="background:${v ? RC[v] : 'var(--na)'}"></span>`;
+const ragLabel = v => `<span class="ilabel">${ragDot(v)}${v || t('notRated')}</span>`;
+const freshBucket = d => !d ? '3' : age(d) > 14 ? '2' : age(d) > 8 ? '1' : '0';
+const freshLabel = v => `<span class="ilabel"><span class="dot sm" style="background:${['var(--g)','var(--y)','var(--r)','var(--na)'][+v]}"></span>${t('fr' + v)}</span>`;
+const scoreBucket = s => s >= 15 ? '0' : s >= 8 ? '1' : '2';
+const icoCompass = '<svg class="hico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor" fill-opacity=".25"/></svg>';
+const icoFlag = '<svg class="hico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg>';
+const stratHead = () => `<span class="ico" title="${t('cStrat')}">${icoCompass}</span>`;
+const prioHead = () => `<span class="ico" title="${t('cPrio')}">${icoFlag}</span>`;
+const PP = pid => pById(pid).prio;
+const dimCol = (k, l) => ({l:() => fl(l), main:r => ragDot(r[k]), sort:r => ragOrder(r[k]), filter:r => r[k] || '', flabel:ragLabel, cls:'w-ico'});
+
+const peopleCell = arr => { arr = arr || []; if (!arr.length) return '<span class="muted">—</span>';
+  return `<span class="plist" title="${esc(arr.join(', '))}"><span class="astack">${arr.slice(0, 3).map(n => avatar(n)).join('')}</span><b>${esc(arr[0])}</b>${arr.length > 1 ? `<span class="more-n">+${arr.length - 1}</span>` : ''}</span>`; };
+const dateCell = v => fmt(D(v)) || '<span class="muted">—</span>';
+const devDays = p => (p.fc && p.plan) ? Math.round((D(p.fc) - D(p.plan)) / DAY) : null;
+const PDEF = {
+  _lock:'title',
+  strat:{l:() => t('cStrat'), h:stratHead, main:p => stratCell(p.type), sort:p => p.type === 'Стратегічний' ? 0 : 1, filter:p => p.type, flabel:stratLabel, cls:'w-ico'},
+  title:{l:() => fl('title'), main:p => pLink(p), sort:p => p.title, cls:'w-title'},
+  code:{l:() => t('cCode'), main:p => esc(p.code), sort:p => p.code},
+  type:{l:() => fl('type'), main:p => esc(p.type), sort:p => p.type, filter:p => p.type},
+  pm:{l:() => fl('pm'), main:p => person(p.pm), sort:p => p.pm, filter:p => p.pm},
+  owner:{l:() => t('cOwner'), main:p => p.owner ? person(p.owner) : '<span class="muted">—</span>', sort:p => p.owner, filter:p => p.owner || ''},
+  product:{l:() => fl('stakeholders'), main:p => peopleCell(p.stakeholders), sort:p => (p.stakeholders || [])[0] || '', filter:p => p.stakeholders || []},
+  status:{l:() => t('cStatusOnly'), main:p => esc(p.status), sort:p => STATUSES.indexOf(p.status), filter:p => p.status, cls:'w-min'},
+  prio:{l:() => t('cPrio'), h:prioHead, main:p => prioIcon(p.prio), sort:p => p.prio, filter:p => p.prio, flabel:prioLabel, cls:'w-ico'},
+  rag:{l:() => t('cHealth'), main:p => ragDot(p.rag), sort:p => ragOrder(p.rag), filter:p => p.rag || '', flabel:ragLabel, cls:'w-ico w-min'},
+  repDate:{l:() => t('cRepDate'), main:p => { const d = lastUpd(p); return `<span class="rag"><span class="dot sm" style="background:${freshColor(d)}"></span>${d ? fmt(d) : t('noReports')}</span>`; }, sort:p => p.lastUpdate || '', filter:p => freshBucket(lastUpd(p)), flabel:freshLabel},
+  repAge:{l:() => t('cRepAge'), main:p => lastUpd(p) ? String(age(lastUpd(p))) : '<span class="muted">—</span>', sort:p => lastUpd(p) ? age(lastUpd(p)) : '', cls:'num'},
+  progress:{l:() => fl('progress'), main:p => barHtml(p.progress), sort:p => p.progress},
+  start:{l:() => t('cStart2'), main:p => dateCell(p.start), sort:p => p.start || ''},
+  golive:{l:() => t('cGolive'), main:p => dateCell(p.golive), sort:p => p.golive || ''},
+  plan:{l:() => t('cPlan'), main:p => planHtml(p) || '<span class="muted">—</span>', sort:p => p.plan || ''},
+  fc:{l:() => t('cFc'), main:p => dateCell(p.fc), sort:p => p.fc || ''},
+  dev:{l:() => t('cDev'), main:p => { const d = devDays(p); return d == null ? '<span class="muted">—</span>' : d > 0 ? `<span class="late">+${d}</span>` : String(d); }, sort:p => devDays(p) ?? '', cls:'num'},
+  budget:{l:() => t('cBudgetP'), main:p => money(p.budget), sort:p => p.budget || 0, cls:'num'},
+  actual:{l:() => t('cActual'), main:p => money(p.actual), sort:p => p.actual || 0, cls:'num'},
+  use:{l:() => t('cUse'), main:useHtml, sort:p => p.budget ? p.actual / p.budget : 0, cls:'num'},
+  update:{l:() => fl('lastReport'), main:p => p.lastReport ? `<span class="clamp2" title="${esc(p.lastReport)}">${esc(p.lastReport)}</span>` : '<span class="muted">—</span>', sort:p => p.lastReport || '', cls:'w-upd'},
+  comment:{l:() => fl('comments'), main:p => { const c = lastCm(p); return c ? `<span class="clamp2">${esc(c.txt)}</span> <button class="cnt" data-act="comments" data-id="${p.id}">${p.comments.length}</button>` : '<span class="muted">—</span>'; }, sort:p => { const c = lastCm(p); return c ? c.date : ''; }, cls:'w-wide'},
+  cmtBy:{l:() => t('cCmtBy'), main:p => { const c = lastCm(p); return c ? person(c.who) : '<span class="muted">—</span>'; }, sort:p => { const c = lastCm(p); return c ? c.who : ''; }, filter:p => { const c = lastCm(p); return c ? c.who : ''; }},
+  dept:{l:() => fl('dept'), main:p => esc(p.dept), sort:p => p.dept, filter:p => p.dept},
+  loop:{l:() => 'Loop', main:loopHtml},
+  archived:{l:() => t('archivedAt'), main:p => dateCell(p.archivedAt), sort:p => p.archivedAt || ''}
+};
+const RP = r => pById(r.pid);
+const RDEF = {
+  _lock:'proj',
+  strat:{l:() => t('cStrat'), h:stratHead, main:r => stratCell(RP(r).type), sort:r => RP(r).type === 'Стратегічний' ? 0 : 1, filter:r => RP(r).type, flabel:stratLabel, cls:'w-ico'},
+  proj:{l:() => fl('rProj'), main:r => pLink(RP(r)), sort:r => RP(r).title, filter:r => RP(r).title, cls:'w-title'},
+  code:{l:() => t('cCode'), main:r => esc(RP(r).code), sort:r => RP(r).code},
+  date:{l:() => fl('rDate'), main:r => fmt(r.d), sort:r => r.date},
+  period:{l:() => t('cPeriod'), main:r => esc(r.period || '—'), sort:r => r.period || '', filter:r => r.period || ''},
+  prio:{l:() => t('cPrio'), h:prioHead, main:r => prioIcon(PP(r.pid)), sort:r => PP(r.pid), filter:r => PP(r.pid), flabel:prioLabel, cls:'w-ico'},
+  rag:{l:() => t('cHealth'), main:r => ragDot(r.rag), sort:r => ragOrder(r.rag), filter:r => r.rag, flabel:ragLabel, cls:'w-ico w-min'},
+  sched:dimCol('sched', 'rSched'), budget:dimCol('budget', 'rBudget'), res:dimCol('res', 'rRes'),
+  title:{l:() => fl('rTitle'), main:r => `<span class="clamp2" title="${esc(r.title)}">${esc(r.title)}</span>`, sort:r => r.title, cls:'w-upd'},
+  done:{l:() => t('cDone'), main:r => `<span class="clamp2">${esc(r.done)}</span>`, sort:r => r.done, cls:'w-wide'},
+  next:{l:() => t('cNextP'), main:r => `<span class="clamp2">${esc(r.next)}</span>`, sort:r => r.next, cls:'w-wide'},
+  issues:{l:() => t('cIssues'), main:r => `<span class="clamp2">${esc(r.issues) || '<span class="muted">—</span>'}</span>`, sort:r => r.issues || '', cls:'w-wide'},
+  progress:{l:() => fl('progress'), main:r => barHtml(r.progress), sort:r => r.progress},
+  status:{l:() => t('cStatusR'), main:r => r.status ? esc(r.status === 'Завершено' ? 'Архівний' : r.status) : '<span class="muted">—</span>', sort:r => r.status || '', filter:r => r.status || ''},
+  author:{l:() => fl('rAuthor'), main:r => person(r.author), sort:r => r.author, filter:r => r.author},
+  decision:{l:() => t('cDecFlag'), main:r => r.decision ? `<span class="flag">${t('yes')}</span>` : '<span class="muted">—</span>', sort:r => r.decision ? 0 : 1, filter:r => r.decision ? 'yes' : 'no', flabel:v => v === 'yes' ? t('yes') : t('no')},
+  decText:{l:() => t('cDecText'), main:r => r.decisionText ? `<span class="clamp2">${esc(r.decisionText)}</span>` : '<span class="muted">—</span>', sort:r => r.decisionText || '', cls:'w-wide'}
+};
+const KDEF = {
+  _lock:'proj',
+  proj:{l:() => fl('rProj'), main:k => pLink(pById(k.pid)), sort:k => pById(k.pid).title, filter:k => pById(k.pid).title, cls:'w-title'},
+  prio:{l:() => t('cPrio'), h:prioHead, main:k => prioIcon(PP(k.pid)), sort:k => PP(k.pid), filter:k => PP(k.pid), flabel:prioLabel, cls:'w-ico'},
+  strat:{l:() => t('cStrat'), h:stratHead, main:k => stratCell(pById(k.pid).type), sort:k => pById(k.pid).type === 'Стратегічний' ? 0 : 1, filter:k => pById(k.pid).type, flabel:stratLabel, cls:'w-ico'},
+  code:{l:() => t('cCode'), main:k => esc(pById(k.pid).code), sort:k => pById(k.pid).code},
+  title:{l:() => fl('kTitle'), main:k => `<button class="link clamp2" data-act="riskopen" data-src="list" data-id="${k.pid}" data-rid="${k.id}">${esc(k.title)}</button>`, sort:k => k.title, cls:'w-wide'},
+  type:{l:() => fl('kType'), main:k => esc(k.type), sort:k => k.type, filter:k => k.type},
+  score:{l:() => fl('kScore'), main:k => scoreHtml(k.p * k.i), sort:k => -(k.p * k.i), filter:k => scoreBucket(k.p * k.i), flabel:v => t('sc' + v)},
+  prob:{l:() => t('cProb'), main:k => String(k.p), sort:k => k.p, filter:k => String(k.p), cls:'num'},
+  imp:{l:() => t('cImp'), main:k => String(k.i), sort:k => k.i, filter:k => String(k.i), cls:'num'},
+  owner:{l:() => fl('kOwner'), main:k => person(k.owner), sort:k => k.owner, filter:k => k.owner},
+  status:{l:() => fl('kStatus'), main:k => esc(k.status), sort:k => k.status, filter:k => k.status},
+  due:{l:() => fl('kDue'), main:k => { const d = D(k.due); return d < TODAY && k.status !== 'Закрито' ? `<span class="late">${fmt(d)}</span>` : fmt(d); }, sort:k => k.due}
+};
+TDEFS.projects = PDEF; TDEFAULTS.projects = ['strat','prio','title','pm','status','rag','repDate','progress','plan','update'];
+TDEFS.archive = PDEF; TDEFAULTS.archive = ['strat','prio','title','pm','owner','archived','plan','budget','actual'];
+TDEFS.reports = RDEF; TDEFAULTS.reports = ['strat','prio','proj','date','rag','sched','budget','res','title','author','decision'];
+TDEFS.risks = KDEF; TDEFAULTS.risks = ['strat','prio','proj','title','type','score','owner','status','due'];
+
+const icoSort = d => d === 'asc' ? '↑' : d === 'desc' ? '↓' : '';
+const icoFunnel = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M2 3h12l-4.5 5.5V13l-3 1.5V8.5z"/></svg>';
+const icoGear = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
+const matchF = (fv, vals) => Array.isArray(fv) ? fv.some(x => vals.includes(String(x))) : vals.includes(String(fv));
+const gearBtn = key => `<button class="iconbtn gear-lg" data-act="tcols" data-key="${key}" aria-label="${t('cols')}" title="${t('cols')}">${icoGear}</button>`;
+function applyTable(key, rows){
+  const st = tState(key), defs = TDEFS[key];
+  let data = rows.filter(r => Object.entries(st.filters).every(([id, vals]) => !vals || !vals.length || !defs[id] || !defs[id].filter || matchF(defs[id].filter(r), vals)));
+  if (st.sort && defs[st.sort.id] && defs[st.sort.id].sort){
+    const f = defs[st.sort.id].sort, dir = st.sort.dir === 'desc' ? -1 : 1;
+    data = data.slice().sort((a, b) => { const x = f(a), y = f(b); const ex = x === '' || x == null || x === -1, ey = y === '' || y == null || y === -1;
+      if (ex && ey) return 0; if (ex) return 1; if (ey) return -1;
+      return dir * (typeof x === 'number' && typeof y === 'number' ? x - y : String(x).localeCompare(String(y), 'uk')); });
+  }
+  return data;
+}
+function dataTable(key, rows, emptyMsg){
+  TROWS[key] = rows;
+  const st = tState(key), defs = TDEFS[key], data = applyTable(key, rows), cols = st.cols.map(c => [c, defs[c]]);
+  const chips = Object.entries(st.filters).filter(([id, v]) => v && v.length && defs[id]).map(([id, v]) =>
+    `<span class="fchip">${defs[id].l()}: ${v.map(x => fvLabel(defs[id], x)).join(', ')}<button data-act="fclear" data-key="${key}" data-col="${id}" aria-label="${t('clear')}">×</button></span>`).join('');
+  const head = cols.map(([id, d]) => {
+    const s = st.sort && st.sort.id === id ? st.sort.dir : '';
+    const fa = st.filters[id] && st.filters[id].length;
+    return `<th class="${d.cls || ''}"><span class="th${d.filter ? ' hasf' : ''}">${d.sort ? `<button class="sortb${s ? ' on' : ''}" data-act="tsort" data-key="${key}" data-col="${id}" title="${t('sortBy')}: ${d.l()}">${d.h ? d.h() : d.l()}<i>${icoSort(s)}</i></button>` : `<span>${d.h ? d.h() : d.l()}</span>`}${d.filter ? `<button class="fbtn${fa ? ' on' : ''}" data-act="tfilter" data-key="${key}" data-col="${id}" aria-label="${t('filter')}: ${d.l()}">${icoFunnel}</button>` : ''}</span></th>`;
+  }).join('');
+  const body = data.map(r => `<tr class="row">${cols.map(([id, d]) => `<td class="${d.cls || ''}">${d.main(r)}</td>`).join('')}</tr>`).join('');
+  return `<div class="dt-bar"><span class="muted">${t('shown')} ${data.length} ${t('of')} ${rows.length}</span>${chips}</div>
+    ${data.length ? `<div class="tablewrap dt"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>` : `<p class="empty">${emptyMsg || t('empty')}</p>`}`;
+}
+
+/* popovers */
+const pop = document.getElementById('pop');
+let POP = null;
+function openPop(anchor, kind, key, col){
+  POP = {kind, key, col, q:''};
+  pop.hidden = false;
+  renderPop();
+  const r = anchor.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight;
+  let left = kind === 'filter' ? r.left : r.right - w, top = r.bottom + 6;
+  left = Math.max(12, Math.min(left, window.innerWidth - w - 12));
+  if (top + h > window.innerHeight - 12) top = Math.max(12, r.top - h - 6);
+  pop.style.left = left + 'px'; pop.style.top = top + 'px';
+  const f = pop.querySelector('input[type=search]'); if (f) f.focus();
+}
+function closePop(){ POP = null; pop.hidden = true; pop.innerHTML = ''; }
+function renderPop(){
+  if (!POP) return;
+  if (POP.kind === 'filter'){
+    const d = TDEFS[POP.key][POP.col], st = tState(POP.key), cur = st.filters[POP.col] || [];
+    const vals = [...new Set((TROWS[POP.key] || []).flatMap(r => { const v = d.filter(r); return Array.isArray(v) ? v.map(String) : [String(v)]; }))].sort((a, b) => a.localeCompare(b, 'uk'));
+    const q = POP.q.toLowerCase();
+    pop.innerHTML = `<div class="pop-h">${t('filter')}: ${d.l()}</div>
+      ${vals.length > 7 ? `<input type="search" class="pop-q" placeholder="${t('search')}" value="${esc(POP.q)}">` : ''}
+      <div class="pop-list">${vals.filter(v => !q || v.toLowerCase().includes(q)).map(v => `<label class="pop-row"><input type="checkbox" data-pv="${esc(v)}"${cur.includes(v) ? ' checked' : ''}><span>${fvLabel(d, v)}</span></label>`).join('')}</div>
+      <div class="pop-f"><button class="more" data-act="fclear" data-key="${POP.key}" data-col="${POP.col}">${t('clear')}</button></div>`;
+  } else if (POP.kind === 'cols'){
+    const defs = TDEFS[POP.key], st = tState(POP.key);
+    const all = st.cols.concat(Object.keys(defs).filter(k => k !== '_lock' && !st.cols.includes(k)));
+    pop.innerHTML = `<div class="pop-h">${t('cols')}</div><div class="pop-list">${all.map(id => {
+      const on = st.cols.includes(id), idx = st.cols.indexOf(id), lock = id === defs._lock;
+      return `<div class="pop-row col-row"><label><input type="checkbox" data-col="${id}"${on ? ' checked' : ''}${lock ? ' disabled' : ''}><span>${defs[id].l()}</span></label>
+        <span class="mv"><button data-act="cmove" data-col="${id}" data-dir="-1" aria-label="↑"${!on || idx <= 1 ? ' disabled' : ''}>↑</button><button data-act="cmove" data-col="${id}" data-dir="1" aria-label="↓"${!on || lock || idx === st.cols.length - 1 ? ' disabled' : ''}>↓</button></span></div>`; }).join('')}</div>
+      <div class="pop-f"><button class="more" data-act="creset">${t('colsReset')}</button></div>`;
+  } else if (POP.kind === 'user'){
+    pop.innerHTML = `<div class="pop-me">${avatar(VIEWER, 'lg')}<span class="pn"><b>${esc(VIEWER)}</b><small>${esc(roleOf(VIEWER))}</small><small>${esc(email(VIEWER))}</small></span></div>
+      <div class="pop-sep">${t('switchUser')}</div>
+      <div class="pop-list">${Object.keys(ORG).filter(n => n !== VIEWER).map(n => `<button class="pop-row pop-user" data-act="asuser" data-n="${esc(n)}">${person(n, roleOf(n))}</button>`).join('')}</div>`;
+  }
+}
+pop.addEventListener('input', e => { if (e.target.classList.contains('pop-q')){ POP.q = e.target.value; const pos = e.target.selectionStart; renderPop(); const q = pop.querySelector('.pop-q'); q.focus(); q.setSelectionRange(pos, pos); } });
+pop.addEventListener('change', e => {
+  if (!POP) return;
+  const st = tState(POP.key);
+  if (POP.kind === 'filter' && e.target.dataset.pv !== undefined){
+    const v = e.target.dataset.pv, cur = new Set(st.filters[POP.col] || []);
+    e.target.checked ? cur.add(v) : cur.delete(v);
+    st.filters[POP.col] = [...cur]; tSave(POP.key); rerenderMain();
+  } else if (POP.kind === 'cols' && e.target.dataset.col){
+    const id = e.target.dataset.col;
+    if (e.target.checked){ if (!st.cols.includes(id)) st.cols.push(id); } else st.cols = st.cols.filter(c => c !== id);
+    tSave(POP.key); rerenderMain(); renderPop();
+  }
+});
+
+/* ================= Pages ================= */
+const wp = (title, inner, more, extra) => `<section class="wp"><div class="wp-h"><h2>${title}</h2><span>${extra || ''}${more ? `<button class="more" data-act="goview" data-page="${more[0]}" data-view="${more[1]}">${t('showAll')}</button>` : ''}</span></div>${inner}</section>`;
+const hero = (title, sub, withNew) => `<div class="hero"><div><h1 class="page-title">${title}</h1>${sub ? `<p class="page-sub">${sub}</p>` : ''}</div>${withNew ? `<button class="btn primary" data-act="newproj">${iconPlus}${t('newProject')}</button>` : ''}</div>`;
+function stateScreen(){
+  if (MODE === 'loading') return `${hero(t('dash'))}<div class="wp empty-state"><div class="spinner" aria-hidden="true"></div><p>${t('loading')}</p></div>`;
+  if (MODE === 'empty') return `${hero(t('dash'), '', true)}<div class="wp empty-state"><p>${t('emptyDb')}</p><button class="btn" data-act="seed">${t('seed')}</button></div>`;
+  return null;
+}
+function pageHome(){
+  const s = stateScreen(); if (s) return s;
+  const vis = visP();
+  if (!vis.length) return `${hero(t('dash'), t('visible') + '0', true)}<div class="wp empty-state"><p>${t('noVisible')}</p></div>`;
+  const prob = vis.filter(PV.problem.f).sort((a, b) => (a.rag === 'Червоний' ? 0 : 1) - (b.rag === 'Червоний' ? 0 : 1));
+  const stale = vis.filter(PV.stale.f);
+  const dec = visR().filter(r => r.decision && !isArch(pById(r.pid))).sort((a, b) => b.d - a.d);
+  const open = visK().filter(k => KV.open.f(k) && !isArch(pById(k.pid))).sort((a, b) => b.p * b.i - a.p * a.i).slice(0, 6);
+  const C = (l, r, cls) => ({l:() => l, r, cls});
+  const S = {l:stratHead, r:p => stratCell(p.type), cls:'c-ico'}, PR = {l:prioHead, r:p => prioIcon(p.prio), cls:'c-ico'};
+  const SR = {l:stratHead, r:x => stratCell(pById(x.pid).type), cls:'c-ico'}, PRR = {l:prioHead, r:x => prioIcon(PP(x.pid)), cls:'c-ico'};
+  const probCols = [S, PR, C(fl('title'), pLink), C(t('cHealth'), p => ragDot(p.rag), 'c-ico'), C(fl('pm'), p => person(p.pm)), C(fl('lastReport'), p => `<span title="${esc(p.lastReport)}">${esc(p.lastReport)}</span>`, 'wide'), C(t('cRepDate'), p => fmt(lastUpd(p)))];
+  const staleCols = [S, PR, C(fl('title'), pLink), C(fl('pm'), p => person(p.pm)), C(fl('last'), freshHtml), C(t('cStatusOnly'), p => esc(p.status))];
+  const decCols = [SR, PRR, C(fl('rProj'), r => pLink(pById(r.pid))), C(fl('rDate'), r => fmt(r.d)), C(fl('rDecText'), r => esc(r.decisionText), 'wide'), C(fl('rAuthor'), r => person(r.author))];
+  const riskCols = [SR, PRR, C(fl('rProj'), k => pLink(pById(k.pid))), C(fl('kTitle'), k => esc(k.title), 'wide'), C(fl('kType'), k => esc(k.type)), C(fl('kScore'), k => scoreHtml(k.p * k.i)), C(fl('kOwner'), k => person(k.owner)), KC.due];
+  return `${hero(t('dash'), t('visible') + vis.length, true)}
+  <div class="grid2">${wp(t('wpHealth'), donut())}${wp(t('wpDyn'), dynamics())}</div>
+  <div class="dash">
+    ${wp(t('wpProblem'), table(probCols, prob, {empty:t('emptyProblem')}), ['projects','problem'])}
+    ${wp(t('wpStale'), table(staleCols, stale, {empty:t('emptyStale')}), ['projects','stale'])}
+    ${wp(t('wpDecision'), table(decCols, dec, {empty:t('emptyDecision')}), ['reports','decision'])}
+    ${wp(t('wpRisks'), table(riskCols, open, {empty:t('emptyRisks')}), ['risks','open'])}
+  </div>`;
+}
+const viewSel = (views, cur, key) => `<label class="viewsel" title="${t('viewsNote')}">${t('view')}
+  <select data-act="view" data-key="${key}">${Object.entries(views).map(([k, v]) => `<option value="${k}"${k === cur ? ' selected' : ''}>${v.t}</option>`).join('')}</select></label>`;
+function pageProjects(){
+  const s = stateScreen(); if (s) return s.replace(t('dash'), t('navProjects'));
+  const v = PV[state.pv], rows = visP().filter(v.f).sort(byOrder);
+  const inner = state.projMode === 'tiles' ? tiles(rows) : dataTable('projects', rows);
+  return `${hero(t('navProjects'), t('visible') + visP().length, true)}
+  <div class="listcard"><div class="cmdbar">${modeSwitch('projMode')}<span class="spacer"></span>${viewSel(PV, state.pv, 'pv')}${state.projMode === 'list' ? gearBtn('projects') : ''}</div>${inner}</div>
+  <p class="hint">${t('hintProjects')}</p>`;
+}
+function pageArchive(){
+  const s = stateScreen(); if (s) return s.replace(t('dash'), t('navArchive'));
+  const rows = visArch().sort((a, b) => String(b.archivedAt || '').localeCompare(String(a.archivedAt || '')));
+  return `${hero(t('navArchive'), t('archiveSub') + ' · ' + rows.length)}
+  <div class="listcard"><div class="cmdbar"><span class="spacer"></span>${gearBtn('archive')}</div>${dataTable('archive', rows)}</div>`;
+}
+function pageReports(){
+  const s = stateScreen(); if (s) return s.replace(t('dash'), t('navReports'));
+  const v = RV[state.rv], rows = visR().filter(v.f).sort((a, b) => b.d - a.d);
+  const canAdd = visP().some(p => isActive(p) && canEditP(p));
+  return `${hero(t('navReports'))}
+  <div class="listcard"><div class="cmdbar">${canAdd ? `<button class="cmd primary" data-act="newrep">${iconPlus}${t('newReport')}</button>` : ''}<span class="spacer"></span>${viewSel(RV, state.rv, 'rv')}${gearBtn('reports')}</div>
+  ${dataTable('reports', rows)}</div>`;
+}
+function pageRisks(){
+  const s = stateScreen(); if (s) return s.replace(t('dash'), t('navRisks'));
+  const v = KV[state.kv], rows = visK().filter(k => v.f(k) && !isArch(pById(k.pid))).sort((a, b) => b.p * b.i - a.p * a.i);
+  return `${hero(t('navRisks'))}
+  <div class="listcard"><div class="cmdbar">${visP().some(p => isActive(p) && canEditP(p)) ? `<button class="cmd primary" data-act="newrisk">${iconPlus}${t('newRisk')}</button>` : ''}<span class="spacer"></span>${viewSel(KV, state.kv, 'kv')}${gearBtn('risks')}</div>${dataTable('risks', rows)}</div>
+  <p class="hint">${t('hintRisks')}</p>`;
+}
+const PAGES = {home:pageHome, projects:pageProjects, reports:pageReports, risks:pageRisks, archive:pageArchive};
+const main = document.getElementById('main');
+const foot = document.getElementById('foot');
+
+function renderChrome(){
+  document.documentElement.lang = LANGS[LI];
+  document.title = t('siteTitle');
+  document.getElementById('siteName').textContent = t('siteTitle');
+  document.getElementById('siteSub').textContent = 'SharePoint · Microsoft 365';
+  const nav = {home:'navHome', projects:'navProjects', reports:'navReports', risks:'navRisks', archive:'navArchive'};
+  document.querySelectorAll('.nav button').forEach(b => { b.textContent = t(nav[b.dataset.page]); if (b.dataset.page === state.page) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  document.querySelectorAll('[data-act=lang]').forEach((b, i) => b.setAttribute('aria-pressed', i === LI));
+  document.querySelectorAll('[data-act=theme]').forEach(b => { b.setAttribute('aria-pressed', b.dataset.t === THEME); b.title = t(b.dataset.t === 'light' ? 'themeLight' : 'themeDark'); b.setAttribute('aria-label', b.title); });
+  const me = document.getElementById('me');
+  me.innerHTML = avatar(VIEWER); me.title = `${t('signedIn')}: ${VIEWER} · ${email(VIEWER)}`; me.setAttribute('aria-label', me.title);
+  foot.innerHTML = MODE === 'loading' ? '' : `<span class="src"><span class="dot sm" style="background:${db ? 'var(--g)' : 'var(--y)'}"></span>${db ? t('srcDb') : t('srcLocal')}</span>${MODE !== 'empty' ? `<button class="more" data-act="reset">${t('reset')}</button>` : ''}`;
+}
+function render(){
+  renderChrome();
+  main.innerHTML = PAGES[state.page]();
+  if (state.panel && state.panel.kind === 'project'){
+    const p = pById(state.panel.id);
+    if (p && canSee(p)) projectPanel(p.id, state.panel.showCm, true, state.panel.showCh); else closePanel();
+  }
+}
+const rerenderMain = () => { renderChrome(); main.innerHTML = PAGES[state.page](); };
+
+/* ================= Panel ================= */
+const panel = document.getElementById('panel'), scrim = document.getElementById('scrim');
+let lastFocus = null;
+function openPanel(html, keep){
+  if (!keep) lastFocus = document.activeElement;
+  const top = panel.scrollTop;
+  panel.innerHTML = html;
+  panel.classList.add('open'); scrim.classList.add('open'); panel.setAttribute('aria-hidden', 'false');
+  if (keep) panel.scrollTop = top; else { panel.scrollTop = 0; const x = panel.querySelector('.x'); if (x) x.focus(); }
+}
+function closePanel(){
+  panel.classList.remove('open'); scrim.classList.remove('open'); panel.setAttribute('aria-hidden', 'true');
+  state.panel = null;
+  if (lastFocus && document.body.contains(lastFocus)) lastFocus.focus();
+}
+const closeBtn = () => `<button class="x" data-act="close" aria-label="${t('close')}"><svg width="14" height="14" viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.6"><path d="M2 2l12 12M14 2 2 14"/></svg></button>`;
+const kv = (k, v) => `<div class="kv"><span class="k">${k === 'archived' ? t('archivedAt') : fl(k)}</span><span class="v">${v || '<span class="muted">—</span>'}</span></div>`;
+
+function accessList(p){
+  const rows = [], seen = new Set();
+  const add = (n, lvl, sub) => { if (!n || seen.has(n)) return; seen.add(n); rows.push(`<li>${person(n, sub)}<span class="lvl">${lvl}</span></li>`); };
+  add(p.pm, t('lvlEdit'), t('pmRole'));
+  chain(p.pm).forEach(m => add(m, t('lvlEdit'), roleOf(m)));
+  add(p.owner, t('lvlEdit'), fl('owner'));
+  (p.stakeholders || []).forEach(n => add(n, t('lvlRead'), fl('stakeholders')));
+  [p.owner].concat(p.stakeholders || []).filter(Boolean).forEach(x => chain(x).forEach(m => add(m, t('lvlRead'), roleOf(m))));
+  return rows.join('') + `<li><span class="pav" style="background:var(--text-3)">PMO</span><span class="pn"><b>${t('pmoGroup')}</b></span><span class="lvl">${t('lvlFull')}</span></li>`;
+}
+function changesHtml(p, showAll){
+  const list = (p.changes || []).slice().sort((a, b) => D(b.date) - D(a.date));
+  if (!list.length) return `<p class="empty">${t('noChanges')}</p>`;
+  const kindL = {create:'kCreate', key:'kKey', edit:'kEdit', report:'kReport'};
+  const item = c => `<div class="chg">
+    <div class="chg-h">${avatar(c.who, 'sm')}<b>${esc(c.who)}</b><span class="muted">${fmtDT(D(c.date))}</span><span class="chg-k chg-${c.kind}">${t(kindL[c.kind] || 'kEdit')}</span></div>
+    ${c.diffs && c.diffs.length ? `<div class="diffs">${c.diffs.map(d => `<div class="diff"><span class="df">${fl(d.f)}</span><span class="dv"><s>${valFmt(d.f, d.from)}</s><span class="arr">→</span>${valFmt(d.f, d.to)}</span></div>`).join('')}</div>` : ''}
+    ${c.reason ? `<div class="chg-r">${esc(c.reason)}</div>` : ''}</div>`;
+  const shown = showAll ? list : list.slice(0, 3);
+  return `<div class="cmts">${shown.map(item).join('')}${list.length > 3 ? `<button class="more" data-act="togglech">${showAll ? t('hideHistory') : t('showHistory') + ` (${list.length})`}</button>` : ''}</div>`;
+}
+
+function projectPanel(id, showCm, keep, showCh){
+  const p = pById(id); if (!p) return;
+  state.panel = {kind:'project', id, showCm:!!showCm, showCh:!!showCh};
+  const rs = repsOf(p), last8 = rs.slice(-8), edit = canEditP(p) && !isArch(p);
+  let dev = '';
+  if (p.fc && p.plan){ const dd = Math.round((D(p.fc) - D(p.plan)) / DAY); dev = dd > 0 ? ` <span class="late">+${dd} ${t('days')}</span>` : dd < 0 ? ` <span class="muted">${dd} ${t('days')}</span>` : ''; }
+  const dims = [['rag','rag'],['sched','rSched'],['budget','rBudget'],['res','rRes']];
+  const matrix = last8.length ? `<div class="tablewrap"><table class="matrix"><thead><tr><th></th>${last8.map(r => `<th>${fmtShort(r.d)}</th>`).join('')}</tr></thead><tbody>
+    ${dims.map(([k, l]) => `<tr><td>${fl(l)}</td>${last8.map(r => `<td>${dotOnly(r[k])}</td>`).join('')}</tr>`).join('')}
+    <tr><td>${fl('progress')}</td>${last8.map(r => `<td class="muted">${r.progress}</td>`).join('')}</tr></tbody></table></div>` : `<p class="empty">${t('noReportsYet')}</p>`;
+  const repList = rs.slice().reverse().map(r => `<div class="rep">
+    <div class="rep-h"><b>${fmt(r.d)}</b>${ragHtml(r.rag)}${person(r.author)}${r.decision ? `<span class="flag">${t('needDecision')}</span>` : ''}</div>
+    <p><b>${esc(r.title)}</b></p><p><span class="lbl">${t('done')}:</span> ${esc(r.done)}</p><p><span class="lbl">${t('plan')}:</span> ${esc(r.next)}</p>
+    ${r.issues ? `<p><span class="lbl">${t('issues')}:</span> ${esc(r.issues)}</p>` : ''}${r.decisionText ? `<p><span class="lbl">${t('needDecision')}:</span> ${esc(r.decisionText)}</p>` : ''}</div>`).join('');
+  const cms = (p.comments || []).slice().reverse();
+  const cmItem = c => `<div class="hist-c"><div class="who">${fmtDT(D(c.date))} · ${esc(c.who)}</div><div>${esc(c.txt)}</div></div>`;
+  const cmBlock = cms.length ? '<div class="cmts">' + cmItem(cms[0]) + (cms.length > 1 ? (showCm ? cms.slice(1).map(cmItem).join('') : '') +
+      `<button class="more" data-act="togglecm">${showCm ? t('hideHistory') : t('showHistory') + ` (${cms.length})`}</button>` : '') + '</div>'
+    : `<p class="empty">${t('noComments')}</p>`;
+  const risks = (p.risks || []).slice().sort((a, b) => b.p * b.i - a.p * a.i);
+  const actions = edit
+    ? `<div class="actbar"><button class="btn primary" data-act="newrep" data-id="${p.id}">${iconPlus}${t('addReport')}</button>
+       <button class="btn" data-act="editproj" data-id="${p.id}">${iconEdit}${t('editProject')}</button></div>`
+    : `<p class="note lock">🔒 ${isArch(p) ? t('archivedNote') : t('noEdit')}</p>`;
+  openPanel(`<div class="ph"><div><div class="k">${esc(p.code)} · ${t('listLabel')} «${t('navProjects')}»</div><h2>${esc(p.title)}</h2></div>${closeBtn()}</div>
+    <div class="badges">${typeHtml(p.type)}${ragHtml(p.rag)}<span class="badge">${esc(p.status)}</span><span class="badge">${esc(p.prio)}</span>${p.loop ? `<a class="loop" href="${esc(p.loop)}" target="_blank" rel="noopener">${t('openLoop')} ↗</a>` : ''}</div>
+    ${actions}
+    ${p.desc ? `<p class="desc">${esc(p.desc)}</p>` : ''}
+    <div class="sec"><h3>${t('secPeople')}</h3>
+      <div class="pmcard">${avatar(p.pm, 'lg')}<span class="pn"><b>${esc(p.pm)}</b><small>${esc(roleOf(p.pm))} · ${esc(email(p.pm))}</small></span><span class="role">${t('pmRole')}</span></div>
+      <div class="people2"><div><div class="k">${fl('owner')}</div>${person(p.owner, roleOf(p.owner))}</div><div><div class="k">${fl('stakeholders')}</div><div class="plist-v">${(p.stakeholders || []).length ? p.stakeholders.map(n => person(n, roleOf(n))).join('') : '<span class="muted">—</span>'}</div></div></div></div>
+    <div class="sec"><h3>${t('secDates')}</h3><div class="group">
+      ${kv('start', fmt(D(p.start)))}${kv('golive', fmt(D(p.golive)))}${kv('plan', planHtml(p))}${kv('fc', p.fc ? fmt(D(p.fc)) + dev : '')}${p.archivedAt ? kv('archived', fmt(D(p.archivedAt))) : ''}</div></div>
+    <div class="sec"><h3>${t('secMoney')}</h3><div class="group">
+      ${kv('progress', barHtml(p.progress))}${kv('last', freshHtml(p))}${kv('budget', money(p.budget))}${kv('actual', money(p.actual) + ' · ' + useHtml(p))}${kv('dept', esc(p.dept))}</div></div>
+    <div class="sec"><h3>${t('secChanges')}</h3>${changesHtml(p, showCh)}</div>
+    <div class="sec"><h3>${fl('comments')}</h3>${cmBlock}
+      <form id="cmform" class="frow" style="margin-top:12px" novalidate>
+        <label class="t" for="cm-t">${t('addComment')}</label><textarea id="cm-t" placeholder="${t('cmtPh')}"></textarea>
+        <p class="err" id="cm-err" hidden></p><div class="actions" style="margin-top:10px"><button type="submit" class="btn">${t('addComment')}</button></div></form></div>
+    <div class="sec"><h3>${t('secHistory')}</h3>${matrix}</div>
+    <div class="sec"><h3>${t('secReports')} (${rs.length})</h3>${repList || `<p class="empty">${t('noReportsYet')}</p>`}</div>
+    <div class="sec"><div class="sec-h"><h3>${t('secRisks')} (${risks.length})</h3>${edit ? `<button class="more" data-act="newrisk" data-id="${p.id}">${iconPlus} ${t('addRisk')}</button>` : ''}</div>
+      ${risks.length ? `<div class="rlist">${risks.map(k => `<button class="rrow" data-act="riskopen" data-id="${p.id}" data-rid="${k.id}">${scoreHtml(k.p * k.i)}<span class="rt">${esc(k.title)}</span><span class="muted">${esc(k.type)} · ${esc(k.status)}</span></button>`).join('')}</div>` : `<p class="empty">${t('emptyRisks')}</p>`}</div>
+    <div class="sec"><h3>${t('accessTitle')}</h3><div class="access"><div class="muted" style="font-size:13px">${t('accessDesc')}</div><ol>${accessList(p)}</ol></div></div>`, keep);
+  document.getElementById('cmform').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = document.getElementById('cm-t').value.trim();
+    if (!v){ const er = document.getElementById('cm-err'); er.textContent = t('errCmt'); er.hidden = false; return; }
+    p.comments = (p.comments || []).concat([{id:uid(), date:new Date().toISOString(), who:VIEWER, txt:v}]);
+    rerenderMain(); projectPanel(id, state.panel.showCm, true, state.panel.showCh); persist(p); toast(t('cmtSaved'));
+  });
+  if (showCm && !keep){ const s = panel.querySelector('#cmform'); if (s && s.parentElement.scrollIntoView) s.parentElement.scrollIntoView({block:'start'}); }
+}
+
+/* ================= Forms ================= */
+const opt = (v, cur, label) => `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(label || v)}</option>`;
+const peopleSelect = (id, cur, req) => `<select id="${id}">${req ? '' : `<option value="">${t('notSet')}</option>`}${Object.keys(ORG).map(n => opt(n, cur, `${n} — ${roleOf(n)} · ${email(n)}`)).join('')}</select>`;
+const segPick = (name, values, cur, colors) => `<div class="opts">${values.map((v, i) => `<input type="radio" id="${name}${i}" name="${name}" value="${esc(v)}"${v === cur ? ' checked' : ''}><label for="${name}${i}">${colors ? `<span class="dot sm" style="background:${RC[v]}"></span>` : ''}${esc(v)}</label>`).join('')}</div>`;
+const ragPick = (name, label, req, cur) => `<fieldset class="ragpick"><legend>${label}${req ? ' *' : ''}</legend>${segPick(name, RAGS, cur, true)}</fieldset>`;
+const formHead = (title, sub) => `<div class="ph"><div><div class="k">${sub}</div><h2>${title}</h2></div>${closeBtn()}</div>`;
+const fErr = form => msg => { const e = form.querySelector('.err'); e.textContent = msg; e.hidden = false; e.scrollIntoView && e.scrollIntoView({block:'nearest'}); };
+const radioVal = (form, n) => (form.querySelector(`input[name="${n}"]:checked`) || {}).value || '';
+
+function projectForm(p){
+  const isNew = !p; p = p || {pm:VIEWER, type:'Звичайний', status:'Ініціація', prio:'2 — Середній', dept:'ІТ', start:iso(TODAY)};
+  state.panel = {kind:'form'};
+  openPanel(`${formHead(isNew ? t('newProject') : t('editProject') + ': ' + esc(p.title), `${t('listLabel')} «${t('navProjects')}»`)}
+  <form id="pform" novalidate>
+    <h3 class="fsec">${t('fGeneral')}</h3>
+    <div class="frow"><label class="t" for="p-title">${fl('title')} *</label><input type="text" id="p-title" value="${esc(p.title || '')}"></div>
+    <div class="fgrid2 frow">
+      <div><label class="t" for="p-code">${fl('code')}</label><input type="text" id="p-code" value="${esc(p.code || '')}" placeholder="${t('codeAuto')}"></div>
+      <div><label class="t" for="p-dept">${fl('dept')}</label><select id="p-dept">${DEPTS.map(d => opt(d, p.dept)).join('')}</select></div>
+    </div>
+    <div class="frow"><label class="t" for="p-loop">${fl('loop')}</label><input type="text" inputmode="url" id="p-loop" value="${esc(p.loop || '')}" placeholder="https://loop.cloud.microsoft/…"></div>
+    ${isNew ? `<fieldset class="ragpick"><legend>${fl('type')} *</legend>${segPick('p-type', TYPES, p.type)}</fieldset>` : ''}
+    <h3 class="fsec">${t('fPeople')}</h3>
+    <div class="frow"><label class="t" for="p-pm">${fl('pm')} * <span class="muted">· ${t('m365')}</span></label>${peopleSelect('p-pm', p.pm, true)}</div>
+    <div class="fgrid2 frow">
+      <div><label class="t" for="p-owner">${fl('owner')}</label>${peopleSelect('p-owner', p.owner)}</div>
+    </div>
+    <div class="frow"><span class="t lbl-t">${fl('stakeholders')} <span class="muted">· ${t('m365')}</span></span>
+      <div class="pmulti" id="p-st">${Object.keys(ORG).map(n => `<label class="pop-row"><input type="checkbox" value="${esc(n)}"${(p.stakeholders || []).includes(n) ? ' checked' : ''}>${person(n, roleOf(n))}</label>`).join('')}</div></div>
+    ${isNew ? '' : `<p class="note">${t('accessRecalc')}</p>`}
+    ${isNew ? `<h3 class="fsec">${t('fDates')}</h3>
+    <div class="fgrid frow">
+      <div><label class="t" for="p-start">${fl('start')}</label><input type="date" id="p-start" value="${p.start || ''}"></div>
+      <div><label class="t" for="p-golive">${fl('golive')}</label><input type="date" id="p-golive" value="${p.golive || ''}"></div>
+      <div><label class="t" for="p-plan">${fl('plan')}</label><input type="date" id="p-plan" value="${p.plan || ''}"></div>
+    </div>
+    <div class="fgrid2 frow"><div><label class="t" for="p-status">${fl('status')}</label><select id="p-status">${REPORT_STATUSES.map(s => opt(s, p.status)).join('')}</select></div><div></div></div>` : ''}
+    <h3 class="fsec">${t('secMoney')}</h3>
+    <div class="fgrid2 frow">
+      <div><label class="t" for="p-prio">${fl('prio')}</label><select id="p-prio">${PRIOS.map(s => opt(s, p.prio)).join('')}</select></div>
+      <div><label class="t" for="p-budget">${fl('budget')}, ₴</label><input type="number" id="p-budget" min="0" step="10000" value="${p.budget || 0}"></div>
+    </div>
+    <div class="frow"><label class="t" for="p-desc">${fl('desc')}</label><textarea id="p-desc">${esc(p.desc || '')}</textarea></div>
+    <p class="err" hidden></p>
+    <div class="actions"><button type="submit" class="btn primary">${t('save')}</button><button type="button" class="btn" data-act="${isNew ? 'close' : 'backp'}" data-id="${p.id || ''}">${t('cancel')}</button></div>
+  </form>`);
+  const form = document.getElementById('pform'), err = fErr(form), g = id => form.querySelector('#' + id);
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const vals = {title:g('p-title').value.trim(), code:g('p-code').value.trim(), dept:g('p-dept').value, loop:g('p-loop').value.trim(),
+      pm:g('p-pm').value, owner:g('p-owner').value, stakeholders:[...form.querySelectorAll('#p-st input:checked')].map(x => x.value), prio:g('p-prio').value, budget:+g('p-budget').value || 0, desc:g('p-desc').value.trim()};
+    if (!vals.title) return err(t('errTitle'));
+    if (!vals.pm) return err(t('errPM'));
+    if (isNew){
+      const id = Math.max(0, ...PROJ.map(x => x.id)) + 1;
+      const np = Object.assign({id, type:radioVal(form, 'p-type') || 'Звичайний', status:g('p-status').value, progress:0,
+        start:g('p-start').value, golive:g('p-golive').value, plan:g('p-plan').value, fc:'', actual:0, rag:'', lastUpdate:'', lastReport:'',
+        reports:[], comments:[], risks:[], changes:[{id:uid(), date:new Date().toISOString(), who:VIEWER, kind:'create', reason:'', diffs:[]}]}, vals);
+      if (!np.code) np.code = 'PRJ-' + String(id).padStart(3, '0');
+      PROJ.push(np);
+      rerenderMain();
+      if (canSee(np)) projectPanel(id, false); else closePanel();
+      persist(np); toast(t('savedProject'));
+    } else {
+      const diffs = Object.keys(vals).filter(k => String(p[k] ?? '') !== String(vals[k] ?? '')).map(k => ({f:k, from:p[k] ?? '', to:vals[k]}));
+      if (!diffs.length){ projectPanel(p.id, false); return; }
+      Object.assign(p, vals);
+      p.changes = (p.changes || []).concat([{id:uid(), date:new Date().toISOString(), who:VIEWER, kind:'edit', reason:'', diffs:diffs.filter(d => d.f !== 'desc')}]);
+      rerenderMain();
+      if (canSee(p)) projectPanel(p.id, false); else closePanel();
+      persist(p); toast(t('savedEdit'));
+    }
+  });
+}
+
+function riskForm(pid, rid, fromList){
+  const pool = visP().filter(p => isActive(p) && canEditP(p)).sort(byOrder);
+  let p = pid ? pById(pid) : pool[0];
+  if (!p) return;
+  const k = rid ? (p.risks || []).find(x => x.id === rid) : null;
+  const edit = canEditP(p) && !isArch(p);
+  const cur = k || {type:'Ризик', p:3, i:3, owner:p.pm, status:'Відкрито', due:'', title:'', mitigation:''};
+  state.panel = {kind:'form'};
+  const dis = edit ? '' : ' disabled';
+  const scale = (name, val, pre) => `<div class="opts scale">${[1,2,3,4,5].map(n => `<input type="radio" id="${name}${n}" name="${name}" value="${n}"${+val === n ? ' checked' : ''}${dis}><label for="${name}${n}">${n}</label>`).join('')}</div><p class="scale-d" id="${name}-d">${t(pre + val)}</p>`;
+  openPanel(`${formHead(k ? t('riskCard') : t('newRisk'), `${t('listLabel')} «${t('navRisks')}»`)}
+  ${edit ? '' : `<p class="note lock">🔒 ${t('readOnly')}</p>`}
+  <form id="kform" novalidate>
+    <div class="frow"><label class="t" for="k-p">${fl('rProj')} *</label>
+      ${k || (pid && !fromList) ? `<div class="fixed">${esc(p.title)}</div>` : `<select id="k-p">${pool.map(x => `<option value="${x.id}"${x.id === p.id ? ' selected' : ''}>${esc(x.title)}</option>`).join('')}</select>`}</div>
+    <div class="frow"><label class="t" for="k-title">${fl('kTitle')} *</label><textarea id="k-title"${dis}>${esc(cur.title)}</textarea></div>
+    <fieldset class="ragpick"><legend>${fl('kType')}</legend>${segPick('k-type', ['Ризик','Проблема'], cur.type)}</fieldset>
+    <div class="scorecalc">
+      <div class="frow"><span class="lbl-t">${t('cProb')}</span>${scale('k-pr', cur.p, 'p')}</div>
+      <div class="frow"><span class="lbl-t">${t('cImp')}</span>${scale('k-im', cur.i, 'i')}</div>
+      <div class="scorebox"><span class="k">${fl('kScore')}</span><span id="k-score"></span></div>
+      <p class="note" style="margin:8px 0 0">${t('riskHow')}</p>
+    </div>
+    <div class="fgrid2 frow">
+      <div><label class="t" for="k-owner">${fl('kOwner')}</label>${peopleSelect('k-owner', cur.owner, true)}</div>
+      <div><label class="t" for="k-status">${fl('kStatus')}</label><select id="k-status"${dis}>${['Відкрито','В роботі','Закрито'].map(v => opt(v, cur.status)).join('')}</select></div>
+      <div><label class="t" for="k-due">${fl('kDue')}</label><input type="date" id="k-due" value="${cur.due || ''}"${dis}></div>
+    </div>
+    <div class="frow"><label class="t" for="k-mit">${t('kMit')}</label><textarea id="k-mit"${dis}>${esc(cur.mitigation || '')}</textarea></div>
+    <p class="err" hidden></p>
+    <div class="actions">${edit ? `<button type="submit" class="btn primary">${t('save')}</button>` : ''}<button type="button" class="btn" data-act="${pid && !fromList ? 'backp' : 'close'}" data-id="${pid || ''}">${edit ? t('cancel') : t('close')}</button></div>
+  </form>`);
+  const form = document.getElementById('kform'), err = fErr(form), g = id => form.querySelector('#' + id);
+  if (!edit){ form.querySelectorAll('input,select,textarea').forEach(x => x.disabled = true); }
+  const sync = () => { const pr = +radioVal(form, 'k-pr') || 1, im = +radioVal(form, 'k-im') || 1, sc = pr * im;
+    g('k-score').innerHTML = `${scoreHtml(sc)} <b>${t('sc' + scoreBucket(sc))}</b> <span class="muted">= ${pr} × ${im}</span>`;
+    g('k-pr-d').textContent = t('p' + pr); g('k-im-d').textContent = t('i' + im); };
+  form.addEventListener('change', sync); sync();
+  form.addEventListener('submit', e => {
+    e.preventDefault(); if (!edit) return;
+    if (g('k-p')) p = pById(+g('k-p').value);
+    const vals = {title:g('k-title').value.trim(), type:radioVal(form, 'k-type') || 'Ризик', p:+radioVal(form, 'k-pr') || 1, i:+radioVal(form, 'k-im') || 1,
+      owner:g('k-owner').value, status:g('k-status').value, due:g('k-due').value, mitigation:g('k-mit').value.trim()};
+    if (!vals.title){ g('k-title').focus(); return err(t('errRiskTitle')); }
+    if (k) Object.assign(k, vals); else p.risks = (p.risks || []).concat([Object.assign({id:uid()}, vals)]);
+    rerenderMain();
+    if (pid && !fromList) projectPanel(p.id, false); else closePanel();
+    persist(p); toast(t('savedRisk'));
+  });
+}
+
+function reportForm(pid){
+  state.panel = {kind:'form'};
+  const act = visP().filter(p => isActive(p) && canEditP(p)).sort(byOrder);
+  if (!act.length) return;
+  const sel = (pid && act.find(p => p.id === pid)) || act[0];
+  openPanel(`${formHead(t('newReport'), `${t('listLabel')} «${t('navReports')}»`)}
+  <form id="repform" novalidate>
+    <div class="frow"><label class="t" for="f-p">${fl('rProj')} *</label><select id="f-p">${act.map(p => `<option value="${p.id}"${p.id === sel.id ? ' selected' : ''}>${esc(p.title)}</option>`).join('')}</select></div>
+    <div class="fgrid frow">
+      <div><label class="t" for="f-d">${fl('rDate')} *</label><input type="date" id="f-d" value="${iso(TODAY)}"></div>
+      <div><label class="t" for="f-per">${fl('rPeriod')}</label><select id="f-per"><option>Тиждень</option><option selected>2 тижні</option><option>Місяць</option><option>Квартал</option></select></div>
+      <div></div>
+    </div>
+    <div class="dims">${ragPick('sched', fl('rSched'), true)}${ragPick('budget', fl('rBudget'), true)}${ragPick('res', fl('rRes'), true)}</div>
+    <div class="ragcalc"><span class="k">${t('ragCalc')}</span><span id="f-ragv">${ragLabel('')}</span><span class="note">${t('ragRule')}</span></div>
+    <div class="keysec">
+      <h3 class="fsec">${t('keySec')}</h3><p class="note" style="margin:-6px 0 14px">${t('keySecHint')}</p>
+      <div class="fgrid2 frow">
+        <div><label class="t" for="f-st">${fl('status')}</label><select id="f-st">${REPORT_STATUSES.map(v => opt(v, sel.status)).join('')}<option value="Завершено">${t('completeArch')}</option></select></div>
+        <div><label class="t" for="f-pr">${fl('progress')}</label><input type="number" id="f-pr" min="0" max="100" value="${sel.progress}"></div>
+      </div>
+      <p class="note" id="f-arch" hidden style="margin:-4px 0 14px">${t('completeHint')}</p>
+      <fieldset class="ragpick"><legend>${fl('type')}</legend>${segPick('f-type', TYPES, sel.type)}</fieldset>
+      <div class="fgrid2 frow">
+        <div><label class="t" for="f-start">${fl('start')}</label><input type="date" id="f-start" value="${sel.start || ''}"></div>
+        <div><label class="t" for="f-golive">${fl('golive')}</label><input type="date" id="f-golive" value="${sel.golive || ''}"></div>
+        <div><label class="t" for="f-plan">${fl('plan')}</label><input type="date" id="f-plan" value="${sel.plan || ''}"></div>
+        <div><label class="t" for="f-fc">${fl('fc')}</label><input type="date" id="f-fc" value="${sel.fc || ''}"></div>
+      </div>
+      <div class="frow"><label class="t" for="f-c">${fl('rCost')}, ₴</label><input type="number" id="f-c" min="0" step="1000" value="${sel.actual || 0}"></div>
+      <div class="frow" id="f-kr-wrap" hidden><label class="t" for="f-kr">${t('keyReason')} *</label><textarea id="f-kr" placeholder="${t('reasonPh')}"></textarea></div>
+    </div>
+    <div class="frow"><label class="t" for="f-t">${fl('rTitle')} *</label><input type="text" id="f-t" placeholder="${t('summaryPh')}"></div>
+    <div class="frow"><label class="t" for="f-done">${fl('rDone')}</label><textarea id="f-done"></textarea></div>
+    <div class="frow"><label class="t" for="f-next">${fl('rNext')}</label><textarea id="f-next"></textarea></div>
+    <div class="frow"><label class="t" for="f-iss">${fl('rIssues')}</label><textarea id="f-iss"></textarea></div>
+    <div class="frow"><label class="check"><input type="checkbox" id="f-dec"> ${fl('rDec')}</label></div>
+    <div class="frow" id="f-dec-wrap" hidden><label class="t" for="f-dect">${fl('rDecText')}</label><textarea id="f-dect"></textarea></div>
+    <p class="err" hidden></p>
+    <div class="actions"><button type="submit" class="btn primary">${t('save')}</button><button type="button" class="btn" data-act="close">${t('cancel')}</button></div>
+  </form>`);
+  const form = document.getElementById('repform'), err = fErr(form), g = id => form.querySelector('#' + id);
+  const KEYF = [['f-st','status'],['f-start','start'],['f-golive','golive'],['f-plan','plan'],['f-fc','fc']];
+  const curP = () => pById(+g('f-p').value);
+  const keyChanged = () => { const p = curP(); return KEYF.some(([id, k]) => String(g(id).value || '') !== String(p[k] || '')) || (radioVal(form, 'f-type') || p.type) !== p.type; };
+  const dimsNow = () => ({sched:radioVal(form, 'sched'), budget:radioVal(form, 'budget'), res:radioVal(form, 'res')});
+  const syncKey = () => { g('f-kr-wrap').hidden = !keyChanged(); g('f-arch').hidden = g('f-st').value !== 'Завершено'; g('f-ragv').innerHTML = ragLabel(calcRag(dimsNow())); };
+  form.addEventListener('input', syncKey); form.addEventListener('change', syncKey);
+  g('f-p').addEventListener('change', e => { const p = pById(+e.target.value);
+    g('f-pr').value = p.progress; g('f-c').value = p.actual || 0; g('f-st').value = p.status;
+    ['start','golive','plan','fc'].forEach(k => g('f-' + k).value = p[k] || '');
+    const tr = form.querySelector(`input[name="f-type"][value="${p.type}"]`); if (tr) tr.checked = true;
+    form.querySelectorAll('input[name="rag"]').forEach(x => x.checked = false);
+    const rr = form.querySelector(`input[name="rag"][value="${p.rag}"]`); if (rr) rr.checked = true;
+    syncKey(); });
+  g('f-dec').addEventListener('change', e => { g('f-dec-wrap').hidden = !e.target.checked; });
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const dims = dimsNow(), title = g('f-t').value.trim(), dstr = g('f-d').value;
+    if (Object.values(dims).some(v => !v)) return err(t('errDims'));
+    const rag = calcRag(dims);
+    if (!title){ g('f-t').focus(); return err(t('errSum')); }
+    if (!dstr) return err(t('errDate'));
+    const p = pById(+g('f-p').value);
+    const kr = g('f-kr').value.trim();
+    if (keyChanged() && !kr){ g('f-kr').focus(); return err(t('errKeyReason')); }
+    const progress = Math.max(0, Math.min(100, +g('f-pr').value || 0)), cost = Math.max(0, +g('f-c').value || 0), dec = g('f-dec').checked;
+    const complete = g('f-st').value === 'Завершено';
+    p.reports = (p.reports || []).concat([{id:uid(), date:dstr, rag, sched:dims.sched, budget:dims.budget, res:dims.res,
+      progress, status:g('f-st').value, period:g('f-per').value, title, done:g('f-done').value.trim() || '—', next:g('f-next').value.trim() || '—', issues:g('f-iss').value.trim(), author:VIEWER, decision:dec, decisionText:dec ? g('f-dect').value.trim() : ''}]);
+    const vals = {status: complete ? 'Архівний' : g('f-st').value, type: radioVal(form, 'f-type') || p.type,
+      start:g('f-start').value, golive:g('f-golive').value, plan:g('f-plan').value, fc:g('f-fc').value, progress};
+    const newer = !p.lastUpdate || D(dstr) >= D(p.lastUpdate);
+    if (newer) vals.rag = rag;
+    const diffs = Object.keys(vals).filter(k => String(p[k] ?? '') !== String(vals[k] ?? '')).map(k => ({f:k, from:p[k] ?? '', to:vals[k]}));
+    Object.assign(p, vals, {actual:cost});
+    if (newer) Object.assign(p, {lastUpdate:dstr, lastReport:title});
+    if (complete) p.archivedAt = dstr;
+    if (diffs.length) p.changes = (p.changes || []).concat([{id:uid(), date:new Date().toISOString(), who:VIEWER, kind:'report', reason: kr ? kr + ' · ' + title : title, diffs}]);
+    rerenderMain(); projectPanel(p.id, false); persist(p); toast(complete ? t('savedArch') : t('savedReport'));
+  });
+}
+
+/* ================= Theme, toast, events ================= */
+let THEME = null;
+try { THEME = localStorage.getItem('pmo-theme'); } catch(e) {}
+if (THEME !== 'light' && THEME !== 'dark') THEME = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+function applyTheme(){ document.documentElement.setAttribute('data-theme', THEME); }
+applyTheme();
+const toastEl = document.getElementById('toast'); let tt;
+function toast(m){ toastEl.textContent = m; toastEl.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => toastEl.classList.remove('show'), 4200); }
+
+document.addEventListener('click', e => {
+  if (e.target.closest('a')) return;
+  if (POP && !e.target.closest('#pop') && !e.target.closest('[data-act=tfilter],[data-act=tcols],#me')) closePop();
+  const el = e.target.closest('[data-act]'); if (!el || el.tagName === 'SELECT') return;
+  const a = el.dataset.act, id = el.dataset.id ? +el.dataset.id : null;
+  if (a === 'nav'){ state.page = el.dataset.page; closePop(); closePanel(); render(); window.scrollTo(0, 0); }
+  else if (a === 'lang'){ LI = +el.dataset.i; render(); }
+  else if (a === 'theme'){ THEME = el.dataset.t; try { localStorage.setItem('pmo-theme', THEME); } catch(e) {} applyTheme(); renderChrome(); }
+  else if (a === 'goview'){ state.page = el.dataset.page; state[{projects:'pv', reports:'rv', risks:'kv'}[state.page]] = el.dataset.view; render(); window.scrollTo(0, 0); }
+  else if (a === 'mode'){ state[el.dataset.key] = el.dataset.mode; rerenderMain(); }
+  else if (a === 'openp') projectPanel(id, false);
+  else if (a === 'comments') projectPanel(id, true);
+  else if (a === 'togglecm') projectPanel(state.panel.id, !state.panel.showCm, true, state.panel.showCh);
+  else if (a === 'togglech') projectPanel(state.panel.id, state.panel.showCm, true, !state.panel.showCh);
+  else if (a === 'newrep') reportForm(id);
+  else if (a === 'newrisk') riskForm(id, null);
+  else if (a === 'riskopen') riskForm(id, el.dataset.rid, el.dataset.src === 'list');
+  else if (a === 'newproj') projectForm(null);
+  else if (a === 'editproj') projectForm(pById(id));
+  else if (a === 'backp') { if (id) projectPanel(id, false); else closePanel(); }
+  else if (a === 'close') closePanel();
+  else if (a === 'seed'){ el.disabled = true; el.textContent = t('seeding'); seed().catch(err => { console.error(err); toast(t('saveErr')); }); }
+  else if (a === 'reset') resetDemo();
+  else if (a === 'tsort'){ const st = tState(el.dataset.key), c = el.dataset.col;
+    st.sort = !st.sort || st.sort.id !== c ? {id:c, dir:'asc'} : st.sort.dir === 'asc' ? {id:c, dir:'desc'} : null; tSave(el.dataset.key); rerenderMain(); }
+  else if (a === 'tfilter'){ if (POP && POP.kind === 'filter' && POP.col === el.dataset.col) closePop(); else openPop(el, 'filter', el.dataset.key, el.dataset.col); }
+  else if (a === 'tcols'){ if (POP && POP.kind === 'cols') closePop(); else openPop(el, 'cols', el.dataset.key); }
+  else if (a === 'fclear'){ const st = tState(el.dataset.key); delete st.filters[el.dataset.col]; tSave(el.dataset.key); rerenderMain(); if (POP && POP.kind === 'filter') renderPop(); }
+  else if (a === 'cmove'){ const st = tState(POP.key), i = st.cols.indexOf(el.dataset.col), j = i + (+el.dataset.dir);
+    if (i > 0 && j > 0 && j < st.cols.length){ [st.cols[i], st.cols[j]] = [st.cols[j], st.cols[i]]; tSave(POP.key); rerenderMain(); renderPop(); } }
+  else if (a === 'creset'){ TS[POP.key] = {cols:TDEFAULTS[POP.key].slice(), sort:null, filters:{}}; tSave(POP.key); rerenderMain(); renderPop(); }
+  else if (a === 'me'){ if (POP && POP.kind === 'user') closePop(); else openPop(el, 'user'); }
+  else if (a === 'asuser'){ VIEWER = el.dataset.n; closePop(); render(); }
+  else if (a === 'grp'){ el.classList.toggle('collapsed'); const h = el.classList.contains('collapsed'); document.querySelectorAll(`[data-gk="${el.dataset.g}"]`).forEach(r => r.hidden = h); }
+});
+document.addEventListener('change', e => {
+  if (e.target.dataset.act === 'view'){ state[e.target.dataset.key] = e.target.value; rerenderMain(); }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && POP){ closePop(); return; }
+  if (e.key === 'Escape' && panel.classList.contains('open')) closePanel();
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role=button][data-act]')){ e.preventDefault(); e.target.click(); }
+});
+render();
+initData();
+})();
+</script>
+</body>
+</html>

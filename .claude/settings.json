@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pwsh -NoLogo -File tests/Test-Scripts.ps1:*)",
+      "Bash(pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test:*)",
+      "Bash(pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action sync-dryrun:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git switch:*)",
+      "Bash(git checkout -b:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(node --check:*)"
+    ],
+    "ask": [
+      "Bash(pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod:*)",
+      "Bash(git push:*)",
+      "Bash(git merge:*)",
+      "Bash(pwsh -NoLogo -File scripts/Register-PMOApps.ps1:*)"
+    ],
+    "deny": [
+      "Read(certs/**)",
+      "Read(**/*.pfx)",
+      "Read(**/*.key)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(*Remove-PnPSite*)",
+      "Bash(*Remove-PnPList*)",
+      "Bash(*Remove-PnPTenantSite*)"
+    ]
+  }
+}
