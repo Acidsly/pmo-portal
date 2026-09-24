@@ -25,3 +25,7 @@ export interface Risk {
   id: number; projectId: number; title: string; type: string; probability: number; impact: number;
   owner: Person | null; status: string; due: string; mitigation: string;
 }
+
+export interface Comment { id: number; projectId: number; text: string; author: Person | null; created: string; }  // created — ISO дата-время
+export interface ChangeEntry { id: number; projectId: number; date: string; who: Person | null; kind: string; field: string; from: string; to: string; reason: string; }
+export interface ChangeEvent { id: number; date: string; who: Person | null; kind: 'create' | 'key' | 'edit' | 'report'; reason: string; diffs: { f: string; from: string; to: string }[]; }

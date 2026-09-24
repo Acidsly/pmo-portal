@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- ответы REST SharePoint нетипизированы, типы задаются здесь */
-import { Person, Project, StatusReport, Risk } from './types';
+import { Person, Project, StatusReport, Risk, Comment, ChangeEntry } from './types';
 import { dateOnly } from '../logic/dates';
 import { Rag } from '../logic/rag';
 
@@ -54,3 +54,11 @@ export function mapRisk(r: any): Risk {
   return { id: r.Id, projectId: r.riProjectId, title: s(r.Title), type: s(r.riType), probability: n(r.riProbability), impact: n(r.riImpact),
     owner: mapPerson(r.riOwner), status: s(r.riStatus), due: dateOnly(r.riDue), mitigation: s(r.riMitigation) };
 }
+
+export const COMMENT_SELECT = ['Id', 'cmProjectId', 'cmText', 'Created', ...people('Author')].join(',');
+export const COMMENT_EXPAND = 'Author';
+export const CHANGE_SELECT = ['Id', 'kcProjectId', 'kcDate', 'kcKind', 'kcField', 'kcFrom', 'kcTo', 'kcReason', ...people('kcChangedBy')].join(',');
+export const CHANGE_EXPAND = 'kcChangedBy';
+export const mapComment = (r: any): Comment => ({ id: r.Id, projectId: r.cmProjectId, text: s(r.cmText), created: s(r.Created), author: mapPerson(r.Author) });
+export const mapChange = (r: any): ChangeEntry => ({ id: r.Id, projectId: r.kcProjectId, date: s(r.kcDate), who: mapPerson(r.kcChangedBy),
+  kind: s(r.kcKind), field: s(r.kcField), from: s(r.kcFrom), to: s(r.kcTo), reason: s(r.kcReason) });

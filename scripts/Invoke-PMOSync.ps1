@@ -293,8 +293,10 @@ foreach ($r in $pending) {
 
     $changed = [ordered]@{}
     foreach ($k in $target.Keys) { if ($p.Values[$k] -ne $target[$k]) { $changed[$k] = $target[$k] } }
+    # одно время на все строки журнала отчёта — приложение собирает их в одно событие истории
+    $when = (Get-Date).ToUniversalTime().ToString("o")
     foreach ($k in $changed.Keys) {
-        if ($DISPLAY.Contains($k)) { Add-Change $p.Item.Id $k (Human $k $p.Values[$k]) (Human $k $changed[$k]) "Статус-звіт" $author $reason $null }
+        if ($DISPLAY.Contains($k)) { Add-Change $p.Item.Id $k (Human $k $p.Values[$k]) (Human $k $changed[$k]) "Статус-звіт" $author $reason $when }
     }
     if ($changed.Count) {
         $write = @{}
