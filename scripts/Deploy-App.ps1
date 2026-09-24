@@ -64,4 +64,6 @@ if (-not (Get-PnPPage -Identity "Portal" -ErrorAction SilentlyContinue)) {
     Write-Host "  + страница Portal" -ForegroundColor Green
 }
 Set-PnPHomePage -RootFolderRelativeUrl "SitePages/Portal.aspx"
+# компактная шапка сайта без названия: над приложением — только строка меню SharePoint
+Set-PnPWeb -HeaderLayout Minimal -HideTitleInHeader:$true
 Write-Host "`nГотово: $SiteUrl (прежняя главная — $SiteUrl/SitePages/Dashboard.aspx)" -ForegroundColor Yellow
