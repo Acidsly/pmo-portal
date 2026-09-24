@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> Ход работ: задачи 1–2 выполнены 2026-09-25 (ветка `change/spfx-phase2`). Следующая — задача 3.
+
 **Goal:** На `pmo-test` вкладки «Проєкти» (таблица и плитки), «Статус-звіти», «Ризики та проблеми», «Архів» и карточка проекта (выдвижная панель, только чтение) работают как в прототипе.
 
 **Architecture:** Движок таблицы (фильтры, сортировка, колонки) и представления — чистые функции в `logic/` с тестами. Журнал «Зміни показників» (строка на поле) собирается в события по правилу, покрытому тестами. React-компоненты повторяют разметку прототипа (`dataTable`, `openPop`, `tile`, `projectPanel`) — CSS прототипа уже перенесён на этапе 1.
@@ -63,7 +65,7 @@ export function loadState(key: string, defaults: string[], known: string[], lock
 export function saveState(key: string, st: TableState): void;
 ```
 
-- [ ] **Step 1: Падающий тест** — `spfx/test/table.test.ts`:
+- [x] **Step 1: Падающий тест** — `spfx/test/table.test.ts`:
 ```ts
 import { applyTable, filterValues, nextSort, toggleCol, moveCol, ColDef, TableState } from '../src/webparts/pmoPortal/logic/table';
 
@@ -108,7 +110,7 @@ test('колонки: закреплённую не снять; первую н�
 ```
 Run: `scripts/spfx.sh npm run test:unit` → FAIL (модуля нет).
 
-- [ ] **Step 2: Реализация** — `logic/table.ts`:
+- [x] **Step 2: Реализация** — `logic/table.ts`:
 ```ts
 export interface ColDef<R> { label: string; sort?: (r: R) => string | number | null; filter?: (r: R) => string | string[]; }
 export interface TableState { cols: string[]; sort: { id: string; dir: 'asc' | 'desc' } | null; filters: Record<string, string[]>; }
@@ -163,8 +165,8 @@ export function loadState(key: string, defaults: string[], known: string[], lock
 }
 export function saveState(key: string, st: TableState): void { try { localStorage.setItem('pmo-table5-' + key, JSON.stringify(st)); } catch { /* нет хранилища */ } }
 ```
-- [ ] **Step 3:** `scripts/spfx.sh npm run test:unit` → PASS.
-- [ ] **Step 4: Commit** — «SPFx: движок таблицы — фильтры, сортировка, колонки …».
+- [x] **Step 3:** `scripts/spfx.sh npm run test:unit` → PASS.
+- [x] **Step 4: Commit** — «SPFx: движок таблицы — фильтры, сортировка, колонки …».
 
 ---
 
@@ -191,7 +193,7 @@ export const participants = (p: Project): string[];                             
 export function ofProject<T extends { projectId: number }>(items: T[], id: number): T[];      // записи проекта — для колонок и карточки
 ```
 
-- [ ] **Step 1: Падающий тест** — `spfx/test/views.test.ts`:
+- [x] **Step 1: Падающий тест** — `spfx/test/views.test.ts`:
 ```ts
 import { projectView, reportView, riskView, freshBucket, scoreBucket, participants, ofProject } from '../src/webparts/pmoPortal/logic/views';
 import { Project, StatusReport, Risk } from '../src/webparts/pmoPortal/data/types';
@@ -228,7 +230,7 @@ test('корзины и участники', () => {
 ```
 Run → FAIL.
 
-- [ ] **Step 2: Реализация** — `logic/views.ts`:
+- [x] **Step 2: Реализация** — `logic/views.ts`:
 ```ts
 import { Project, StatusReport, Risk } from '../data/types';
 import { isActive, freshness } from './status';
@@ -261,7 +263,7 @@ export function freshBucket(lastUpdate: string, today: string): '0' | '1' | '2' 
 export const scoreBucket = (s: number): '0' | '1' | '2' => (s >= 15 ? '0' : s >= 8 ? '1' : '2');
 export const ofProject = <T extends { projectId: number }>(items: T[], id: number): T[] => items.filter(x => x.projectId === id);
 ```
-- [ ] **Step 3:** тесты PASS. **Step 4: Commit** — «SPFx: представления проектов, отчётов и рисков …».
+- [x] **Step 3:** тесты PASS. **Step 4: Commit** — «SPFx: представления проектов, отчётов и рисков …».
 
 ---
 
