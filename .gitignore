@@ -12,3 +12,13 @@ config/environments.json
 .DS_Store
 Thumbs.db
 *.log
+# SPFx
+spfx/node_modules/
+spfx/lib/
+spfx/lib-commonjs/
+spfx/lib-esm/
+spfx/temp/
+spfx/dist/
+spfx/release/
+spfx/sharepoint/solution/
+spfx/coverage/

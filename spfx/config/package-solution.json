@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "pmo-portal",
+    "id": "e9537b05-6a88-44af-b9bb-69d8c9fec495",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "PMO",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.23.2"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "Портфель проєктів — портал управління портфелем проєктів"
+      },
+      "longDescription": {
+        "default": "Портфель проєктів — портал управління портфелем проєктів"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "Портфель проєктів",
+        "description": "Портфель проєктів",
+        "id": "1103c1d7-c2ce-48c2-b787-a831e1083b88",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/pmo-portal.sppkg"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "whichFolder": "subdir",
+    "solutionName": "pmo-portal",
+    "environment": "spo",
+    "packageManager": "npm",
+    "skipFeatureDeployment": true,
+    "useGulp": false,
+    "componentType": "webpart",
+    "template": "react",
+    "componentName": "PmoPortal",
+    "componentDescription": "Портфель проєктів",
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "nodeVersion": "22.23.3",
+    "sdksVersions": {},
+    "version": "1.23.2",
+    "libraryName": "pmo-portal",
+    "libraryId": "e9537b05-6a88-44af-b9bb-69d8c9fec495",
+    "solutionShortDescription": "pmo-portal description",
+    "isDomainIsolated": false
+  }
+}
