@@ -224,6 +224,21 @@ New-ApplicationAccessPolicy -AppId <PMO Sync> -PolicyScopeGroupId "PMO Sync send
 
 Это отдельный следующий этап. Прототип `pmo-prototype.html` — его техническое задание.
 
+## Приложение SPFx (главная по прототипу)
+
+Интерфейс из прототипа реализует приложение SPFx в папке `spfx/` (SPFx 1.23.2, React 17). Оно работает с теми же списками от имени пользователя, поэтому каждый видит только свои проекты. Новые статус-отчёты сразу видны в карточке: приложение накладывает их по тем же правилам, что синхронизация, а в списки их переносит синхронизация.
+
+Сборка и установка:
+```bash
+brew install node@22                                     # один раз; системный Node не меняется
+scripts/spfx.sh npm ci                                   # зависимости
+scripts/spfx.sh npm run test:unit                        # модульные тесты логики
+pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action app   # сборка и установка на тестовый сайт
+```
+`Deploy-App.ps1` один раз создаёт каталог приложений сайта (нужны права администратора SharePoint), загружает и обновляет пакет и делает страницу `SitePages/Portal.aspx` (приложение на весь экран) главной. Прежняя главная остаётся по адресу `SitePages/Dashboard.aspx`.
+
+Ограничения: над приложением остаётся полоса Microsoft 365 (в Teams её нет); размещённый workbench SharePoint снимается 2026-12-01 — отладка на странице тестового сайта с `?debug=true&noredir=true&debugManifestsFile=https://localhost:4321/temp/build/manifests.js` при запущенном `scripts/spfx.sh npm run start`.
+
 ## Обновление с предыдущей версии скрипта
 
 `Deploy-PMO.ps1` сам выполняет миграцию:

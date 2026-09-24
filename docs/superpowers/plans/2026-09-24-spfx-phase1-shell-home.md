@@ -1,6 +1,6 @@
 # SPFx, этап 1: каркас и главная — план реализации
 
-> Ход работ: задачи 1–6 выполнены 2026-09-24 (ветка `change/spfx-phase1`). Следующая — задача 7.
+> Ход работ: задачи 1–8 выполнены 2026-09-24 (ветка `change/spfx-phase1`), приложение установлено на `pmo-test`. Осталось: приёмка человеком. Замечено при установке: CSS прототипа нужно объявлять глобальным (`:global`) — сборка SPFx переименовывает классы; новый каталог приложений сайта появляется с задержкой (повторить `-Action app`).
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -827,7 +827,7 @@ export const saveTheme = (v: 'light' | 'dark'): void => { try { localStorage.set
 
 Разметка и классы — как у функций прототипа (`hero`, `wp`, `table`, `ragDot`, `person`, `freshHtml`, `donut`, `dynamics`, шапка строк 465–481): тогда CSS прототипа применяется без изменений.
 
-- [ ] **Step 1: `Icons.tsx`** — щит с мечом, приоритеты, компас, флаг, плюс, солнце, луна; пути `d` — дословно из прототипа (`SHIELD_D`, `SWORD_D`, `PRIO_I`, `icoCompass`, `icoFlag`, `iconPlus`, иконки темы в строке 477):
+- [x] **Step 1: `Icons.tsx`** — щит с мечом, приоритеты, компас, флаг, плюс, солнце, луна; пути `d` — дословно из прототипа (`SHIELD_D`, `SWORD_D`, `PRIO_I`, `icoCompass`, `icoFlag`, `iconPlus`, иконки темы в строке 477):
 ```tsx
 import * as React from 'react';
 export const SHIELD_D = 'M12 2 4 5v6.2c0 4.9 3.4 9.3 8 10.8 4.6-1.5 8-5.9 8-10.8V5z';
@@ -848,7 +848,7 @@ export const Sun: React.FC = () => <svg width="15" height="15" viewBox="0 0 16 1
 export const Moon: React.FC = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"><path d="M13.5 10.2A6 6 0 0 1 5.8 2.5a6 6 0 1 0 7.7 7.7Z" /></svg>;
 ```
 
-- [ ] **Step 2: `Bits.tsx`** — мелкие элементы с классами прототипа:
+- [x] **Step 2: `Bits.tsx`** — мелкие элементы с классами прототипа:
 ```tsx
 import * as React from 'react';
 import { Rag } from '../logic/rag';
@@ -873,7 +873,7 @@ export const Score: React.FC<{ s: number }> = ({ s }) =>
   <span className="chip" style={{ background: s >= 15 ? 'var(--r)' : s >= 8 ? 'var(--y)' : 'var(--g)' }}>{s}</span>;
 ```
 
-- [ ] **Step 3: `Donut.tsx` и `Dynamics.tsx`** — геометрия прототипа (строки 924–956):
+- [x] **Step 3: `Donut.tsx` и `Dynamics.tsx`** — геометрия прототипа (строки 924–956):
 ```tsx
 // Donut.tsx
 import * as React from 'react';
@@ -915,7 +915,7 @@ export const Dynamics: React.FC<{ pts: { date: string; g: number; y: number; r: 
 };
 ```
 
-- [ ] **Step 4: `Wp.tsx`, `SimpleTable.tsx`**
+- [x] **Step 4: `Wp.tsx`, `SimpleTable.tsx`**
 ```tsx
 // Wp.tsx — блок главной (функция wp прототипа)
 import * as React from 'react';
@@ -933,7 +933,7 @@ export function SimpleTable<R extends { id: number }>(p: { cols: Col<R>[]; rows:
 }
 ```
 
-- [ ] **Step 5: `Header.tsx`, `App.tsx`, `Soon.tsx`** — шапка строк 465–481 и `renderChrome` (строки 1226–1236):
+- [x] **Step 5: `Header.tsx`, `App.tsx`, `Soon.tsx`** — шапка строк 465–481 и `renderChrome` (строки 1226–1236):
 ```tsx
 // Header.tsx
 import * as React from 'react';
@@ -1002,7 +1002,7 @@ export const App: React.FC<{ repo: SpRepo; culture: string; userName: string; us
 ```
 `Soon.tsx`: `<div className="wp empty-state"><p>{t('soon')}</p></div>` через `React.useContext(AppCtx)`.
 
-- [ ] **Step 6: `pages/Home.tsx`** — порядок и колонки `pageHome` прототипа (строки 1167–1190):
+- [x] **Step 6: `pages/Home.tsx`** — порядок и колонки `pageHome` прототипа (строки 1167–1190):
 ```tsx
 import * as React from 'react';
 import { AppCtx, Data } from '../components/App';
@@ -1063,7 +1063,7 @@ export const Home: React.FC<{ data: Data; webUrl: string }> = ({ data, webUrl })
 ```
 В `App.tsx` передать `webUrl` (из `pageContext.web.absoluteUrl`) в `App` и дальше в `<Home data={data} webUrl={p.webUrl} />`; в `PmoPortalWebPart.ts` добавить `webUrl: pc.web.absoluteUrl` в свойства `App`.
 
-- [ ] **Step 7: Точка входа** — `PmoPortalWebPart.ts`:
+- [x] **Step 7: Точка входа** — `PmoPortalWebPart.ts`:
 ```ts
 import * as React from 'react';
 import * as ReactDom from 'react-dom';
@@ -1083,8 +1083,8 @@ export default class PmoPortalWebPart extends BaseClientSideWebPart<{}> {
 ```
 Удалить сгенерированные `components/PmoPortal.tsx`, `IPmoPortalProps.ts`, `PmoPortal.module.scss`, строки локализации генератора, которые больше не используются.
 
-- [ ] **Step 8:** `scripts/spfx.sh npm run test:unit` → PASS; `scripts/spfx.sh npm run build` → код 0, `.sppkg` пересобран.
-- [ ] **Step 9: Commit** — «SPFx: шапка и главная по прототипу …».
+- [x] **Step 8:** `scripts/spfx.sh npm run test:unit` → PASS; `scripts/spfx.sh npm run build` → код 0, `.sppkg` пересобран.
+- [x] **Step 9: Commit** — «SPFx: шапка и главная по прототипу …».
 
 ---
 
@@ -1098,7 +1098,7 @@ export default class PmoPortalWebPart extends BaseClientSideWebPart<{}> {
 - Consumes: `spfx/sharepoint/solution/pmo-portal.sppkg`, конфиг `test` из `config/environments.json`.
 - Produces: `Invoke-Env.ps1 -Env test -Action app` — сборка, каталог приложений сайта, установка/обновление приложения, страница `SitePages/Portal.aspx` (одна веб-часть на весь экран) — главная сайта.
 
-- [ ] **Step 1: `scripts/Deploy-App.ps1`**
+- [x] **Step 1: `scripts/Deploy-App.ps1`**
 ```powershell
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
@@ -1141,7 +1141,7 @@ Set-PnPHomePage -RootFolderRelativeUrl "SitePages/Portal.aspx"
 Write-Host "Готово: $SiteUrl (прежняя главная — SitePages/Dashboard.aspx)" -ForegroundColor Yellow
 ```
 
-- [ ] **Step 2: Действие `app` в `Invoke-Env.ps1`** — `ValidateSet` + ветка:
+- [x] **Step 2: Действие `app` в `Invoke-Env.ps1`** — `ValidateSet` + ветка:
 ```powershell
 } elseif ($Action -eq "app") {
     if ($Env -ne "test") { throw "Действие «app» на этапе 1 — только для test." }
@@ -1150,7 +1150,7 @@ Write-Host "Готово: $SiteUrl (прежняя главная — SitePages/
     & (Join-Path $PSScriptRoot "Deploy-App.ps1") @a
 ```
 
-- [ ] **Step 3: Установить и проверить**
+- [x] **Step 3: Установить и проверить**
 
 Run: `pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action app`
 Expected: «Готово». Если `Add-PnPSiteCollectionAppCatalog` отказывает по правам приложения — остановиться и попросить пользователя выполнить в терминале `Connect-PnPOnline -Url https://smarthrua-admin.sharepoint.com -ClientId a6293d9d-37bc-4c55-8d67-e080dbc16a26 -DeviceLogin; Add-PnPSiteCollectionAppCatalog -Site https://smarthrua.sharepoint.com/sites/pmo-test`, затем повторить.
@@ -1161,7 +1161,7 @@ Expected: «Готово». Если `Add-PnPSiteCollectionAppCatalog` отка�
 - тёмная тема и три языка переключаются, выбор сохраняется после перезагрузки;
 - проверить, что `EffectiveBasePermissions` приходит в ответе (консоль Chrome, сеть: запрос `items?$select=…EffectiveBasePermissions`); если нет — записать в план этапа 2 отдельный запрос прав.
 
-- [ ] **Step 4: CI** — в `.github/workflows/validate.yml` добавить job:
+- [x] **Step 4: CI** — в `.github/workflows/validate.yml` добавить job:
 ```yaml
   spfx:
     runs-on: ubuntu-latest
@@ -1175,12 +1175,12 @@ Expected: «Готово». Если `Add-PnPSiteCollectionAppCatalog` отка�
       - run: npm run build
 ```
 
-- [ ] **Step 5: Документация**
+- [x] **Step 5: Документация**
   - `docs/DEPLOYMENT.md`: раздел «Приложение SPFx» — что это, `brew install node@22`, `scripts/spfx.sh npm run build`, `Invoke-Env.ps1 -Env test -Action app`, прежняя главная `SitePages/Dashboard.aspx`, ограничения (полоса Microsoft 365, hosted workbench до 2026-12-01).
   - `CLAUDE.md`: строки таблицы структуры для `spfx/`, `scripts/spfx.sh`, `scripts/Deploy-App.ps1`, `tests/cases/`; в «Порядок работы» — `scripts/spfx.sh npm run test:unit` рядом с `Test-Scripts.ps1`; правило: бизнес-правила, которые есть и в PowerShell, и в TypeScript, проверяются общими векторами `tests/cases/`.
   - `CHANGELOG.md`: «SPFx, этап 1: каркас, главная по прототипу на `pmo-test`».
 
-- [ ] **Step 6: Проверки и commit**
+- [x] **Step 6: Проверки и commit**
 
 Run: `pwsh -NoLogo -File tests/Test-Scripts.ps1` → «Все проверки пройдены»; `scripts/spfx.sh npm run test:unit` → PASS.
 ```bash

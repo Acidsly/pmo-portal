@@ -13,3 +13,21 @@ jobs:
       - name: Проверки без доступа к SharePoint
         shell: pwsh
         run: ./tests/Test-Scripts.ps1
+  spfx:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: spfx
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: spfx/package-lock.json
+      - name: Установка
+        run: npm ci
+      - name: Модульные тесты логики
+        run: npm run test:unit
+      - name: Сборка пакета .sppkg
+        run: npm run build

@@ -12,6 +12,10 @@
 | `scripts/Register-PMOApps.ps1` | Регистрация приложений Entra ID (выполняет человек) |
 | `scripts/Invoke-Env.ps1` | **Единственный способ запускать скрипты против SharePoint**: берёт параметры из `config/environments.json` |
 | `scripts/Seed-TestData.ps1` | Демонстрационные данные для тестового сайта (`-Env test -Action seed`). На прод не запускается |
+| `spfx/` | Приложение SPFx (React) по прототипу: `logic/` — правила с тестами, `data/` — чтение SharePoint, `components/`, `pages/`. Спецификация и планы — `docs/superpowers/` |
+| `scripts/spfx.sh` | Команды в `spfx/` под Node 22: `scripts/spfx.sh npm run test:unit`, `scripts/spfx.sh npm run build` |
+| `scripts/Deploy-App.ps1` | Установка приложения на сайт (`-Env test -Action app`): каталог приложений сайта, страница `Portal` на весь экран — главная |
+| `tests/cases/` | Общие тест-векторы: их проверяют и `tests/Test-Scripts.ps1`, и Jest в `spfx/test` |
 | `scripts/gallery-view.json` | Оформление плиток (галерея) |
 | `tests/Test-Scripts.ps1` | Проверки без доступа к SharePoint. Запускай после каждого изменения |
 | `prototype/pmo-prototype.html` | Прототип интерфейса — эталон UX и ТЗ для будущего приложения SPFx |
@@ -38,7 +42,7 @@ pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action deploy -ConfirmProdu
 1. **Анализ.** Уточни требование, если оно неоднозначно. Найди все места, которых оно касается: прототип, поля и представления в `Deploy-PMO.ps1`, логика в `Invoke-PMOSync.ps1`, `docs/DEPLOYMENT.md`.
 2. **Ветка.** `git switch -c change/<кратко>`.
 3. **Реализация.** Меняй согласованно прототип, скрипты и документацию — одно требование не должно жить только в одном месте.
-4. **Проверки.** `tests/Test-Scripts.ps1` должен проходить. Для новых правил расчёта добавь тест-кейсы в `tests/Test-Scripts.ps1`.
+4. **Проверки.** `tests/Test-Scripts.ps1` и `scripts/spfx.sh npm run test:unit` должны проходить. Правило, которое есть и в синхронизации, и в приложении, проверяется общими векторами `tests/cases/*.json`.
 5. **Тест-сайт.** `-Env test -Action deploy`, затем `sync-dryrun` и `sync`. Проверь результат и перечисли пользователю, что изменилось на сайте.
 6. **Коммит.** Понятное сообщение на русском, запись в `CHANGELOG.md`.
 7. **Ворота 1 — ревью человеком.** Покажи diff и итоги теста. `git push` и слияние — только после «да».
