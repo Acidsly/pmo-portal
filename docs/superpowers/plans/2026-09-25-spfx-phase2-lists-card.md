@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> Ход работ: задачи 1–2 выполнены 2026-09-25 (ветка `change/spfx-phase2`). Следующая — задача 3.
+> Ход работ: задачи 1–7 выполнены 2026-09-25 (ветка `change/spfx-phase2`), версия 1.1.1.0 на `pmo-test`. Осталось: приёмка человеком. При проверке: панель начинается под полосой Microsoft 365 (`theme/overrides.scss`, класс `pmo-sp`).
 
 **Goal:** На `pmo-test` вкладки «Проєкти» (таблица и плитки), «Статус-звіти», «Ризики та проблеми», «Архів» и карточка проекта (выдвижная панель, только чтение) работают как в прототипе.
 
@@ -286,7 +286,7 @@ export interface ChangeEvent { id: number; date: string; who: Person | null; kin
 
 Правило сборки событий: строки журнала одного проекта с одинаковыми `kind`, `who`, `reason` и датой с точностью до минуты — одно событие; `kind` из списка: «Створення» → `create`, «Статус-звіт» → `report`, «Редагування картки» → `edit`; строка «Створення» даёт событие без изменений; `field` через `FIELD_KEY` (неизвестное поле — как есть).
 
-- [ ] **Step 1: Падающие тесты** — `spfx/test/changes.test.ts`:
+- [x] **Step 1: Падающие тесты** — `spfx/test/changes.test.ts`:
 ```ts
 import { toEvents } from '../src/webparts/pmoPortal/logic/changes';
 import { ChangeEntry } from '../src/webparts/pmoPortal/data/types';
@@ -321,7 +321,7 @@ test('mapChange', () => {
 ```
 Run → FAIL.
 
-- [ ] **Step 2: Реализация**
+- [x] **Step 2: Реализация**
 
 `scripts/Invoke-PMOSync.ps1` — одно время на все строки журнала одного отчёта (иначе поля одного отчёта на границе минуты разойдутся в разные события): в цикле применения отчётов перед `foreach ($k in $changed.Keys)` добавить `$when = (Get-Date).ToUniversalTime().ToString("o")` и передавать `$when` последним аргументом `Add-Change` вместо `$null`. `tests/Test-Scripts.ps1` — без изменений (синтаксис проверяется).
 
@@ -377,7 +377,7 @@ export const mapChange = (r: any): ChangeEntry => ({ id: r.Id, projectId: r.kcPr
     return this.titles[k];
   }
 ```
-- [ ] **Step 3:** тесты PASS; `scripts/spfx.sh npm run build` → код 0. **Step 4: Commit** — «SPFx: комментарии, журнал изменений -> история, должности …».
+- [x] **Step 3:** тесты PASS; `scripts/spfx.sh npm run build` → код 0. **Step 4: Commit** — «SPFx: комментарии, журнал изменений -> история, должности …».
 
 ---
 
@@ -413,9 +413,9 @@ export const Pop: React.FC<{ anchor: HTMLElement; align: 'left' | 'right'; onClo
 
 `Pop` — `div.pmo-pop` c `position: fixed`, координаты как `openPop` прототипа (слева под кнопкой для фильтра, справа — для колонок, не выходит за окно; если не помещается снизу — над кнопкой); закрывается по Esc, по клику вне и при прокрутке.
 
-- [ ] **Step 1:** Реализовать `Pop.tsx`, `defs.tsx`, `DataTable.tsx` по описанию выше.
-- [ ] **Step 2:** `scripts/spfx.sh npm run build` → код 0, без предупреждений.
-- [ ] **Step 3: Commit** — «SPFx: таблица прототипа — сортировка, фильтры, выбор колонок …».
+- [x] **Step 1:** Реализовать `Pop.tsx`, `defs.tsx`, `DataTable.tsx` по описанию выше.
+- [x] **Step 2:** `scripts/spfx.sh npm run build` → код 0, без предупреждений.
+- [x] **Step 3: Commit** — «SPFx: таблица прототипа — сортировка, фильтры, выбор колонок …».
 
 ---
 
@@ -427,15 +427,15 @@ export const Pop: React.FC<{ anchor: HTMLElement; align: 'left' | 'right'; onClo
 - Consumes: Tasks 1–4.
 - Produces: `Ctx` + `me: string` (e-mail), `views: { projects: ProjectView; reports: ReportView; risks: RiskView }`, `setView(page, view)`, `openProject(id: number): void` — представление хранится отдельно для каждой вкладки (как `state.pv/rv/kv` прототипа) и не теряется при переключении; в адресе — представление активной вкладки; адрес `#<page>/<view>/<projectId>` (например `#projects/problem`, `#home//7`) — назад/вперёд браузера работает, ссылку на карточку можно отправить.
 
-- [ ] **Step 1: `Tiles.tsx`** — функция `tile` прототипа (строки 901–913): `div.tile[role=button][tabIndex=0]` (Enter/Space = клик), `tile-top` (код, щит, пилюля RAG `pill` с точкой или «не оцінено»), `tile-t`, `tile-prog` (`pl`: статус и `%`, `track` с полосой, зелёной при 100%), `tile-upd` (`ul`: точка свежести, `t('latestUpd') · дата` или `t('noReports')`; `tx`: «Останній апдейт»), `tile-f` (Loop ↗ или пусто, `tile-pm`: аватар и имя PM). Обёртка `div.tiles`; пусто — `p.empty`.
-- [ ] **Step 2: Страницы** — как `pageProjects` / `pageArchive` / `pageReports` / `pageRisks` прототипа (строки 1193–1221):
+- [x] **Step 1: `Tiles.tsx`** — функция `tile` прототипа (строки 901–913): `div.tile[role=button][tabIndex=0]` (Enter/Space = клик), `tile-top` (код, щит, пилюля RAG `pill` с точкой или «не оцінено»), `tile-t`, `tile-prog` (`pl`: статус и `%`, `track` с полосой, зелёной при 100%), `tile-upd` (`ul`: точка свежести, `t('latestUpd') · дата` или `t('noReports')`; `tx`: «Останній апдейт»), `tile-f` (Loop ↗ или пусто, `tile-pm`: аватар и имя PM). Обёртка `div.tiles`; пусто — `p.empty`.
+- [x] **Step 2: Страницы** — как `pageProjects` / `pageArchive` / `pageReports` / `pageRisks` прототипа (строки 1193–1221):
   - «Проєкти»: `hero` (заголовок `navProjects`, `visible` + число неархивных, кнопка «Новий проєкт»); `div.listcard` → `div.cmdbar`: переключатель `seg` «Список / Плитки» (`t('list')`, `t('tiles')`, иконки `iconList`/`iconTiles` прототипа строки 914–915; по умолчанию плитки; `localStorage['pmo-projmode']`), `span.spacer`, выбор представления `label.viewsel` (`t('view')`, `select` с `PV`, подсказка `title={t('viewsNote')}`), шестерёнка только в режиме списка; строки — неархивные, фильтр представления, `byOrder`; под списком `p.hint` `t('hintProjects')`.
   - «Архів»: `hero` (`navArchive`, `t('archiveSub') + ' · ' + N`); только шестерёнка; архивные, по дате архивации ↓.
   - «Статус-звіти»: `hero(navReports)`; кнопка `cmd primary` «Новий статус-звіт» (ссылка на `Lists/StatusReports/NewForm.aspx`), если есть активный проект с `canEdit`; `RV`; по дате ↓.
   - «Ризики»: `hero(navRisks)`; «Новий ризик» по тому же условию (ссылка на `Lists/RisksIssues/NewForm.aspx`); `KV` (по умолчанию `open`); риски неархивных проектов по оценке ↓; `p.hint` `t('hintRisks')`.
   - «Показати все» на главной передаёт представление: `go('projects', 'problem')` открывает «Проєкти» в режиме списка с `Проблемні`.
-- [ ] **Step 3: `App.tsx`** — состояние `{ page, view, projectId }` синхронизируется с `location.hash` (`hashchange`); названия проектов во всех таблицах и плитки открывают карточку (`openProject`); `Home` получает `openProject` вместо кнопки-заглушки.
-- [ ] **Step 4:** `scripts/spfx.sh npm run build` → код 0. **Step 5: Commit** — «SPFx: вкладки Проєкти, Архів, Статус-звіти, Ризики …».
+- [x] **Step 3: `App.tsx`** — состояние `{ page, view, projectId }` синхронизируется с `location.hash` (`hashchange`); названия проектов во всех таблицах и плитки открывают карточку (`openProject`); `Home` получает `openProject` вместо кнопки-заглушки.
+- [x] **Step 4:** `scripts/spfx.sh npm run build` → код 0. **Step 5: Commit** — «SPFx: вкладки Проєкти, Архів, Статус-звіти, Ризики …».
 
 ---
 
@@ -461,8 +461,8 @@ export const Pop: React.FC<{ anchor: HTMLElement; align: 'left' | 'right'; onClo
 11. «Статус-звіти (N)» (`secReports`): новые сверху, `rep`: `rep-h` (дата, RAG, автор, `flag` «Потрібне рішення»), резюме, «Зроблено», «План», «Проблеми», «Потрібне рішення: …».
 12. «Ризики та проблеми (N)» (`secRisks`): `rlist` строк `rrow` (оценка, название, «тип · статус»), по оценке ↓; пусто — `t('emptyRisks')`.
 
-- [ ] **Step 1:** Реализовать `Panel.tsx` и `ProjectCard.tsx` по описанию.
-- [ ] **Step 2:** `scripts/spfx.sh npm run build` → код 0. **Step 3: Commit** — «SPFx: карточка проекта (только чтение) …».
+- [x] **Step 1:** Реализовать `Panel.tsx` и `ProjectCard.tsx` по описанию.
+- [x] **Step 2:** `scripts/spfx.sh npm run build` → код 0. **Step 3: Commit** — «SPFx: карточка проекта (только чтение) …».
 
 ---
 
@@ -470,16 +470,16 @@ export const Pop: React.FC<{ anchor: HTMLElement; align: 'left' | 'right'; onClo
 
 **Files:** Modify `spfx/config/package-solution.json` (версия `1.1.0.0`), `docs/DEPLOYMENT.md`, `CHANGELOG.md`, план (отметки)
 
-- [ ] **Step 1:** `pwsh -NoLogo -File tests/Test-Scripts.ps1` и `scripts/spfx.sh npm run test:unit` → всё проходит.
-- [ ] **Step 2:** `pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action app` → «приложение обновлено до 1.1.0.0».
-- [ ] **Step 3: Проверка в Chrome рядом с прототипом** (светлая и тёмная тема, UA/EN/RU):
+- [x] **Step 1:** `pwsh -NoLogo -File tests/Test-Scripts.ps1` и `scripts/spfx.sh npm run test:unit` → всё проходит.
+- [x] **Step 2:** `pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action app` → «приложение обновлено до 1.1.0.0».
+- [x] **Step 3: Проверка в Chrome рядом с прототипом** (светлая и тёмная тема, UA/EN/RU):
   - «Проєкти»: плитки по умолчанию, 9 плиток; «Список» — колонки по умолчанию; сортировка по «Стан» и «% виконання» (пустые внизу); фильтр «Статус» с чипом; шестерёнка: снять/вернуть колонку, сдвинуть, «Як за замовчуванням»; после перезагрузки настройки сохранены; представления «Проблемні» (5), «Немає свіжого звіту» (3), «Мої проєкти».
   - «Архів»: 1 проект (TEST-08).
   - «Статус-звіти»: 18, «Потребують рішення» — 2; «Ризики»: «Відкриті» — 11, «Усі елементи» — 12.
   - Карточка TEST-01: все разделы 1–12; история изменений собрана в события («Створення» и отчёты), комментарии — 2, матрица состояний — 3 отчёта, риски — 2; Esc закрывает, фокус возвращается; адрес `#…/1` открывает карточку после перезагрузки.
   - «Показати все» на главной открывает нужные представления.
-- [ ] **Step 4:** `docs/DEPLOYMENT.md` — в разделе «Приложение SPFx» перечислить вкладки и карточку; `CHANGELOG.md` — «SPFx, этап 2: списки, плитки, архив, карточка проекта (только чтение)».
-- [ ] **Step 5: Commit** — «SPFx, этап 2: установка на pmo-test, документация …».
+- [x] **Step 4:** `docs/DEPLOYMENT.md` — в разделе «Приложение SPFx» перечислить вкладки и карточку; `CHANGELOG.md` — «SPFx, этап 2: списки, плитки, архив, карточка проекта (только чтение)».
+- [x] **Step 5: Commit** — «SPFx, этап 2: установка на pmo-test, документация …».
 
 ## Приёмка этапа (человек)
 

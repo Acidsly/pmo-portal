@@ -1,0 +1,7 @@
+// Поправки для SharePoint — не из прототипа (prototype.scss генерируется и не правится вручную).
+// pmo-sp: приложение открыто в SharePoint — сверху полоса Microsoft 365 (48px), панель и затемнение начинаются под ней.
+:global {
+  .pmo-app.pmo-sp .pmo-panel,
+  .pmo-app.pmo-sp .pmo-scrim { top: 48px; }
+  .pmo-app.pmo-sp .pmo-panel { border-radius: 28px 0 0 0; }
+}

@@ -61,7 +61,7 @@ export const App: React.FC<AppProps> = p => {
     : route.page === 'archive' ? <Archive data={data} />
     : route.page === 'reports' ? <Reports data={data} /> : <Risks data={data} />;
   return <AppCtx.Provider value={ctx}>
-    <div className="pmo-app" data-theme={theme || undefined} lang={LANG_CODES[lang]}>
+    <div className="pmo-app pmo-sp" data-theme={theme || undefined} lang={LANG_CODES[lang]}>
       <Header page={route.page} lang={lang} theme={theme} userName={p.userName} userEmail={p.userEmail}
         onPage={pg => ctx.go(pg)} onLang={l => { setLang(l); saveLang(l); }} onTheme={v => { setTheme(v); saveTheme(v); }} />
       <main className="pmo-main">
