@@ -21,10 +21,11 @@
          группа PMO и владельцы сайта — полный доступ. Цепочка руководителей берётся из Entra ID.
          Отчёты и риски проекта получают тот же круг, комментарии и журнал — только чтение.
       6. (-SendReminders) письмо каждому PM со списком его активных проектов без свежего отчёта.
-      7. Диаграммы Quick chart на главной (и её переводах EN / RU): «Портфель за станом» — активные
-         проекты по общему состоянию, «Проєкти за статусом» — по статусу. Quick chart не умеет считать
-         элементы списка, поэтому числа считает синхронизация; страница публикуется, только если числа
-         изменились. Числа видны всем, кто открывает главную, — без названий проектов.
+      7. Показатели портфеля для главной (список «Показники портфеля»): строка «Поточний» — активные
+         проекты по общему состоянию, семь срезов раз в две недели — динамика. Строки обновляются на месте
+         и только при изменении. Числа видны всем, кто открывает главную, — без названий проектов.
+      8. «Пов'язані записи і доступ» в карточке: ссылки на отчёты, риски, журнал и комментарии проекта
+         и список, кто имеет доступ. Архивный проект — только чтение для всех, кроме PMO и владельцев сайта.
 
 .PARAMETER SiteUrl          https://contoso.sharepoint.com/sites/pmo
 .PARAMETER ClientId         Client ID приложения синхронизации (Register-PMOApps.ps1)
@@ -35,7 +36,7 @@
 .PARAMETER RebuildPermissions  пересчитать права для всех элементов (после смены руководителей в Entra ID)
 .PARAMETER SendReminders    отправить напоминания PM (запускайте с этим ключом раз в неделю)
 .PARAMETER ReminderFrom     ящик-отправитель напоминаний, например pmo@contoso.com
-.PARAMETER ChartsOnly       только пересчитать диаграммы на главной (без Graph и прав; подходит приложение развёртывания)
+.PARAMETER ChartsOnly       только показатели портфеля и ссылки в карточках (без Graph и прав; подходит приложение развёртывания)
 .PARAMETER DryRun           только показать, что будет сделано
 
 .EXAMPLE
@@ -63,8 +64,8 @@ param(
 $ErrorActionPreference = "Stop"
 $PMO_GROUP = "PMO-адміністратори"
 $L_PROJ = "Lists/Projects"; $L_REP = "Lists/StatusReports"; $L_RISK = "Lists/RisksIssues"
-$L_CHG  = "Lists/KeyChanges"; $L_CMT = "Lists/ProjectComments"
-$stats = [ordered]@{ reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; reminders = 0; charts = 0; warnings = 0 }
+$L_CHG  = "Lists/KeyChanges"; $L_CMT = "Lists/ProjectComments"; $L_STAT = "Lists/PortfolioStats"
+$stats = [ordered]@{ reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; reminders = 0; stats = 0; cards = 0; warnings = 0 }
 
 function Log([string]$m, [string]$c = "Gray") { Write-Host ("{0:HH:mm:ss} {1}" -f (Get-Date), $m) -ForegroundColor $c }
 function Warn([string]$m) { $stats.warnings++; Write-Warning $m }
@@ -92,7 +93,14 @@ $OWNERS = (Get-PnPGroup -AssociatedOwnerGroup).Title
 # ---------------------------------------------------------------------------
 # Поля «только дата» хранятся как полночь по часовому поясу сайта в UTC.
 # +12 часов даёт правильную календарную дату для поясов от UTC-12 до UTC+12.
-function DateOnly($v) { if ($v -is [datetime]) { return $v.ToUniversalTime().AddHours(12).ToString("yyyy-MM-dd") } return "" }
+function DateOnly($v) {
+    if ($v -isnot [datetime]) { return "" }
+    $u = $v.ToUniversalTime()
+    # 12:00 UTC — значение, записанное синхронизацией (ToSpDate): календарная дата — дата UTC.
+    # Иначе — дата из формы, хранится как полночь по поясу сайта: +12 часов дают верную дату для UTC-11…UTC+11.
+    if ($u.TimeOfDay -eq [timespan]::FromHours(12)) { return $u.ToString("yyyy-MM-dd") }
+    return $u.AddHours(12).ToString("yyyy-MM-dd")
+}
 function ToSpDate([string]$d) { if ($d) { return "$($d)T12:00:00Z" } return $null }
 function Human([string]$field, [string]$v) {
     if (-not $v) { return "—" }
@@ -146,76 +154,114 @@ $projects = Get-PnPListItem -List $L_PROJ -PageSize 500
 $reports  = Get-PnPListItem -List $L_REP  -PageSize 500
 $risks    = Get-PnPListItem -List $L_RISK -PageSize 500
 $comments = Get-PnPListItem -List $L_CMT  -PageSize 500
-$P = @{}
+$PROJ = @{}
 foreach ($it in $projects) {
-    $P[$it.Id] = [pscustomobject]@{ Item = $it; Values = @{} }
+    $PROJ[$it.Id] = [pscustomobject]@{ Item = $it; Values = @{} }
     foreach ($f in @($DISPLAY.Keys) + @("pmActualCost","pmLastUpdate","pmLastReport","pmLastComment","pmArchivedAt","pmoAcl")) {
-        $P[$it.Id].Values[$f] = Norm $it[$f]
+        $PROJ[$it.Id].Values[$f] = Norm $it[$f]
     }
 }
 Log ("Проєктів: {0}, звітів: {1}, ризиків: {2}, коментарів: {3}" -f $projects.Count, $reports.Count, $risks.Count, $comments.Count)
 
 # ---------------------------------------------------------------------------
-# 7. Диаграммы на главной (вызывается в конце; с -ChartsOnly — сразу)
+# 7–8. Показатели портфеля и «Пов'язані записи» (вызываются в конце; с -ChartsOnly — сразу)
 # ---------------------------------------------------------------------------
-$QUICK_CHART = "91a50c94-865f-4f5c-8b4e-e49659e69772"
-$CHART_PAGES = [ordered]@{   # страница -> заголовки двух диаграмм и подпись «без оценки»
-    "Dashboard"    = @("Портфель за станом",    "Проєкти за статусом", "Без оцінки")
-    "en/Dashboard" = @("Portfolio by health",   "Projects by status",  "Not rated")
-    "ru/Dashboard" = @("Портфель по состоянию", "Проекты по статусу",  "Без оценки")
-}
-function Update-Charts {
-    # активные — как в представлениях: без Скасовано / Архівний / Завершено
-    $act = @($P.Values | Where-Object { $_.Values.pmStatus -notin @("Скасовано", "Архівний", "Завершено") })
-    $rag = [ordered]@{}
-    # цвета секторов Quick chart не настраиваются (палитра: синий, жёлтый, оранжевый, тёмно-красный) —
-    # порядок подобран под неё, и все четыре категории выводятся всегда, чтобы цвета не сдвигались
-    foreach ($k in @("Зелений", "Жовтий", "", "Червоний")) { $rag[$k] = @($act | Where-Object { $_.Values.pmRAG -eq $k }).Count }
-    $st = [ordered]@{}
-    foreach ($k in @("Ініціація", "Планування", "Реалізація", "Призупинено")) { $st[$k] = @($act | Where-Object { $_.Values.pmStatus -eq $k }).Count }
-    Log ("Діаграми: стан {0}; статус {1}" -f (($rag.Keys | ForEach-Object { "$(if ($_) { $_ } else { '—' })=$($rag[$_])" }) -join ", "), (($st.Keys | ForEach-Object { "$_=$($st[$_])" }) -join ", "))
+function Plain([string]$html) { ([regex]::Replace([System.Net.WebUtility]::HtmlDecode(([regex]::Replace([string]$html, '<[^>]+>', ' '))), '\s+', ' ')).Trim() }
+function Update-Stats {
+    $inactive = @("Скасовано", "Архівний", "Завершено")
+    $act = @($PROJ.Values | Where-Object { $_.Values.pmStatus -notin $inactive })
+    $cnt = { param($set, $k) @($set | Where-Object { $_ -eq $k }).Count }
+    $now = @($act | ForEach-Object { $_.Values.pmRAG })
+    $rows = @([ordered]@{ Title = "Поточний"; psKind = "Поточний"; psDate = (Get-Date).Date.ToString("yyyy-MM-dd")
+        psGreen = (& $cnt $now "Зелений"); psYellow = (& $cnt $now "Жовтий"); psRed = (& $cnt $now "Червоний"); psNone = (& $cnt $now ""); psTotal = $act.Count; psMax = 0 })
+    # срезы: состояние каждого проекта по последнему отчёту на дату среза (как в прототипе)
+    $byProj = @{}
+    foreach ($r in $reports) {
+        $lk = $r["srProject"]; if (-not $lk) { continue }
+        $rag = CalcRag $r["srSchedule"] $r["srBudget"] $r["srResources"]; if (-not $rag) { continue }
+        if (-not $byProj[$lk.LookupId]) { $byProj[$lk.LookupId] = @() }
+        $byProj[$lk.LookupId] += [pscustomobject]@{ D = (DateOnly $r["srDate"]); Rag = $rag }
+    }
+    $snaps = @()
+    for ($k = 6; $k -ge 0; $k--) {
+        $tt = (Get-Date).Date.AddDays(-14 * $k).ToString("yyyy-MM-dd")
+        $c = @{ "Зелений" = 0; "Жовтий" = 0; "Червоний" = 0 }
+        foreach ($p in $PROJ.Values) {
+            $rs = @($byProj[$p.Item.Id] | Where-Object { $_ -and $_.D -le $tt } | Sort-Object D); if (-not $rs) { continue }
+            if ($p.Values.pmStatus -eq "Скасовано") { continue }
+            if ($p.Values.pmStatus -eq "Архівний" -and $p.Values.pmArchivedAt -and $tt -gt $p.Values.pmArchivedAt) { continue }
+            $c[$rs[-1].Rag]++
+        }
+        $snaps += [ordered]@{ Title = ([datetime]$tt).ToString("dd.MM"); psKind = "Зріз"; psDate = $tt
+            psGreen = $c["Зелений"]; psYellow = $c["Жовтий"]; psRed = $c["Червоний"]; psNone = 0; psTotal = ($c.Values | Measure-Object -Sum).Sum; psMax = 0 }
+    }
+    $max = [Math]::Max(1, ($snaps | ForEach-Object { $_.psTotal } | Measure-Object -Maximum).Maximum)
+    foreach ($x in $snaps) { $x.psMax = $max }
+    $rows += $snaps
+    Log ("Показники: зараз {0} активних (З {1} · Ж {2} · Ч {3} · — {4}); зрізи {5}" -f $rows[0].psTotal, $rows[0].psGreen, $rows[0].psYellow, $rows[0].psRed, $rows[0].psNone,
+        (($snaps | ForEach-Object { "$($_.Title)=$($_.psTotal)" }) -join ", "))
 
-    foreach ($page in $CHART_PAGES.Keys) {
-        $t = $CHART_PAGES[$page]
-        $charts = @(Get-PnPPageComponent -Page $page -ErrorAction SilentlyContinue | Where-Object { $_.WebPartId -eq $QUICK_CHART } |
-                    Sort-Object { $_.Section.Order }, { $_.Column.Order }, { $_.Order })
-        if ($charts.Count -lt 2) { if ($page -eq "Dashboard") { Warn "На главной нет двух диаграмм Quick chart — диаграммы не обновлены" }; continue }
-        $specs = @(
-            @{ Type = 1; Title = $t[0]; Points = @($rag.Keys | ForEach-Object { [pscustomobject]@{ L = $(if ($_) { $_ } else { $t[2] }); V = $rag[$_] } }) }   # 1 — круговая
-            @{ Type = 0; Title = $t[1]; Points = @($st.Keys  | ForEach-Object { [pscustomobject]@{ L = $_; V = $st[$_] } }) }                                # 0 — столбцы
-        )
-        $changed = $false
-        for ($i = 0; $i -lt 2; $i++) {
-            $sp = $specs[$i]
-            $sig = "$($sp.Type)|$($sp.Title)|" + (($sp.Points | ForEach-Object { "$($_.L)=$($_.V)" }) -join ";")
-            $hash = [Convert]::ToHexString([System.Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($sig))).Substring(0, 16)
-            if ([string]$charts[$i].PropertiesJson -match [regex]::Escape("`"pmoHash`":`"$hash`"")) { continue }
-            $n = 0
-            $data = @($sp.Points | ForEach-Object { $n++; @{ id = ("{0:X8}-0000-4000-8000-000000000000" -f $n); label = $_.L; value = [string]$_.V; valueNumber = $_.V } })
-            # заголовок диаграммы хранится в serverProcessedContent, данные — в properties (dataSourceType 0 — ввод вручную)
-            $json = @{ properties = @{ data = $data; type = $sp.Type; isInitialState = $false; dataSourceType = 0; listItemOrderBy = 0; pmoHash = $hash }
-                       serverProcessedContent = @{ htmlStrings = @{}; searchablePlainTexts = @{ title = $sp.Title }; imageSources = @{}; links = @{} } } |
-                    ConvertTo-Json -Depth 8 -Compress
-            $changed = $true
-            if (-not $DryRun) { Set-PnPPageWebPart -Page $page -Identity $charts[$i].InstanceId -PropertiesJson $json }
+    # строки обновляются на месте: «Поточний» — одна, срезов — семь (по порядку дат); удалений нет
+    $have = @(Get-PnPListItem -List $L_STAT -PageSize 100)
+    $cur = @($have | Where-Object { $_["psKind"] -eq "Поточний" } | Select-Object -First 1)
+    $old = @($have | Where-Object { $_["psKind"] -eq "Зріз" } | Sort-Object { $_["psDate"] }, { $_.Id })
+    $targets = @(@{ Row = $rows[0]; Item = $cur[0] }) + @(for ($i = 0; $i -lt $snaps.Count; $i++) { @{ Row = $snaps[$i]; Item = $(if ($i -lt $old.Count) { $old[$i] }) } })
+    foreach ($t in $targets) {
+        $v = $t.Row; $it = $t.Item
+        $same = $it -and ((@($v.Keys | Where-Object { $_ -ne "psDate" }) | Where-Object { [string]$it[$_] -ne [string]$v[$_] }).Count -eq 0) -and ((DateOnly $it["psDate"]) -eq $v.psDate)
+        if ($same) { continue }
+        $stats.stats++
+        if ($DryRun) { continue }
+        $w = @{}; foreach ($k in $v.Keys) { $w[$k] = if ($k -eq "psDate") { ToSpDate $v[$k] } else { $v[$k] } }
+        if ($it) { Set-PnPListItem -List $L_STAT -Identity $it.Id -Values $w -UpdateType SystemUpdate | Out-Null }
+        else     { Add-PnPListItem -List $L_STAT -Values $w | Out-Null }
+    }
+}
+function Update-CardInfo($acl) {
+    $site = $SiteUrl.TrimEnd('/'); $enc = { param($x) [uri]::EscapeDataString([string]$x) }
+    $h = { param($x) [System.Net.WebUtility]::HtmlEncode([string]$x) }
+    $nRep = @{}; $nRisk = @{}; $nCmt = @{}
+    foreach ($x in @(@($reports, "srProject", $nRep), @($comments, "cmProject", $nCmt))) { foreach ($it in $x[0]) { $lk = $it[$x[1]]; if ($lk) { $x[2][$lk.LookupId]++ } } }
+    foreach ($it in $risks) { $lk = $it["riProject"]; if ($lk -and $it["riStatus"] -ne "Закрито") { $nRisk[$lk.LookupId]++ } }
+    foreach ($p in $PROJ.Values) {
+        $id = $p.Item.Id; $t = [string]$p.Item["Title"]
+        $f = { param($list, $field, $label) "<a href=""$site/Lists/$list/AllItems.aspx?FilterField1=$field&amp;FilterValue1=$(& $enc $t)"">$label</a>" }
+        $links = @(
+            (& $f "StatusReports" "srProject" "Статус-звіти ($([int]$nRep[$id]))"),
+            (& $f "RisksIssues" "riProject" "Відкриті ризики ($([int]$nRisk[$id]))"),
+            (& $f "ProjectComments" "cmProject" "Коментарі ($([int]$nCmt[$id]))"),
+            (& $f "KeyChanges" "kcProject" "Журнал змін"),
+            "<a href=""$site/Lists/StatusReports/NewForm.aspx"">＋ Статус-звіт</a>",
+            "<a href=""$site/Lists/ProjectComments/NewForm.aspx"">＋ Коментар</a>") -join " · "
+        $html = "<p>$links</p>"
+        if ($acl -and $acl[$id]) {
+            $names = @{}
+            foreach ($u in @($p.Item["pmManager"], $p.Item["pmOwner"]) + @($p.Item["pmStakeholders"])) { if ($u -and $u.Email) { $names[$u.Email.ToLowerInvariant()] = $u.LookupValue } }
+            $who = { param($lvl) (@($acl[$id].Keys | Where-Object { $acl[$id][$_] -eq $lvl } | ForEach-Object { if ($names[$_]) { $names[$_] } else { $_ } }) | ForEach-Object { & $h $_ }) -join ", " }
+            $arch = $p.Values.pmStatus -eq "Архівний"
+            $edit = & $who "edit"; $read = & $who "read"
+            $html += "<p><strong>Доступ</strong>" + $(if ($arch) { " (архів — лише перегляд)" }) + ": " +
+                     $(if ($edit) { "редагування — $edit; " }) + $(if ($read) { "перегляд і коментарі — $read; " }) + "повний доступ — $(& $h $PMO_GROUP).</p>"
+        } elseif ($p.Item["pmCardInfo"] -and ([string]$p.Item["pmCardInfo"]) -match '(?s)(<p><strong>Доступ.*)$') {
+            # без Graph (-ChartsOnly) — прежний блок доступа сохраняется; SharePoint оборачивает текст в <div class=ExternalClass…>, закрывающий </div> отрезаем
+            $html += $Matches[1] -replace '</div>\s*$', ''
         }
-        if ($changed) {
-            $stats.charts++
-            Log "  діаграми оновлено: $page"
-            if (-not $DryRun) { Set-PnPPage -Identity $page -Publish | Out-Null }
-        }
+        if ((Plain $html) -eq (Plain $p.Item["pmCardInfo"])) { continue }
+        $stats.cards++
+        if (-not $DryRun) { Set-PnPListItem -List $L_PROJ -Identity $id -Values @{ pmCardInfo = $html } -UpdateType SystemUpdate | Out-Null }
     }
 }
 if ($ChartsOnly) {
-    Update-Charts
-    Log ("Готово. Сторінок з оновленими діаграмами: {0}, попереджень: {1}" -f $stats.charts, $stats.warnings) "Green"
+    Update-Stats
+    Update-CardInfo $null
+    Log ("Готово. Показників оновлено: {0}, карток: {1}, попереджень: {2}" -f $stats.stats, $stats.cards, $stats.warnings) "Green"
     return
 }
 
 # ---------------------------------------------------------------------------
 # 1–2. Новые проекты -> «Створення» в журнале
 # ---------------------------------------------------------------------------
-foreach ($p in $P.Values) {
+foreach ($p in $PROJ.Values) {
     if (-not $p.Values.pmoAcl) {
         $stats.created++
         Add-Change $p.Item.Id "Title" "" ([string]$p.Item["Title"]) "Створення" (Email $p.Item["Author"]) "" ($p.Item["Created"].ToUniversalTime().ToString("o"))
@@ -229,7 +275,7 @@ $pending = $reports | Where-Object { $_["srApplied"] -ne $true } |
     Sort-Object @{ Expression = { DateOnly $_["srDate"] } }, @{ Expression = { $_.Id } }
 foreach ($r in $pending) {
     $lk = $r["srProject"]; if (-not $lk) { continue }
-    $p = $P[$lk.LookupId]; if (-not $p) { Warn "Отчёт $($r.Id): проект $($lk.LookupId) не найден"; continue }
+    $p = $PROJ[$lk.LookupId]; if (-not $p) { Warn "Отчёт $($r.Id): проект $($lk.LookupId) не найден"; continue }
     $stats.reports++
     $repDate = DateOnly $r["srDate"]
     $rag     = CalcRag $r["srSchedule"] $r["srBudget"] $r["srResources"]
@@ -277,7 +323,7 @@ foreach ($c in $comments) {
     if (-not $cur -or $c["Created"] -gt $cur["Created"]) { $latest[$lk.LookupId] = $c }
 }
 foreach ($id in $latest.Keys) {
-    $p = $P[$id]; if (-not $p) { continue }
+    $p = $PROJ[$id]; if (-not $p) { continue }
     $c = $latest[$id]
     $txt = "{0} — {1}, {2}" -f $c["cmText"], $c["Author"].LookupValue, $c["Created"].ToLocalTime().ToString("dd.MM.yyyy")
     if ($p.Values.pmLastComment -ne $txt) {
@@ -293,7 +339,7 @@ foreach ($id in $latest.Keys) {
 foreach ($pair in @(@($L_REP, $reports, "srProject", "srProjectType", "srProjectPriority"), @($L_RISK, $risks, "riProject", "riProjectType", "riProjectPriority"))) {
     foreach ($it in $pair[1]) {
         $lk = $it[$pair[2]]; if (-not $lk) { continue }
-        $p = $P[$lk.LookupId]; if (-not $p) { continue }
+        $p = $PROJ[$lk.LookupId]; if (-not $p) { continue }
         $prio = Norm $p.Item["pmPriority"]
         if ((Norm $it[$pair[3]]) -ne $p.Values.pmType -or (Norm $it[$pair[4]]) -ne $prio) {
             $stats.types++
@@ -337,24 +383,27 @@ function Get-Hash($acl) {
     $bytes = [System.Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($s))
     return ([Convert]::ToHexString($bytes)).Substring(0, 24)
 }
-function Set-ItemAcl([string]$list, [int]$id, $acl, [bool]$readOnly, [string]$hash) {
+function Set-ItemAcl([string]$list, [int]$id, $acl, [bool]$readOnly, [string]$aclHash) {
     $stats.acl++
     if ($DryRun) { Log ("    права: {0} #{1} -> {2}" -f $list, $id, (($acl.Keys | ForEach-Object { "$_($($acl[$_]))" }) -join ", ")); return }
     Set-PnPListItemPermission -List $list -Identity $id -Group $PMO_GROUP -AddRole $ROLE.full -ClearExisting -SystemUpdate | Out-Null
     Set-PnPListItemPermission -List $list -Identity $id -Group $OWNERS -AddRole $ROLE.full -SystemUpdate | Out-Null
     foreach ($e in $acl.Keys) {
-        $role = if ($readOnly -or $acl[$e] -eq "read") { $ROLE.read } else { $ROLE.edit }
-        try { Set-PnPListItemPermission -List $list -Identity $id -User $e -AddRole $role -SystemUpdate | Out-Null }
+        $roleName = if ($readOnly -or $acl[$e] -eq "read") { $ROLE.read } else { $ROLE.edit }
+        try { Set-PnPListItemPermission -List $list -Identity $id -User $e -AddRole $roleName -SystemUpdate | Out-Null }
         catch { Warn "Не удалось выдать права $e на $list #$id : $($_.Exception.Message)" }
     }
-    Set-PnPListItem -List $list -Identity $id -Values @{ pmoAcl = $hash } -UpdateType SystemUpdate | Out-Null
+    Set-PnPListItem -List $list -Identity $id -Values @{ pmoAcl = $aclHash } -UpdateType SystemUpdate | Out-Null
 }
 
 Log "Права доступа…"
-$HASH = @{}; $ACL = @{}
-foreach ($p in $P.Values) {
-    $acl = Get-Acl $p.Item; $h = Get-Hash $acl
-    $HASH[$p.Item.Id] = $h; $ACL[$p.Item.Id] = $acl
+$HASH = @{}; $ACLS = @{}
+foreach ($p in $PROJ.Values) {
+    $acl = Get-Acl $p.Item
+    # архивный проект — только просмотр (PMO и владельцы сайта сохраняют полный доступ, см. Set-ItemAcl)
+    if ($p.Values.pmStatus -eq "Архівний") { foreach ($k in @($acl.Keys)) { $acl[$k] = "read" } }
+    $h = Get-Hash $acl
+    $HASH[$p.Item.Id] = $h; $ACLS[$p.Item.Id] = $acl
     if ($RebuildPermissions -or $p.Values.pmoAcl -ne $h) {
         Log "  проєкт «$($p.Item["Title"])»: $($acl.Count) користувачів"
         Set-ItemAcl $L_PROJ $p.Item.Id $acl $false $h
@@ -371,7 +420,7 @@ foreach ($c in $children) {
     foreach ($it in $c[1]) {
         $lk = $it[$c[2]]; if (-not $lk -or -not $HASH.ContainsKey($lk.LookupId)) { continue }
         $h = $HASH[$lk.LookupId]
-        if ($RebuildPermissions -or (Norm $it["pmoAcl"]) -ne $h) { Set-ItemAcl $c[0] $it.Id $ACL[$lk.LookupId] $c[3] $h }
+        if ($RebuildPermissions -or (Norm $it["pmoAcl"]) -ne $h) { Set-ItemAcl $c[0] $it.Id $ACLS[$lk.LookupId] $c[3] $h }
     }
 }
 
@@ -382,7 +431,7 @@ if ($SendReminders) {
     if (-not $ReminderFrom) { throw "Для -SendReminders укажите -ReminderFrom (ящик-отправитель)." }
     $limit = (Get-Date).Date.AddDays(-$ReminderDays).ToString("yyyy-MM-dd")
     $byPm = @{}
-    foreach ($p in $P.Values) {
+    foreach ($p in $PROJ.Values) {
         if ($p.Values.pmStatus -in @("Скасовано","Архівний","Завершено")) { continue }
         if ($p.Values.pmLastUpdate -and $p.Values.pmLastUpdate -ge $limit) { continue }
         $pm = Email $p.Item["pmManager"]; if (-not $pm) { continue }
@@ -412,9 +461,10 @@ if ($SendReminders) {
 }
 
 # ---------------------------------------------------------------------------
-# 7. Диаграммы на главной — по состоянию после всех изменений выше
+# 7–8. Показатели портфеля и «Пов'язані записи і доступ» — по состоянию после всех изменений выше
 # ---------------------------------------------------------------------------
-try { Update-Charts } catch { Warn "Диаграммы на главной не обновлены: $($_.Exception.Message)" }
+try { Update-Stats } catch { Warn "Показатели портфеля не обновлены: $($_.Exception.Message)" }
+try { Update-CardInfo $ACLS } catch { Warn "«Пов'язані записи» не обновлены: $($_.Exception.Message)" }
 
-Log ("Готово. Звітів: {0}, записів у журнал: {1}, нових проєктів: {2}, коментарів: {3}, типів: {4}, прав: {5}, нагадувань: {6}, діаграм: {7}, попереджень: {8}" -f `
-    $stats.reports, $stats.changes, $stats.created, $stats.comments, $stats.types, $stats.acl, $stats.reminders, $stats.charts, $stats.warnings) "Green"
+Log ("Готово. Звітів: {0}, записів у журнал: {1}, нових проєктів: {2}, коментарів: {3}, типів: {4}, прав: {5}, нагадувань: {6}, показників: {7}, карток: {8}, попереджень: {9}" -f `
+    $stats.reports, $stats.changes, $stats.created, $stats.comments, $stats.types, $stats.acl, $stats.reminders, $stats.stats, $stats.cards, $stats.warnings) "Green"

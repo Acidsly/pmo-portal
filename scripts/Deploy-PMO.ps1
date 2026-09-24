@@ -74,19 +74,25 @@ function Get-RoleName([string]$Kind) {
     (Get-PnPRoleDefinition | Where-Object { $_.RoleTypeKind -eq $Kind } | Select-Object -First 1).Name
 }
 
-function Ensure-List([string]$Url, [string]$Uk, [string]$En, [string]$Ru) {
+function Ensure-List([string]$Url, [string]$Uk, [string]$En, [string]$Ru, [switch]$Service) {
     try { $l = Get-PnPList -Identity $Url -ErrorAction Stop } catch { $l = $null }
     if (-not $l) {
         Write-Host "  + список $Uk" -ForegroundColor Green
-        $l = New-PnPList -Title $Uk -Url $Url -Template GenericList -OnQuickLaunch
+        $l = if ($Service) { New-PnPList -Title $Uk -Url $Url -Template GenericList } else { New-PnPList -Title $Uk -Url $Url -Template GenericList -OnQuickLaunch }
         Set-PnPList -Identity $l -EnableVersioning $true -MajorVersions 100 | Out-Null
     }
     $l = Get-PnPList -Identity $Url
     Set-Loc $l $Uk $En $Ru
     $script:ListNames[$Url] = @($Uk, $En, $Ru)
+    # встроенные комментарии SharePoint выключены: комментарии к проекту — список «Коментарі»
+    $l.DisableCommenting = $true
     $l.Update(); Invoke-PnPQuery
     return $l
 }
+
+# Подсказка под полем в форме (uk / en / ru); применяется вместе с переводами названий
+$script:Desc = @()
+function Desc($List, [string]$Name, [string]$Uk, [string]$En, [string]$Ru) { $script:Desc += , @($List, $Name, $Uk, $En, $Ru) }
 
 # Список в текущем контексте PnP (объект, полученный раньше, мог остаться в прежнем контексте)
 function Fresh-List($List) { Get-PnPList -Identity $List.Id }
@@ -101,6 +107,13 @@ function F {
     param($List, [string]$Name, [string]$Type, [string]$Uk, [string]$En, [string]$Ru,
           [string]$Attrs = "", [string]$Inner = "")
     if (-not (Test-Field $List $Name)) {
+        if ($Type -eq "Calculated") {
+            # формула понимает отображаемые названия: на существующем сайте они уже переведены — подставляем текущие
+            foreach ($ref in [regex]::Matches($Inner, "FieldRef Name='([^']+)'")) {
+                $n = $ref.Groups[1].Value; $cur = (Get-PnPField -List $List -Identity $n).Title
+                if ($cur -ne $n) { $Inner = $Inner.Replace("[$n]", "[$([System.Security.SecurityElement]::Escape($cur))]") }
+            }
+        }
         $xml = "<Field Type='$Type' Name='$Name' StaticName='$Name' DisplayName='$Name' $Attrs>$Inner</Field>"
         Add-PnPFieldFromXml -List $List -FieldXml $xml | Out-Null
         Write-Host "    + поле $Uk"
@@ -136,9 +149,11 @@ function Ensure-View($List, [string]$Title, [string[]]$Fields, [string]$Query) {
     return $v
 }
 
-function Set-DefaultView($List, [string[]]$Fields, [string]$Query) {
-    $dv = Get-PnPView -List $List | Where-Object DefaultView
-    Set-PnPView -List $List -Identity $dv.Id -Fields $Fields -Values @{ ViewQuery = $Query } | Out-Null
+# Базовое представление списка (AllItems.aspx) — по адресу, а не по признаку «по умолчанию»:
+# представлением по умолчанию может быть назначено другое (например, «Плитки»)
+function Set-BaseView($List, [string]$Title, [string[]]$Fields, [string]$Query) {
+    $dv = Get-PnPView -List $List -Includes ServerRelativeUrl | Where-Object { $_.ServerRelativeUrl -like "*/AllItems.aspx" } | Select-Object -First 1
+    Set-PnPView -List $List -Identity $dv.Id -Fields $Fields -Values @{ ViewQuery = $Query; Title = $Title } | Out-Null
     return $dv
 }
 
@@ -213,15 +228,34 @@ F $P pmDescription Note     "Мета та опис"       "Goal and description
 F $P pmBudgetUse   Calculated "Освоєння бюджету, %" "Budget used, %"   "Освоение бюджета, %"  "ResultType='Number' Decimals='0'" `
     "<Formula>=IF([pmBudget]=0,0,[pmActualCost]/[pmBudget]*100)</Formula><FieldRefs><FieldRef Name='pmBudget'/><FieldRef Name='pmActualCost'/></FieldRefs>"
 F $P pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='64'"
+# Ключевые показатели в карточке — только для чтения: поля выше скрыты из формы (меняются через отчёт),
+# а форма SharePoint не показывает скрытые поля; вычисляемые столбцы видны и не редактируются.
+function Formula([string]$Expr, [string[]]$Refs) {
+    # формула внутри XML поля: & и < экранируются
+    "<Formula>$([System.Security.SecurityElement]::Escape($Expr))</Formula><FieldRefs>" + (($Refs | ForEach-Object { "<FieldRef Name='$_'/>" }) -join "") + "</FieldRefs>"
+}
+function DateTxt([string]$f) { "IF(ISBLANK([$f]),""—"",TEXT([$f],""dd.mm.yyyy""))" }
+F $P pmKState      Calculated "Стан і статус"    "Health and status"   "Состояние и статус"   "ResultType='Text'" `
+    (Formula "=[pmStatus]&IF(ISBLANK([pmRAG]),"" · не оцінено"","" · ""&[pmRAG])&"" · ""&TEXT([pmProgress],""0"")&""%""" @("pmStatus","pmRAG","pmProgress"))
+F $P pmKDates      Calculated "Терміни"          "Timeline"            "Сроки"                "ResultType='Text'" `
+    (Formula ("=""старт ""&$(DateTxt pmStart)&"" · запуск ""&$(DateTxt pmGoLive)&"" · план ""&$(DateTxt pmPlanEnd)" +
+              "&IF(ISBLANK([pmForecastEnd]),"""","" · прогноз ""&TEXT([pmForecastEnd],""dd.mm.yyyy"")&IF(OR(ISBLANK([pmPlanEnd]),[pmForecastEnd]<=[pmPlanEnd]),"""","" (+""&TEXT([pmForecastEnd]-[pmPlanEnd],""0"")&"" дн.)""))") `
+             @("pmStart","pmGoLive","pmPlanEnd","pmForecastEnd"))
+F $P pmKMoney      Calculated "Бюджет і звіт"    "Budget and report"   "Бюджет и отчёт"       "ResultType='Text'" `
+    (Formula ("=""витрати ""&TEXT([pmActualCost],""#,##0"")&"" з ""&TEXT([pmBudget],""#,##0"")&"" ₴""" +
+              "&IF([pmBudget]>0,"" (""&TEXT([pmActualCost]/[pmBudget]*100,""0"")&""%)"","""")&"" · останній звіт ""&$(DateTxt pmLastUpdate)") `
+             @("pmActualCost","pmBudget","pmLastUpdate"))
+# Ссылки на отчёты, риски, журнал и комментарии проекта и список доступа — заполняет синхронизация
+F $P pmCardInfo    Note     "Пов'язані записи і доступ" "Related records and access" "Связанные записи и доступ" "NumLines='6' RichText='TRUE' RichTextMode='FullHtml'"
 $script:Loc += , @($P, "Title", "Назва проєкту", "Project name", "Название проекта")
 
 # Миграция из ранних версий: «Product» (один пользователь) -> «Стейкхолдери» (несколько)
 if (Test-Field $P "pmProduct") {
     Write-Host "  миграция: Product -> Стейкхолдери"
     foreach ($it in (Get-PnPListItem -List $P -PageSize 500 -Fields "pmProduct","pmStakeholders")) {
-        $pr = $it["pmProduct"]
-        if ($pr -and -not $it["pmStakeholders"]) {
-            Set-PnPListItem -List $P -Identity $it.Id -Values @{ pmStakeholders = @($pr.Email) } -UpdateType SystemUpdate | Out-Null
+        $prod = $it["pmProduct"]
+        if ($prod -and -not $it["pmStakeholders"]) {
+            Set-PnPListItem -List $P -Identity $it.Id -Values @{ pmStakeholders = @($prod.Email) } -UpdateType SystemUpdate | Out-Null
         }
     }
     Remove-PnPField -List $P -Identity "pmProduct" -Force
@@ -338,6 +372,34 @@ F $M pmoAcl        Text     "Службове: права"    "System: access"  
 $script:Loc += , @($M, "Title", "Коротко", "Summary", "Кратко")
 Set-PnPField -List $M -Identity "Title" -Values @{ Required = $false } | Out-Null
 
+# ===========================================================================
+# 6a. Показники портфеля — служебный список для диаграмм на главной; пишет синхронизация
+# ===========================================================================
+Write-Host "6a. Список «Показники портфеля»" -ForegroundColor Cyan
+$S = Ensure-List "Lists/PortfolioStats" "Показники портфеля" "Portfolio indicators" "Показатели портфеля" -Service
+F $S psKind        Choice   "Вид"                "Kind"                "Вид"                  "Format='Dropdown'" (Choices @("Поточний","Зріз") "Зріз")
+F $S psDate        DateTime "Дата зрізу"         "Snapshot date"       "Дата среза"           "Format='DateOnly'"
+foreach ($x in @(@("psGreen","Зелений","Green","Зелёный"), @("psYellow","Жовтий","Yellow","Жёлтый"), @("psRed","Червоний","Red","Красный"),
+                 @("psNone","Не оцінено","Not rated","Не оценено"), @("psTotal","Усього","Total","Всего"), @("psMax","Максимум шкали","Scale maximum","Максимум шкалы"))) {
+    F $S $x[0] Number $x[1] $x[2] $x[3] "Decimals='0'" "<Default>0</Default>"
+}
+$script:Loc += , @($S, "Title", "Зріз", "Snapshot", "Срез")
+
+# ---------------------------------------------------------------------------
+# Подсказки в формах (как в прототипе)
+# ---------------------------------------------------------------------------
+$keep = @("Залиште порожнім, якщо не змінюється.", "Leave empty if unchanged.", "Оставьте пустым, если не меняется.")
+foreach ($n in @("srType","srProgress","srStart","srGoLive","srPlanEnd","srForecastEnd","srActualCost")) { Desc $R $n $keep[0] $keep[1] $keep[2] }
+Desc $R srStatus "Залиште порожнім, якщо не змінюється. «Завершено» переводить проєкт в архів." "Leave empty if unchanged. «Завершено» moves the project to the archive." "Оставьте пустым, если не меняется. «Завершено» переводит проект в архив."
+Desc $R srKeyReason "Обов'язково, якщо змінюєте статус, тип або дати — потрапить у журнал змін." "Required if you change the status, type or dates — goes to the change log." "Обязательно, если меняете статус, тип или даты — попадёт в журнал изменений."
+Desc $R srDecisionText "Заповніть, якщо позначено «Потрібне рішення керівництва»." "Fill in if «Management decision needed» is checked." "Заполните, если отмечено «Требуется решение руководства»."
+Desc $R srSchedule "Загальний стан звіту — найгірша з трьох оцінок." "Overall health is the worst of the three ratings." "Общее состояние отчёта — худшая из трёх оценок."
+Desc $P pmPlanEnd "Червона дата — термін минув, а проєкт не закрито." "Red date: the deadline has passed and the project is still open." "Красная дата — срок прошёл, а проект не закрыт."
+Desc $P pmKMoney "Витрати з бюджету, освоєння і дата останнього статус-звіту (свіжий — до 8 днів)." "Cost against budget, budget used and the last status report date (fresh: up to 8 days)." "Затраты из бюджета, освоение и дата последнего статус-отчёта (свежий — до 8 дней)."
+Desc $P pmKState "Ключові показники змінюються лише через статус-звіт." "Key indicators change only through a status report." "Ключевые показатели меняются только через статус-отчёт."
+Desc $P pmCardInfo "Заповнюється автоматично." "Filled in automatically." "Заполняется автоматически."
+Desc $K riScore "Оцінка = ймовірність × вплив. Від 15 — червоний, від 8 — жовтий." "Score = probability × impact. 15+ red, 8+ yellow." "Оценка = вероятность × влияние. От 15 — красный, от 8 — жёлтый."
+
 # ---------------------------------------------------------------------------
 # Переводы названий столбцов
 # ---------------------------------------------------------------------------
@@ -351,6 +413,18 @@ foreach ($grp in ($script:Loc | Group-Object { $_[0].Id })) {
         $f = $l.Fields.GetByInternalNameOrTitle($x[1])
         $f.Title = $x[2]
         Set-Loc $f $x[2] $x[3] $x[4]
+        $f.Update()
+    }
+    Invoke-PnPQuery
+}
+foreach ($grp in ($script:Desc | Group-Object { $_[0].Id })) {
+    $l = Fresh-List $grp.Group[0][0]
+    foreach ($x in $grp.Group) {
+        $f = $l.Fields.GetByInternalNameOrTitle($x[1])
+        $f.Description = $x[2]
+        $f.DescriptionResource.SetValueForUICulture("uk-UA", $x[2])
+        $f.DescriptionResource.SetValueForUICulture("en-US", $x[3])
+        $f.DescriptionResource.SetValueForUICulture("ru-RU", $x[4])
         $f.Update()
     }
     Invoke-PnPQuery
@@ -378,17 +452,50 @@ Set-FormVisibility $P @("pmRAG","pmForecastEnd","pmActualCost","pmArchivedAt","p
 # «Стратегічний» и «Пріоритет» в отчётах и рисках — копия из проекта, заполняет синхронизация
 Set-FormVisibility $R @("srProjectType","srProjectPriority") $false $false
 Set-FormVisibility $K @("riProjectType","riProjectPriority") $false $false
+# «Пов'язані записи і доступ» заполняет синхронизация; в форме редактирования поле должно быть видно — иначе его нет и в карточке
+Set-FormVisibility $P @("pmCardInfo") $false $true
 
-# Журнал изменений: пользователи только читают, пишет синхронизация
-$members = Get-PnPGroup -AssociatedMemberGroup
-$C = Get-PnPList -Identity "Lists/KeyChanges" -Includes HasUniqueRoleAssignments
-if (-not $C.HasUniqueRoleAssignments) {
-    Set-PnPList -Identity $C -BreakRoleInheritance -CopyRoleAssignments | Out-Null
-    Set-PnPListPermission -Identity $C -Group $members.Title -RemoveRole $ROLE_EDIT -ErrorAction SilentlyContinue | Out-Null
-    Set-PnPListPermission -Identity $C -Group $members.Title -AddRole $ROLE_READ | Out-Null
-    Write-Host "  «Зміни показників»: участники сайта — только чтение"
+# Разделы форм. SharePoint сопоставляет поля раздела по отображаемому названию на языке пользователя,
+# поэтому в раздел попадают названия на всех трёх языках (лишние он пропускает).
+function Set-FormSections($List, $Sections) {
+    $labels = @{}
+    foreach ($x in $script:Loc) { if ($x[0].Id -eq $List.Id) { $labels[$x[1]] = @($x[2], $x[3], $x[4]) } }
+    $body = @{ sections = @($Sections | ForEach-Object {
+        @{ displayname = $_[0]; fields = @($_[1] | ForEach-Object { $labels[$_] } | Where-Object { $_ } | Select-Object -Unique) } }) } | ConvertTo-Json -Depth 6 -Compress
+    $l = Fresh-List $List
+    $ct = Get-PnPContentType -List $l | Where-Object { $_.StringId -like "0x0100*" } | Select-Object -First 1
+    $ct.ClientFormCustomFormatter = (@{ headerJSONFormatter = ""; footerJSONFormatter = ""; bodyJSONFormatter = $body } | ConvertTo-Json -Compress)
+    $ct.Update($false); Invoke-PnPQuery
 }
-Set-PnPListPermission -Identity $C -Group $PMO_GROUP -AddRole $ROLE_FULL -ErrorAction SilentlyContinue | Out-Null
+Set-FormSections $P @(
+    @("Ключові показники", @("pmKState","pmKDates","pmKMoney")),
+    @("Проєкт",            @("Title","pmCode","pmType","pmPriority","pmDepartment","pmLoop","pmDescription")),
+    @("Учасники",          @("pmManager","pmOwner","pmStakeholders")),
+    @("Терміни і бюджет",  @("pmStatus","pmProgress","pmStart","pmGoLive","pmPlanEnd","pmBudget","pmBudgetUse")),
+    @("Пов'язані записи",  @("pmCardInfo")))
+Set-FormSections $R @(
+    @("Звіт",              @("srProject","srDate","srPeriod","Title")),
+    @("Оцінки",            @("srSchedule","srBudget","srResources","srRAG")),
+    @("Що зроблено",       @("srDone","srNext","srIssues")),
+    @("Ключові показники — лише якщо змінюються", @("srStatus","srType","srProgress","srStart","srGoLive","srPlanEnd","srForecastEnd","srActualCost","srKeyReason")),
+    @("Рішення керівництва", @("srDecision","srDecisionText")))
+Set-FormSections $K @(
+    @("Ризик",             @("riProject","Title","riType","riStatus")),
+    @("Оцінка",            @("riProbability","riImpact","riScore")),
+    @("Реагування",        @("riOwner","riDue","riMitigation")))
+
+# Журнал изменений и показатели портфеля: пользователи только читают, пишет синхронизация
+$members = Get-PnPGroup -AssociatedMemberGroup
+foreach ($u in @("Lists/KeyChanges", "Lists/PortfolioStats")) {
+    $ro = Get-PnPList -Identity $u -Includes HasUniqueRoleAssignments
+    if (-not $ro.HasUniqueRoleAssignments) {
+        Set-PnPList -Identity $ro -BreakRoleInheritance -CopyRoleAssignments | Out-Null
+        Set-PnPListPermission -Identity $ro -Group $members.Title -RemoveRole $ROLE_EDIT -ErrorAction SilentlyContinue | Out-Null
+        Set-PnPListPermission -Identity $ro -Group $members.Title -AddRole $ROLE_READ | Out-Null
+        Write-Host "  «$($ro.Title)»: участники сайта — только чтение"
+    }
+    Set-PnPListPermission -Identity $ro -Group $PMO_GROUP -AddRole $ROLE_FULL -ErrorAction SilentlyContinue | Out-Null
+}
 
 # ===========================================================================
 # 8. Цветовое форматирование столбцов
@@ -493,6 +600,59 @@ $fmtScore = @'
     "background-color": "=if(@currentField >= 15, '#c62828', if(@currentField >= 8, '#f2a900', '#2e7d32'))" } }
 '@
 
+# Главная: «Портфель за станом» — представление «Стан» списка «Показники портфеля» (одна строка «Поточний»)
+$fmtStatsNow = @'
+{ "$schema": "https://developer.microsoft.com/json-schemas/sp/v2/view-formatting.schema.json",
+  "hideSelection": true, "hideColumnHeader": true,
+  "rowFormatter": {
+    "elmType": "div", "style": { "display": "flex", "flex-direction": "column", "width": "100%", "padding": "8px 4px 16px", "box-sizing": "border-box" },
+    "children": [
+      { "elmType": "div", "style": { "display": "flex", "align-items": "center", "flex-wrap": "wrap" },
+        "children": [
+          { "elmType": "div", "style": { "display": "flex", "flex-direction": "column", "align-items": "center", "margin-right": "28px", "min-width": "90px" },
+            "children": [
+              { "elmType": "span", "txtContent": "[$psTotal]", "style": { "font-size": "44px", "font-weight": "600", "line-height": "1.1", "color": "#323130" } },
+              { "elmType": "span", "txtContent": "активних", "style": { "font-size": "13px", "color": "#605e5c" } } ] },
+          { "elmType": "div", "style": { "display": "flex", "flex-wrap": "wrap", "flex-grow": "1" },
+            "children": [
+              { "elmType": "div", "style": { "display": "flex", "align-items": "center", "padding": "8px 14px", "margin": "4px", "border-radius": "8px", "background-color": "#e6f4ea", "min-width": "110px" },
+                "children": [ { "elmType": "span", "txtContent": "[$psGreen]", "style": { "font-size": "24px", "font-weight": "600", "color": "#1e6b2b", "margin-right": "8px" } },
+                              { "elmType": "span", "txtContent": "Зелений", "style": { "color": "#1e6b2b" } } ] },
+              { "elmType": "div", "style": { "display": "flex", "align-items": "center", "padding": "8px 14px", "margin": "4px", "border-radius": "8px", "background-color": "#fff4ce", "min-width": "110px" },
+                "children": [ { "elmType": "span", "txtContent": "[$psYellow]", "style": { "font-size": "24px", "font-weight": "600", "color": "#8a5a00", "margin-right": "8px" } },
+                              { "elmType": "span", "txtContent": "Жовтий", "style": { "color": "#8a5a00" } } ] },
+              { "elmType": "div", "style": { "display": "flex", "align-items": "center", "padding": "8px 14px", "margin": "4px", "border-radius": "8px", "background-color": "#fde7e9", "min-width": "110px" },
+                "children": [ { "elmType": "span", "txtContent": "[$psRed]", "style": { "font-size": "24px", "font-weight": "600", "color": "#a4262c", "margin-right": "8px" } },
+                              { "elmType": "span", "txtContent": "Червоний", "style": { "color": "#a4262c" } } ] },
+              { "elmType": "div", "style": { "display": "=if([$psNone] > 0, 'flex', 'none')", "align-items": "center", "padding": "8px 14px", "margin": "4px", "border-radius": "8px", "background-color": "#f3f2f1", "min-width": "110px" },
+                "children": [ { "elmType": "span", "txtContent": "[$psNone]", "style": { "font-size": "24px", "font-weight": "600", "color": "#605e5c", "margin-right": "8px" } },
+                              { "elmType": "span", "txtContent": "не оцінено", "style": { "color": "#605e5c" } } ] } ] } ] },
+      { "elmType": "div", "style": { "display": "flex", "width": "100%", "height": "12px", "border-radius": "6px", "overflow": "hidden", "margin-top": "14px", "background-color": "#edebe9" },
+        "children": [
+          { "elmType": "div", "style": { "height": "100%", "background-color": "#2e7d32", "width": "=if([$psTotal] == 0, '0%', ([$psGreen] / [$psTotal] * 100) + '%')" } },
+          { "elmType": "div", "style": { "height": "100%", "background-color": "#f2a900", "width": "=if([$psTotal] == 0, '0%', ([$psYellow] / [$psTotal] * 100) + '%')" } },
+          { "elmType": "div", "style": { "height": "100%", "background-color": "#c62828", "width": "=if([$psTotal] == 0, '0%', ([$psRed] / [$psTotal] * 100) + '%')" } },
+          { "elmType": "div", "style": { "height": "100%", "background-color": "#bdbdbd", "width": "=if([$psTotal] == 0, '0%', ([$psNone] / [$psTotal] * 100) + '%')" } } ] } ] } }
+'@
+
+# Главная: «Динаміка стану портфеля» — галерея «Динаміка»: плитка = срез, цветной сложенный столбец (высота — от psMax)
+$fmtStatsDyn = @'
+{ "tileProps": { "height": 236, "width": 64, "hideSelection": true, "fillHorizontally": false,
+  "formatter": {
+    "elmType": "div", "style": { "display": "flex", "flex-direction": "column", "align-items": "center", "justify-content": "flex-end", "height": "228px", "box-sizing": "border-box" },
+    "attributes": { "title": "='Зелений ' + [$psGreen] + ' · Жовтий ' + [$psYellow] + ' · Червоний ' + [$psRed]" },
+    "children": [
+      { "elmType": "div", "style": { "display": "flex", "flex-direction": "column", "justify-content": "flex-end", "width": "30px", "height": "172px" },
+        "children": [
+          { "elmType": "div", "txtContent": "=if([$psRed] == 0, '', [$psRed])",
+            "style": { "height": "=if([$psMax] == 0, '0px', ([$psRed] / [$psMax] * 150) + 'px')", "background-color": "#c62828", "color": "#ffffff", "font-size": "11px", "font-weight": "600", "text-align": "center", "border-radius": "5px", "margin-top": "2px", "overflow": "hidden" } },
+          { "elmType": "div", "txtContent": "=if([$psYellow] == 0, '', [$psYellow])",
+            "style": { "height": "=if([$psMax] == 0, '0px', ([$psYellow] / [$psMax] * 150) + 'px')", "background-color": "#f2a900", "color": "#ffffff", "font-size": "11px", "font-weight": "600", "text-align": "center", "border-radius": "5px", "margin-top": "2px", "overflow": "hidden" } },
+          { "elmType": "div", "txtContent": "=if([$psGreen] == 0, '', [$psGreen])",
+            "style": { "height": "=if([$psMax] == 0, '0px', ([$psGreen] / [$psMax] * 150) + 'px')", "background-color": "#2e7d32", "color": "#ffffff", "font-size": "11px", "font-weight": "600", "text-align": "center", "border-radius": "5px", "margin-top": "2px", "overflow": "hidden" } } ] },
+      { "elmType": "div", "txtContent": "[$Title]", "style": { "font-size": "11px", "color": "#605e5c", "margin-top": "6px", "white-space": "nowrap" } } ] } } }
+'@
+
 @(
     @($P,"pmRAG",$fmtDot), @($P,"pmPriority",$fmtPrio), @($P,"pmType",$fmtStar), @($P,"pmProgress",$fmtProgress), @($P,"pmLastUpdate",$fmtFreshness),
     @($P,"pmPlanEnd",$fmtPlanEnd), @($P,"pmLastReport",$fmtLong), @($P,"pmLastComment",$fmtLong), @($P,"pmLoop",$fmtLoop), @($P,"pmBudgetUse",$fmtBudgetUse),
@@ -513,7 +673,7 @@ $order = "<OrderBy><FieldRef Name='pmType' Ascending='FALSE'/><FieldRef Name='pm
 
 # Порядок колонок во всех представлениях: стратегический, приоритет, название, затем остальные
 $pFields = @("pmType","pmPriority","LinkTitle","pmManager","pmStatus","pmRAG","pmLastUpdate","pmProgress","pmPlanEnd","pmLastReport")
-$null     = Set-DefaultView $P $pFields "$order<Where>$notArchived</Where>"
+$null     = Set-BaseView $P "Усі проєкти" $pFields "$order<Where>$notArchived</Where>"
 $null     = Ensure-View $P "Стратегічні" $pFields "$order<Where><And>$active<Eq><FieldRef Name='pmType'/><Value Type='Choice'>Стратегічний</Value></Eq></And></Where>"
 $vProblem = Ensure-View $P "Проблемні" @("pmType","pmPriority","LinkTitle","pmRAG","pmManager","pmLastReport","pmLastUpdate") `
     ("<OrderBy><FieldRef Name='pmRAG'/></OrderBy><Where><And>$active<Or><Eq><FieldRef Name='pmRAG'/><Value Type='Choice'>Червоний</Value></Eq>" +
@@ -525,7 +685,7 @@ $null     = Ensure-View $P "Мої проєкти" $pFields `
 $vStale   = Ensure-View $P "Немає свіжого звіту" @("pmType","pmPriority","LinkTitle","pmManager","pmLastUpdate","pmStatus") `
     ("<Where><And>$active<Or><IsNull><FieldRef Name='pmLastUpdate'/></IsNull>" +
      "<Lt><FieldRef Name='pmLastUpdate'/><Value Type='DateTime'><Today OffsetDays='-14'/></Value></Lt></Or></And></Where>")
-$null     = Ensure-View $P "Архів" @("pmType","pmPriority","LinkTitle","pmManager","pmOwner","pmArchivedAt","pmPlanEnd","pmBudget","pmActualCost") `
+$vArchive = Ensure-View $P "Архів" @("pmType","pmPriority","LinkTitle","pmManager","pmOwner","pmArchivedAt","pmPlanEnd","pmBudget","pmActualCost") `
     "<OrderBy><FieldRef Name='pmArchivedAt' Ascending='FALSE'/></OrderBy><Where><Eq><FieldRef Name='pmStatus'/><Value Type='Choice'>Архівний</Value></Eq></Where>"
 
 # Галерея «Плитки» — оформление из gallery-view.json
@@ -548,47 +708,103 @@ try {
 }
 
 $rFields = @("srProjectType","srProjectPriority","srProject","srDate","srRAG","srSchedule","srBudget","srResources","LinkTitle","Author","srDecision")
-$null      = Set-DefaultView $R $rFields "<OrderBy><FieldRef Name='srDate' Ascending='FALSE'/></OrderBy>"
+$null      = Set-BaseView $R "Усі звіти" $rFields "<OrderBy><FieldRef Name='srDate' Ascending='FALSE'/></OrderBy>"
 $vDecision = Ensure-View $R "Потребують рішення" @("srProjectType","srProjectPriority","srProject","srDate","srDecisionText","Author") `
     "<OrderBy><FieldRef Name='srDate' Ascending='FALSE'/></OrderBy><Where><Eq><FieldRef Name='srDecision'/><Value Type='Boolean'>1</Value></Eq></Where>"
 
 $kFields = @("riProjectType","riProjectPriority","riProject","LinkTitle","riType","riScore","riOwner","riStatus","riDue")
-$null   = Set-DefaultView $K $kFields "<OrderBy><FieldRef Name='riScore' Ascending='FALSE'/></OrderBy>"
+$null   = Set-BaseView $K "Усі ризики" $kFields "<OrderBy><FieldRef Name='riScore' Ascending='FALSE'/></OrderBy>"
 $vRisks = Ensure-View $K "Відкриті" $kFields `
     "<OrderBy><FieldRef Name='riScore' Ascending='FALSE'/></OrderBy><Where><Neq><FieldRef Name='riStatus'/><Value Type='Choice'>Закрито</Value></Neq></Where>"
 
-$null = Set-DefaultView $C @("kcProject","kcDate","kcChangedBy","kcKind","LinkTitle","kcFrom","kcTo","kcReason") "<OrderBy><FieldRef Name='kcDate' Ascending='FALSE'/></OrderBy>"
-$null = Set-DefaultView $M @("cmProject","cmText","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
+$null = Set-BaseView $C "Усі зміни" @("kcProject","kcDate","kcChangedBy","kcKind","LinkTitle","kcFrom","kcTo","kcReason") "<OrderBy><FieldRef Name='kcDate' Ascending='FALSE'/></OrderBy>"
+$null = Set-BaseView $M "Усі коментарі" @("cmProject","cmText","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
+
+# Как в прототипе: «Проєкти» открываются плитками, «Ризики» — открытыми
+Set-PnPView -List $P -Identity $vTiles.Id -Values @{ DefaultView = $true } | Out-Null
+Set-PnPView -List $K -Identity $vRisks.Id -Values @{ DefaultView = $true } | Out-Null
+
+# Меню сайта — как в прототипе: Головна, Проєкти, Статус-звіти, Ризики та проблеми, Архів.
+# Журнал и комментарии открываются из карточки проекта; «Вміст сайту» остаётся в меню «Параметры».
+Write-Host "  меню сайта"
+$web = Get-PnPWeb -Includes ServerRelativeUrl
+$keepUrls = @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues")
+$archUrl = (Get-PnPView -List $P -Identity $vArchive.Id -Includes ServerRelativeUrl).ServerRelativeUrl
+foreach ($nd in (Get-PnPNavigationNode -Location QuickLaunch)) {
+    $u = [string]$nd.Url
+    $isHome = $u.TrimEnd('/') -eq $web.ServerRelativeUrl.TrimEnd('/')
+    $isList = $keepUrls | Where-Object { $u -like "*/$_/*" }
+    if (-not $isHome -and -not $isList -and $u -ne $archUrl) {
+        Remove-PnPNavigationNode -Identity $nd.Id -Force | Out-Null
+        Write-Host "    - пункт меню «$($nd.Title)»"
+    }
+}
+if (-not (Get-PnPNavigationNode -Location QuickLaunch | Where-Object { $_.Url -eq $archUrl })) {
+    $null = Add-PnPNavigationNode -Location QuickLaunch -Title "Архів" -Url $archUrl
+    Write-Host "    + пункт меню «Архів»"
+}
+$ctx = Get-PnPContext
+$ql = $ctx.Web.Navigation.QuickLaunch; $ctx.Load($ql); Invoke-PnPQuery
+foreach ($nd in $ql) { if ($nd.Url -eq $archUrl) { Set-Loc $nd "Архів" "Archive" "Архив"; $nd.Update() } }
+Invoke-PnPQuery
+
+# Показатели портфеля: «Стан» — плашки по состоянию, «Динаміка» — столбцы по срезам (оформление ниже, в fmtStats*)
+$vStatNow = Ensure-View $S "Стан" @("LinkTitle","psGreen","psYellow","psRed","psNone","psTotal") `
+    "<Where><Eq><FieldRef Name='psKind'/><Value Type='Choice'>Поточний</Value></Eq></Where>"
+$vStatDyn = Ensure-View $S "Динаміка" @("LinkTitle","psDate","psGreen","psYellow","psRed","psNone","psTotal","psMax") `
+    "<OrderBy><FieldRef Name='psDate'/></OrderBy><Where><Eq><FieldRef Name='psKind'/><Value Type='Choice'>Зріз</Value></Eq></Where>"
+Set-PnPView -List $S -Identity $vStatNow.Id -Values @{ CustomFormatter = $fmtStatsNow } | Out-Null
+Set-PnPView -List $S -Identity $vStatDyn.Id -Values @{ ViewType2 = "TILES"; CustomFormatter = $fmtStatsDyn.Replace('&', '\u0026') } | Out-Null
 
 # ===========================================================================
-# 10. Дашборд: сверху две диаграммы, ниже списки во всю ширину; переводы EN и RU
+# 10. Дашборд: ссылки «Новий проєкт / статус-звіт», показатели портфеля (плашки и динамика),
+#     ниже списки во всю ширину; переводы EN и RU
 # ===========================================================================
 if (-not $SkipPage) {
     Write-Host "10. Панель проєктів" -ForegroundColor Cyan
-    function Add-ListPart($Page, $List, $View, [int]$Section, [string]$Title) {
-        Add-PnPPageWebPart -Page $Page -DefaultWebPartType List -Section $Section -Column 1 -WebPartProperties @{
-            isDocumentLibrary = $false; selectedListId = "$($List.Id)"; selectedListUrl = $List.RootFolder.ServerRelativeUrl
-            selectedViewId = "$($View.Id)"; listTitle = $Title; webpartHeightKey = 4
-        } | Out-Null
+    $Pr = Get-PnPList -Identity "Lists/Projects" -Includes RootFolder
+    $Re = Get-PnPList -Identity "Lists/StatusReports" -Includes RootFolder
+    $Ri = Get-PnPList -Identity "Lists/RisksIssues" -Includes RootFolder
+    $St = Get-PnPList -Identity "Lists/PortfolioStats" -Includes RootFolder
+    # тексты страницы: uk / en / ru — как в прототипе
+    $DASH = @{
+        "Dashboard"    = @{ New = @("Новий проєкт", "Новий статус-звіт"); T = @("Портфель за станом", "Динаміка стану портфеля", "Проблемні проєкти", "Немає свіжого статус-звіту", "Потребують рішення керівництва", "Відкриті ризики") }
+        "en/Dashboard" = @{ New = @("New project", "New status report"); T = @("Portfolio by health", "Portfolio health over time", "Projects at risk", "No recent status report", "Management decisions needed", "Open risks") }
+        "ru/Dashboard" = @{ New = @("Новый проект", "Новый статус-отчёт"); T = @("Портфель по состоянию", "Динамика состояния портфеля", "Проблемные проекты", "Нет свежего статус-отчёта", "Требуют решения руководства", "Открытые риски") }
+    }
+    $parts = @(@($St, $vStatNow, 2, 1), @($St, $vStatDyn, 2, 2), @($Pr, $vProblem, 3, 1), @($Pr, $vStale, 4, 1), @($Re, $vDecision, 5, 1), @($Ri, $vRisks, 6, 1))
+    function Build-Dashboard([string]$Name) {
+        $d = $DASH[$Name]
+        # пересобираем, только если состав страницы отличается (прежняя версия с Quick chart, другие заголовки)
+        $have = @(Get-PnPPageComponent -Page $Name | ForEach-Object { try { ($_.PropertiesJson | ConvertFrom-Json).listTitle } catch { $null } } | Where-Object { $_ })
+        if (($have -join "|") -eq ($d.T -join "|")) { return $false }
+        $pg = Get-PnPPage -Identity $Name
+        $pg.ClearPage()
+        $pg.AddSection("OneColumn", 1)
+        $pg.AddSection("TwoColumn", 2)
+        3..6 | ForEach-Object { $pg.AddSection("OneColumn", $_) }
+        $null = $pg.Save()
+        $base = $web.ServerRelativeUrl.TrimEnd('/')
+        Add-PnPPageTextPart -Page $Name -Section 1 -Column 1 -Text ("<p><a href=""$base/Lists/Projects/NewForm.aspx""><strong>＋ $($d.New[0])</strong></a>&nbsp;&nbsp;&nbsp;&nbsp;" +
+            "<a href=""$base/Lists/StatusReports/NewForm.aspx""><strong>＋ $($d.New[1])</strong></a></p>") | Out-Null
+        for ($i = 0; $i -lt $parts.Count; $i++) {
+            $x = $parts[$i]
+            Add-PnPPageWebPart -Page $Name -DefaultWebPartType List -Section $x[2] -Column $x[3] -WebPartProperties @{
+                isDocumentLibrary = $false; selectedListId = "$($x[0].Id)"; selectedListUrl = $x[0].RootFolder.ServerRelativeUrl
+                selectedViewId = "$($x[1].Id)"; listTitle = $d.T[$i]; webpartHeightKey = 4; hideCommandBar = $true
+            } | Out-Null
+        }
+        Set-PnPPage -Identity $Name -Publish | Out-Null
+        return $true
     }
     try { $page = Get-PnPPage -Identity "Dashboard" -ErrorAction Stop } catch { $page = $null }
     if (-not $page) {
-        $Pr = Get-PnPList -Identity "Lists/Projects" -Includes RootFolder
-        $Re = Get-PnPList -Identity "Lists/StatusReports" -Includes RootFolder
-        $Ri = Get-PnPList -Identity "Lists/RisksIssues" -Includes RootFolder
-        $page = Add-PnPPage -Name "Dashboard" -Title "Панель проєктів" -LayoutType Article
-        Add-PnPPageSection -Page $page -SectionTemplate TwoColumn -Order 1
-        1..4 | ForEach-Object { Add-PnPPageSection -Page $page -SectionTemplate OneColumn -Order ($_ + 1) }
-        Add-PnPPageWebPart -Page $page -DefaultWebPartType QuickChart -Section 1 -Column 1 | Out-Null
-        Add-PnPPageWebPart -Page $page -DefaultWebPartType QuickChart -Section 1 -Column 2 | Out-Null
-        Add-ListPart $page $Pr $vProblem  2 "Проблемні проєкти"
-        Add-ListPart $page $Pr $vStale    3 "Немає свіжого статус-звіту"
-        Add-ListPart $page $Re $vDecision 4 "Потребують рішення керівництва"
-        Add-ListPart $page $Ri $vRisks    5 "Відкриті ризики"
+        $null = Add-PnPPage -Name "Dashboard" -Title "Панель проєктів" -LayoutType Article
         Set-PnPPage -Identity "Dashboard" -Publish | Out-Null
         Set-PnPHomePage -RootFolderRelativeUrl "SitePages/Dashboard.aspx"
         Write-Host "  + страница создана и назначена домашней" -ForegroundColor Green
     }
+    if (Build-Dashboard "Dashboard") { Write-Host "  + главная собрана" -ForegroundColor Green }
     try {
         Enable-PnPFeature -Identity "24611c05-ee19-45da-955f-6602264abaf8" -Scope Web -ErrorAction SilentlyContinue
         # по полному пути: у переводов (SitePages/en/, SitePages/ru/) то же имя файла
@@ -609,6 +825,7 @@ if (-not $SkipPage) {
                 Set-PnPPage -Identity "$($t[0])/Dashboard" -Title $t[1] -Publish | Out-Null
                 Write-Host "  + перевод $($t[0]): «$($t[1])», опубликован"
             }
+            if ($tp -and (Build-Dashboard "$($t[0])/Dashboard")) { Write-Host "  + перевод $($t[0]) собран" -ForegroundColor Green }
         }
     } catch {
         Write-Warning "Переводы страницы не созданы автоматически ($($_.Exception.Message)): страница → «Перевод» → «Создать» для English и Русский."

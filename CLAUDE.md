@@ -46,6 +46,9 @@ pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action deploy -ConfirmProdu
 
 ## Правила, которые нельзя нарушать
 
+- **Имена переменных PowerShell не различаются по регистру**: `$p` и `$P` — одна переменная. Не называй так коллекцию и переменную цикла; `tests/Test-Scripts.ps1` это проверяет.
+- **Даты «только дата»** синхронизация пишет как полдень UTC (`ToSpDate`) и читает через `DateOnly`, который понимает и полдень UTC, и полночь по поясу сайта (значения из форм).
+
 - **Идемпотентность.** Любой скрипт можно запустить повторно без дублей. Новые поля добавляй через функцию `F`, представления — через `Ensure-View`.
 - **Внутренние имена полей не переименовываются** (`pmStatus`, `srRAG`, …). Меняются только отображаемые названия и переводы (uk / en / ru).
 - **Данные не теряются.** Удаление или смена типа поля — только через блок миграции в `Deploy-PMO.ps1` с переносом значений. Никогда не удаляй сайт, список или элементы.
@@ -55,10 +58,10 @@ pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action deploy -ConfirmProdu
 
 ## Модель данных (кратко)
 
-- **Проєкти** (`Lists/Projects`): `pmType`, `pmPriority`, `pmManager` (PM), `pmOwner`, `pmStakeholders` (несколько пользователей), `pmStatus`, `pmRAG`, `pmProgress`, `pmStart`, `pmGoLive`, `pmPlanEnd`, `pmForecastEnd`, `pmArchivedAt`, `pmBudget`, `pmActualCost`, `pmLastUpdate`, `pmLastReport`, `pmLastComment`, `pmLoop`, `pmCode`, `pmDepartment`, `pmDescription`, служебное `pmoAcl`.
+- **Проєкти** (`Lists/Projects`): `pmType`, `pmPriority`, `pmManager` (PM), `pmOwner`, `pmStakeholders` (несколько пользователей), `pmStatus`, `pmRAG`, `pmProgress`, `pmStart`, `pmGoLive`, `pmPlanEnd`, `pmForecastEnd`, `pmArchivedAt`, `pmBudget`, `pmActualCost`, `pmLastUpdate`, `pmLastReport`, `pmLastComment`, `pmLoop`, `pmCode`, `pmDepartment`, `pmDescription`; для карточки — вычисляемые `pmKState` / `pmKDates` / `pmKMoney` (показатели только для чтения) и `pmCardInfo` (ссылки и доступ, пишет синхронизация); служебное `pmoAcl`.
 - **Статус-звіти** (`Lists/StatusReports`): `srProject`, `srDate`, `srPeriod`, оценки `srSchedule` / `srBudget` / `srResources`, вычисляемое `srRAG`, ключевые показатели `srStatus` / `srType` / `srProgress` / `srStart` / `srGoLive` / `srPlanEnd` / `srForecastEnd` / `srActualCost`, `srKeyReason`, `srDone` / `srNext` / `srIssues`, `srDecision` / `srDecisionText`, копии `srProjectType` / `srProjectPriority`, служебные `srApplied`, `pmoAcl`.
 - **Ризики та проблеми** (`Lists/RisksIssues`): `riProject`, `riType`, `riProbability` 1–5, `riImpact` 1–5, вычисляемое `riScore` = P × I, `riOwner`, `riStatus`, `riDue`, `riMitigation`, копии `riProjectType` / `riProjectPriority`.
-- **Зміни показників** (`Lists/KeyChanges`) — журнал; **Коментарі** (`Lists/ProjectComments`).
+- **Зміни показників** (`Lists/KeyChanges`) — журнал; **Коментарі** (`Lists/ProjectComments`); **Показники портфеля** (`Lists/PortfolioStats`) — служебный, для главной: `psKind` (Поточний / Зріз), `psDate`, `psGreen` / `psYellow` / `psRed` / `psNone` / `psTotal` / `psMax`.
 
 ## Бизнес-правила
 
@@ -67,7 +70,7 @@ pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action deploy -ConfirmProdu
 - Статус «Завершено» в отчёте → проект получает «Архівний» и дату архивации, уходит в архив.
 - Общее состояние отчёта — **худшая из трёх оценок**: хотя бы одна красная → Червоний; иначе хотя бы одна жёлтая → Жовтий; иначе Зелений. Состояние проекта = состояние последнего отчёта.
 - Оценка риска = вероятность × влияние: 15–25 высокий, 8–14 средний, 1–7 низкий.
-- Доступ: PM, руководители PM (Entra ID), собственник — редактирование; стейкхолдеры и руководители собственника и стейкхолдеров — просмотр и комментарии; группа `PMO-адміністратори` — всё. Права выдаёт `Invoke-PMOSync.ps1`.
+- Доступ: PM, руководители PM (Entra ID), собственник — редактирование; стейкхолдеры и руководители собственника и стейкхолдеров — просмотр и комментарии; группа `PMO-адміністратори` — всё. Проект в архиве — только просмотр (кроме PMO и владельцев сайта). Права выдаёт `Invoke-PMOSync.ps1`.
 - Порядок колонок во всех списках: стратегический (щит с мечом), приоритет, название, остальные.
 
 ## Как проверять изменения прототипа

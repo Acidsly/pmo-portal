@@ -17,6 +17,16 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
     if ($e.Count) { $e | ForEach-Object { Bad "$($f.Name):$($_.Extent.StartLineNumber) $($_.Message)" } } else { Ok $f.Name }
 }
 
+Write-Host "1a. Имена переменных, отличающиеся только регистром (в PowerShell это одна переменная)"
+foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "tests") -Filter *.ps1) {
+    $t = $null; $e = $null
+    $ast = [System.Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$t, [ref]$e)
+    $vars = $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.VariableExpressionAst] }, $true) |
+        Where-Object { -not $_.VariablePath.IsDriveQualified } | ForEach-Object { $_.VariablePath.UserPath -replace '^(script|global|local):', '' } | Sort-Object -Unique -CaseSensitive
+    $clash = $vars | Group-Object { $_.ToLowerInvariant() } | Where-Object { @($_.Group | Sort-Object -Unique -CaseSensitive).Count -gt 1 }
+    if ($clash) { Bad "$($f.Name): $(($clash | ForEach-Object { $_.Group -join '/' }) -join ', ')" } else { Ok $f.Name }
+}
+
 Write-Host "2. JSON-файлы"
 foreach ($f in @("scripts/gallery-view.json", "config/environments.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
@@ -40,6 +50,23 @@ $cases = @(
     @("Зелений","Червоний","Зелений","Червоний"), @("Жовтий","Червоний","Жовтий","Червоний"), @("Зелений","","Зелений","")
 )
 foreach ($c in $cases) { $r = CalcRag $c[0] $c[1] $c[2]; if ($r -eq $c[3]) { Ok "$($c[0])/$($c[1])/$($c[2]) -> $r" } else { Bad "$($c[0])/$($c[1])/$($c[2]) -> $r, ожидалось $($c[3])" } }
+
+Write-Host "4a. Даты «только дата» (Invoke-PMOSync.ps1: DateOnly / ToSpDate)"
+foreach ($n in @("DateOnly", "ToSpDate")) {
+    $fn = $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $n }, $true) | Select-Object -First 1
+    Invoke-Expression $fn.Extent.Text
+}
+$dcases = @(
+    @("2026-09-21T12:00:00Z", "2026-09-21", "записано синхронизацией (полдень UTC)"),
+    @("2026-09-20T21:00:00Z", "2026-09-21", "введено в форме, сайт UTC+3 (полночь по Киеву)"),
+    @("2026-01-20T22:00:00Z", "2026-01-21", "введено в форме, сайт UTC+2 (зима)"),
+    @("2026-09-21T04:00:00Z", "2026-09-21", "введено в форме, сайт UTC-4"),
+    @((ToSpDate "2026-03-05"), "2026-03-05", "ToSpDate -> DateOnly без сдвига")
+)
+foreach ($c in $dcases) {
+    $d = [datetime]::Parse($c[0], [cultureinfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AdjustToUniversal -bor [System.Globalization.DateTimeStyles]::AssumeUniversal)
+    $r = DateOnly $d; if ($r -eq $c[1]) { Ok "$($c[2]): $r" } else { Bad "$($c[2]): $r, ожидалось $($c[1])" }
+}
 
 Write-Host "5. Прототип"
 $html = Get-Content -Raw (Join-Path $root "prototype/pmo-prototype.html")

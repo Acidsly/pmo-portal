@@ -19,9 +19,11 @@
       "border-radius": "6px",
       "background-color": "#ffffff",
       "box-shadow": "0 1.6px 3.6px rgba(0,0,0,.13), 0 0.3px 0.9px rgba(0,0,0,.11)",
-      "border-left": "='6px solid ' + if([$pmRAG] == 'Зелений', '#2e7d32', if([$pmRAG] == 'Жовтий', '#f2a900', if([$pmRAG] == 'Червоний', '#c62828', '#bdbdbd')))",
       "cursor": "pointer",
-      "overflow": "hidden"
+      "overflow": "hidden",
+      "border": "1px solid #edebe9",
+      "align-items": "stretch",
+      "text-align": "left"
     },
     "children": [
       {
@@ -31,7 +33,9 @@
           "justify-content": "space-between",
           "align-items": "center",
           "font-size": "12px",
-          "color": "#605e5c"
+          "color": "#605e5c",
+          "width": "100%",
+          "box-sizing": "border-box"
         },
         "children": [
           {
@@ -39,34 +43,73 @@
             "txtContent": "[$pmCode]"
           },
           {
-            "elmType": "svg",
-            "attributes": {
-              "viewBox": "0 0 24 24",
-              "title": "[$pmType]"
-            },
+            "elmType": "div",
             "style": {
-              "width": "18px",
-              "height": "18px",
-              "display": "=if([$pmType] == 'Стратегічний', 'inline', 'none')"
+              "display": "flex",
+              "align-items": "center"
             },
             "children": [
               {
-                "elmType": "path",
+                "elmType": "svg",
                 "attributes": {
-                  "d": "M12 2 4 5v6.2c0 4.9 3.4 9.3 8 10.8 4.6-1.5 8-5.9 8-10.8V5z"
+                  "viewBox": "0 0 24 24",
+                  "title": "[$pmType]"
                 },
                 "style": {
-                  "fill": "#8e44c9"
-                }
+                  "width": "18px",
+                  "height": "18px",
+                  "display": "=if([$pmType] == 'Стратегічний', 'inline', 'none')",
+                  "margin-right": "6px"
+                },
+                "children": [
+                  {
+                    "elmType": "path",
+                    "attributes": {
+                      "d": "M12 2 4 5v6.2c0 4.9 3.4 9.3 8 10.8 4.6-1.5 8-5.9 8-10.8V5z"
+                    },
+                    "style": {
+                      "fill": "#8e44c9"
+                    }
+                  },
+                  {
+                    "elmType": "path",
+                    "attributes": {
+                      "d": "M12 4.6l.9 1.3v7.2h2.3v1.4h-2.3v2h.5v1.2h-2.8v-1.2h.5v-2H8.8v-1.4h2.3V5.9z"
+                    },
+                    "style": {
+                      "fill": "#ffffff"
+                    }
+                  }
+                ]
               },
               {
-                "elmType": "path",
-                "attributes": {
-                  "d": "M12 4.6l.9 1.3v7.2h2.3v1.4h-2.3v2h.5v1.2h-2.8v-1.2h.5v-2H8.8v-1.4h2.3V5.9z"
-                },
+                "elmType": "span",
                 "style": {
-                  "fill": "#ffffff"
-                }
+                  "display": "inline-flex",
+                  "align-items": "center",
+                  "padding": "1px 8px",
+                  "border-radius": "10px",
+                  "font-size": "11px",
+                  "font-weight": "600",
+                  "background-color": "=if([$pmRAG] == 'Зелений', '#e6f4ea', if([$pmRAG] == 'Жовтий', '#fff4ce', if([$pmRAG] == 'Червоний', '#fde7e9', '#f3f2f1')))",
+                  "color": "=if([$pmRAG] == 'Зелений', '#1e6b2b', if([$pmRAG] == 'Жовтий', '#8a5a00', if([$pmRAG] == 'Червоний', '#a4262c', '#605e5c')))"
+                },
+                "children": [
+                  {
+                    "elmType": "span",
+                    "style": {
+                      "width": "7px",
+                      "height": "7px",
+                      "border-radius": "50%",
+                      "margin-right": "5px",
+                      "background-color": "=if([$pmRAG] == 'Зелений', '#2e7d32', if([$pmRAG] == 'Жовтий', '#f2a900', if([$pmRAG] == 'Червоний', '#c62828', '#bdbdbd')))"
+                    }
+                  },
+                  {
+                    "elmType": "span",
+                    "txtContent": "=if([$pmRAG] == '', 'не оцінено', [$pmRAG])"
+                  }
+                ]
               }
             ]
           }
@@ -81,28 +124,49 @@
           "margin": "6px 0 4px",
           "line-height": "1.3",
           "max-height": "42px",
-          "overflow": "hidden"
+          "overflow": "hidden",
+          "width": "100%",
+          "box-sizing": "border-box",
+          "text-align": "left"
         }
       },
       {
         "elmType": "div",
-        "txtContent": "[$pmStatus]",
         "style": {
+          "display": "flex",
+          "justify-content": "space-between",
           "font-size": "12px",
           "color": "#605e5c",
-          "margin-bottom": "10px"
-        }
+          "margin-bottom": "4px",
+          "width": "100%",
+          "box-sizing": "border-box"
+        },
+        "children": [
+          {
+            "elmType": "span",
+            "txtContent": "[$pmStatus]"
+          },
+          {
+            "elmType": "span",
+            "txtContent": "=[$pmProgress] + '%'",
+            "style": {
+              "font-weight": "600",
+              "color": "#323130"
+            }
+          }
+        ]
       },
       {
         "elmType": "div",
         "style": {
           "width": "100%",
-          "height": "16px",
+          "height": "6px",
           "background-color": "#edebe9",
-          "border-radius": "8px",
+          "border-radius": "3px",
           "position": "relative",
           "overflow": "hidden",
-          "flex-shrink": "0"
+          "flex-shrink": "0",
+          "box-sizing": "border-box"
         },
         "children": [
           {
@@ -111,21 +175,6 @@
               "height": "100%",
               "width": "=if([$pmProgress] > 100, '100%', [$pmProgress] + '%')",
               "background-color": "=if([$pmProgress] >= 100, '#2e7d32', '#0078d4')"
-            }
-          },
-          {
-            "elmType": "span",
-            "txtContent": "=[$pmProgress] + '%'",
-            "style": {
-              "position": "absolute",
-              "left": "0",
-              "right": "0",
-              "top": "0",
-              "text-align": "center",
-              "font-size": "11px",
-              "line-height": "16px",
-              "font-weight": "600",
-              "color": "#323130"
             }
           }
         ]
@@ -137,7 +186,9 @@
           "align-items": "center",
           "margin-top": "12px",
           "font-size": "12px",
-          "color": "#605e5c"
+          "color": "#605e5c",
+          "width": "100%",
+          "box-sizing": "border-box"
         },
         "children": [
           {
@@ -152,7 +203,7 @@
           },
           {
             "elmType": "span",
-            "txtContent": "=if(Number([$pmLastUpdate]) == 0, '—', toLocaleDateString([$pmLastUpdate]))"
+            "txtContent": "='Останній апдейт · ' + if(Number([$pmLastUpdate]) == 0, 'звітів ще немає', toLocaleDateString([$pmLastUpdate]))"
           }
         ]
       },
@@ -165,7 +216,9 @@
           "line-height": "1.4",
           "max-height": "74px",
           "overflow": "hidden",
-          "flex-grow": "1"
+          "flex-grow": "1",
+          "width": "100%",
+          "box-sizing": "border-box"
         }
       },
       {
@@ -175,7 +228,9 @@
           "justify-content": "space-between",
           "align-items": "center",
           "margin-top": "auto",
-          "padding-top": "8px"
+          "padding-top": "8px",
+          "width": "100%",
+          "box-sizing": "border-box"
         },
         "children": [
           {
