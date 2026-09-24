@@ -10,7 +10,8 @@
     "clean": "heft clean",
     "eject-webpack": "heft eject-webpack",
     "start": "heft start --clean",
-    "test:unit": "jest"
+    "test:unit": "jest",
+    "extract": "node tools/extract-prototype.mjs"
   },
   "dependencies": {
     "@fluentui/react": "^8.106.4",
