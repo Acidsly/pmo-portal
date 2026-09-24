@@ -27,3 +27,23 @@ export const PersonCell: React.FC<{ p: Person | null }> = ({ p }) => p
 
 export const Score: React.FC<{ s: number }> = ({ s }) =>
   <span className="chip" style={{ background: s >= 15 ? 'var(--r)' : s >= 8 ? 'var(--y)' : 'var(--g)' }}>{s}</span>;
+
+export const money = (n: number): string => Math.round(n || 0).toLocaleString('uk-UA') + ' ₴';
+export const ragColor = (v: Rag): string => (v ? RC[v] : 'var(--na)');
+export const freshColor = (f: Fresh): string => FC[f];
+
+/** Пилюля состояния с точкой (ragHtml прототипа). */
+export const RagPill: React.FC<{ v: Rag; notRated: string }> = ({ v, notRated }) =>
+  <span className="pill" style={{ ['--c' as string]: ragColor(v) } as React.CSSProperties}><span className="dot sm" />{v || notRated}</span>;
+
+/** Полоса выполнения (barHtml прототипа). */
+export const Progress: React.FC<{ v: number }> = ({ v }) =>
+  <span className="prog" role="img" aria-label={`${v}%`}><span className="track"><i style={{ width: `${Math.min(v, 100)}%`, background: v >= 100 ? 'var(--g)' : 'var(--theme)' }} /></span><b>{v}%</b></span>;
+
+/** Несколько людей: стопка аватаров, первый по имени, «+N» (peopleCell прототипа). */
+export const People: React.FC<{ list: Person[] }> = ({ list }) => list.length
+  ? <span className="plist" title={list.map(x => x.name).join(', ')}><span className="astack">{list.slice(0, 3).map(x => <Avatar key={x.id} name={x.name} />)}</span>
+      <b>{list[0].name}</b>{list.length > 1 ? <span className="more-n">+{list.length - 1}</span> : null}</span>
+  : <span className="muted">—</span>;
+
+export const Muted: React.FC = () => <span className="muted">—</span>;
