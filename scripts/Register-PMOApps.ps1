@@ -32,12 +32,16 @@ param(
     [string]$DeployClientId,
     [string]$OutPath = (Join-Path $PSScriptRoot "certs"),
     [switch]$AllSites,
-    [switch]$NoMail
+    [switch]$NoMail,
+    [switch]$DeviceLogin
 )
 $ErrorActionPreference = "Stop"
+# PnP.PowerShell 3.x: командлеты регистрации входят интерактивно по умолчанию, ключа -Interactive у них нет.
+# -DeviceLogin выводит код и адрес — их можно открыть в любом браузере (например, в том, где уже выполнен вход).
+$login = if ($DeviceLogin) { @{ DeviceLogin = $true } } else { @{} }
 
 if ($Stage -eq "Deploy") {
-    $app = Register-PnPEntraIDAppForInteractiveLogin -ApplicationName "PMO Deploy" -Tenant $Tenant -Interactive `
+    $app = Register-PnPEntraIDAppForInteractiveLogin -ApplicationName "PMO Deploy" -Tenant $Tenant @login `
         -SharePointDelegatePermissions "AllSites.FullControl" -GraphDelegatePermissions "Sites.FullControl.All", "User.Read.All"
     $id = $app.'AzureAppId/ClientId'
     Write-Host "`nPMO Deploy ClientId: $id" -ForegroundColor Green
@@ -49,7 +53,7 @@ if ($Stage -eq "Automation") {
     New-Item -ItemType Directory -Force -Path $OutPath | Out-Null
     $pfxPassword = Read-Host "Пароль для файла сертификата .pfx" -AsSecureString
     $app = Register-PnPEntraIDApp -ApplicationName "PMO Automation" -Tenant $Tenant -OutPath $OutPath -CertificatePassword $pfxPassword `
-        -SharePointApplicationPermissions "Sites.FullControl.All" -Interactive
+        -SharePointApplicationPermissions "Sites.FullControl.All" @login
     Write-Host "`nPMO Automation ClientId: $($app.'AzureAppId/ClientId')" -ForegroundColor Green
     Write-Host   "Отпечаток сертификата:   $($app.'Certificate Thumbprint')" -ForegroundColor Green
     Write-Host   "Внесите их в config/environments.json (секция test)."
@@ -66,12 +70,13 @@ $graph = @("User.Read.All") + $(if ($NoMail) { @() } else { @("Mail.Send") })
 $sp    = if ($AllSites) { "Sites.FullControl.All" } else { "Sites.Selected" }
 
 $app = Register-PnPEntraIDApp -ApplicationName "PMO Sync" -Tenant $Tenant -OutPath $OutPath -CertificatePassword $pfxPassword `
-    -SharePointApplicationPermissions $sp -GraphApplicationPermissions $graph -Interactive
+    -SharePointApplicationPermissions $sp -GraphApplicationPermissions $graph @login
 $syncId = $app.'AzureAppId/ClientId'
 $thumb  = $app.'Certificate Thumbprint'
 
 if (-not $AllSites) {
-    Connect-PnPOnline -Url $SiteUrl -ClientId $DeployClientId -Interactive
+    $connect = if ($DeviceLogin) { @{ DeviceLogin = $true; Tenant = $Tenant } } else { @{ Interactive = $true } }
+    Connect-PnPOnline -Url $SiteUrl -ClientId $DeployClientId @connect
     $grant = Grant-PnPEntraIDAppSitePermission -AppId $syncId -DisplayName "PMO Sync" -Site $SiteUrl -Permissions Write
     Set-PnPEntraIDAppSitePermission -Site $SiteUrl -PermissionId $grant.Id -Permissions FullControl | Out-Null
     Write-Host "  PMO Sync: FullControl только на $SiteUrl" -ForegroundColor Green

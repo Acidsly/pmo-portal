@@ -1,5 +1,11 @@
 # Журнал изменений
 
+## Не выпущено
+
+- `Register-PMOApps.ps1` совместим с PnP.PowerShell 3.x: у командлетов регистрации больше нет ключа `-Interactive`.
+- Ключ `-DeviceLogin` в `Register-PMOApps.ps1` — вход по коду в любом браузере.
+- `docs/SETUP-CLAUDE-CODE.md`: установка PowerShell — `brew install powershell`; сертификаты — в `certs/`, как в примере конфигурации.
+
 ## 1.0.0 — 2026-09-24
 
 Первая версия, перенесённая в репозиторий.
