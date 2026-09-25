@@ -28,7 +28,7 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "config/focus-group.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
@@ -51,6 +51,23 @@ foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/acl.json") | Conv
     $got = ($res | ForEach-Object { "$($_.e) $($_.l) $($_.r)" }) -join "; "
     $exp = ($c.expect | ForEach-Object { $_ -join " " }) -join "; "
     if ($got -eq $exp) { Ok $c.name } else { Bad "$($c.name): $got — ожидалось $exp" }
+}
+
+Write-Host "3b. Роли фокус-группы (Get-RolePlan, Seed-TestData.ps1)"
+$seedAst = [System.Management.Automation.Language.Parser]::ParseInput((Get-Content -Raw (Join-Path $root "scripts/Seed-TestData.ps1")), [ref]$null, [ref]$null)
+Invoke-Expression ($seedAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Get-RolePlan" }, $true) | Select-Object -First 1).Extent.Text
+$codes = 1..10 | ForEach-Object { "TEST-{0:d2}" -f $_ }
+foreach ($k in @(3, 5, 10, 13)) {
+    $em = 1..$k | ForEach-Object { "u$_@c" }
+    $plan = Get-RolePlan $em $codes
+    $bad = @()
+    foreach ($e in $em) {
+        $isPm = @($plan.Values | Where-Object { $_.pm -eq $e }).Count; $isOwn = @($plan.Values | Where-Object { $_.owner -eq $e }).Count; $isSt = @($plan.Values | Where-Object { $_.st -contains $e }).Count
+        if ($k -le 10 -and (-not $isPm -or -not $isOwn -or -not $isSt)) { $bad += $e }
+        if ($k -gt 10 -and -not ($isPm + $isOwn + $isSt)) { $bad += $e }
+    }
+    foreach ($c in $codes) { $r = $plan[$c]; if ($r.pm -eq $r.owner -or $r.st -contains $r.pm -or $r.st -contains $r.owner) { $bad += $c } }
+    if ($bad) { Bad "$k человек: $($bad -join ', ')" } else { Ok "$k человек — у каждого роль, PM ≠ власник ≠ стейкхолдер" }
 }
 
 Write-Host "4. Формула общего состояния (Invoke-PMOSync.ps1)"

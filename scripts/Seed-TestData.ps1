@@ -14,6 +14,7 @@
 
 .EXAMPLE
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action seed
+    (если есть config/focus-group.json — после демо-данных раздаёт роли фокус-группе, см. -Roles)
 #>
 param(
     [Parameter(Mandatory)][string]$SiteUrl,
@@ -23,7 +24,10 @@ param(
     [string]$CertificatePath,
     [SecureString]$CertificatePassword,
     # люди для полей PM / Власник / Стейкхолдери / Власник ризику; по умолчанию — тестовые учётные записи тенанта
-    [string[]]$People = @("j.pochobut@eclectic.group", "test.kovalenko@smarthr.kz", "test.burbega@fillin.kz")
+    [string[]]$People = @("j.pochobut@eclectic.group", "test.kovalenko@smarthr.kz", "test.burbega@fillin.kz"),
+    # фокус-группа: JSON { "people": [e-mail…], "noRole": [e-mail…] } (config/focus-group.json, не в git).
+    # Все — в «Учасники сайта»; people получают роли в проектах TEST-NN по кругу (Get-RolePlan), noRole — без ролей.
+    [string]$Roles
 )
 $ErrorActionPreference = "Stop"
 if ($SiteUrl -notmatch '-test/?$') { throw "Seed-TestData.ps1 работает только с тестовым сайтом (…/sites/*-test), получено: $SiteUrl" }
@@ -262,3 +266,44 @@ foreach ($code in $lastComment.Keys) {
 }
 
 Write-Host ("`nГотово: проектов {0}, статус-отчётов {1}, рисков {2}, комментариев {3}, записей журнала {4}" -f $n.projects, $n.reports, $n.risks, $n.comments, $n.changes) -ForegroundColor Green
+
+# ---------------------------------------------------------------------------
+# Роли фокус-группы (-Roles): в каждом проекте TEST-NN — PM, собственник и стейкхолдер из списка по кругу,
+# так что каждый (при людях ≤ проектов) получает все три роли в разных проектах. Лишние люди — стейкхолдерами.
+# Повторный запуск ничего не меняет; меняются только поля участников, права пересчитает синхронизация.
+# ---------------------------------------------------------------------------
+function Get-RolePlan([string[]]$Emails, [string[]]$Codes) {
+    $k = $Emails.Count; $plan = [ordered]@{}
+    for ($j = 0; $j -lt $Codes.Count; $j++) {
+        $st = @(); if ($k -ge 3) { $st += $Emails[($j + 2) % $k] }
+        for ($x = $Codes.Count + $j; $x -lt $k; $x += $Codes.Count) { $st += $Emails[$x] }
+        $plan[$Codes[$j]] = @{ pm = $Emails[$j % $k]; owner = $(if ($k -ge 2) { $Emails[($j + 1) % $k] } else { "" }); st = @($st | Where-Object { $_ } | Select-Object -Unique) }
+    }
+    return $plan
+}
+if ($Roles) {
+    $fg = Get-Content -Raw $Roles | ConvertFrom-Json
+    $who = @($fg.people | ForEach-Object { ([string]$_).Trim().ToLowerInvariant() } | Where-Object { $_ })
+    $none = @($fg.noRole | ForEach-Object { ([string]$_).Trim().ToLowerInvariant() } | Where-Object { $_ })
+    if (-not $who) { throw "В $Roles нет people." }
+    Write-Host "`nФокус-група: $($who.Count) з ролями, $($none.Count) без ролей" -ForegroundColor Cyan
+    $members = (Get-PnPGroup -AssociatedMemberGroup).Title
+    $inGroup = @(Get-PnPGroupMember -Group $members | ForEach-Object { ([string]$_.Email).ToLowerInvariant() })
+    foreach ($e in $who + $none) {
+        try { $null = New-PnPUser -LoginName "i:0#.f|membership|$e" } catch { Write-Warning "  $e не знайдено в тенанті — пропущено"; continue }
+        if ($inGroup -notcontains $e) { Add-PnPGroupMember -Group $members -EmailAddress $e | Out-Null; Write-Host "  + $e — учасник сайту" }
+    }
+    $items = @(Get-PnPListItem -List "Lists/Projects" -PageSize 500 | Where-Object { [string]$_["pmCode"] -match '^TEST-\d+$' } | Sort-Object { [string]$_["pmCode"] })
+    $plan = Get-RolePlan $who @($items | ForEach-Object { [string]$_["pmCode"] })
+    foreach ($it in $items) {
+        $want = $plan[[string]$it["pmCode"]]
+        $cur = @{ pm = ([string]$it["pmManager"].Email).ToLowerInvariant(); owner = ([string]$it["pmOwner"].Email).ToLowerInvariant()
+                  st = @($it["pmStakeholders"] | ForEach-Object { ([string]$_.Email).ToLowerInvariant() }) }
+        if ($cur.pm -eq $want.pm -and $cur.owner -eq $want.owner -and (($cur.st | Sort-Object) -join ",") -eq (($want.st | Sort-Object) -join ",")) { continue }
+        $vals = @{ pmManager = $want.pm; pmOwner = $(if ($want.owner) { $want.owner } else { $null }); pmStakeholders = @($want.st) }
+        Set-PnPListItem -List "Lists/Projects" -Identity $it.Id -Values $vals | Out-Null
+        Write-Host ("  {0}: PM {1}, власник {2}, стейкхолдери {3}" -f $it["pmCode"], $want.pm, $want.owner, ($want.st -join ", "))
+    }
+    Write-Host "Ролі роздано. Права і «Доступ до картки» видасть синхронізація." -ForegroundColor Green
+}
+
