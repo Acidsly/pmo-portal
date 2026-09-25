@@ -19,6 +19,8 @@ export interface Ctx {
   /** Формы в панели: report, project (новый), edit (правка карточки), risk:<id> / risk:new. */
   openForm(form: string, projectId?: number): void;
   repo: SpRepo;
+  /** Кнопка «Новий проєкт» — только у PMO (право добавления в «Проєкти»). */
+  canCreate: boolean;
   /** Перечитать данные после сохранения. */
   reload(): Promise<void>;
   toast(m: string): void;

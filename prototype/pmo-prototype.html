@@ -532,7 +532,7 @@ const T = {
  addReport:['Додати статус-звіт','Add status report','Добавить статус-отчёт'],
  changeKey:['Змінити ключові показники','Change key indicators','Изменить ключевые показатели'],
  editProject:['Редагувати','Edit','Редактировать'],
- noEdit:['Змінювати проєкт можуть PM, власник, керівники PM і PMO. Вам доступні перегляд і коментарі.','PM, owner, the PM’s managers and PMO can change this project. You can view and comment.','Изменять проект могут PM, собственник, руководители PM и PMO. Вам доступны просмотр и комментарии.'],
+ noEdit:['Змінювати проєкт, статус-звіти й ризики може лише PM проєкту. Вам доступні перегляд і коментарі.','Only the project PM can change the project, status reports and risks. You can view and comment.','Изменять проект, статус-отчёты и риски может только PM проекта. Вам доступны просмотр и комментарии.'],
  secPeople:['Учасники','Stakeholders','Участники'], secDates:['Терміни','Timeline','Сроки'], secMoney:['Бюджет і виконання','Budget and progress','Бюджет и выполнение'],
  secHistory:['Історія станів','Health history','История состояний'], secChanges:['Історія змін','Change history','История изменений'],
  secReports:['Статус-звіти','Status reports','Статус-отчёты'], secRisks:['Ризики та проблеми','Risks and issues','Риски и проблемы'],
@@ -570,8 +570,9 @@ const T = {
  pmRole:['PM','PM','PM'],
  visible:['Доступних вам проєктів: ','Projects available to you: ','Доступных вам проектов: '],
  accessTitle:['Доступ до картки','Card access','Доступ к карточке'],
- accessDesc:['Права задаються автоматично за учасниками проєкту та їхніми керівниками з Entra ID.','Permissions are set automatically from the project participants and their managers in Entra ID.','Права назначаются автоматически по участникам проекта и их руководителям из Entra ID.'],
- lvlEdit:['редагування','can edit','редактирование'], lvlRead:['перегляд і коментарі','view and comment','просмотр и комментарии'], lvlFull:['повний доступ','full control','полный доступ'],
+ accessDesc:['Права задаються автоматично за учасниками проєкту та їхніми керівниками з Entra ID. Змінювати проєкт може лише PM, решта — перегляд і коментарі.','Permissions are set automatically from the project participants and their managers in Entra ID. Only the PM can change the project; everyone else can view and comment.','Права назначаются автоматически по участникам проекта и их руководителям из Entra ID. Изменять проект может только PM, остальные — просмотр и комментарии.'],
+ lvlEdit:['редагування','can edit','редактирование'], lvlPmo:['перегляд усіх проєктів, нові проєкти','view all projects, create new','просмотр всех проектов, новые проекты'],
+ accessPending:['Список з’явиться після найближчої синхронізації (до 15 хвилин).','The list appears after the next sync (up to 15 minutes).','Список появится после ближайшей синхронизации (до 15 минут).'], lvlRead:['перегляд і коментарі','view and comment','просмотр и комментарии'], lvlFull:['повний доступ','full control','полный доступ'],
  pmoGroup:['Група «PMO — адміністратори»','Group “PMO — administrators”','Группа «PMO — администраторы»'],
  m365:['Користувач Microsoft 365','Microsoft 365 user','Пользователь Microsoft 365'],
  notSet:['— не вказано —','— not set —','— не указано —'],
@@ -636,7 +637,7 @@ const T = {
  i4:['4 — значний: зсув запуску або перевитрата понад 10%','4 — major: go-live slip or overspend over 10%','4 — значительное: сдвиг запуска или перерасход более 10%'],
  i5:['5 — критичний: зрив цілей проєкту','5 — critical: project goals fail','5 — критическое: срыв целей проекта'],
  savedRisk:['Ризик збережено.','Risk saved.','Риск сохранён.'], errRiskTitle:['Опишіть ризик або проблему.','Describe the risk or issue.','Опишите риск или проблему.'],
- readOnly:['Лише перегляд: змінювати ризики можуть PM, власник, керівники PM і PMO.','View only: PM, owner, the PM’s managers and PMO can change risks.','Только просмотр: изменять риски могут PM, собственник, руководители PM и PMO.'],
+ readOnly:['Лише перегляд: змінювати ризики може лише PM проєкту.','View only: only the project PM can change risks.','Только просмотр: изменять риски может только PM проекта.'],
  kMit:['Заходи реагування','Mitigation','Меры реагирования'],
  noVisible:['У вас поки немає доступних проєктів.','You don’t have any available projects yet.','У вас пока нет доступных проектов.']
 };
@@ -702,7 +703,10 @@ let VIEWER = ME;
 const isPMO = () => !!(ORG[VIEWER] && ORG[VIEWER].pmo);
 const participants = p => [p.pm, p.owner].concat(p.stakeholders || []).filter(Boolean);
 const canSee = p => isPMO() || participants(p).some(x => x === VIEWER || chain(x).includes(VIEWER));
-const canEditP = p => isPMO() || p.pm === VIEWER || chain(p.pm).includes(VIEWER) || p.owner === VIEWER;
+// править проект, отчёты и риски может только PM; руководители, собственник, стейкхолдеры и PMO — смотрят и комментируют
+const canEditP = p => p.pm === VIEWER;
+// новый проект заводит PMO (и назначает PM)
+const canCreate = () => isPMO();
 
 /* ================= Demo seed ================= */
 function buildSeed(){
@@ -1158,7 +1162,7 @@ pop.addEventListener('change', e => {
 
 /* ================= Pages ================= */
 const wp = (title, inner, more, extra) => `<section class="wp"><div class="wp-h"><h2>${title}</h2><span>${extra || ''}${more ? `<button class="more" data-act="goview" data-page="${more[0]}" data-view="${more[1]}">${t('showAll')}</button>` : ''}</span></div>${inner}</section>`;
-const hero = (title, sub, withNew) => `<div class="hero"><div><h1 class="page-title">${title}</h1>${sub ? `<p class="page-sub">${sub}</p>` : ''}</div>${withNew ? `<button class="btn primary" data-act="newproj">${iconPlus}${t('newProject')}</button>` : ''}</div>`;
+const hero = (title, sub, withNew) => `<div class="hero"><div><h1 class="page-title">${title}</h1>${sub ? `<p class="page-sub">${sub}</p>` : ''}</div>${withNew && canCreate() ? `<button class="btn primary" data-act="newproj">${iconPlus}${t('newProject')}</button>` : ''}</div>`;
 function stateScreen(){
   if (MODE === 'loading') return `${hero(t('dash'))}<div class="wp empty-state"><div class="spinner" aria-hidden="true"></div><p>${t('loading')}</p></div>`;
   if (MODE === 'empty') return `${hero(t('dash'), '', true)}<div class="wp empty-state"><p>${t('emptyDb')}</p><button class="btn" data-act="seed">${t('seed')}</button></div>`;
@@ -1268,11 +1272,11 @@ function accessList(p){
   const rows = [], seen = new Set();
   const add = (n, lvl, sub) => { if (!n || seen.has(n)) return; seen.add(n); rows.push(`<li>${person(n, sub)}<span class="lvl">${lvl}</span></li>`); };
   add(p.pm, t('lvlEdit'), t('pmRole'));
-  chain(p.pm).forEach(m => add(m, t('lvlEdit'), roleOf(m)));
-  add(p.owner, t('lvlEdit'), fl('owner'));
+  chain(p.pm).forEach(m => add(m, t('lvlRead'), roleOf(m)));
+  add(p.owner, t('lvlRead'), fl('owner'));
   (p.stakeholders || []).forEach(n => add(n, t('lvlRead'), fl('stakeholders')));
   [p.owner].concat(p.stakeholders || []).filter(Boolean).forEach(x => chain(x).forEach(m => add(m, t('lvlRead'), roleOf(m))));
-  return rows.join('') + `<li><span class="pav" style="background:var(--text-3)">PMO</span><span class="pn"><b>${t('pmoGroup')}</b></span><span class="lvl">${t('lvlFull')}</span></li>`;
+  return rows.join('') + `<li><span class="pav" style="background:var(--text-3)">PMO</span><span class="pn"><b>${t('pmoGroup')}</b></span><span class="lvl">${t('lvlPmo')}</span></li>`;
 }
 function changesHtml(p, showAll){
   const list = (p.changes || []).slice().sort((a, b) => D(b.date) - D(a.date));

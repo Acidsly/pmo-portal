@@ -52,6 +52,8 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
     } catch (x) { setErr(String((x as Error).message || x)); setBusy(false); }
   };
 
+  if (isNew && !data.canCreate) return <><div className="ph"><div><h2>{t('newProject')}</h2></div><button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
+    <p className="note lock">🔒 {t('noCreate')}</p></>;
   return <>
     <div className="ph"><div><div className="k">{isNew ? `${t('listLabel')} «${t('navProjects')}»` : `${project!.code} · ${t('listLabel')} «${t('navProjects')}»`}</div>
       <h2>{isNew ? t('newProject') : project!.title}</h2></div><button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>

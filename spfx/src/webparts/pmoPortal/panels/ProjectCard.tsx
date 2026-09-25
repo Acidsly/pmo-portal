@@ -6,6 +6,7 @@ import { calcRag } from '../logic/rag';
 import { isArch, isPlanLate, forecastDelta, budgetUse, budgetLevel, freshness, riskScore } from '../logic/status';
 import { ofProject } from '../logic/views';
 import { toEvents, editLogEvents } from '../logic/changes';
+import { parseAccess, AccessRow } from '../logic/access';
 import { Avatar, RagPill, RagDot, Progress, Score, fmtDate, money, freshColor } from '../components/Bits';
 import { Plus } from '../components/Icons';
 import { commentBody } from '../data/write';
@@ -21,6 +22,18 @@ const Who: React.FC<{ p: Person | null; repo: SpRepo; sub?: string }> = ({ p, re
   if (!p) return <span className="muted">—</span>;
   const small = sub !== undefined ? sub : title;
   return <span className="person" title={p.email}><Avatar name={p.name} /><span className="pn"><b>{p.name}</b>{small ? <small>{small}</small> : null}</span></span>;
+};
+
+/** «Доступ до картки» (accessList прототипа): кто видит проект и что может; строка PMO — всегда. */
+const Access: React.FC<{ p: Project }> = ({ p }) => {
+  const { t, fl } = React.useContext(AppCtx);
+  const a = parseAccess(p.access || '', isArch(p.status));
+  const sub = (x: AccessRow): string => (x.r === 'pm' ? t('pmRole') : x.r === 'owner' ? fl('owner') : x.r === 'stake' ? fl('stakeholders') : x.j);
+  return <div className="sec"><h3>{t('accessTitle')}</h3><div className="access"><div className="muted" style={{ fontSize: 13 }}>{a ? t('accessDesc') : t('accessPending')}</div>
+    <ol>{a ? a.people.map(x => <li key={x.e}><span className="person" title={x.e}><Avatar name={x.n} /><span className="pn"><b>{x.n}</b>{sub(x) ? <small>{sub(x)}</small> : null}</span></span>
+      <span className="lvl">{t(x.l === 'edit' ? 'lvlEdit' : 'lvlRead')}</span></li>) : null}
+      {a && a.more ? <li className="muted">+ {a.more}</li> : null}
+      <li><span className="pav" style={{ background: 'var(--text-3)' }}>PMO</span><span className="pn"><b>{t('pmoGroup')}</b></span><span className="lvl">{t('lvlPmo')}</span></li></ol></div></div>;
 };
 
 const Kv: React.FC<{ k: string; children?: React.ReactNode }> = ({ k, children }) =>
@@ -145,5 +158,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
       {edit ? <button className="more" onClick={() => c.openForm('risk:new', p.id)}><Plus /> {t('addRisk')}</button> : null}</div>
       {risks.length ? <div className="rlist">{risks.map(k => <button key={k.id} className="rrow" onClick={() => c.openForm('risk:' + k.id, p.id)}><Score s={riskScore(k.probability, k.impact)} />
         <span className="rt">{k.title}</span><span className="muted">{k.type} · {k.status}</span></button>)}</div> : <p className="empty">{t('emptyRisks')}</p>}</div>
+
+    <Access p={p} />
   </>;
 };

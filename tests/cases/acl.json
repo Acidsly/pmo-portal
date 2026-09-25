@@ -1,0 +1,33 @@
+[
+  {
+    "name": "ієрархія: PM править, керівники PM (керівник PM-ів, CIO, CEO) лише дивляться",
+    "pm": "pm@c", "owner": "fin@c", "stakeholders": ["st@c"], "archived": false,
+    "managers": { "pm@c": "lead@c", "lead@c": "cio@c", "cio@c": "ceo@c", "fin@c": "ceo@c", "st@c": "fin@c" },
+    "expect": [["pm@c", "edit", "pm"], ["lead@c", "read", "pmMgr"], ["cio@c", "read", "pmMgr"], ["ceo@c", "read", "pmMgr"],
+               ["fin@c", "read", "owner"], ["st@c", "read", "stake"]]
+  },
+  {
+    "name": "фін. директор бачить проєкт, де роль має його підлеглий",
+    "pm": "pm@c", "owner": "", "stakeholders": ["acc@c"], "archived": false,
+    "managers": { "acc@c": "fin@c", "fin@c": "ceo@c" },
+    "expect": [["pm@c", "edit", "pm"], ["acc@c", "read", "stake"], ["fin@c", "read", "mgr"], ["ceo@c", "read", "mgr"]]
+  },
+  {
+    "name": "PM також у стейкхолдерах — один рядок, правка лишається",
+    "pm": "pm@c", "owner": "own@c", "stakeholders": ["pm@c", "x@c"], "archived": false,
+    "managers": { "x@c": "own@c" },
+    "expect": [["pm@c", "edit", "pm"], ["own@c", "read", "owner"], ["x@c", "read", "stake"]]
+  },
+  {
+    "name": "архів — лише перегляд, і для PM",
+    "pm": "pm@c", "owner": "own@c", "stakeholders": [], "archived": true,
+    "managers": { "pm@c": "lead@c" },
+    "expect": [["pm@c", "read", "pm"], ["lead@c", "read", "pmMgr"], ["own@c", "read", "owner"]]
+  },
+  {
+    "name": "без PM — ніхто не править",
+    "pm": "", "owner": "own@c", "stakeholders": [], "archived": false,
+    "managers": {},
+    "expect": [["own@c", "read", "owner"]]
+  }
+]

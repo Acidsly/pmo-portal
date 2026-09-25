@@ -60,7 +60,7 @@ export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
   return <>
     <div className="hero">
       <div><h1 className="page-title">{t('dash')}</h1><p className="page-sub">{t('visible') + vis.length}</p></div>
-      <button className="btn primary" onClick={() => openForm('project')}><Plus />{t('newProject')}</button>
+      {data.canCreate ? <button className="btn primary" onClick={() => openForm('project')}><Plus />{t('newProject')}</button> : null}
     </div>
     <div className="grid2">
       <Wp title={t('wpHealth')}><Donut c={donutCounts(vis)} label={t('wpHealth')} active={t('active')} notRated={t('notRated')} /></Wp>

@@ -8,7 +8,7 @@ const people = (...fields: string[]): string[] => fields.reduce<string[]>((a, f)
 
 export const PROJECT_SELECT = ['Id', 'Title', 'pmCode', 'pmType', 'pmPriority', 'pmDepartment', 'pmStatus', 'pmRAG', 'pmProgress',
   'pmStart', 'pmGoLive', 'pmPlanEnd', 'pmForecastEnd', 'pmArchivedAt', 'pmBudget', 'pmActualCost', 'pmLastUpdate', 'pmLastReport',
-  'pmLastComment', 'pmLoop', 'pmDescription', 'pmEditLog', 'Created', 'EffectiveBasePermissions', ...people('pmManager', 'pmOwner', 'pmStakeholders')].join(',');
+  'pmLastComment', 'pmLoop', 'pmDescription', 'pmEditLog', 'pmAccess', 'Created', 'EffectiveBasePermissions', ...people('pmManager', 'pmOwner', 'pmStakeholders')].join(',');
 export const PROJECT_EXPAND = 'pmManager,pmOwner,pmStakeholders';
 export const REPORT_SELECT = ['Id', 'Title', 'srProjectId', 'srDate', 'srPeriod', 'srSchedule', 'srBudget', 'srResources', 'srStatus', 'srType',
   'srProgress', 'srStart', 'srGoLive', 'srPlanEnd', 'srForecastEnd', 'srActualCost', 'srKeyReason', 'srDone', 'srNext', 'srIssues',
@@ -25,6 +25,11 @@ const nn = (v: any): number | null => (typeof v === 'number' ? v : null);
 export const mapPerson = (v: any): Person | null =>
   v && v.Id ? { id: v.Id, name: s(v.Title), email: s(v.EMail) } : null;
 
+/** Право добавлять элементы в список: AddListItems — бит 0x2 (новый проект заводит PMO). */
+export function canAdd(perm: { High: string; Low: string } | undefined): boolean {
+  return !!perm && (Number(perm.Low) & 0x2) !== 0;
+}
+
 /** Право редактирования элемента: EditListItems — бит 0x4 в младшем слове EffectiveBasePermissions. */
 export function canEdit(perm: { High: string; Low: string } | undefined): boolean {
   return !!perm && (Number(perm.Low) & 0x4) !== 0;
@@ -38,7 +43,7 @@ export function mapProject(r: any): Project {
     start: dateOnly(r.pmStart), goLive: dateOnly(r.pmGoLive), planEnd: dateOnly(r.pmPlanEnd), forecastEnd: dateOnly(r.pmForecastEnd),
     archivedAt: dateOnly(r.pmArchivedAt), budget: n(r.pmBudget), actualCost: n(r.pmActualCost), lastUpdate: dateOnly(r.pmLastUpdate),
     lastReport: s(r.pmLastReport), lastComment: s(r.pmLastComment), loop: r.pmLoop ? s(r.pmLoop.Url) : '', description: s(r.pmDescription),
-    canEdit: canEdit(r.EffectiveBasePermissions), pending: false, editLog: s(r.pmEditLog), created: s(r.Created) };
+    canEdit: canEdit(r.EffectiveBasePermissions), pending: false, editLog: s(r.pmEditLog), access: s(r.pmAccess), created: s(r.Created) };
 }
 
 export function mapReport(r: any): StatusReport {

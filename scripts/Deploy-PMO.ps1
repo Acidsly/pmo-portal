@@ -182,12 +182,20 @@ $ROLE_FULL = Get-RoleName "Administrator"
 $ROLE_EDIT = Get-RoleName "Contributor"
 $ROLE_READ = Get-RoleName "Reader"
 
+# PMO видит все проекты и заводит новые; править проект может только его PM (права элементов выдаёт синхронизация)
 try { $g = Get-PnPGroup -Identity $PMO_GROUP -ErrorAction Stop } catch { $g = $null }
 if (-not $g) {
-    New-PnPGroup -Title $PMO_GROUP -Description "Повний доступ до всіх проєктів порталу" | Out-Null
-    Set-PnPGroupPermissions -Identity $PMO_GROUP -AddRole $ROLE_FULL | Out-Null
-    Write-Host "  + группа $PMO_GROUP ($ROLE_FULL)" -ForegroundColor Green
+    New-PnPGroup -Title $PMO_GROUP -Description "Перегляд усіх проєктів порталу, створення нових проєктів" | Out-Null
+    Write-Host "  + группа $PMO_GROUP" -ForegroundColor Green
 }
+# миграция: раньше у PMO был полный доступ к сайту
+$ctx = Get-PnPContext; $ra = $ctx.Web.RoleAssignments; $ctx.Load($ra); Invoke-PnPQuery
+$pmoRoles = @()
+foreach ($a in $ra) { $ctx.Load($a.Member); $ctx.Load($a.RoleDefinitionBindings) }; Invoke-PnPQuery
+# системный «Обмежений доступ» (Hidden) SharePoint выдаёт сам под права элементов — его не трогаем
+foreach ($a in $ra) { if ($a.Member.Title -eq $PMO_GROUP) { $pmoRoles = @($a.RoleDefinitionBindings | Where-Object { -not $_.Hidden } | ForEach-Object { $_.Name }) } }
+foreach ($x in $pmoRoles) { if ($x -ne $ROLE_READ) { Set-PnPGroupPermissions -Identity $PMO_GROUP -RemoveRole $x | Out-Null; Write-Host "  $PMO_GROUP : снят уровень «$x» на сайте" } }
+if ($pmoRoles -notcontains $ROLE_READ) { Set-PnPGroupPermissions -Identity $PMO_GROUP -AddRole $ROLE_READ | Out-Null; Write-Host "  $PMO_GROUP : чтение сайта" }
 
 $rag       = @("Зелений", "Жовтий", "Червоний")
 $status    = @("Ініціація", "Планування", "Реалізація", "Призупинено", "Скасовано", "Архівний")
@@ -226,6 +234,8 @@ F $P pmBudgetUse   Calculated "Освоєння бюджету, %" "Budget used,
     "<Formula>=IF([pmBudget]=0,0,[pmActualCost]/[pmBudget]*100)</Formula><FieldRefs><FieldRef Name='pmBudget'/><FieldRef Name='pmActualCost'/></FieldRefs>"
 F $P pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='64'"
 # Правки карточки из приложения SPFx: «было / стало» до переноса в журнал синхронизацией (она же очищает поле)
+# «Доступ до картки» — кто видит проект и что может (JSON), пишет синхронизация
+F $P pmAccess      Note     "Службове: доступ"   "System: access list" "Служебное: доступ"    "Hidden='TRUE' NumLines='6' RichText='FALSE'"
 F $P pmEditLog     Note     "Службове: правки картки" "System: card edits" "Служебное: правки карточки" "Hidden='TRUE' NumLines='6' RichText='FALSE'"
 $script:Loc += , @($P, "Title", "Назва проєкту", "Project name", "Название проекта")
 
@@ -416,18 +426,22 @@ Set-FormVisibility $P @("pmRAG","pmForecastEnd","pmActualCost","pmArchivedAt","p
 Set-FormVisibility $R @("srProjectType","srProjectPriority") $false $false
 Set-FormVisibility $K @("riProjectType","riProjectPriority") $false $false
 
-# Журнал изменений: пользователи только читают, пишет синхронизация
+# Права списков. Участники сайта: «Проєкти» — только чтение (новый проект заводит PMO), журнал — только чтение
+# (пишет синхронизация); отчёты, риски, комментарии — добавление (кто может менять запись, решают права элемента).
 $members = Get-PnPGroup -AssociatedMemberGroup
-foreach ($u in @("Lists/KeyChanges")) {
-    $ro = Get-PnPList -Identity $u -Includes HasUniqueRoleAssignments
-    if (-not $ro.HasUniqueRoleAssignments) {
-        Set-PnPList -Identity $ro -BreakRoleInheritance -CopyRoleAssignments | Out-Null
-        Set-PnPListPermission -Identity $ro -Group $members.Title -RemoveRole $ROLE_EDIT -ErrorAction SilentlyContinue | Out-Null
-        Set-PnPListPermission -Identity $ro -Group $members.Title -AddRole $ROLE_READ | Out-Null
-        Write-Host "  «$($ro.Title)»: участники сайта — только чтение"
+function Set-ListRoles([string]$Url, [hashtable]$Want) {
+    $l = Get-PnPList -Identity $Url -Includes HasUniqueRoleAssignments
+    if (-not $l.HasUniqueRoleAssignments) { Set-PnPList -Identity $Url -BreakRoleInheritance -CopyRoleAssignments | Out-Null; $l = Get-PnPList -Identity $Url }
+    $ctx = Get-PnPContext; $ra = $l.RoleAssignments; $ctx.Load($ra); Invoke-PnPQuery
+    foreach ($a in $ra) { $ctx.Load($a.Member); $ctx.Load($a.RoleDefinitionBindings) }; Invoke-PnPQuery
+    foreach ($grp in $Want.Keys) {
+        $have = @(); foreach ($a in $ra) { if ($a.Member.Title -eq $grp) { $have = @($a.RoleDefinitionBindings | Where-Object { -not $_.Hidden } | ForEach-Object { $_.Name }) } }
+        foreach ($x in $have) { if ($x -ne $Want[$grp]) { Set-PnPListPermission -Identity $Url -Group $grp -RemoveRole $x | Out-Null; Write-Host "  «$($l.Title)» $grp : − $x" } }
+        if ($have -notcontains $Want[$grp]) { Set-PnPListPermission -Identity $Url -Group $grp -AddRole $Want[$grp] | Out-Null; Write-Host "  «$($l.Title)» $grp : + $($Want[$grp])" }
     }
-    Set-PnPListPermission -Identity $ro -Group $PMO_GROUP -AddRole $ROLE_FULL -ErrorAction SilentlyContinue | Out-Null
 }
+Set-ListRoles "Lists/Projects"   @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_EDIT }
+Set-ListRoles "Lists/KeyChanges" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
 
 # ===========================================================================
 # 8. Представления (группировок по статусам нет; названия представлений SharePoint не переводит)

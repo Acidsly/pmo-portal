@@ -2,12 +2,14 @@
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { Project, StatusReport, Risk, Comment, ChangeEntry, Person } from './types';
 import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, REPORT_SELECT, REPORT_EXPAND, RISK_SELECT, RISK_EXPAND,
-  COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND } from './map';
+  COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, canAdd } from './map';
 import { applyPending } from '../logic/overlay';
 
 export type WritableList = 'Projects' | 'StatusReports' | 'RisksIssues' | 'ProjectComments';
 
-export interface PortalData { projects: Project[]; reports: StatusReport[]; risks: Risk[]; comments: Comment[]; changes: ChangeEntry[]; }
+export interface PortalData { projects: Project[]; reports: StatusReport[]; risks: Risk[]; comments: Comment[]; changes: ChangeEntry[];
+  /** Может ли пользователь заводить проекты (право добавления в «Проєкти» есть у PMO). */
+  canCreate: boolean; }
 
 /** Чтение списков портала от имени пользователя: видны только проекты, которые ему открыла синхронизация. */
 export class SpRepo {
@@ -28,16 +30,24 @@ export class SpRepo {
     return out;
   }
 
+  private async listPerms(list: string): Promise<{ High: string; Low: string } | undefined> {
+    const listUrl = `${this.webRelUrl.replace(/\/$/, '')}/Lists/${list}`;
+    const res = await this.http.get(`${this.webUrl}/_api/web/GetList(@u)?@u='${encodeURIComponent(listUrl)}'&$select=EffectiveBasePermissions`,
+      SPHttpClient.configurations.v1, { headers: { Accept: 'application/json;odata=nometadata' } });
+    return res.ok ? (await res.json()).EffectiveBasePermissions : undefined;
+  }
+
   async loadAll(): Promise<PortalData> {
-    const [p, r, k, c, h] = await Promise.all([
+    const [p, r, k, c, h, perm] = await Promise.all([
       this.items('Projects', PROJECT_SELECT, PROJECT_EXPAND),
       this.items('StatusReports', REPORT_SELECT, REPORT_EXPAND),
       this.items('RisksIssues', RISK_SELECT, RISK_EXPAND),
       this.items('ProjectComments', COMMENT_SELECT, COMMENT_EXPAND),
-      this.items('KeyChanges', CHANGE_SELECT, CHANGE_EXPAND)]);
+      this.items('KeyChanges', CHANGE_SELECT, CHANGE_EXPAND),
+      this.listPerms('Projects').catch(() => undefined)]);
     const reports = r.map(mapReport);
     return { projects: p.map(mapProject).map(x => applyPending(x, reports)), reports, risks: k.map(mapRisk),
-      comments: c.map(mapComment), changes: h.map(mapChange) };
+      comments: c.map(mapComment), changes: h.map(mapChange), canCreate: canAdd(perm) };
   }
 
   private titles: Record<string, Promise<string>> = {};

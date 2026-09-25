@@ -56,7 +56,7 @@ export const App: React.FC<AppProps> = p => {
   }, []);
   const nav = (r: Route): void => { const h = format(r); if (window.location.hash !== h) window.location.hash = h; setRoute(r); };
   const tt = makeT(lang);
-  const ctx: Ctx = { ...tt, lang, today: todayIso(), me: p.userEmail, webUrl: p.webUrl, views: route.views,
+  const ctx: Ctx = { ...tt, lang, today: todayIso(), me: p.userEmail, webUrl: p.webUrl, views: route.views, canCreate: !!data && data.canCreate,
     go: (page, view) => { nav(parse('#' + page + '/' + (view || ''), route.views)); window.scrollTo(0, 0); },
     setView: (page, view) => nav({ ...route, views: { ...route.views, [page]: view } }),
     openProject: id => nav({ ...route, projectId: id, form: '' }),

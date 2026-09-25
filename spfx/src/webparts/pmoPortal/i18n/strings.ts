@@ -177,9 +177,9 @@ export const T: Record<string, L3> = {
   "Редактировать"
  ],
  "noEdit": [
-  "Змінювати проєкт можуть PM, власник, керівники PM і PMO. Вам доступні перегляд і коментарі.",
-  "PM, owner, the PM’s managers and PMO can change this project. You can view and comment.",
-  "Изменять проект могут PM, собственник, руководители PM и PMO. Вам доступны просмотр и комментарии."
+  "Змінювати проєкт, статус-звіти й ризики може лише PM проєкту. Вам доступні перегляд і коментарі.",
+  "Only the project PM can change the project, status reports and risks. You can view and comment.",
+  "Изменять проект, статус-отчёты и риски может только PM проекта. Вам доступны просмотр и комментарии."
  ],
  "secPeople": [
   "Учасники",
@@ -437,14 +437,24 @@ export const T: Record<string, L3> = {
   "Доступ к карточке"
  ],
  "accessDesc": [
-  "Права задаються автоматично за учасниками проєкту та їхніми керівниками з Entra ID.",
-  "Permissions are set automatically from the project participants and their managers in Entra ID.",
-  "Права назначаются автоматически по участникам проекта и их руководителям из Entra ID."
+  "Права задаються автоматично за учасниками проєкту та їхніми керівниками з Entra ID. Змінювати проєкт може лише PM, решта — перегляд і коментарі.",
+  "Permissions are set automatically from the project participants and their managers in Entra ID. Only the PM can change the project; everyone else can view and comment.",
+  "Права назначаются автоматически по участникам проекта и их руководителям из Entra ID. Изменять проект может только PM, остальные — просмотр и комментарии."
  ],
  "lvlEdit": [
   "редагування",
   "can edit",
   "редактирование"
+ ],
+ "lvlPmo": [
+  "перегляд усіх проєктів, нові проєкти",
+  "view all projects, create new",
+  "просмотр всех проектов, новые проекты"
+ ],
+ "accessPending": [
+  "Список з’явиться після найближчої синхронізації (до 15 хвилин).",
+  "The list appears after the next sync (up to 15 minutes).",
+  "Список появится после ближайшей синхронизации (до 15 минут)."
  ],
  "lvlRead": [
   "перегляд і коментарі",
@@ -1002,9 +1012,9 @@ export const T: Record<string, L3> = {
   "Опишите риск или проблему."
  ],
  "readOnly": [
-  "Лише перегляд: змінювати ризики можуть PM, власник, керівники PM і PMO.",
-  "View only: PM, owner, the PM’s managers and PMO can change risks.",
-  "Только просмотр: изменять риски могут PM, собственник, руководители PM и PMO."
+  "Лише перегляд: змінювати ризики може лише PM проєкту.",
+  "View only: only the project PM can change risks.",
+  "Только просмотр: изменять риски может только PM проекта."
  ],
  "kMit": [
   "Заходи реагування",
@@ -1264,5 +1274,10 @@ export const EXTRA: Record<string, L3> = {
   "Оновлюється зі статус-звіту",
   "Updating from a status report",
   "Обновляется из статус-отчёта"
+ ],
+ "noCreate": [
+  "Нові проєкти створює PMO. Зверніться до групи «PMO — адміністратори».",
+  "New projects are created by PMO. Contact the “PMO — administrators” group.",
+  "Новые проекты создаёт PMO. Обратитесь к группе «PMO — администраторы»."
  ]
 };
