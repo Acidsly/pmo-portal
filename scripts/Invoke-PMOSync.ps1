@@ -153,7 +153,7 @@ function EditLogRows([string]$json) {
 }
 function Add-Change($projectId, [string]$field, [string]$from, [string]$to, [string]$kind, [string]$who, [string]$reason, [string]$when) {
     $stats.changes++
-    if ($DryRun) { Log "    журнал: [$kind] $($DISPLAY[$field] ?? $field): $from -> $to"; return }
+    if ($DryRun) { Log "    журнал: [$kind] $($DISPLAY[$field] ?? $EDIT_DISPLAY[$field] ?? $field): $from -> $to"; return }
     $vals = @{ Title = ($DISPLAY[$field] ?? $EDIT_DISPLAY[$field] ?? "Проєкт"); kcProject = $projectId; kcDate = ($when ?? (Get-Date).ToUniversalTime().ToString("o"))
                kcKind = $kind; kcField = $field; kcFrom = $from; kcTo = $to; kcReason = $reason }
     if ($who) { $vals.kcChangedBy = $who }
@@ -342,7 +342,7 @@ function Get-Hash($acl) {
 }
 function Set-ItemAcl([string]$list, [int]$id, $acl, [bool]$readOnly, [string]$aclHash) {
     $stats.acl++
-    if ($DryRun) { Log ("    права: {0} #{1} -> {2}" -f $list, $id, (($acl.Keys | ForEach-Object { "$_($($acl[$_]))" }) -join ", ")); return }
+    if ($DryRun) { Log ("    права: {0} #{1} -> {2}" -f $list, $id, (($acl.Keys | ForEach-Object { "$_($(if ($readOnly) { 'read' } else { $acl[$_] }))" }) -join ", ")); return }
     # PMO видит все проекты, но правит, как все, только свои (как PM); владельцы сайта — полный доступ
     Set-PnPListItemPermission -List $list -Identity $id -Group $PMO_GROUP -AddRole $ROLE.read -ClearExisting -SystemUpdate | Out-Null
     Set-PnPListItemPermission -List $list -Identity $id -Group $OWNERS -AddRole $ROLE.full -SystemUpdate | Out-Null

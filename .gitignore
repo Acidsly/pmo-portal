@@ -6,6 +6,8 @@ certs/
 .env
 .env.*
 config/environments.json
+# фокус-группа: e-mail сотрудников
+config/focus-group.json
 # локальные настройки Claude Code
 .claude/settings.local.json
 # служебное

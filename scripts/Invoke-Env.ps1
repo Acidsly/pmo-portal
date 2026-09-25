@@ -51,6 +51,9 @@ if ($Action -eq "seed") {
     if ($Env -ne "test") { throw "Действие «seed» доступно только для окружения test." }
     $a = Get-Auth $cfg.Deploy
     $a.SiteUrl = $siteUrl
+    # роли фокус-группы — из файла вне git (e-mail сотрудников)
+    $fg = Join-Path $root "config/focus-group.json"
+    if (Test-Path $fg) { $a.Roles = $fg }
     & (Join-Path $PSScriptRoot "Seed-TestData.ps1") @a
 } elseif ($Action -eq "app") {
     # приложение SPFx: сборка, каталог приложений сайта, страница на весь экран; этап 1 — только test
