@@ -111,6 +111,8 @@ Install-Module PnP.PowerShell -Scope CurrentUser
 - `-SendReminders -ReminderFrom pmo@contoso.com` — раз в неделю, например в понедельник утром;
 - `-RebuildPermissions` — раз в неделю ночью, чтобы учесть смену руководителей в Entra ID.
 
+**Временно — на Mac** (пока нет подписки Azure): `pwsh -NoLogo -File scripts/Set-MacSchedule.ps1 -Env test` ставит задания launchd по тому же графику — пн–пт 8:00–20:00 каждые 15 минут, ежедневно 6:00 и 22:00, воскресенье 3:00 полный пересчёт прав. Работает, пока Mac включён и пользователь вошёл в систему; после сна пропущенный запуск выполняется сразу. Журнал — `~/Library/Logs/pmo-sync-test.log`. Снять — тот же скрипт с `-Remove`.
+
 Где запускать:
 - **Azure Automation:** runbook PowerShell 7.4; импортируйте модуль PnP.PowerShell; загрузите сертификат `.pfx` в «Сертификаты» учётной записи; в runbook передавайте `-Thumbprint`. Можно также подключаться через управляемое удостоверение (`-ManagedIdentity`) — тогда права Sites.Selected, User.Read.All и Mail.Send выдаются удостоверению.
 - **Сервер Windows:** «Планировщик заданий», `pwsh.exe -File Invoke-PMOSync.ps1 …`; сертификат — в хранилище компьютера, в скрипт передаётся `-Thumbprint`.
