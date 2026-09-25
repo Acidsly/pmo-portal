@@ -1,7 +1,7 @@
 #Requires -Version 7.2
 <#
 .SYNOPSIS  Проверки без доступа к SharePoint: синтаксис всех скриптов, валидность JSON,
-           JSON форматирования столбцов, формула общего состояния, синтаксис JS прототипа.
+           формула общего состояния, синтаксис JS прототипа.
            Запускается локально, Claude Code и в CI.
 #>
 $ErrorActionPreference = "Stop"
@@ -28,16 +28,14 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("scripts/gallery-view.json", "config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
-Write-Host "3. Форматирование столбцов в Deploy-PMO.ps1"
-$src = Get-Content -Raw (Join-Path $root "scripts/Deploy-PMO.ps1")
-$a = $src.IndexOf('$ragColor = '); $b = $src.IndexOf("@(`n    @(`$P,")
-if ($a -lt 0 -or $b -lt 0) { Bad "не найден блок форматирования" } else {
-    Invoke-Expression $src.Substring($a, $b - $a)
-    foreach ($v in Get-Variable fmt*) { try { $null = $v.Value | ConvertFrom-Json; Ok $v.Name } catch { Bad "$($v.Name): $_" } }
+Write-Host "3. Прежнее оформление SharePoint убрано (интерфейс — приложение SPFx)"
+$src = (Get-ChildItem (Join-Path $root "scripts") -Filter *.ps1 | ForEach-Object { Get-Content -Raw $_.FullName }) -join "`n"
+foreach ($w in @("CustomFormatter", "Build-Dashboard", "PortfolioStats", "Update-Stats", "Update-CardInfo", "pmCardInfo", "ChartsOnly")) {
+    if ($src -match [regex]::Escape($w)) { Bad "scripts/*.ps1 содержит «$w»" } else { Ok "нет «$w»" }
 }
 
 Write-Host "4. Формула общего состояния (Invoke-PMOSync.ps1)"

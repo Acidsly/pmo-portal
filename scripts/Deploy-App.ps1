@@ -7,7 +7,6 @@
 .DESCRIPTION
     Этап 1 — только тестовый сайт (адрес заканчивается на -test). Каталог тенанта и прод — на этапе 4, с подтверждением человека.
     Идемпотентен: каталог и страница создаются один раз, приложение обновляется до новой версии пакета.
-    Прежняя главная (SitePages/Dashboard.aspx) остаётся доступной по ссылке.
 
 .EXAMPLE
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action app
@@ -66,4 +65,4 @@ if (-not (Get-PnPPage -Identity "Portal" -ErrorAction SilentlyContinue)) {
 Set-PnPHomePage -RootFolderRelativeUrl "SitePages/Portal.aspx"
 # компактная шапка сайта без названия: над приложением — только строка меню SharePoint
 Set-PnPWeb -HeaderLayout Minimal -HideTitleInHeader:$true
-Write-Host "`nГотово: $SiteUrl (прежняя главная — $SiteUrl/SitePages/Dashboard.aspx)" -ForegroundColor Yellow
+Write-Host "`nГотово: $SiteUrl" -ForegroundColor Yellow

@@ -7,13 +7,12 @@
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action deploy
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action sync-dryrun
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action seed          # демонстрационные данные
-    pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action charts        # только диаграммы на главной
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action app           # приложение SPFx на тестовый сайт
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action deploy -ConfirmProduction
 #>
 param(
     [Parameter(Mandatory)][ValidateSet("test", "prod")][string]$Env,
-    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "charts", "app")][string]$Action,
+    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "app")][string]$Action,
     [switch]$ConfirmProduction
 )
 $ErrorActionPreference = "Stop"
@@ -59,12 +58,6 @@ if ($Action -eq "seed") {
     $a = Get-Auth $cfg.Deploy
     $a.SiteUrl = $siteUrl; $a.TenantName = $cfg.TenantName
     & (Join-Path $PSScriptRoot "Deploy-App.ps1") @a
-} elseif ($Action -eq "charts") {
-    # только диаграммы на главной — приложением развёртывания (не нужны Graph и приложение синхронизации)
-    $a = Get-Auth $cfg.Deploy
-    if (-not ($a.ContainsKey("Thumbprint") -or $a.ContainsKey("CertificatePath"))) { throw "Для «charts» нужен сертификат в секции Deploy." }
-    $a.SiteUrl = $siteUrl; $a.ChartsOnly = $true
-    & (Join-Path $PSScriptRoot "Invoke-PMOSync.ps1") @a
 } elseif ($Action -eq "deploy") {
     # без сертификата Deploy-PMO.ps1 откроет браузер для входа (рекомендуется для прода)
     $a = Get-Auth $cfg.Deploy
