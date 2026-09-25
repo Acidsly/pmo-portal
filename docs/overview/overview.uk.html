@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<title>Портфель проєктів — огляд системи</title>
+<style>
+@page { size: A4; margin: 14mm 14mm 16mm 14mm; }
+* { box-sizing: border-box; }
+body { font: 10.5pt/1.5 "Segoe UI", "Helvetica Neue", Arial, sans-serif; color: #1a1e29; margin: 0; }
+h1 { font-size: 30pt; line-height: 1.1; letter-spacing: -.02em; margin: 0 0 10pt; }
+h2 { font-size: 17pt; letter-spacing: -.01em; margin: 0 0 8pt; padding-top: 2pt; break-after: avoid; }
+h3 { font-size: 12pt; margin: 14pt 0 5pt; break-after: avoid; }
+p { margin: 0 0 7pt; }
+ul, ol { margin: 0 0 8pt; padding-left: 15pt; }
+li { margin: 2.5pt 0; }
+b { font-weight: 600; }
+.muted { color: #586176; }
+.small { font-size: 9pt; }
+section { break-before: page; }
+.cover { height: 262mm; display: flex; flex-direction: column; justify-content: space-between; padding-top: 30mm; }
+.logo { width: 46pt; height: 46pt; border-radius: 13pt; background: #3a5bdc; color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 17pt; margin-bottom: 18pt; }
+.cover .lead { font-size: 14pt; color: #40485a; max-width: 150mm; }
+.cover .hero-img { width: 100%; border-radius: 10pt; border: 1px solid #d5dbe8; box-shadow: 0 6pt 18pt rgba(20,30,60,.12); margin-top: 16pt; }
+.cover .foot { font-size: 9pt; color: #586176; border-top: 1px solid #d5dbe8; padding-top: 8pt; }
+table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: 4pt 0 10pt; }
+th { background: #eef1f8; color: #40485a; text-align: left; font-weight: 600; padding: 5pt 7pt; border: 1px solid #d5dbe8; }
+td { padding: 5pt 7pt; border: 1px solid #d5dbe8; vertical-align: top; }
+tr { break-inside: avoid; }
+figure { margin: 8pt 0 12pt; break-inside: avoid; }
+figure img { width: 100%; display: block; border-radius: 7pt; border: 1px solid #d5dbe8; }
+figcaption { font-size: 9pt; color: #586176; margin-top: 4pt; }
+.phones { display: flex; gap: 10pt; justify-content: space-between; }
+.phones figure { width: 32%; margin: 0; }
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8pt; margin: 6pt 0 10pt; }
+.card { border: 1px solid #d5dbe8; border-radius: 8pt; padding: 8pt 10pt; break-inside: avoid; }
+.card b { display: block; margin-bottom: 2pt; }
+.arch { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 8pt; align-items: stretch; margin: 8pt 0 6pt; }
+.box { border: 1.5px solid #3a5bdc; border-radius: 8pt; padding: 8pt 9pt; font-size: 9.5pt; }
+.box.alt { border-color: #8a93a8; }
+.box h4 { margin: 0 0 4pt; font-size: 10.5pt; }
+.box ul { margin: 0; padding-left: 12pt; }
+.flow { font-size: 9pt; color: #40485a; text-align: center; margin: 2pt 0 10pt; }
+.note { background: #eef1f8; border-radius: 7pt; padding: 7pt 10pt; font-size: 9.5pt; margin: 6pt 0 10pt; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; }
+.two figure { margin: 0 0 8pt; }
+.grid4 { gap: 6pt 10pt; }
+.grid4 figure img { max-height: 97mm; width: auto; max-width: 100%; margin: 0 auto; }
+.grid4 figcaption { margin-top: 2pt; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div>
+    <div class="logo">ПП</div>
+    <h1>Портфель проєктів</h1>
+    <p class="lead">Огляд системи: навіщо вона, з чого складається і як нею користуються PM, керівники та PMO.</p>
+    <img class="hero-img" src="img/01-home.png" alt="Головна сторінка порталу">
+  </div>
+  <div class="foot">Вересень 2026 · тестове середовище <b>smarthrua.sharepoint.com/sites/pmo-test</b><br>
+  На скриншотах — тестові дані; ПІБ, фото, пошта й суми бюджетів приховані.</div>
+</div>
+
+<section>
+  <h2>Навіщо</h2>
+  <p>Портфель проєктів — єдине місце, де компанія веде всі проєкти: хто відповідає, у якому вони стані, що змінилося і де потрібне рішення керівництва. Замість таблиць, листів і нарад «що там з проєктом» — одна картка проєкту й регулярний статус-звіт PM.</p>
+  <div class="cards">
+    <div class="card"><b>Один стан портфеля</b>Головна показує, скільки проєктів зелених, жовтих і червоних, як це змінювалося за 12 тижнів і що потребує уваги.</div>
+    <div class="card"><b>Зміни — лише через статус-звіт</b>Статус, стан, % виконання, дати й витрати змінюються тільки звітом PM; причина обов'язкова, усе потрапляє в історію.</div>
+    <div class="card"><b>Прозорість для керівництва</b>Керівник бачить проєкти своїх підлеглих автоматично — за оргструктурою Microsoft 365, без ручного налаштування доступу.</div>
+    <div class="card"><b>Контроль ризиків</b>Ризики й проблеми з оцінкою «ймовірність × вплив», власником і терміном; прострочене виділяється.</div>
+    <div class="card"><b>Запити на рішення</b>PM позначає у звіті «Потрібне рішення керівництва» — запит одразу видно на головній і в окремому поданні.</div>
+    <div class="card"><b>Там, де всі працюють</b>У браузері на комп'ютері, на телефоні й планшеті, згодом — у Microsoft Teams. Три мови: українська, англійська, російська.</div>
+  </div>
+
+  <h2 style="margin-top:14pt">Хто що бачить і що може</h2>
+  <table>
+    <tr><th style="width:26%">Роль</th><th style="width:34%">Бачить</th><th>Може</th></tr>
+    <tr><td><b>PM проєкту</b></td><td>свій проєкт</td><td>редагувати картку, здавати статус-звіти, вести ризики, коментувати</td></tr>
+    <tr><td><b>Керівники PM</b> (за оргструктурою)</td><td>проєкти підлеглих</td><td>переглядати й коментувати</td></tr>
+    <tr><td><b>Власник, стейкхолдери</b> та їхні керівники</td><td>проєкти, де роль мають вони або їхні підлеглі</td><td>переглядати й коментувати</td></tr>
+    <tr><td><b>PMO</b></td><td>усі проєкти</td><td>створювати нові проєкти й призначати PM; решту — переглядати й коментувати (у своїх проєктах як PM — редагувати)</td></tr>
+    <tr><td><b>Інші співробітники</b></td><td>порожній портал</td><td>—</td></tr>
+  </table>
+  <p class="small muted">Завершений проєкт переходить в архів і стає лише для перегляду для всіх. Керівника бачать за полем «Керівник» у Microsoft 365: CEO бачить усе, бо CIO — його підлеглий; фінансовий директор — лише проєкти, де роль має він або його підлеглі.</p>
+</section>
+
+<section>
+  <h2>З чого складається</h2>
+  <p>Система побудована повністю на Microsoft 365 компанії: дані зберігаються в SharePoint, доступ і оргструктура — з Microsoft Entra ID. Зовнішніх сервісів і баз немає.</p>
+  <div class="arch">
+    <div class="box alt"><h4>Користувачі</h4><ul><li>браузер на комп'ютері</li><li>телефон і планшет (iOS, Android)</li><li>Microsoft Teams — наступний етап</li></ul></div>
+    <div class="box"><h4>Застосунок порталу</h4><ul><li>головна сторінка сайту SharePoint на весь екран</li><li>головна, проєкти, статус-звіти, ризики, архів, картка й форми</li><li>працює від імені користувача — показує лише дозволене</li></ul></div>
+    <div class="box"><h4>Списки SharePoint</h4><ul><li>Проєкти</li><li>Статус-звіти</li><li>Ризики та проблеми</li><li>Коментарі</li><li>Зміни показників (журнал)</li></ul></div>
+  </div>
+  <div class="flow">Користувач ⟶ застосунок ⟶ списки SharePoint ⟵ синхронізація за розкладом ⟵ оргструктура Microsoft Entra ID</div>
+  <table>
+    <tr><th style="width:26%">Компонент</th><th>Що робить</th></tr>
+    <tr><td><b>Застосунок (SharePoint Framework)</b></td><td>Інтерфейс порталу: сторінки, картка проєкту, форми статус-звіту, ризику, проєкту й коментаря. Збережене видно на екрані одразу.</td></tr>
+    <tr><td><b>Списки SharePoint</b></td><td>Усі дані порталу. Звичайні списки лишаються для адміністраторів, вивантаження в Excel і Power BI.</td></tr>
+    <tr><td><b>Синхронізація</b></td><td>Кожні 15 хвилин у робочий час: переносить статус-звіт у картку проєкту, веде журнал змін, відправляє завершені проєкти в архів, видає права за оргструктурою, оновлює «Доступ до картки». Раз на тиждень — повний перерахунок прав.</td></tr>
+    <tr><td><b>Microsoft Entra ID</b></td><td>Облікові записи, керівники, посади — джерело прав за ієрархією.</td></tr>
+    <tr><td><b>Відгуки</b> (лише тест)</td><td>Кнопка «Відгук»: текст, скриншоти, екран і пристрій — у окремий список для розбору зауважень.</td></tr>
+  </table>
+
+  <h3>Ключові правила</h3>
+  <ul>
+    <li><b>Загальний стан звіту</b> — найгірша з трьох оцінок (терміни, бюджет, ресурси): хоча б одна червона → червоний; хоча б одна жовта → жовтий; усі зелені → зелений. Стан проєкту — за останнім звітом.</li>
+    <li><b>Ключові показники</b> (статус, стан, тип, %, дати, витрати) змінюються лише статус-звітом; зміна статусу, типу чи дат вимагає причини.</li>
+    <li><b>«Завершено»</b> у звіті → проєкт у «Архів», лише перегляд.</li>
+    <li><b>Оцінка ризику</b> = ймовірність × вплив (1–25): 15–25 високий, 8–14 середній, 1–7 низький.</li>
+    <li><b>Свіжість звіту:</b> до 8 днів — зелений, 8–14 — жовтий, понад 14 — червоний.</li>
+    <li><b>Історія:</b> кожна зміна — «було → стало», хто, коли і чому.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Головна</h2>
+  <p>Стан портфеля за видимими користувачу проєктами: кільце за станом, динаміка за 12 тижнів (зріз кожні два тижні), далі — проблемні проєкти, проєкти без свіжого звіту, запити на рішення керівництва й відкриті ризики.</p>
+  <figure><img src="img/01-home.png" alt=""><figcaption>Портфель за станом і динаміка стану.</figcaption></figure>
+  <figure><img src="img/02-home-lists.png" alt=""><figcaption>Блоки, що потребують уваги: «Проблемні проєкти», «Немає свіжого статус-звіту». «Показати все» відкриває повний список.</figcaption></figure>
+</section>
+
+<section>
+  <h2>Проєкти</h2>
+  <p>Плитки для швидкого огляду або таблиця з сортуванням, фільтрами за значеннями й вибором колонок. Подання: Усі проєкти, Стратегічні, Проблемні, Мої проєкти, Немає свіжого звіту. Нові записи — угорі.</p>
+  <figure><img src="img/03-projects-tiles.png" alt=""><figcaption>Плитки: код, стан, статус і % виконання, останній апдейт зі світлофором свіжості, PM.</figcaption></figure>
+  <figure><img src="img/04-projects-list.png" alt=""><figcaption>Таблиця: воронка — фільтр, шестерня — колонки, клік по заголовку — сортування.</figcaption></figure>
+</section>
+
+<section>
+  <h2>Картка проєкту</h2>
+  <p>Усе про проєкт в одній панелі: учасники, терміни з відхиленням прогнозу, бюджет і виконання, історія змін, коментарі, історія станів, статус-звіти, ризики та «Доступ до картки». Посиланням на картку можна поділитися.</p>
+  <div class="two grid4">
+    <figure><img src="img/08-card-top.png" alt=""><figcaption>Шапка картки: тип, стан, статус, пріоритет; для PM — «Додати статус-звіт» і «Редагувати».</figcaption></figure>
+    <figure><img src="img/09-card-history.png" alt=""><figcaption>Бюджет і виконання та історія змін: хто, коли, що змінив і причина.</figcaption></figure>
+    <figure><img src="img/10-card-reports.png" alt=""><figcaption>Історія станів за останніми звітами та самі статус-звіти.</figcaption></figure>
+    <figure><img src="img/11-card-access.png" alt=""><figcaption>«Доступ до картки»: PM — редагування, керівники, власник і стейкхолдери — перегляд і коментарі.</figcaption></figure>
+  </div>
+</section>
+
+<section>
+  <h2>Статус-звіт</h2>
+  <p>PM оцінює терміни, бюджет і ресурси — загальний стан рахується сам. Ключові показники вже заповнені поточними значеннями; змінюється лише те, що змінилося. Якщо змінено статус, тип або дату, з'являється обов'язкова «Причина зміни показників».</p>
+  <div class="two">
+    <figure><img src="img/12-report-form.png" alt=""><figcaption>Оцінки й розрахунок загального стану.</figcaption></figure>
+    <figure><img src="img/13-report-keys.png" alt=""><figcaption>Ключові показники: змінено дату — потрібна причина.</figcaption></figure>
+  </div>
+  <h3>Що відбувається після збереження</h3>
+  <ol>
+    <li><b>Одразу:</b> картка проєкту на екрані показує новий стан, % виконання, дати й «Останній апдейт»; звіт з'являється у списку статус-звітів.</li>
+    <li><b>Протягом 15 хвилин</b> синхронізація переносить ключові показники у список «Проєкти» і записує в журнал кожну зміну: було → стало, автор, причина.</li>
+    <li><b>Запит на рішення</b> (позначка «Потрібне рішення керівництва») — одразу в блоці на головній і в поданні «Потребують рішення».</li>
+    <li><b>«Завершено»</b> — проєкт отримує статус «Архівний» і дату архівації, зникає з робочих списків і стає лише для перегляду.</li>
+  </ol>
+  <div class="note">Звіт може здати лише PM проєкту. Звіт від іншої людини синхронізація не застосує — це захист від випадкових змін у чужих проєктах.</div>
+</section>
+
+<section>
+  <h2>Ризики та проблеми</h2>
+  <p>Реєстр ризиків і проблем усіх видимих проєктів з оцінкою, власником, статусом і терміном. Форма ризику рахує оцінку одразу й пояснює кожен бал шкали.</p>
+  <figure><img src="img/06-risks.png" alt=""><figcaption>Реєстр ризиків: оцінка кольором, власник, статус, термін.</figcaption></figure>
+  <div class="two"><figure><img src="img/14-risk-form.png" alt=""><figcaption>Новий ризик: ймовірність 4 × вплив 5 = 20, «Високий».</figcaption></figure>
+  <div><h3 style="margin-top:0">Як рахується оцінка</h3><p>Ймовірність і вплив — від 1 до 5, кожен бал має опис (наприклад, 4 — «ймовірно, 60–90%», 5 — «критичний: зрив цілей проєкту»).</p><p><b>Оцінка = ймовірність × вплив.</b> 15–25 — високий (червоний), 8–14 — середній (жовтий), 1–7 — низький (зелений).</p><p>Прострочений термін відкритого ризику виділяється червоним; закриті ризики зникають з подання «Відкриті».</p></div></div>
+</section>
+
+<section>
+  <h2>Статус-звіти й архів</h2>
+  <figure><img src="img/05-reports.png" alt=""><figcaption>Усі статус-звіти: оцінки, резюме, автор, «Потрібне рішення» (текст рішення — у підказці). Окреме подання — «Потребують рішення».</figcaption></figure>
+  <figure><img src="img/07-archive.png" alt=""><figcaption>Архів: завершені проєкти з датою архівації, лише перегляд.</figcaption></figure>
+</section>
+
+<section>
+  <h2>Новий проєкт, довідка і відгуки</h2>
+  <div class="two">
+    <figure><img src="img/15-project-form.png" alt=""><figcaption>Новий проєкт (PMO): назва й PM обов'язкові, код призначається сам (PRJ-###).</figcaption></figure>
+    <figure><img src="img/16-help.png" alt=""><figcaption>«Довідка» — інструкція в самому порталі, кнопка «?», три мови.</figcaption></figure>
+  </div>
+  <div class="two"><figure><img src="img/17-feedback.png" alt=""><figcaption>«Відгук»: зауваження зі скриншотами (вставка з буфера або з галереї телефона); екран і пристрій додаються самі.</figcaption></figure>
+  <div><h3 style="margin-top:0">Зворотний зв'язок під час тестування</h3><p>Кожен учасник залишає відгук прямо з того екрана, де помітив проблему. До 5 скриншотів; на комп'ютері — вставка з буфера (Ctrl+V / Cmd+V).</p><p>Усі відгуки збираються в один список: PMO бачить відгуки всіх учасників, ставить статус розгляду й відповідь, вивантажує в Excel.</p></div></div>
+</section>
+
+<section>
+  <h2>Телефон і планшет</h2>
+  <p>Портал відкривається в браузері телефона й планшета без окремого застосунку: сторінки підлаштовуються під ширину, картка й форми — на весь екран, кнопка «Зберегти» завжди видна.</p>
+  <div class="phones">
+    <figure><img src="img/18-phone-home.png" alt=""><figcaption>Головна.</figcaption></figure>
+    <figure><img src="img/19-phone-card.png" alt=""><figcaption>Картка проєкту.</figcaption></figure>
+    <figure><img src="img/20-phone-report.png" alt=""><figcaption>Статус-звіт.</figcaption></figure>
+  </div>
+
+  <h2 style="margin-top:16pt">Безпека та дані</h2>
+  <ul>
+    <li>Дані — лише в SharePoint Online компанії; зовнішніх баз і сервісів немає.</li>
+    <li>Застосунок працює від імені користувача: кожен бачить лише те, до чого має доступ.</li>
+    <li>Права на кожен проєкт і його записи видає синхронізація за оргструктурою; змінювати може лише PM, архів — лише перегляд.</li>
+    <li>Синхронізація має доступ тільки до сайту порталу (Sites.Selected) і читає оргструктуру з Microsoft Entra ID.</li>
+  </ul>
+
+</section>
+
+<section>
+  <h2>Стан і наступні кроки</h2>
+  <table>
+    <tr><th style="width:40%">Етап</th><th>Стан</th></tr>
+    <tr><td>Списки, права, синхронізація</td><td>готово, тестовий сайт</td></tr>
+    <tr><td>Застосунок: головна, проєкти, картка, форми, телефон</td><td>готово, тестовий сайт</td></tr>
+    <tr><td>Тестування з фокус-групою (PM, PMO)</td><td>триває</td></tr>
+    <tr><td>Синхронізація в хмарі (Azure Automation)</td><td>очікує підписку Azure</td></tr>
+    <tr><td>Microsoft Teams, запуск на всю компанію</td><td>після розбору відгуків</td></tr>
+  </table>
+
+  <h2 style="margin-top:14pt">Документи</h2>
+  <table>
+    <tr><th style="width:40%">Документ</th><th>Для кого</th></tr>
+    <tr><td>Інструкція користувача (UA / EN / RU) — також «Довідка» в порталі</td><td>усі користувачі</td></tr>
+    <tr><td>Плани тестування — PM і PMO</td><td>учасники фокус-групи</td></tr>
+    <tr><td>Технічне завдання</td><td>PMO, ІТ</td></tr>
+    <tr><td>Розгортання й адміністрування</td><td>ІТ, адміністратори SharePoint</td></tr>
+  </table>
+  <p class="small muted">Усі документи ведуться в репозиторії проєкту разом із кодом, тож оновлюються разом зі змінами системи.</p>
+</section>
+
+</body>
+</html>

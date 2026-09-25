@@ -51,6 +51,7 @@
 | `docs/SPEC.md` | Техническое задание |
 | `docs/PROTOTYPE.md` | Прототип: как открыть, скриншоты экранов |
 | `docs/USER-GUIDE.uk.md`, `.en.md`, `.ru.md` | Инструкция пользователя на трёх языках; она же — «Довідка» в приложении (`scripts/spfx.sh npm run guide`) |
+| `docs/overview/` | Обзорный документ о системе (украинский): `overview.uk.pdf`, исходник `overview.uk.html`, скриншоты с тестового сайта с размытыми ФИО, почтой и суммами |
 | `docs/testing/` | Планы тестирования для фокус-группы (PM, PMO): `.md` — исходник, `.pdf` — для рассылки; сборка `node docs/testing/build.mjs` |
 | `docs/DEPLOYMENT.md` | Установка, синхронизация, доступ, расписание |
 | `docs/SETUP-CLAUDE-CODE.md` | Подключение проекта к Claude Code |
