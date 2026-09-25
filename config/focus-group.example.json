@@ -1,4 +1,5 @@
 {
   "people": ["pm1@company.ua", "pm2@company.ua", "lead@company.ua", "owner@company.ua"],
-  "noRole": ["guest@company.ua"]
+  "noRole": ["guest@company.ua"],
+  "pmo": ["pmo@company.ua"]
 }

@@ -25,7 +25,7 @@ param(
     [SecureString]$CertificatePassword,
     # люди для полей PM / Власник / Стейкхолдери / Власник ризику; по умолчанию — тестовые учётные записи тенанта
     [string[]]$People = @("j.pochobut@eclectic.group", "test.kovalenko@smarthr.kz", "test.burbega@fillin.kz"),
-    # фокус-группа: JSON { "people": [e-mail…], "noRole": [e-mail…] } (config/focus-group.json, не в git).
+    # фокус-группа: JSON { "people": [e-mail…], "noRole": [e-mail…], "pmo": [e-mail…] } (config/focus-group.json, не в git).
     # Все — в «Учасники сайта»; people получают роли в проектах TEST-NN по кругу (Get-RolePlan), noRole — без ролей.
     [string]$Roles
 )
@@ -285,13 +285,19 @@ if ($Roles) {
     $fg = Get-Content -Raw $Roles | ConvertFrom-Json
     $who = @($fg.people | ForEach-Object { ([string]$_).Trim().ToLowerInvariant() } | Where-Object { $_ })
     $none = @($fg.noRole | ForEach-Object { ([string]$_).Trim().ToLowerInvariant() } | Where-Object { $_ })
+    $pmo  = @($fg.pmo | ForEach-Object { ([string]$_).Trim().ToLowerInvariant() } | Where-Object { $_ })
     if (-not $who) { throw "В $Roles нет people." }
     Write-Host "`nФокус-група: $($who.Count) з ролями, $($none.Count) без ролей" -ForegroundColor Cyan
     $members = (Get-PnPGroup -AssociatedMemberGroup).Title
     $inGroup = @(Get-PnPGroupMember -Group $members | ForEach-Object { ([string]$_.Email).ToLowerInvariant() })
-    foreach ($e in $who + $none) {
+    $inPmo = @(Get-PnPGroupMember -Group "PMO-адміністратори" | ForEach-Object { ([string]$_.Email).ToLowerInvariant() })
+    foreach ($e in $pmo) {
         try { $null = New-PnPUser -LoginName "i:0#.f|membership|$e" } catch { Write-Warning "  $e не знайдено в тенанті — пропущено"; continue }
-        if ($inGroup -notcontains $e) { Add-PnPGroupMember -Group $members -EmailAddress $e | Out-Null; Write-Host "  + $e — учасник сайту" }
+        if ($inPmo -notcontains $e) { Add-PnPGroupMember -Group "PMO-адміністратори" -LoginName "i:0#.f|membership|$e" | Out-Null; Write-Host "  + $e — PMO" }
+    }
+    foreach ($e in $who + $none + $pmo) {
+        try { $null = New-PnPUser -LoginName "i:0#.f|membership|$e" } catch { Write-Warning "  $e не знайдено в тенанті — пропущено"; continue }
+        if ($inGroup -notcontains $e) { Add-PnPGroupMember -Group $members -LoginName "i:0#.f|membership|$e" | Out-Null; Write-Host "  + $e — учасник сайту" }
     }
     $items = @(Get-PnPListItem -List "Lists/Projects" -PageSize 500 | Where-Object { [string]$_["pmCode"] -match '^TEST-\d+$' } | Sort-Object { [string]$_["pmCode"] })
     $plan = Get-RolePlan $who @($items | ForEach-Object { [string]$_["pmCode"] })
