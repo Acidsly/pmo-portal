@@ -12,6 +12,12 @@ export interface Project {
   canEdit: boolean;
   /** На экране учтён неприменённый отчёт — синхронизация ещё не записала его в карточку. */
   pending: boolean;
+  /** Необработанные синхронизацией правки карточки (pmEditLog) — приложение дописывает к ним новые. */
+  editLog?: string;
+  /** События истории из неперенесённых отчётов — видны сразу, журнал запишет синхронизация. */
+  pendingEvents?: ChangeEvent[];
+  /** Дата-время создания (ISO) — базовая сортировка «новые сверху». */
+  created?: string;
 }
 
 export interface StatusReport {
@@ -19,9 +25,15 @@ export interface StatusReport {
   status: string; type: string; progress: number | null; start: string; goLive: string; planEnd: string; forecastEnd: string;
   actualCost: number | null; keyReason: string; title: string; done: string; next: string; issues: string;
   decision: boolean; decisionText: string; applied: boolean; author: Person | null;
+  created?: string;
 }
 
 export interface Risk {
   id: number; projectId: number; title: string; type: string; probability: number; impact: number;
   owner: Person | null; status: string; due: string; mitigation: string;
+  created?: string;
 }
+
+export interface Comment { id: number; projectId: number; text: string; author: Person | null; created: string; }  // created — ISO дата-время
+export interface ChangeEntry { id: number; projectId: number; date: string; who: Person | null; kind: string; field: string; from: string; to: string; reason: string; }
+export interface ChangeEvent { id: number; date: string; who: Person | null; kind: 'create' | 'key' | 'edit' | 'report'; reason: string; diffs: { f: string; from: string; to: string }[]; }

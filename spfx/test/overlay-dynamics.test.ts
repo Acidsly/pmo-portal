@@ -56,3 +56,18 @@ describe('кольцо и динамика — как в прототипе', ()
     expect(s[4]).toEqual({ date: '2026-08-27', g: 0, y: 1, r: 1 });
   });
 });
+
+describe('история из неперенесённых отчётов — сразу, как запишет синхронизация', () => {
+  test('событие «Статус-звіт» с изменёнными показателями и причиной', () => {
+    const p = applyPending(P({ status: 'Планування', progress: 10, planEnd: '2027-04-12', rag: 'Зелений', lastUpdate: '2026-09-18' }),
+      [R({ id: 7, date: '2026-09-24', progress: 10, planEnd: '2027-05-14', keyReason: 'Постачальник', title: 'Обрано CRM',
+        author: { id: 1, name: 'Y', email: 'y@x' } })]);
+    expect(p.pendingEvents).toHaveLength(1);
+    expect(p.pendingEvents![0]).toMatchObject({ kind: 'report', reason: 'Постачальник · Обрано CRM', who: { name: 'Y' },
+      diffs: [{ f: 'plan', from: '12.04.2027', to: '14.05.2027' }] });
+  });
+  test('без изменений показателей — события нет', () => {
+    const p = applyPending(P({ progress: 10, rag: 'Зелений', lastUpdate: '2026-09-18' }), [R({ date: '2026-09-24', progress: 10 })]);
+    expect(p.pendingEvents).toEqual([]);
+  });
+});

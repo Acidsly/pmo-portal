@@ -8,7 +8,7 @@
 | Путь | Что это |
 |---|---|
 | `scripts/Deploy-PMO.ps1` | Развёртывание и обновление всех компонентов SharePoint. Идемпотентен |
-| `scripts/Invoke-PMOSync.ps1` | Логика по расписанию: отчёт → карточка, журнал, архив, комментарии, права по иерархии, напоминания, числа в диаграммах главной |
+| `scripts/Invoke-PMOSync.ps1` | Логика по расписанию: отчёт → карточка, журнал, архив, комментарии, права по иерархии, напоминания, правки карточки → журнал |
 | `scripts/Register-PMOApps.ps1` | Регистрация приложений Entra ID (выполняет человек) |
 | `scripts/Invoke-Env.ps1` | **Единственный способ запускать скрипты против SharePoint**: берёт параметры из `config/environments.json` |
 | `scripts/Seed-TestData.ps1` | Демонстрационные данные для тестового сайта (`-Env test -Action seed`). На прод не запускается |
@@ -16,9 +16,9 @@
 | `scripts/spfx.sh` | Команды в `spfx/` под Node 22: `scripts/spfx.sh npm run test:unit`, `scripts/spfx.sh npm run build` |
 | `scripts/Deploy-App.ps1` | Установка приложения на сайт (`-Env test -Action app`): каталог приложений сайта, страница `Portal` на весь экран — главная |
 | `tests/cases/` | Общие тест-векторы: их проверяют и `tests/Test-Scripts.ps1`, и Jest в `spfx/test` |
-| `scripts/gallery-view.json` | Оформление плиток (галерея) |
 | `tests/Test-Scripts.ps1` | Проверки без доступа к SharePoint. Запускай после каждого изменения |
-| `prototype/pmo-prototype.html` | Прототип интерфейса — эталон UX и ТЗ для будущего приложения SPFx |
+| `prototype/pmo-prototype.html` | Прототип интерфейса — эталон UX ([docs/PROTOTYPE.md](docs/PROTOTYPE.md), скриншоты в `docs/img/`) |
+| `docs/SPEC.md` | Полное техническое задание — обновляй вместе с изменением требований |
 | `docs/DEPLOYMENT.md` | Документация для людей: установка, доступ, синхронизация |
 | `CHANGELOG.md` | Журнал изменений — обновляй в каждом изменении |
 
@@ -59,13 +59,14 @@ pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action deploy -ConfirmProdu
 - **Значения выбора** (статусы, RAG, типы, приоритеты) одинаковы в прототипе, `Deploy-PMO.ps1`, CAML-представлениях, JSON-форматировании и `Invoke-PMOSync.ps1`. Меняешь в одном — меняй везде.
 - **Секреты.** Не читай и не выводи `certs/`, `*.pfx`, `.env`, пароли. Не коммить `config/environments.json`.
 - **Прод** — только по явному подтверждению в чате, даже если команда разрешена.
+- **Приложение SPFx не пишет** ключевые показатели, журнал, права и `pmoAcl` — только синхронизация; отчёт из приложения сохраняется с `srApplied = нет`.
 
 ## Модель данных (кратко)
 
-- **Проєкти** (`Lists/Projects`): `pmType`, `pmPriority`, `pmManager` (PM), `pmOwner`, `pmStakeholders` (несколько пользователей), `pmStatus`, `pmRAG`, `pmProgress`, `pmStart`, `pmGoLive`, `pmPlanEnd`, `pmForecastEnd`, `pmArchivedAt`, `pmBudget`, `pmActualCost`, `pmLastUpdate`, `pmLastReport`, `pmLastComment`, `pmLoop`, `pmCode`, `pmDepartment`, `pmDescription`; для карточки — вычисляемые `pmKState` / `pmKDates` / `pmKMoney` (показатели только для чтения) и `pmCardInfo` (ссылки и доступ, пишет синхронизация); служебное `pmoAcl`.
+- **Проєкти** (`Lists/Projects`): `pmType`, `pmPriority`, `pmManager` (PM), `pmOwner`, `pmStakeholders` (несколько пользователей), `pmStatus`, `pmRAG`, `pmProgress`, `pmStart`, `pmGoLive`, `pmPlanEnd`, `pmForecastEnd`, `pmArchivedAt`, `pmBudget`, `pmActualCost`, `pmLastUpdate`, `pmLastReport`, `pmLastComment`, `pmLoop`, `pmCode`, `pmDepartment`, `pmDescription`; служебные `pmoAcl` и `pmEditLog` (правки карточки из приложения до переноса в журнал).
 - **Статус-звіти** (`Lists/StatusReports`): `srProject`, `srDate`, `srPeriod`, оценки `srSchedule` / `srBudget` / `srResources`, вычисляемое `srRAG`, ключевые показатели `srStatus` / `srType` / `srProgress` / `srStart` / `srGoLive` / `srPlanEnd` / `srForecastEnd` / `srActualCost`, `srKeyReason`, `srDone` / `srNext` / `srIssues`, `srDecision` / `srDecisionText`, копии `srProjectType` / `srProjectPriority`, служебные `srApplied`, `pmoAcl`.
 - **Ризики та проблеми** (`Lists/RisksIssues`): `riProject`, `riType`, `riProbability` 1–5, `riImpact` 1–5, вычисляемое `riScore` = P × I, `riOwner`, `riStatus`, `riDue`, `riMitigation`, копии `riProjectType` / `riProjectPriority`.
-- **Зміни показників** (`Lists/KeyChanges`) — журнал; **Коментарі** (`Lists/ProjectComments`); **Показники портфеля** (`Lists/PortfolioStats`) — служебный, для главной: одна строка `psKind` = Поточний: `psDate`, `psGreen` / `psYellow` / `psRed` / `psNone` / `psTotal`, срезы `ps1G…ps7G` / `ps…Y` / `ps…R` / подписи `ps…D`, `psMax`. Имена вида `psG1` нельзя: SharePoint принимает их за адрес ячейки и кодирует.
+- **Зміни показників** (`Lists/KeyChanges`) — журнал; **Коментарі** (`Lists/ProjectComments`). Остатки прежнего интерфейса на уже развёрнутых сайтах (`Dashboard.aspx`, `Lists/PortfolioStats`, `pmKState` / `pmKDates` / `pmKMoney` / `pmCardInfo`, форматирование столбцов) не обслуживаются — см. конец `docs/DEPLOYMENT.md`; в код их не возвращай.
 
 ## Бизнес-правила
 
@@ -79,4 +80,4 @@ pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action deploy -ConfirmProdu
 
 ## Как проверять изменения прототипа
 
-Открой `prototype/pmo-prototype.html` в браузере. Данные прототипа живут в памяти страницы (или в базе артефакта claude.ai). Проверь сценарии: новый проект, редактирование, статус-отчёт с изменением показателей, архив, риск, комментарий, «войти как другой пользователь», светлая и тёмная темы, три языка.
+Открой `prototype/pmo-prototype.html` в браузере. Данные прототипа живут в памяти страницы (или в базе артефакта claude.ai). После изменения экранов пересними скриншоты в `docs/img/`. Проверь сценарии: новый проект, редактирование, статус-отчёт с изменением показателей, архив, риск, комментарий, «войти как другой пользователь», светлая и тёмная темы, три языка.

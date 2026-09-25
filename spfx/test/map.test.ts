@@ -17,7 +17,7 @@ test('mapReport', () => {
 test('mapRisk', () => {
   expect(mapRisk({ Id: 5, Title: 'Р', riProjectId: 7, riType: 'Ризик', riProbability: 4, riImpact: 5, riStatus: 'Відкрито',
     riDue: '2026-10-01T12:00:00Z', riMitigation: null, riOwner: null }))
-    .toEqual({ id: 5, projectId: 7, title: 'Р', type: 'Ризик', probability: 4, impact: 5, owner: null, status: 'Відкрито', due: '2026-10-01', mitigation: '' });
+    .toEqual({ id: 5, projectId: 7, title: 'Р', type: 'Ризик', probability: 4, impact: 5, owner: null, status: 'Відкрито', due: '2026-10-01', mitigation: '', created: '' });
 });
 test('canEdit: бит EditListItems (0x4) в Low', () => {
   expect(canEdit({ High: '176', Low: '138612833' })).toBe(false);   // «Читання»

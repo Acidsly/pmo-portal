@@ -1,4 +1,5 @@
 import './prototype.scss';
+import './overrides.scss';
 
 export type Theme = 'light' | 'dark' | '';
 const KEY = 'pmo-theme';

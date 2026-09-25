@@ -14,8 +14,8 @@ import { Strat, Prio, Compass, Flag, Plus } from '../components/Icons';
 const byDateDesc = (a: StatusReport, b: StatusReport): number => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
 
 /** Главная — порядок блоков и колонки pageHome прототипа (строки 1167–1190). */
-export const Home: React.FC<{ data: PortalData; webUrl: string }> = ({ data, webUrl }) => {
-  const { t, fl, today, go } = React.useContext(AppCtx);
+export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
+  const { t, fl, today, go, openProject, openForm } = React.useContext(AppCtx);
   const byId: Record<number, Project> = {};
   data.projects.forEach(p => { byId[p.id] = p; });
   const P = (id: number): Project => byId[id];
@@ -29,8 +29,7 @@ export const Home: React.FC<{ data: PortalData; webUrl: string }> = ({ data, web
   const open = data.risks.filter(k => k.status !== 'Закрито' && shown(k.projectId))
     .sort((a, b) => riskScore(b.probability, b.impact) - riskScore(a.probability, a.impact)).slice(0, 6);
 
-  // карточка проекта откроется по названию на этапе 2
-  const link = (p: Project): JSX.Element => <button className="link">{p.title}</button>;
+  const link = (p: Project): JSX.Element => <button className="link" onClick={() => openProject(p.id)}>{p.title}</button>;
   const stratHead = <span className="ico" title={t('cStrat')}><Compass /></span>;
   const prioHead = <span className="ico" title={t('cPrio')}><Flag /></span>;
   const stratCell = (p: Project): JSX.Element => <span className="ico">{p.type === 'Стратегічний' ? <span title={t('cStrat')}><Strat on={true} /></span> : null}</span>;
@@ -61,8 +60,7 @@ export const Home: React.FC<{ data: PortalData; webUrl: string }> = ({ data, web
   return <>
     <div className="hero">
       <div><h1 className="page-title">{t('dash')}</h1><p className="page-sub">{t('visible') + vis.length}</p></div>
-      {/* форма нового проекта — этап 3; до тех пор стандартная форма списка */}
-      <a className="btn primary" href={`${webUrl}/Lists/Projects/NewForm.aspx`}><Plus />{t('newProject')}</a>
+      <button className="btn primary" onClick={() => openForm('project')}><Plus />{t('newProject')}</button>
     </div>
     <div className="grid2">
       <Wp title={t('wpHealth')}><Donut c={donutCounts(vis)} label={t('wpHealth')} active={t('active')} notRated={t('notRated')} /></Wp>

@@ -1,7 +1,7 @@
 #Requires -Version 7.2
 <#
 .SYNOPSIS  Проверки без доступа к SharePoint: синтаксис всех скриптов, валидность JSON,
-           JSON форматирования столбцов, формула общего состояния, синтаксис JS прототипа.
+           формула общего состояния, синтаксис JS прототипа.
            Запускается локально, Claude Code и в CI.
 #>
 $ErrorActionPreference = "Stop"
@@ -28,16 +28,14 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("scripts/gallery-view.json", "config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
-Write-Host "3. Форматирование столбцов в Deploy-PMO.ps1"
-$src = Get-Content -Raw (Join-Path $root "scripts/Deploy-PMO.ps1")
-$a = $src.IndexOf('$ragColor = '); $b = $src.IndexOf("@(`n    @(`$P,")
-if ($a -lt 0 -or $b -lt 0) { Bad "не найден блок форматирования" } else {
-    Invoke-Expression $src.Substring($a, $b - $a)
-    foreach ($v in Get-Variable fmt*) { try { $null = $v.Value | ConvertFrom-Json; Ok $v.Name } catch { Bad "$($v.Name): $_" } }
+Write-Host "3. Прежнее оформление SharePoint убрано (интерфейс — приложение SPFx)"
+$src = (Get-ChildItem (Join-Path $root "scripts") -Filter *.ps1 | ForEach-Object { Get-Content -Raw $_.FullName }) -join "`n"
+foreach ($w in @("CustomFormatter", "Build-Dashboard", "PortfolioStats", "Update-Stats", "Update-CardInfo", "pmCardInfo", "ChartsOnly")) {
+    if ($src -match [regex]::Escape($w)) { Bad "scripts/*.ps1 содержит «$w»" } else { Ok "нет «$w»" }
 }
 
 Write-Host "4. Формула общего состояния (Invoke-PMOSync.ps1)"
@@ -62,6 +60,17 @@ foreach ($c in $dcases) {
 # ToSpDate -> DateOnly без сдвига
 $r = DateOnly ([datetime]::Parse((ToSpDate "2026-03-05"), [cultureinfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AdjustToUniversal))
 if ($r -eq "2026-03-05") { Ok "ToSpDate -> DateOnly: $r" } else { Bad "ToSpDate -> DateOnly: $r, ожидалось 2026-03-05" }
+
+Write-Host "4b. Правки карточки из приложения -> журнал (Invoke-PMOSync.ps1: EditLogRows)"
+$fn = $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "EditLogRows" }, $true) | Select-Object -First 1
+Invoke-Expression $fn.Extent.Text
+foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/card-edit.json") | ConvertFrom-Json)) {
+    $got = @(EditLogRows $c.log) | ForEach-Object { "$($_.field)|$($_.from)|$($_.to)|$($_.who)|$($_.reason)|$($_.when)" }
+    # ConvertFrom-Json превращает ISO-время ожидаемых строк в DateTime — возвращаем в ISO UTC, как EditLogRows
+    $want = @($c.rows) | ForEach-Object { $w = if ($_.when -is [datetime]) { $_.when.ToUniversalTime().ToString("o") } else { $_.when }
+        "$($_.field)|$($_.from)|$($_.to)|$($_.who)|$($_.reason)|$w" }
+    if ((@($got) -join "`n") -eq (@($want) -join "`n")) { Ok $c.note } else { Bad "$($c.note): получено $(@($got) -join '; ')" }
+}
 
 Write-Host "5. Прототип"
 $html = Get-Content -Raw (Join-Path $root "prototype/pmo-prototype.html")

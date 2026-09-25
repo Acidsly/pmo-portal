@@ -1,0 +1,23 @@
+// Поправки для SharePoint — не из прототипа (prototype.scss генерируется и не правится вручную).
+// pmo-sp: приложение открыто в SharePoint — сверху полоса Microsoft 365 (48px), панель и затемнение начинаются под ней.
+:global {
+  .pmo-app.pmo-sp .pmo-panel,
+  .pmo-app.pmo-sp .pmo-scrim { top: 48px; }
+  .pmo-app.pmo-sp .pmo-panel { border-radius: 28px 0 0 0; }
+}
+
+// Выбор людей — в прототипе его нет (там справочник ORG); оформление в стиле полей и всплывающих списков прототипа
+:global {
+  .pmo-app .picker { position: relative; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: var(--bg-alt); border-radius: 12px; padding: 6px 8px; min-height: 42px; box-sizing: border-box; }
+  .pmo-app .picker input[type=search] { flex: 1 1 160px; border: 0; background: none; padding: 6px 4px; min-width: 120px; outline: none; }
+  .pmo-app .picker .pchip { background: var(--bg); border-radius: 999px; padding: 2px 4px 2px 2px; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .pmo-app .picker .x-sm { border: 0; background: none; cursor: pointer; color: var(--text-2); font-size: 15px; line-height: 1; padding: 0 4px; }
+  .pmo-app .picker-list { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 25; background: var(--bg); border-radius: 14px; box-shadow: var(--shadow-hi); border: 1px solid var(--line); padding: 6px; max-height: 280px; overflow: auto; }
+  .pmo-app .picker-list .pop-row { width: 100%; }
+  .pmo-app .picker-list .pop-row.on { background: var(--bg-hover); }
+}
+
+// Воронка в заголовке таблицы: прототип задаёт ширину 14px и не обнуляет браузерные отступы кнопки — иконка вылезала из плашки
+:global {
+  .pmo-app .dt th .fbtn { padding: 0; width: 18px; min-width: 18px; height: 18px; }
+}
