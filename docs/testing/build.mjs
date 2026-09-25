@@ -26,13 +26,9 @@ tr{break-inside:avoid}
 th{background:#eef1f8;color:#40485a;font-weight:600;text-align:left;padding:5pt 6pt;border:1px solid #d5dbe8}
 td{padding:5pt 6pt;border:1px solid #d5dbe8;vertical-align:top}
 td:first-child,th:first-child{width:7%;white-space:nowrap;color:#586176}
-td:nth-child(2){width:41%}
-td:nth-child(3){width:38%}
-td:nth-child(4),td:nth-child(5),th:nth-child(4),th:nth-child(5){width:7%;text-align:center;font-size:13pt;color:#586176}
-th:nth-child(4),th:nth-child(5){font-size:8.5pt}
+td:nth-child(2){width:48%}
+td:nth-child(3){width:45%}
 .tablewrap{overflow:visible}
-.notes{margin-top:18pt;border-top:1px solid #d5dbe8;padding-top:8pt}
-.notes div{border-bottom:1px solid #d5dbe8;height:22pt}
 `;
 for (const f of readdirSync(here).filter(x => /^test-plan-.*\.uk\.md$/.test(x))) {
   const md = readFileSync(join(here, f), 'utf8');
@@ -41,9 +37,9 @@ for (const f of readdirSync(here).filter(x => /^test-plan-.*\.uk\.md$/.test(x)))
   const body = rest.join('\n').replace(/^\n*(Портал:[^\n]*)\n/, (_, m) => `@@META@@${m}\n`);
   const meta = (body.match(/@@META@@([^\n]*)/) || [, ''])[1];
   const html = `<!doctype html><html lang="uk"><head><meta charset="utf-8"><title>${title}</title><style>${css}</style></head><body>
-<h1>${title}</h1><p class="meta">${mdToHtml(meta).replace(/^<p>|<\/p>$/g, '')} · Учасник: ____________________ · Дата: ____________</p>
+<h1>${title}</h1><p class="meta">${mdToHtml(meta).replace(/^<p>|<\/p>$/g, '')}</p>
 ${mdToHtml(body.replace(/@@META@@[^\n]*\n/, ''))}
-<div class="notes"><h3>Нотатки</h3>${'<div></div>'.repeat(8)}</div></body></html>`;
+</body></html>`;
   const dir = mkdtempSync(join(tmpdir(), 'pmo-pdf-'));
   const src = join(dir, 'plan.html'); writeFileSync(src, html);
   const out = join(here, f.replace(/\.md$/, '.pdf'));
