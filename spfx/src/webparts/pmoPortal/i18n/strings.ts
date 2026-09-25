@@ -1279,5 +1279,85 @@ export const EXTRA: Record<string, L3> = {
   "Нові проєкти створює PMO. Зверніться до групи «PMO — адміністратори».",
   "New projects are created by PMO. Contact the “PMO — administrators” group.",
   "Новые проекты создаёт PMO. Обратитесь к группе «PMO — администраторы»."
+ ],
+ "feedback": [
+  "Відгук",
+  "Feedback",
+  "Отзыв"
+ ],
+ "fbTitle": [
+  "Відгук про портал",
+  "Portal feedback",
+  "Отзыв о портале"
+ ],
+ "fbList": [
+  "Відгуки",
+  "Feedback",
+  "Отзывы"
+ ],
+ "fbHint": [
+  "Що не так або що покращити? Опишіть, що ви робили і що очікували побачити. Екран, з якого ви відкрили відгук, і пристрій додаються самі.",
+  "What is wrong or what could be better? Describe what you did and what you expected. The screen you opened this from and your device are added automatically.",
+  "Что не так или что улучшить? Опишите, что вы делали и что ожидали увидеть. Экран, с которого вы открыли отзыв, и устройство добавляются сами."
+ ],
+ "fbText": [
+  "Що не так або що покращити?",
+  "What is wrong or what could be better?",
+  "Что не так или что улучшить?"
+ ],
+ "fbShots": [
+  "Скриншоти",
+  "Screenshots",
+  "Скриншоты"
+ ],
+ "fbAdd": [
+  "Додати скриншот",
+  "Add screenshot",
+  "Добавить скриншот"
+ ],
+ "fbPaste": [
+  "Скриншот можна вставити з буфера: Ctrl+V (Windows) або Cmd+V (Mac).",
+  "You can paste a screenshot from the clipboard: Ctrl+V (Windows) or Cmd+V (Mac).",
+  "Скриншот можно вставить из буфера: Ctrl+V (Windows) или Cmd+V (Mac)."
+ ],
+ "fbMax": [
+  "Не більше 5 скриншотів.",
+  "No more than 5 screenshots.",
+  "Не больше 5 скриншотов."
+ ],
+ "fbBig": [
+  "Файл завеликий (понад 10 МБ).",
+  "The file is too large (over 10 MB).",
+  "Файл слишком большой (больше 10 МБ)."
+ ],
+ "fbRemove": [
+  "Прибрати скриншот",
+  "Remove screenshot",
+  "Убрать скриншот"
+ ],
+ "fbScreen": [
+  "Екран",
+  "Screen",
+  "Экран"
+ ],
+ "fbErrText": [
+  "Опишіть, що не так або що покращити.",
+  "Describe what is wrong or what could be better.",
+  "Опишите, что не так или что улучшить."
+ ],
+ "fbSend": [
+  "Надіслати",
+  "Send",
+  "Отправить"
+ ],
+ "fbSending": [
+  "Надсилаємо…",
+  "Sending…",
+  "Отправляем…"
+ ],
+ "fbSent": [
+  "Дякуємо! Відгук надіслано.",
+  "Thank you! Feedback sent.",
+  "Спасибо! Отзыв отправлен."
  ]
 };

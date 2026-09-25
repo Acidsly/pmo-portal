@@ -15,6 +15,7 @@ import { Risks } from '../pages/Risks';
 import { ProjectCard } from '../panels/ProjectCard';
 import { ReportForm } from '../panels/ReportForm';
 import { ProjectForm } from '../panels/ProjectForm';
+import { FeedbackForm } from '../panels/FeedbackForm';
 import { RiskForm } from '../panels/RiskForm';
 import { Toast, useToast } from './Toast';
 
@@ -67,7 +68,8 @@ export const App: React.FC<AppProps> = p => {
   const back = (): void => nav({ ...route, form: '' });
   const panelOpen = !!data && (!!route.form || !!project);
   let panelEl: React.ReactNode = null;
-  if (data && route.form === 'report') panelEl = <ReportForm data={data} projectId={route.projectId} onCancel={project ? back : close} />;
+  if (data && route.form === 'feedback') panelEl = <FeedbackForm screen={format({ ...route, form: '' })} onCancel={back} />;
+  else if (data && route.form === 'report') panelEl = <ReportForm data={data} projectId={route.projectId} onCancel={project ? back : close} />;
   else if (data && (route.form === 'project' || route.form === 'edit')) panelEl = <ProjectForm data={data} project={route.form === 'edit' ? project : undefined} onCancel={project ? back : close} />;
   else if (data && route.form.indexOf('risk:') === 0) panelEl = <RiskForm data={data} projectId={route.projectId} riskId={Number(route.form.slice(5)) || 0} onCancel={project ? back : close} />;
   else if (data && project) panelEl = <ProjectCard project={project} data={data} repo={p.repo} onClose={close} />;
@@ -79,7 +81,8 @@ export const App: React.FC<AppProps> = p => {
   return <AppCtx.Provider value={ctx}>
     <div className="pmo-app pmo-sp" data-theme={theme || undefined} lang={LANG_CODES[lang]}>
       <Header page={route.page} lang={lang} theme={theme} userName={p.userName} userEmail={p.userEmail}
-        onPage={pg => ctx.go(pg)} onLang={l => { setLang(l); saveLang(l); }} onTheme={v => { setTheme(v); saveTheme(v); }} />
+        onPage={pg => ctx.go(pg)} onLang={l => { setLang(l); saveLang(l); }} onTheme={v => { setTheme(v); saveTheme(v); }}
+        onFeedback={data && data.feedback ? () => ctx.openForm('feedback', route.projectId) : undefined} />
       <main className="pmo-main">
         {err ? <p className="empty">{tt.t('loadErr')}: {err}</p> : !data ? <p className="empty">…</p> : pageEl}
       </main>

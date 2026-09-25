@@ -37,7 +37,9 @@ param(
     [string]$Tenant,
     [string]$Thumbprint,
     [string]$CertificatePath,
-    [SecureString]$CertificatePassword
+    [SecureString]$CertificatePassword,
+    # список «Відгуки» и кнопка «Відгук» в приложении — для теста с фокус-группой (Invoke-Env передаёт только для test)
+    [switch]$Feedback
 )
 
 $ErrorActionPreference = "Stop"
@@ -362,6 +364,21 @@ F $M pmoAcl        Text     "Службове: права"    "System: access"  
 $script:Loc += , @($M, "Title", "Коротко", "Summary", "Кратко")
 Set-PnPField -List $M -Identity "Title" -Values @{ Required = $false } | Out-Null
 
+# 6b. Відгуки — замечания фокус-группы из приложения (текст, экран, устройство, скриншоты-вложения)
+if ($Feedback) {
+    Write-Host "6b. Список «Відгуки»" -ForegroundColor Cyan
+    $FB = Ensure-List "Lists/Feedback" "Відгуки" "Feedback" "Отзывы"
+    F $FB fbText    Note   "Відгук"             "Feedback"            "Отзыв"                "NumLines='6' RichText='FALSE' Required='TRUE'"
+    F $FB fbScreen  Text   "Екран"              "Screen"              "Экран"                "MaxLength='255'"
+    F $FB fbDevice  Text   "Пристрій"           "Device"              "Устройство"           "MaxLength='255'"
+    F $FB fbStatus  Choice "Статус розгляду"    "Review status"       "Статус рассмотрения"  "" (Choices @("Новий", "Прийнято", "Відхилено", "Зроблено") "Новий")
+    F $FB fbAnswer  Note   "Відповідь"          "Answer"              "Ответ"                "NumLines='4' RichText='FALSE'"
+    $script:Loc += , @($FB, "Title", "Коротко", "Summary", "Кратко")
+    Set-PnPField -List $FB -Identity "Title" -Values @{ Required = $false } | Out-Null
+    # каждый видит и правит только свои отзывы; PMO (уровень «Редагування» списка) — все
+    Set-PnPList -Identity "Lists/Feedback" -ReadSecurity AllUsersReadAccessOnItemsTheyCreate -WriteSecurity WriteOnlyMyItems -EnableAttachments $true | Out-Null
+}
+
 # ---------------------------------------------------------------------------
 # Подсказки к полям (описания столбцов, uk / en / ru)
 # ---------------------------------------------------------------------------
@@ -442,6 +459,7 @@ function Set-ListRoles([string]$Url, [hashtable]$Want) {
 }
 Set-ListRoles "Lists/Projects"   @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_EDIT }
 Set-ListRoles "Lists/KeyChanges" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
+if ($Feedback) { Set-ListRoles "Lists/Feedback" @{ $members.Title = $ROLE_EDIT; $PMO_GROUP = (Get-RoleName "Editor") } }
 
 # ===========================================================================
 # 8. Представления (группировок по статусам нет; названия представлений SharePoint не переводит)
@@ -482,6 +500,7 @@ $vRisks = Ensure-View $K "Відкриті" $kFields `
 
 $null = Set-BaseView $C "Усі зміни" @("kcProject","kcDate","kcChangedBy","kcKind","LinkTitle","kcFrom","kcTo","kcReason") "<OrderBy><FieldRef Name='kcDate' Ascending='FALSE'/></OrderBy>"
 $null = Set-BaseView $M "Усі коментарі" @("cmProject","cmText","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
+if ($Feedback) { $null = Set-BaseView $FB "Усі відгуки" @("Created","Author","fbStatus","fbScreen","fbText","Attachments","fbDevice","fbAnswer") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>" }
 
 # По умолчанию: «Проєкти» — «Усі проєкти» (без архива), «Ризики» — «Відкриті»
 Set-PnPView -List $P -Identity $vAll.Id -Values @{ DefaultView = $true } | Out-Null
