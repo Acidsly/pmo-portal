@@ -497,6 +497,52 @@ $ql = $ctx.Web.Navigation.QuickLaunch; $ctx.Load($ql); Invoke-PnPQuery
 foreach ($nd in $ql) { if ($nd.Url -eq $archUrl) { Set-Loc $nd "Архів" "Archive" "Архив"; $nd.Update() } }
 Invoke-PnPQuery
 
+#region legacy-cleanup
+# ===========================================================================
+# 9. Уборка прежнего интерфейса на стандартных средствах SharePoint (до приложения SPFx).
+#    Идемпотентно; данных в этих объектах нет. Список и страницы — в корзину сайта (восстановимы).
+# ===========================================================================
+Write-Host "9. Уборка прежнего интерфейса" -ForegroundColor Cyan
+$homePage = [string](Get-PnPHomePage)
+if ($homePage -notmatch 'Dashboard\.aspx$') {
+    # прежняя главная и её копии EN / RU — только когда главной уже стало приложение
+    foreach ($pg in @("SitePages/Dashboard.aspx", "SitePages/en/Dashboard.aspx", "SitePages/ru/Dashboard.aspx")) {
+        if (Get-PnPFile -Url $pg -ErrorAction SilentlyContinue) {
+            Remove-PnPFile -ServerRelativeUrl "$($web.ServerRelativeUrl.TrimEnd('/'))/$pg" -Recycle -Force | Out-Null
+            Write-Host "  - страница $pg (в корзину)"
+        }
+    }
+} else { Write-Host "  главная — ещё прежняя страница: сначала установите приложение (-Action app)" -ForegroundColor Yellow }
+
+# служебный список для диаграмм прежней главной
+$stats = Get-PnPList -Identity "Lists/PortfolioStats" -ErrorAction SilentlyContinue
+if ($stats) { Remove-PnPList -Identity $stats -Recycle -Force | Out-Null; Write-Host "  - список «$($stats.Title)» (в корзину)" }
+
+# вычисляемые поля карточки стандартной формы и «Пов'язані записи і доступ»
+foreach ($fn in @("pmKState", "pmKDates", "pmKMoney", "pmCardInfo")) {
+    if (Test-Field $P $fn) { Remove-PnPField -List $P -Identity $fn -Force; Write-Host "  - поле $fn" }
+}
+
+# оформление столбцов, представлений и разделы стандартных форм
+$pl = Fresh-List $P
+if (Get-PnPView -List $pl -Identity "Плитки" -ErrorAction SilentlyContinue) { Remove-PnPView -List $pl -Identity "Плитки" -Force; Write-Host "  - представление «Плитки»" }
+foreach ($l in @($P, $R, $K, $C, $M)) {
+    $l = Fresh-List $l
+    $n = 0
+    foreach ($fd in (Get-PnPField -List $l)) {
+        if ($fd.CustomFormatter) { Set-PnPField -List $l -Identity $fd.InternalName -Values @{ CustomFormatter = "" } | Out-Null; $n++ }
+    }
+    foreach ($vw in (Get-PnPView -List $l -Includes CustomFormatter)) {
+        if ($vw.CustomFormatter) { Set-PnPView -List $l -Identity $vw.Id -Values @{ CustomFormatter = "" } | Out-Null; $n++ }
+    }
+    foreach ($ct in (Get-PnPContentType -List $l)) {
+        $ctx = Get-PnPContext; $ctx.Load($ct); Invoke-PnPQuery
+        if ($ct.ClientFormCustomFormatter) { $ct.ClientFormCustomFormatter = ""; $ct.Update($false); Invoke-PnPQuery; $n++ }
+    }
+    if ($n) { Write-Host "  «$($l.Title)»: снято оформление ($n)" }
+}
+#endregion legacy-cleanup
+
 Write-Host "`nГотово: $siteUrl" -ForegroundColor Yellow
 Write-Host "Дальше:" -ForegroundColor Yellow
 Write-Host "  1) добавьте участников в группу «$PMO_GROUP» и сотрудников компании — в участники сайта;"

@@ -34,6 +34,8 @@ foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "te
 
 Write-Host "3. Прежнее оформление SharePoint убрано (интерфейс — приложение SPFx)"
 $src = (Get-ChildItem (Join-Path $root "scripts") -Filter *.ps1 | ForEach-Object { Get-Content -Raw $_.FullName }) -join "`n"
+# блок уборки на развёрнутых сайтах упоминает прежние объекты по имени — его не считаем
+$src = [regex]::Replace($src, "(?s)#region legacy-cleanup.*?#endregion legacy-cleanup", "")
 foreach ($w in @("CustomFormatter", "Build-Dashboard", "PortfolioStats", "Update-Stats", "Update-CardInfo", "pmCardInfo", "ChartsOnly")) {
     if ($src -match [regex]::Escape($w)) { Bad "scripts/*.ps1 содержит «$w»" } else { Ok "нет «$w»" }
 }
