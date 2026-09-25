@@ -8,7 +8,9 @@ const SHOWN: [keyof Project, string][] = [['status', 'status'], ['rag', 'rag'], 
 
 /** Накладывает неприменённые отчёты (srApplied = нет) на карточку — те же правила, что шаг 1 Invoke-PMOSync.ps1. */
 export function applyPending(project: Project, reports: StatusReport[]): Project {
-  const pending = reports.filter(r => r.projectId === project.id && !r.applied).sort(byDateThenId);
+  // как синхронизация: карточку меняет только отчёт PM проекта
+  const pm = project.manager ? project.manager.email.toLowerCase() : '';
+  const pending = reports.filter(r => r.projectId === project.id && !r.applied && !!pm && !!r.author && r.author.email.toLowerCase() === pm).sort(byDateThenId);
   if (!pending.length) return project;
   const p: Project = { ...project, pending: true };
   const events: ChangeEvent[] = [];

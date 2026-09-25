@@ -37,7 +37,9 @@ param(
     [string]$Tenant,
     [string]$Thumbprint,
     [string]$CertificatePath,
-    [SecureString]$CertificatePassword
+    [SecureString]$CertificatePassword,
+    # список «Відгуки» и кнопка «Відгук» в приложении — для теста с фокус-группой (Invoke-Env передаёт только для test)
+    [switch]$Feedback
 )
 
 $ErrorActionPreference = "Stop"
@@ -182,12 +184,20 @@ $ROLE_FULL = Get-RoleName "Administrator"
 $ROLE_EDIT = Get-RoleName "Contributor"
 $ROLE_READ = Get-RoleName "Reader"
 
+# PMO видит все проекты и заводит новые; править проект может только его PM (права элементов выдаёт синхронизация)
 try { $g = Get-PnPGroup -Identity $PMO_GROUP -ErrorAction Stop } catch { $g = $null }
 if (-not $g) {
-    New-PnPGroup -Title $PMO_GROUP -Description "Повний доступ до всіх проєктів порталу" | Out-Null
-    Set-PnPGroupPermissions -Identity $PMO_GROUP -AddRole $ROLE_FULL | Out-Null
-    Write-Host "  + группа $PMO_GROUP ($ROLE_FULL)" -ForegroundColor Green
+    New-PnPGroup -Title $PMO_GROUP -Description "Перегляд усіх проєктів порталу, створення нових проєктів" | Out-Null
+    Write-Host "  + группа $PMO_GROUP" -ForegroundColor Green
 }
+# миграция: раньше у PMO был полный доступ к сайту
+$ctx = Get-PnPContext; $ra = $ctx.Web.RoleAssignments; $ctx.Load($ra); Invoke-PnPQuery
+$pmoRoles = @()
+foreach ($a in $ra) { $ctx.Load($a.Member); $ctx.Load($a.RoleDefinitionBindings) }; Invoke-PnPQuery
+# системный «Обмежений доступ» (Hidden) SharePoint выдаёт сам под права элементов — его не трогаем
+foreach ($a in $ra) { if ($a.Member.Title -eq $PMO_GROUP) { $pmoRoles = @($a.RoleDefinitionBindings | Where-Object { -not $_.Hidden } | ForEach-Object { $_.Name }) } }
+foreach ($x in $pmoRoles) { if ($x -ne $ROLE_READ) { Set-PnPGroupPermissions -Identity $PMO_GROUP -RemoveRole $x | Out-Null; Write-Host "  $PMO_GROUP : снят уровень «$x» на сайте" } }
+if ($pmoRoles -notcontains $ROLE_READ) { Set-PnPGroupPermissions -Identity $PMO_GROUP -AddRole $ROLE_READ | Out-Null; Write-Host "  $PMO_GROUP : чтение сайта" }
 
 $rag       = @("Зелений", "Жовтий", "Червоний")
 $status    = @("Ініціація", "Планування", "Реалізація", "Призупинено", "Скасовано", "Архівний")
@@ -226,6 +236,8 @@ F $P pmBudgetUse   Calculated "Освоєння бюджету, %" "Budget used,
     "<Formula>=IF([pmBudget]=0,0,[pmActualCost]/[pmBudget]*100)</Formula><FieldRefs><FieldRef Name='pmBudget'/><FieldRef Name='pmActualCost'/></FieldRefs>"
 F $P pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='64'"
 # Правки карточки из приложения SPFx: «было / стало» до переноса в журнал синхронизацией (она же очищает поле)
+# «Доступ до картки» — кто видит проект и что может (JSON), пишет синхронизация
+F $P pmAccess      Note     "Службове: доступ"   "System: access list" "Служебное: доступ"    "Hidden='TRUE' NumLines='6' RichText='FALSE'"
 F $P pmEditLog     Note     "Службове: правки картки" "System: card edits" "Служебное: правки карточки" "Hidden='TRUE' NumLines='6' RichText='FALSE'"
 $script:Loc += , @($P, "Title", "Назва проєкту", "Project name", "Название проекта")
 
@@ -352,6 +364,21 @@ F $M pmoAcl        Text     "Службове: права"    "System: access"  
 $script:Loc += , @($M, "Title", "Коротко", "Summary", "Кратко")
 Set-PnPField -List $M -Identity "Title" -Values @{ Required = $false } | Out-Null
 
+# 6b. Відгуки — замечания фокус-группы из приложения (текст, экран, устройство, скриншоты-вложения)
+if ($Feedback) {
+    Write-Host "6b. Список «Відгуки»" -ForegroundColor Cyan
+    $FB = Ensure-List "Lists/Feedback" "Відгуки" "Feedback" "Отзывы"
+    F $FB fbText    Note   "Відгук"             "Feedback"            "Отзыв"                "NumLines='6' RichText='FALSE' Required='TRUE'"
+    F $FB fbScreen  Text   "Екран"              "Screen"              "Экран"                "MaxLength='255'"
+    F $FB fbDevice  Text   "Пристрій"           "Device"              "Устройство"           "MaxLength='255'"
+    F $FB fbStatus  Choice "Статус розгляду"    "Review status"       "Статус рассмотрения"  "" (Choices @("Новий", "Прийнято", "Відхилено", "Зроблено") "Новий")
+    F $FB fbAnswer  Note   "Відповідь"          "Answer"              "Ответ"                "NumLines='4' RichText='FALSE'"
+    $script:Loc += , @($FB, "Title", "Коротко", "Summary", "Кратко")
+    Set-PnPField -List $FB -Identity "Title" -Values @{ Required = $false } | Out-Null
+    # каждый видит и правит только свои отзывы; PMO (уровень «Редагування» списка) — все
+    Set-PnPList -Identity "Lists/Feedback" -ReadSecurity AllUsersReadAccessOnItemsTheyCreate -WriteSecurity WriteOnlyMyItems -EnableAttachments $true | Out-Null
+}
+
 # ---------------------------------------------------------------------------
 # Подсказки к полям (описания столбцов, uk / en / ru)
 # ---------------------------------------------------------------------------
@@ -416,18 +443,23 @@ Set-FormVisibility $P @("pmRAG","pmForecastEnd","pmActualCost","pmArchivedAt","p
 Set-FormVisibility $R @("srProjectType","srProjectPriority") $false $false
 Set-FormVisibility $K @("riProjectType","riProjectPriority") $false $false
 
-# Журнал изменений: пользователи только читают, пишет синхронизация
+# Права списков. Участники сайта: «Проєкти» — только чтение (новый проект заводит PMO), журнал — только чтение
+# (пишет синхронизация); отчёты, риски, комментарии — добавление (кто может менять запись, решают права элемента).
 $members = Get-PnPGroup -AssociatedMemberGroup
-foreach ($u in @("Lists/KeyChanges")) {
-    $ro = Get-PnPList -Identity $u -Includes HasUniqueRoleAssignments
-    if (-not $ro.HasUniqueRoleAssignments) {
-        Set-PnPList -Identity $ro -BreakRoleInheritance -CopyRoleAssignments | Out-Null
-        Set-PnPListPermission -Identity $ro -Group $members.Title -RemoveRole $ROLE_EDIT -ErrorAction SilentlyContinue | Out-Null
-        Set-PnPListPermission -Identity $ro -Group $members.Title -AddRole $ROLE_READ | Out-Null
-        Write-Host "  «$($ro.Title)»: участники сайта — только чтение"
+function Set-ListRoles([string]$Url, [hashtable]$Want) {
+    $l = Get-PnPList -Identity $Url -Includes HasUniqueRoleAssignments
+    if (-not $l.HasUniqueRoleAssignments) { Set-PnPList -Identity $Url -BreakRoleInheritance -CopyRoleAssignments | Out-Null; $l = Get-PnPList -Identity $Url }
+    $ctx = Get-PnPContext; $ra = $l.RoleAssignments; $ctx.Load($ra); Invoke-PnPQuery
+    foreach ($a in $ra) { $ctx.Load($a.Member); $ctx.Load($a.RoleDefinitionBindings) }; Invoke-PnPQuery
+    foreach ($grp in $Want.Keys) {
+        $have = @(); foreach ($a in $ra) { if ($a.Member.Title -eq $grp) { $have = @($a.RoleDefinitionBindings | Where-Object { -not $_.Hidden } | ForEach-Object { $_.Name }) } }
+        foreach ($x in $have) { if ($x -ne $Want[$grp]) { Set-PnPListPermission -Identity $Url -Group $grp -RemoveRole $x | Out-Null; Write-Host "  «$($l.Title)» $grp : − $x" } }
+        if ($have -notcontains $Want[$grp]) { Set-PnPListPermission -Identity $Url -Group $grp -AddRole $Want[$grp] | Out-Null; Write-Host "  «$($l.Title)» $grp : + $($Want[$grp])" }
     }
-    Set-PnPListPermission -Identity $ro -Group $PMO_GROUP -AddRole $ROLE_FULL -ErrorAction SilentlyContinue | Out-Null
 }
+Set-ListRoles "Lists/Projects"   @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_EDIT }
+Set-ListRoles "Lists/KeyChanges" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
+if ($Feedback) { Set-ListRoles "Lists/Feedback" @{ $members.Title = $ROLE_EDIT; $PMO_GROUP = (Get-RoleName "Editor") } }
 
 # ===========================================================================
 # 8. Представления (группировок по статусам нет; названия представлений SharePoint не переводит)
@@ -468,6 +500,7 @@ $vRisks = Ensure-View $K "Відкриті" $kFields `
 
 $null = Set-BaseView $C "Усі зміни" @("kcProject","kcDate","kcChangedBy","kcKind","LinkTitle","kcFrom","kcTo","kcReason") "<OrderBy><FieldRef Name='kcDate' Ascending='FALSE'/></OrderBy>"
 $null = Set-BaseView $M "Усі коментарі" @("cmProject","cmText","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
+if ($Feedback) { $null = Set-BaseView $FB "Усі відгуки" @("Created","Author","fbStatus","fbScreen","fbText","Attachments","fbDevice","fbAnswer") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>" }
 
 # По умолчанию: «Проєкти» — «Усі проєкти» (без архива), «Ризики» — «Відкриті»
 Set-PnPView -List $P -Identity $vAll.Id -Values @{ DefaultView = $true } | Out-Null
@@ -496,6 +529,52 @@ $ctx = Get-PnPContext
 $ql = $ctx.Web.Navigation.QuickLaunch; $ctx.Load($ql); Invoke-PnPQuery
 foreach ($nd in $ql) { if ($nd.Url -eq $archUrl) { Set-Loc $nd "Архів" "Archive" "Архив"; $nd.Update() } }
 Invoke-PnPQuery
+
+#region legacy-cleanup
+# ===========================================================================
+# 9. Уборка прежнего интерфейса на стандартных средствах SharePoint (до приложения SPFx).
+#    Идемпотентно; данных в этих объектах нет. Список и страницы — в корзину сайта (восстановимы).
+# ===========================================================================
+Write-Host "9. Уборка прежнего интерфейса" -ForegroundColor Cyan
+$homePage = [string](Get-PnPHomePage)
+if ($homePage -notmatch 'Dashboard\.aspx$') {
+    # прежняя главная и её копии EN / RU — только когда главной уже стало приложение
+    foreach ($pg in @("SitePages/Dashboard.aspx", "SitePages/en/Dashboard.aspx", "SitePages/ru/Dashboard.aspx")) {
+        if (Get-PnPFile -Url $pg -ErrorAction SilentlyContinue) {
+            Remove-PnPFile -ServerRelativeUrl "$($web.ServerRelativeUrl.TrimEnd('/'))/$pg" -Recycle -Force | Out-Null
+            Write-Host "  - страница $pg (в корзину)"
+        }
+    }
+} else { Write-Host "  главная — ещё прежняя страница: сначала установите приложение (-Action app)" -ForegroundColor Yellow }
+
+# служебный список для диаграмм прежней главной
+$stats = Get-PnPList -Identity "Lists/PortfolioStats" -ErrorAction SilentlyContinue
+if ($stats) { Remove-PnPList -Identity $stats -Recycle -Force | Out-Null; Write-Host "  - список «$($stats.Title)» (в корзину)" }
+
+# вычисляемые поля карточки стандартной формы и «Пов'язані записи і доступ»
+foreach ($fn in @("pmKState", "pmKDates", "pmKMoney", "pmCardInfo")) {
+    if (Test-Field $P $fn) { Remove-PnPField -List $P -Identity $fn -Force; Write-Host "  - поле $fn" }
+}
+
+# оформление столбцов, представлений и разделы стандартных форм
+$pl = Fresh-List $P
+if (Get-PnPView -List $pl -Identity "Плитки" -ErrorAction SilentlyContinue) { Remove-PnPView -List $pl -Identity "Плитки" -Force; Write-Host "  - представление «Плитки»" }
+foreach ($l in @($P, $R, $K, $C, $M)) {
+    $l = Fresh-List $l
+    $n = 0
+    foreach ($fd in (Get-PnPField -List $l)) {
+        if ($fd.CustomFormatter) { Set-PnPField -List $l -Identity $fd.InternalName -Values @{ CustomFormatter = "" } | Out-Null; $n++ }
+    }
+    foreach ($vw in (Get-PnPView -List $l -Includes CustomFormatter)) {
+        if ($vw.CustomFormatter) { Set-PnPView -List $l -Identity $vw.Id -Values @{ CustomFormatter = "" } | Out-Null; $n++ }
+    }
+    foreach ($ct in (Get-PnPContentType -List $l)) {
+        $ctx = Get-PnPContext; $ctx.Load($ct); Invoke-PnPQuery
+        if ($ct.ClientFormCustomFormatter) { $ct.ClientFormCustomFormatter = ""; $ct.Update($false); Invoke-PnPQuery; $n++ }
+    }
+    if ($n) { Write-Host "  «$($l.Title)»: снято оформление ($n)" }
+}
+#endregion legacy-cleanup
 
 Write-Host "`nГотово: $siteUrl" -ForegroundColor Yellow
 Write-Host "Дальше:" -ForegroundColor Yellow

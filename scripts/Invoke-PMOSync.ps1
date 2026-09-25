@@ -59,7 +59,7 @@ $ErrorActionPreference = "Stop"
 $PMO_GROUP = "PMO-адміністратори"
 $L_PROJ = "Lists/Projects"; $L_REP = "Lists/StatusReports"; $L_RISK = "Lists/RisksIssues"
 $L_CHG  = "Lists/KeyChanges"; $L_CMT = "Lists/ProjectComments"
-$stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; reminders = 0; warnings = 0 }
+$stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; access = 0; reminders = 0; warnings = 0 }
 
 function Log([string]$m, [string]$c = "Gray") { Write-Host ("{0:HH:mm:ss} {1}" -f (Get-Date), $m) -ForegroundColor $c }
 function Warn([string]$m) { $stats.warnings++; Write-Warning $m }
@@ -81,6 +81,7 @@ $ROLE = @{
     read = ($roles | Where-Object RoleTypeKind -eq "Reader"        | Select-Object -First 1).Name
 }
 $OWNERS = (Get-PnPGroup -AssociatedOwnerGroup).Title
+$OWNER_EMAILS = @(Get-PnPGroupMember -Group $OWNERS | ForEach-Object { ([string]$_.Email).ToLowerInvariant() } | Where-Object { $_ })
 
 # ---------------------------------------------------------------------------
 # Значения полей
@@ -200,6 +201,10 @@ foreach ($r in $pending) {
     $rag     = CalcRag $r["srSchedule"] $r["srBudget"] $r["srResources"]
     $newer   = (-not $p.Values.pmLastUpdate) -or ($repDate -ge $p.Values.pmLastUpdate)
     $author  = Email $r["Author"]
+    # статус-отчёт меняет карточку, только если его сдал PM проекта (или владелец сайта); приложение других не пускает
+    if ($author -ne (Email $p.Item["pmManager"]) -and $OWNER_EMAILS -notcontains $author) {
+        Warn "Звіт #$($r.Id) від $author — не PM проєкту «$($p.Item["Title"])»: не застосовано"; $stats.reports--; continue
+    }
     $title   = [string]$r["Title"]
     $reason  = @($r["srKeyReason"], $title) | Where-Object { $_ } | Join-String -Separator " · "
     Log "  звіт #$($r.Id) ($repDate) -> «$($p.Item["Title"])»"
@@ -283,14 +288,26 @@ foreach ($pair in @(@($L_REP, $reports, "srProject", "srProjectType", "srProject
 # ---------------------------------------------------------------------------
 # 5. Права по иерархии
 # ---------------------------------------------------------------------------
-$MGR = @{}
+$MGR = @{}; $PEOPLE = @{}
+# человек из Entra ID: имя и должность для «Доступ до картки» (кэш на запуск)
+function Get-Person([string]$email) {
+    if (-not $email) { return @{ n = ""; j = "" } }
+    if (-not $PEOPLE.ContainsKey($email)) {
+        try {
+            $u = Invoke-PnPGraphMethod -Url ("v1.0/users/{0}?`$select=displayName,jobTitle" -f [uri]::EscapeDataString($email)) -Method Get
+            $PEOPLE[$email] = @{ n = [string]$u.displayName; j = [string]$u.jobTitle }
+        } catch { $PEOPLE[$email] = @{ n = ""; j = "" } }
+    }
+    return $PEOPLE[$email]
+}
 function Get-Chain([string]$email) {
     $chain = @(); $cur = $email; $depth = 0
     while ($cur -and $depth -lt $MaxManagerDepth) {
         if (-not $MGR.ContainsKey($cur)) {
             try {
-                $m = Invoke-PnPGraphMethod -Url ("v1.0/users/{0}/manager?`$select=mail,userPrincipalName" -f [uri]::EscapeDataString($cur)) -Method Get
+                $m = Invoke-PnPGraphMethod -Url ("v1.0/users/{0}/manager?`$select=mail,userPrincipalName,displayName,jobTitle" -f [uri]::EscapeDataString($cur)) -Method Get
                 $MGR[$cur] = ([string]($m.mail ?? $m.userPrincipalName)).ToLowerInvariant()
+                if ($MGR[$cur] -and -not $PEOPLE.ContainsKey($MGR[$cur])) { $PEOPLE[$MGR[$cur]] = @{ n = [string]$m.displayName; j = [string]$m.jobTitle } }
             } catch { $MGR[$cur] = "" }
         }
         $cur = $MGR[$cur]
@@ -299,15 +316,23 @@ function Get-Chain([string]$email) {
     }
     return $chain
 }
-function Get-Acl($item) {
+# Кто видит проект и что может (общие векторы tests/cases/acl.json). Править — только PM;
+# его руководители, собственник, стейкхолдеры и их руководители — просмотр и комментарии.
+# Порядок — как «Доступ до картки» в прототипе; первое вхождение человека побеждает. Архив — всем просмотр.
+function Get-Access([string]$pm, [string]$owner, [string[]]$st, [scriptblock]$chain, [bool]$archived) {
+    $list = [System.Collections.Generic.List[object]]::new(); $seen = @{}
+    $add = { param($e, $l, $r) if (-not $e -or $seen.ContainsKey($e)) { return }; $seen[$e] = 1; $list.Add([ordered]@{ e = $e; l = $l; r = $r }) }
+    & $add $pm "edit" "pm"
+    foreach ($m in (& $chain $pm)) { & $add $m "read" "pmMgr" }
+    & $add $owner "read" "owner"
+    foreach ($x in $st) { & $add $x "read" "stake" }
+    foreach ($x in @($owner) + @($st)) { if ($x) { foreach ($m in (& $chain $x)) { & $add $m "read" "mgr" } } }
+    if ($archived) { foreach ($a in $list) { $a.l = "read" } }
+    return , $list
+}
+function Get-Acl($access) {
     $acl = [ordered]@{}
-    $add = { param($e, $lvl) if (-not $e) { return }; if ($acl[$e] -ne "edit") { $acl[$e] = $lvl } }
-    $pm = Email $item["pmManager"]; $owner = Email $item["pmOwner"]; $st = Emails $item["pmStakeholders"]
-    & $add $pm "edit"
-    foreach ($m in (Get-Chain $pm)) { & $add $m "edit" }
-    & $add $owner "edit"
-    foreach ($s in $st) { & $add $s "read" }
-    foreach ($x in @($owner) + $st) { if ($x) { foreach ($m in (Get-Chain $x)) { & $add $m "read" } } }
+    foreach ($a in $access) { $acl[$a.e] = $a.l }
     return $acl
 }
 function Get-Hash($acl) {
@@ -318,7 +343,8 @@ function Get-Hash($acl) {
 function Set-ItemAcl([string]$list, [int]$id, $acl, [bool]$readOnly, [string]$aclHash) {
     $stats.acl++
     if ($DryRun) { Log ("    права: {0} #{1} -> {2}" -f $list, $id, (($acl.Keys | ForEach-Object { "$_($($acl[$_]))" }) -join ", ")); return }
-    Set-PnPListItemPermission -List $list -Identity $id -Group $PMO_GROUP -AddRole $ROLE.full -ClearExisting -SystemUpdate | Out-Null
+    # PMO видит все проекты, но правит, как все, только свои (как PM); владельцы сайта — полный доступ
+    Set-PnPListItemPermission -List $list -Identity $id -Group $PMO_GROUP -AddRole $ROLE.read -ClearExisting -SystemUpdate | Out-Null
     Set-PnPListItemPermission -List $list -Identity $id -Group $OWNERS -AddRole $ROLE.full -SystemUpdate | Out-Null
     foreach ($e in $acl.Keys) {
         $roleName = if ($readOnly -or $acl[$e] -eq "read") { $ROLE.read } else { $ROLE.edit }
@@ -330,11 +356,19 @@ function Set-ItemAcl([string]$list, [int]$id, $acl, [bool]$readOnly, [string]$ac
 
 Log "Права доступа…"
 $HASH = @{}; $ACLS = @{}
+$chainOf = { param($e) Get-Chain $e }
 foreach ($p in $PROJ.Values) {
-    $acl = Get-Acl $p.Item
-    # архивный проект — только просмотр (PMO и владельцы сайта сохраняют полный доступ, см. Set-ItemAcl)
-    if ($p.Values.pmStatus -eq "Архівний") { foreach ($k in @($acl.Keys)) { $acl[$k] = "read" } }
+    $access = Get-Access (Email $p.Item["pmManager"]) (Email $p.Item["pmOwner"]) (Emails $p.Item["pmStakeholders"]) $chainOf ($p.Values.pmStatus -eq "Архівний")
+    $acl = Get-Acl $access
     $h = Get-Hash $acl
+    # «Доступ до картки» в приложении: имя и должность из Entra ID, пишется только при изменении
+    $rows = @($access | Select-Object -First 200 | ForEach-Object { $who = Get-Person $_.e; [ordered]@{ e = $_.e; n = $who.n; j = $who.j; l = $_.l; r = $_.r } })
+    $json = ConvertTo-Json -InputObject ([ordered]@{ v = 1; more = [math]::Max(0, $access.Count - 200); people = $rows }) -Depth 5 -Compress
+    if ((Norm $p.Item["pmAccess"]) -ne $json) {
+        $stats.access++
+        if ($DryRun) { Log "  доступ «$($p.Item["Title"])»: $($access.Count) людей" }
+        else { Set-PnPListItem -List $L_PROJ -Identity $p.Item.Id -Values @{ pmAccess = $json } -UpdateType SystemUpdate | Out-Null }
+    }
     $HASH[$p.Item.Id] = $h; $ACLS[$p.Item.Id] = $acl
     if ($RebuildPermissions -or $p.Values.pmoAcl -ne $h) {
         Log "  проєкт «$($p.Item["Title"])»: $($acl.Count) користувачів"
@@ -393,5 +427,6 @@ if ($SendReminders) {
 }
 
 Log ("Правок картки: {0}" -f $stats.edits)
+Log ("Списков доступа обновлено: {0}" -f $stats.access)
 Log ("Готово. Звітів: {0}, записів у журнал: {1}, нових проєктів: {2}, коментарів: {3}, типів: {4}, прав: {5}, нагадувань: {6}, попереджень: {7}" -f `
     $stats.reports, $stats.changes, $stats.created, $stats.comments, $stats.types, $stats.acl, $stats.reminders, $stats.warnings) "Green"

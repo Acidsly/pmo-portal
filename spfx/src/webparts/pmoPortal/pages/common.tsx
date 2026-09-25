@@ -7,9 +7,9 @@ import { Plus } from '../components/Icons';
 
 /** Заголовок страницы (hero прототипа): название, подзаголовок, кнопка «Новий проєкт». */
 export const Hero: React.FC<{ title: string; sub?: string; withNew?: boolean }> = p => {
-  const { t, openForm } = React.useContext(AppCtx);
+  const { t, openForm, canCreate } = React.useContext(AppCtx);
   return <div className="hero"><div><h1 className="page-title">{p.title}</h1>{p.sub ? <p className="page-sub">{p.sub}</p> : null}</div>
-    {p.withNew ? <button className="btn primary" onClick={() => openForm('project')}><Plus />{t('newProject')}</button> : null}</div>;
+    {p.withNew && canCreate ? <button className="btn primary" onClick={() => openForm('project')}><Plus />{t('newProject')}</button> : null}</div>;
 };
 
 /** Выбор представления (viewSel прототипа). */

@@ -62,6 +62,7 @@ if ($Action -eq "seed") {
     # без сертификата Deploy-PMO.ps1 откроет браузер для входа (рекомендуется для прода)
     $a = Get-Auth $cfg.Deploy
     $a.TenantName = $cfg.TenantName; $a.SiteAlias = $cfg.SiteAlias; $a.Owner = $cfg.Owner
+    if ($Env -eq "test") { $a.Feedback = $true }   # отзывы фокус-группы — только на тесте
     & (Join-Path $PSScriptRoot "Deploy-PMO.ps1") @a
 } else {
     $a = Get-Auth $cfg.Sync

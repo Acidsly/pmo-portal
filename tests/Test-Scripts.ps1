@@ -28,14 +28,29 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
 Write-Host "3. Прежнее оформление SharePoint убрано (интерфейс — приложение SPFx)"
 $src = (Get-ChildItem (Join-Path $root "scripts") -Filter *.ps1 | ForEach-Object { Get-Content -Raw $_.FullName }) -join "`n"
+# блок уборки на развёрнутых сайтах упоминает прежние объекты по имени — его не считаем
+$src = [regex]::Replace($src, "(?s)#region legacy-cleanup.*?#endregion legacy-cleanup", "")
 foreach ($w in @("CustomFormatter", "Build-Dashboard", "PortfolioStats", "Update-Stats", "Update-CardInfo", "pmCardInfo", "ChartsOnly")) {
     if ($src -match [regex]::Escape($w)) { Bad "scripts/*.ps1 содержит «$w»" } else { Ok "нет «$w»" }
+}
+
+Write-Host "3a. Права и «Доступ до картки» (Get-Access, tests/cases/acl.json)"
+$syncAst = [System.Management.Automation.Language.Parser]::ParseInput((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")), [ref]$null, [ref]$null)
+$ga = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Get-Access" }, $true) | Select-Object -First 1
+Invoke-Expression $ga.Extent.Text
+foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/acl.json") | ConvertFrom-Json)) {
+    $mgrs = $c.managers
+    $chainFn = { param($e) $out = @(); $cur = $e; while ($cur -and $mgrs.$cur -and $out -notcontains $mgrs.$cur) { $cur = $mgrs.$cur; $out += $cur }; $out }.GetNewClosure()
+    $res = Get-Access $c.pm $c.owner @($c.stakeholders) $chainFn $c.archived
+    $got = ($res | ForEach-Object { "$($_.e) $($_.l) $($_.r)" }) -join "; "
+    $exp = ($c.expect | ForEach-Object { $_ -join " " }) -join "; "
+    if ($got -eq $exp) { Ok $c.name } else { Bad "$($c.name): $got — ожидалось $exp" }
 }
 
 Write-Host "4. Формула общего состояния (Invoke-PMOSync.ps1)"

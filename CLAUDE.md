@@ -19,6 +19,7 @@
 | `tests/Test-Scripts.ps1` | Проверки без доступа к SharePoint. Запускай после каждого изменения |
 | `prototype/pmo-prototype.html` | Прототип интерфейса — эталон UX ([docs/PROTOTYPE.md](docs/PROTOTYPE.md), скриншоты в `docs/img/`) |
 | `docs/SPEC.md` | Полное техническое задание — обновляй вместе с изменением требований |
+| `docs/USER-GUIDE.{uk,en,ru}.md` | Инструкция пользователя — источник «Довідки» в приложении. Меняешь интерфейс — меняй все три и запускай `scripts/spfx.sh npm run guide`; Jest сверяет, что разделы совпадают |
 | `docs/DEPLOYMENT.md` | Документация для людей: установка, доступ, синхронизация |
 | `CHANGELOG.md` | Журнал изменений — обновляй в каждом изменении |
 
@@ -63,10 +64,10 @@ pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action deploy -ConfirmProdu
 
 ## Модель данных (кратко)
 
-- **Проєкти** (`Lists/Projects`): `pmType`, `pmPriority`, `pmManager` (PM), `pmOwner`, `pmStakeholders` (несколько пользователей), `pmStatus`, `pmRAG`, `pmProgress`, `pmStart`, `pmGoLive`, `pmPlanEnd`, `pmForecastEnd`, `pmArchivedAt`, `pmBudget`, `pmActualCost`, `pmLastUpdate`, `pmLastReport`, `pmLastComment`, `pmLoop`, `pmCode`, `pmDepartment`, `pmDescription`; служебные `pmoAcl` и `pmEditLog` (правки карточки из приложения до переноса в журнал).
+- **Проєкти** (`Lists/Projects`): `pmType`, `pmPriority`, `pmManager` (PM), `pmOwner`, `pmStakeholders` (несколько пользователей), `pmStatus`, `pmRAG`, `pmProgress`, `pmStart`, `pmGoLive`, `pmPlanEnd`, `pmForecastEnd`, `pmArchivedAt`, `pmBudget`, `pmActualCost`, `pmLastUpdate`, `pmLastReport`, `pmLastComment`, `pmLoop`, `pmCode`, `pmDepartment`, `pmDescription`; служебные `pmoAcl`, `pmAccess` (кто и с каким правом — JSON для «Доступ до картки») и `pmEditLog` (правки карточки из приложения до переноса в журнал).
 - **Статус-звіти** (`Lists/StatusReports`): `srProject`, `srDate`, `srPeriod`, оценки `srSchedule` / `srBudget` / `srResources`, вычисляемое `srRAG`, ключевые показатели `srStatus` / `srType` / `srProgress` / `srStart` / `srGoLive` / `srPlanEnd` / `srForecastEnd` / `srActualCost`, `srKeyReason`, `srDone` / `srNext` / `srIssues`, `srDecision` / `srDecisionText`, копии `srProjectType` / `srProjectPriority`, служебные `srApplied`, `pmoAcl`.
 - **Ризики та проблеми** (`Lists/RisksIssues`): `riProject`, `riType`, `riProbability` 1–5, `riImpact` 1–5, вычисляемое `riScore` = P × I, `riOwner`, `riStatus`, `riDue`, `riMitigation`, копии `riProjectType` / `riProjectPriority`.
-- **Зміни показників** (`Lists/KeyChanges`) — журнал; **Коментарі** (`Lists/ProjectComments`). Остатки прежнего интерфейса на уже развёрнутых сайтах (`Dashboard.aspx`, `Lists/PortfolioStats`, `pmKState` / `pmKDates` / `pmKMoney` / `pmCardInfo`, форматирование столбцов) не обслуживаются — см. конец `docs/DEPLOYMENT.md`; в код их не возвращай.
+- **Зміни показників** (`Lists/KeyChanges`) — журнал; **Коментарі** (`Lists/ProjectComments`); **Відгуки** (`Lists/Feedback`, только на тесте, `Deploy-PMO.ps1 -Feedback`): `fbText`, `fbScreen`, `fbDevice`, `fbStatus` (Новий / Прийнято / Відхилено / Зроблено), `fbAnswer`, скриншоты — вложения; каждый видит только свои, PMO — все. Остатки прежнего интерфейса на уже развёрнутых сайтах (`Dashboard.aspx`, `Lists/PortfolioStats`, `pmKState` / `pmKDates` / `pmKMoney` / `pmCardInfo`, форматирование столбцов) убирает раздел 9 `Deploy-PMO.ps1` (`#region legacy-cleanup`) — см. конец `docs/DEPLOYMENT.md`; в остальной код их не возвращай.
 
 ## Бизнес-правила
 
@@ -75,7 +76,7 @@ pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action deploy -ConfirmProdu
 - Статус «Завершено» в отчёте → проект получает «Архівний» и дату архивации, уходит в архив.
 - Общее состояние отчёта — **худшая из трёх оценок**: хотя бы одна красная → Червоний; иначе хотя бы одна жёлтая → Жовтий; иначе Зелений. Состояние проекта = состояние последнего отчёта.
 - Оценка риска = вероятность × влияние: 15–25 высокий, 8–14 средний, 1–7 низкий.
-- Доступ: PM, руководители PM (Entra ID), собственник — редактирование; стейкхолдеры и руководители собственника и стейкхолдеров — просмотр и комментарии; группа `PMO-адміністратори` — всё. Проект в архиве — только просмотр (кроме PMO и владельцев сайта). Права выдаёт `Invoke-PMOSync.ps1`.
+- Доступ: править проект, отчёты и риски — **только PM**; руководители PM (Entra ID), собственник, стейкхолдеры и их руководители — просмотр и комментарии; `PMO-адміністратори` — просмотр всех проектов и создание новых; владельцы сайта — всё. Проект в архиве — только просмотр для всех. Права и `pmAccess` выдаёт `Invoke-PMOSync.ps1` (`Get-Access`, векторы `tests/cases/acl.json`).
 - Порядок колонок во всех списках: стратегический (щит с мечом), приоритет, название, остальные.
 
 ## Как проверять изменения прототипа

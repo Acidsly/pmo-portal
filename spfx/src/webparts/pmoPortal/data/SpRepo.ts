@@ -2,12 +2,16 @@
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { Project, StatusReport, Risk, Comment, ChangeEntry, Person } from './types';
 import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, REPORT_SELECT, REPORT_EXPAND, RISK_SELECT, RISK_EXPAND,
-  COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND } from './map';
+  COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, canAdd } from './map';
 import { applyPending } from '../logic/overlay';
 
-export type WritableList = 'Projects' | 'StatusReports' | 'RisksIssues' | 'ProjectComments';
+export type WritableList = 'Projects' | 'StatusReports' | 'RisksIssues' | 'ProjectComments' | 'Feedback';
 
-export interface PortalData { projects: Project[]; reports: StatusReport[]; risks: Risk[]; comments: Comment[]; changes: ChangeEntry[]; }
+export interface PortalData { projects: Project[]; reports: StatusReport[]; risks: Risk[]; comments: Comment[]; changes: ChangeEntry[];
+  /** Может ли пользователь заводить проекты (право добавления в «Проєкти» есть у PMO). */
+  canCreate: boolean;
+  /** На сайте есть список «Відгуки» (тест с фокус-группой) — показывается кнопка «Відгук». */
+  feedback: boolean; }
 
 /** Чтение списков портала от имени пользователя: видны только проекты, которые ему открыла синхронизация. */
 export class SpRepo {
@@ -28,16 +32,25 @@ export class SpRepo {
     return out;
   }
 
+  private async listPerms(list: string): Promise<{ High: string; Low: string } | undefined> {
+    const listUrl = `${this.webRelUrl.replace(/\/$/, '')}/Lists/${list}`;
+    const res = await this.http.get(`${this.webUrl}/_api/web/GetList(@u)?@u='${encodeURIComponent(listUrl)}'&$select=EffectiveBasePermissions`,
+      SPHttpClient.configurations.v1, { headers: { Accept: 'application/json;odata=nometadata' } });
+    return res.ok ? (await res.json()).EffectiveBasePermissions : undefined;
+  }
+
   async loadAll(): Promise<PortalData> {
-    const [p, r, k, c, h] = await Promise.all([
+    const [p, r, k, c, h, perm, fbPerm] = await Promise.all([
       this.items('Projects', PROJECT_SELECT, PROJECT_EXPAND),
       this.items('StatusReports', REPORT_SELECT, REPORT_EXPAND),
       this.items('RisksIssues', RISK_SELECT, RISK_EXPAND),
       this.items('ProjectComments', COMMENT_SELECT, COMMENT_EXPAND),
-      this.items('KeyChanges', CHANGE_SELECT, CHANGE_EXPAND)]);
+      this.items('KeyChanges', CHANGE_SELECT, CHANGE_EXPAND),
+      this.listPerms('Projects').catch(() => undefined),
+      this.listPerms('Feedback').catch(() => undefined)]);
     const reports = r.map(mapReport);
     return { projects: p.map(mapProject).map(x => applyPending(x, reports)), reports, risks: k.map(mapRisk),
-      comments: c.map(mapComment), changes: h.map(mapChange) };
+      comments: c.map(mapComment), changes: h.map(mapChange), canCreate: canAdd(perm), feedback: canAdd(fbPerm) };
   }
 
   private titles: Record<string, Promise<string>> = {};
@@ -78,6 +91,13 @@ export class SpRepo {
     const res = await this.http.post(`${this.listItems(list)}(${id})?${this.listQuery(list)}`, SPHttpClient.configurations.v1,
       { headers: { ...SpRepo.JSON_HEADERS, 'X-HTTP-Method': 'MERGE', 'IF-MATCH': '*' }, body: JSON.stringify(body) });
     await this.check(res, `${list} #${id}`);
+  }
+
+  /** Вложение к элементу (скриншот отзыва). */
+  async attach(list: WritableList, id: number, name: string, file: Blob): Promise<void> {
+    const res = await this.http.post(`${this.listItems(list)}(${id})/AttachmentFiles/add(FileName='${encodeURIComponent(name.replace(/'/g, ''))}')?${this.listQuery(list)}`,
+      SPHttpClient.configurations.v1, { headers: { Accept: 'application/json;odata=nometadata' }, body: file });
+    await this.check(res, `${list} #${id}: ${name}`);
   }
 
   /** Id пользователя на сайте (добавляет его на сайт при первом выборе) — для полей «Користувач». */
