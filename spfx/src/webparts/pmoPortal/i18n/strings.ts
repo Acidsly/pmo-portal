@@ -1285,6 +1285,11 @@ export const EXTRA: Record<string, L3> = {
   "Feedback",
   "Отзыв"
  ],
+ "help": [
+  "Довідка",
+  "Help",
+  "Справка"
+ ],
  "fbTitle": [
   "Відгук про портал",
   "Portal feedback",

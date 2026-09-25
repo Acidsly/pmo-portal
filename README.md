@@ -50,6 +50,7 @@
 | `prototype/pmo-prototype.html` | Интерактивный прототип — эталон интерфейса |
 | `docs/SPEC.md` | Техническое задание |
 | `docs/PROTOTYPE.md` | Прототип: как открыть, скриншоты экранов |
+| `docs/USER-GUIDE.uk.md`, `.en.md`, `.ru.md` | Инструкция пользователя на трёх языках; она же — «Довідка» в приложении (`scripts/spfx.sh npm run guide`) |
 | `docs/DEPLOYMENT.md` | Установка, синхронизация, доступ, расписание |
 | `docs/SETUP-CLAUDE-CODE.md` | Подключение проекта к Claude Code |
 | `docs/superpowers/` | Проектное решение по приложению и планы этапов |

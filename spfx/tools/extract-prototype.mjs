@@ -17,6 +17,7 @@ const EXTRA = {
   pendingNote: ['Оновлюється зі статус-звіту', 'Updating from a status report', 'Обновляется из статус-отчёта'],
   noCreate: ['Нові проєкти створює PMO. Зверніться до групи «PMO — адміністратори».', 'New projects are created by PMO. Contact the “PMO — administrators” group.', 'Новые проекты создаёт PMO. Обратитесь к группе «PMO — администраторы».'],
   feedback: ['Відгук', 'Feedback', 'Отзыв'],
+  help: ['Довідка', 'Help', 'Справка'],
   fbTitle: ['Відгук про портал', 'Portal feedback', 'Отзыв о портале'],
   fbList: ['Відгуки', 'Feedback', 'Отзывы'],
   fbHint: ['Що не так або що покращити? Опишіть, що ви робили і що очікували побачити. Екран, з якого ви відкрили відгук, і пристрій додаються самі.', 'What is wrong or what could be better? Describe what you did and what you expected. The screen you opened this from and your device are added automatically.', 'Что не так или что улучшить? Опишите, что вы делали и что ожидали увидеть. Экран, с которого вы открыли отзыв, и устройство добавляются сами.'],

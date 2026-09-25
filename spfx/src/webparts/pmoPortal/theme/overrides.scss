@@ -104,3 +104,18 @@
   @media (pointer: coarse) { .pmo-app .fb-paste { display: none; } .pmo-app .hbtn { min-height: 40px; } .pmo-app .hbtn.round { width: 40px; } }
   @media (max-width: 600px) { .pmo-app .hbtn .hlabel { display: none; } }
 }
+
+// «Довідка»
+:global {
+  .pmo-app .help { font-size: 15px; line-height: 1.55; }
+  .pmo-app .help h3 { font-size: 17px; font-weight: 600; margin: 26px 0 8px; }
+  .pmo-app .help h3:first-child { margin-top: 4px; }
+  .pmo-app .help p { margin: 0 0 10px; }
+  .pmo-app .help ul, .pmo-app .help ol { margin: 0 0 10px; padding-left: 22px; }
+  .pmo-app .help li { margin: 4px 0; }
+  .pmo-app .help code { background: var(--bg-alt); border-radius: 6px; padding: 1px 6px; font-size: 13px; word-break: break-all; }
+  .pmo-app .help table { border-collapse: collapse; font-size: 14px; margin: 4px 0 12px; width: 100%; }
+  @media (max-width: 600px) { .pmo-app .help table { min-width: 480px; } }
+  .pmo-app .help th, .pmo-app .help td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  .pmo-app .help th { color: var(--text-2); font-weight: 600; font-size: 13px; }
+}
