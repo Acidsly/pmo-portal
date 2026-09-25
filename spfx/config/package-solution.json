@@ -3,7 +3,7 @@
   "solution": {
     "name": "pmo-portal",
     "id": "e9537b05-6a88-44af-b9bb-69d8c9fec495",
-    "version": "1.2.2.0",
+    "version": "1.2.3.1",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
@@ -30,7 +30,7 @@
         "title": "Портфель проєктів",
         "description": "Портфель проєктів",
         "id": "1103c1d7-c2ce-48c2-b787-a831e1083b88",
-        "version": "1.2.2.0"
+        "version": "1.2.3.1"
       }
     ]
   },

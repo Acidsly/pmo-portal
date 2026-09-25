@@ -16,3 +16,8 @@
   .pmo-app .picker-list .pop-row { width: 100%; }
   .pmo-app .picker-list .pop-row.on { background: var(--bg-hover); }
 }
+
+// Воронка в заголовке таблицы: прототип задаёт ширину 14px и не обнуляет браузерные отступы кнопки — иконка вылезала из плашки
+:global {
+  .pmo-app .dt th .fbtn { padding: 0; width: 18px; min-width: 18px; height: 18px; }
+}

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
-import { isArch, byOrder } from '../logic/status';
+import { isArch, newestFirst } from '../logic/status';
 import { PV, projectView } from '../logic/views';
 import { DataTable } from '../components/DataTable';
 import { projectDefs } from '../components/defs';
@@ -19,7 +19,7 @@ export const Projects: React.FC<{ data: PortalData }> = ({ data }) => {
   const pick = (m: 'list' | 'tiles'): void => { setMode(m); try { localStorage.setItem(MODE, m); } catch { /* нет хранилища */ } };
   const x = useDefsCtx(data);
   const vis = data.projects.filter(p => !isArch(p.status));
-  const rows = vis.filter(p => projectView(c.views.projects, p, c.today, c.me)).sort(byOrder);
+  const rows = vis.filter(p => projectView(c.views.projects, p, c.today, c.me)).sort(newestFirst);   // новые сверху
   const modeSw = <span className="seg" role="group">
     <button aria-pressed={mode === 'list'} onClick={() => pick('list')}><ListIco />{t('list')}</button>
     <button aria-pressed={mode === 'tiles'} onClick={() => pick('tiles')}><TilesIco />{t('tiles')}</button></span>;

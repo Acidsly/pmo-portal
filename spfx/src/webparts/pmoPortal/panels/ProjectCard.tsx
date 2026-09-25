@@ -5,7 +5,7 @@ import { Project, Person } from '../data/types';
 import { calcRag } from '../logic/rag';
 import { isArch, isPlanLate, forecastDelta, budgetUse, budgetLevel, freshness, riskScore } from '../logic/status';
 import { ofProject } from '../logic/views';
-import { toEvents } from '../logic/changes';
+import { toEvents, editLogEvents } from '../logic/changes';
 import { Avatar, RagPill, RagDot, Progress, Score, fmtDate, money, freshColor } from '../components/Bits';
 import { Plus } from '../components/Icons';
 import { commentBody } from '../data/write';
@@ -48,7 +48,10 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
   const last8 = reps.slice(0, 8).reverse();
   const risks = ofProject(data.risks, p.id).slice().sort((a, b) => riskScore(b.probability, b.impact) - riskScore(a.probability, a.impact));
   const cms = ofProject(data.comments, p.id).slice().sort((a, b) => (a.created < b.created ? 1 : -1));
-  const events = toEvents(ofProject(data.changes, p.id));
+  // журнал синхронизации + ещё не перенесённые отчёты и правки карточки — видны сразу, как в прототипе
+  const people = [p.manager, p.owner, ...p.stakeholders].filter(Boolean) as Person[];
+  const events = [...(p.pendingEvents || []), ...editLogEvents(p.editLog || '', people), ...toEvents(ofProject(data.changes, p.id))]
+    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
   const edit = p.canEdit && !isArch(p.status);
   const dev = forecastDelta(p.planEnd, p.forecastEnd);
   const use = budgetUse(p.budget, p.actualCost);
@@ -102,7 +105,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
     <div className="sec"><h3>{t('secChanges')}</h3>
       {events.length ? <div className="cmts">{(showCh ? events : events.slice(0, 3)).map(c =>
         <div key={c.id} className="chg">
-          <div className="chg-h">{c.who ? <><Avatar name={c.who.name} /><b>{c.who.name}</b></> : null}<span className="muted">{fmtDT(c.date)}</span>
+          <div className="chg-h">{c.who ? <><Avatar name={c.who.name} /><b>{c.who.name}</b></> : null}<span className="muted">{c.date.length === 10 ? fmtDate(c.date) : fmtDT(c.date)}</span>
             <span className={'chg-k chg-' + c.kind}>{t(kindL[c.kind] || 'kEdit')}</span></div>
           {c.diffs.length ? <div className="diffs">{c.diffs.map((d, i) => <div key={i} className="diff"><span className="df">{fl(d.f)}</span>
             <span className="dv"><s>{d.from || '—'}</s><span className="arr">→</span>{d.to || '—'}</span></div>)}</div> : null}

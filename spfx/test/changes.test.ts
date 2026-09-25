@@ -15,3 +15,13 @@ test('разные минуты, причины или виды — разные
   expect(ev.map(e => e.kind)).toEqual(['report', 'report', 'create']);
   expect(ev[2].diffs).toEqual([]);
 });
+
+import { editLogEvents } from '../src/webparts/pmoPortal/logic/changes';
+test('необработанные правки карточки (pmEditLog) — события «Редагування картки»', () => {
+  const log = JSON.stringify({ entries: [{ when: '2026-09-24T20:03:14Z', who: 'j.pochobut@eclectic.group', reason: '', diffs: [{ f: 'prio', from: '2 — Середній', to: '1 — Високий' }] }] });
+  const ev = editLogEvents(log, [{ id: 3, name: 'Yurii', email: 'J.Pochobut@eclectic.group' }]);
+  expect(ev).toEqual([{ id: -1, date: '2026-09-24T20:03:14Z', who: { id: 3, name: 'Yurii', email: 'J.Pochobut@eclectic.group' }, kind: 'edit', reason: '',
+    diffs: [{ f: 'prio', from: '2 — Середній', to: '1 — Високий' }] }]);
+  expect(editLogEvents('', [])).toEqual([]);
+  expect(editLogEvents('{битый', [])).toEqual([]);
+});

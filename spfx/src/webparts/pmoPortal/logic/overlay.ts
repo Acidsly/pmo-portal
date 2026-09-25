@@ -1,14 +1,19 @@
-import { Project, StatusReport } from '../data/types';
+import { Project, StatusReport, ChangeEvent } from '../data/types';
 import { calcRag } from './rag';
 
 const byDateThenId = (a: StatusReport, b: StatusReport): number => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id);
+
+const SHOWN: [keyof Project, string][] = [['status', 'status'], ['rag', 'rag'], ['type', 'type'], ['progress', 'progress'],
+  ['start', 'start'], ['goLive', 'golive'], ['planEnd', 'plan'], ['forecastEnd', 'fc']];
 
 /** Накладывает неприменённые отчёты (srApplied = нет) на карточку — те же правила, что шаг 1 Invoke-PMOSync.ps1. */
 export function applyPending(project: Project, reports: StatusReport[]): Project {
   const pending = reports.filter(r => r.projectId === project.id && !r.applied).sort(byDateThenId);
   if (!pending.length) return project;
   const p: Project = { ...project, pending: true };
+  const events: ChangeEvent[] = [];
   for (const r of pending) {
+    const before = { ...p };
     if (r.status) p.status = r.status;
     if (r.type) p.type = r.type;
     if (r.progress !== null) p.progress = r.progress;
@@ -24,7 +29,21 @@ export function applyPending(project: Project, reports: StatusReport[]): Project
       if (rag) p.rag = rag;
       p.lastUpdate = r.date; p.lastReport = r.title;
     }
+    // событие истории — как строки журнала синхронизации (поля DISPLAY, значения — как Human)
+    const diffs = SHOWN.filter(([k]) => String(before[k] || '') !== String(p[k] || ''))
+      .map(([k, f]) => ({ f, from: human(k, String(before[k] || '')), to: human(k, String(p[k] || '')) }));
+    if (diffs.length) events.push({ id: -r.id, date: r.date, who: r.author, kind: 'report', reason: [r.keyReason, r.title].filter(Boolean).join(' · '), diffs });
   }
+  p.pendingEvents = events;
   return p;
+}
+
+// ключевые показатели журнала (DISPLAY синхронизации): поле модели -> ключ FLD прототипа
+/** Значение для истории — как Human синхронизации: даты dd.MM.yyyy, % — с «%», пусто — «—». */
+function human(k: keyof Project, v: string): string {
+  if (!v) return '—';
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+  if (m) return `${m[3]}.${m[2]}.${m[1]}`;
+  return k === 'progress' ? v + '%' : v;
 }
 export { byDateThenId };

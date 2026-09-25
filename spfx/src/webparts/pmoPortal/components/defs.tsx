@@ -101,7 +101,8 @@ export function reportDefs(x: DefsCtx): TableDefs<StatusReport> {
     progress: { label: fl('progress'), cell: r => (r.progress === null ? <Muted /> : <Progress v={r.progress} />), sort: r => r.progress },
     status: { label: t('cStatusR'), cell: r => (r.status ? (r.status === 'Завершено' ? 'Архівний' : r.status) : <Muted />), sort: r => r.status, filter: r => r.status },
     author: { label: fl('rAuthor'), cell: r => <PersonCell p={r.author} />, sort: r => (r.author ? r.author.name : ''), filter: r => (r.author ? r.author.name : '') },
-    decision: { label: t('cDecFlag'), cell: r => (r.decision ? <span className="flag">{t('yes')}</span> : <Muted />), sort: r => (r.decision ? 0 : 1), filter: r => (r.decision ? 'yes' : 'no'),
+    // флажок «Потрібне рішення керівництва»; при наведении — какое решение нужно
+    decision: { label: t('needDecision'), cell: r => (r.decision ? <span className="flag" title={r.decisionText}>{t('yes')}</span> : <Muted />), sort: r => (r.decision ? 0 : 1), filter: r => (r.decision ? 'yes' : 'no'),
       flabel: v => (v === 'yes' ? t('yes') : t('no')) },
     decText: { label: t('cDecText'), cell: r => clamp(r.decisionText), sort: r => r.decisionText, cls: 'w-wide' }
   };

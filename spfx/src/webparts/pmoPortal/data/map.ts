@@ -8,13 +8,13 @@ const people = (...fields: string[]): string[] => fields.reduce<string[]>((a, f)
 
 export const PROJECT_SELECT = ['Id', 'Title', 'pmCode', 'pmType', 'pmPriority', 'pmDepartment', 'pmStatus', 'pmRAG', 'pmProgress',
   'pmStart', 'pmGoLive', 'pmPlanEnd', 'pmForecastEnd', 'pmArchivedAt', 'pmBudget', 'pmActualCost', 'pmLastUpdate', 'pmLastReport',
-  'pmLastComment', 'pmLoop', 'pmDescription', 'pmEditLog', 'EffectiveBasePermissions', ...people('pmManager', 'pmOwner', 'pmStakeholders')].join(',');
+  'pmLastComment', 'pmLoop', 'pmDescription', 'pmEditLog', 'Created', 'EffectiveBasePermissions', ...people('pmManager', 'pmOwner', 'pmStakeholders')].join(',');
 export const PROJECT_EXPAND = 'pmManager,pmOwner,pmStakeholders';
 export const REPORT_SELECT = ['Id', 'Title', 'srProjectId', 'srDate', 'srPeriod', 'srSchedule', 'srBudget', 'srResources', 'srStatus', 'srType',
   'srProgress', 'srStart', 'srGoLive', 'srPlanEnd', 'srForecastEnd', 'srActualCost', 'srKeyReason', 'srDone', 'srNext', 'srIssues',
-  'srDecision', 'srDecisionText', 'srApplied', ...people('Author')].join(',');
+  'srDecision', 'srDecisionText', 'srApplied', 'Created', ...people('Author')].join(',');
 export const REPORT_EXPAND = 'Author';
-export const RISK_SELECT = ['Id', 'Title', 'riProjectId', 'riType', 'riProbability', 'riImpact', 'riStatus', 'riDue', 'riMitigation',
+export const RISK_SELECT = ['Id', 'Title', 'riProjectId', 'riType', 'riProbability', 'riImpact', 'riStatus', 'riDue', 'riMitigation', 'Created',
   ...people('riOwner')].join(',');
 export const RISK_EXPAND = 'riOwner';
 
@@ -38,7 +38,7 @@ export function mapProject(r: any): Project {
     start: dateOnly(r.pmStart), goLive: dateOnly(r.pmGoLive), planEnd: dateOnly(r.pmPlanEnd), forecastEnd: dateOnly(r.pmForecastEnd),
     archivedAt: dateOnly(r.pmArchivedAt), budget: n(r.pmBudget), actualCost: n(r.pmActualCost), lastUpdate: dateOnly(r.pmLastUpdate),
     lastReport: s(r.pmLastReport), lastComment: s(r.pmLastComment), loop: r.pmLoop ? s(r.pmLoop.Url) : '', description: s(r.pmDescription),
-    canEdit: canEdit(r.EffectiveBasePermissions), pending: false, editLog: s(r.pmEditLog) };
+    canEdit: canEdit(r.EffectiveBasePermissions), pending: false, editLog: s(r.pmEditLog), created: s(r.Created) };
 }
 
 export function mapReport(r: any): StatusReport {
@@ -47,12 +47,12 @@ export function mapReport(r: any): StatusReport {
     status: s(r.srStatus), type: s(r.srType), progress: nn(r.srProgress), start: dateOnly(r.srStart), goLive: dateOnly(r.srGoLive),
     planEnd: dateOnly(r.srPlanEnd), forecastEnd: dateOnly(r.srForecastEnd), actualCost: nn(r.srActualCost), keyReason: s(r.srKeyReason),
     title: s(r.Title), done: s(r.srDone), next: s(r.srNext), issues: s(r.srIssues), decision: r.srDecision === true,
-    decisionText: s(r.srDecisionText), applied: r.srApplied === true, author: mapPerson(r.Author) };
+    decisionText: s(r.srDecisionText), applied: r.srApplied === true, author: mapPerson(r.Author), created: s(r.Created) };
 }
 
 export function mapRisk(r: any): Risk {
   return { id: r.Id, projectId: r.riProjectId, title: s(r.Title), type: s(r.riType), probability: n(r.riProbability), impact: n(r.riImpact),
-    owner: mapPerson(r.riOwner), status: s(r.riStatus), due: dateOnly(r.riDue), mitigation: s(r.riMitigation) };
+    owner: mapPerson(r.riOwner), status: s(r.riStatus), due: dateOnly(r.riDue), mitigation: s(r.riMitigation), created: s(r.Created) };
 }
 
 export const COMMENT_SELECT = ['Id', 'cmProjectId', 'cmText', 'Created', ...people('Author')].join(',');
