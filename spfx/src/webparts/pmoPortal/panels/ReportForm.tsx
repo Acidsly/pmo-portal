@@ -6,7 +6,7 @@ import { isActive, byOrder } from '../logic/status';
 import { calcRag, Rag } from '../logic/rag';
 import { ReportDraft, reportFromProject, keyChanged, validateReport } from '../logic/forms';
 import { reportBody } from '../data/write';
-import { Frow, RagPick, SegPick, DateIn, Err } from '../components/fields';
+import { Frow, RagPick, SegPick, DateIn, Err, Opts } from '../components/fields';
 import { RagDot } from '../components/Bits';
 
 const REPORT_STATUSES = ['Ініціація', 'Планування', 'Реалізація', 'Призупинено', 'Скасовано'];
@@ -51,7 +51,7 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; onCance
       <div className="fgrid frow">
         <div><label className="t" htmlFor="f-d">{fl('rDate')} *</label><DateIn id="f-d" value={d.date} onChange={v => set({ date: v })} /></div>
         <div><label className="t" htmlFor="f-per">{fl('rPeriod')}</label>
-          <select id="f-per" value={d.period} onChange={e => set({ period: e.target.value })}>{PERIODS.map(x => <option key={x}>{x}</option>)}</select></div>
+          <select id="f-per" value={d.period} onChange={e => set({ period: e.target.value })}><Opts values={PERIODS} /></select></div>
         <div />
       </div>
       <div className="dims">
@@ -68,7 +68,7 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; onCance
         <div className="fgrid2 frow">
           <div><label className="t" htmlFor="f-st">{fl('status')}</label>
             <select id="f-st" value={d.status} onChange={e => set({ status: e.target.value })}>
-              {REPORT_STATUSES.map(x => <option key={x} value={x}>{x}</option>)}<option value="Завершено">{t('completeArch')}</option></select></div>
+              <Opts values={REPORT_STATUSES} /><option value="Завершено">{t('completeArch')}</option></select></div>
           <div><label className="t" htmlFor="f-pr">{fl('progress')}</label>
             <input type="number" id="f-pr" min={0} max={100} value={d.progress} onChange={e => set({ progress: Number(e.target.value) || 0 })} /></div>
         </div>

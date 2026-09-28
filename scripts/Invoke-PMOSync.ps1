@@ -67,10 +67,19 @@ function Warn([string]$m) { $stats.warnings++; Write-Warning $m }
 # ---------------------------------------------------------------------------
 # Подключение
 # ---------------------------------------------------------------------------
-if ($ManagedIdentity)      { Connect-PnPOnline -Url $SiteUrl -ManagedIdentity }
-elseif ($Thumbprint)       { Connect-PnPOnline -Url $SiteUrl -ClientId $ClientId -Tenant $Tenant -Thumbprint $Thumbprint }
-elseif ($CertificatePath)  { Connect-PnPOnline -Url $SiteUrl -ClientId $ClientId -Tenant $Tenant -CertificatePath $CertificatePath -CertificatePassword $CertificatePassword }
-else { throw "Укажите -Thumbprint, -CertificatePath или -ManagedIdentity (синхронизация работает от имени приложения)." }
+if (-not ($ManagedIdentity -or $Thumbprint -or $CertificatePath)) { throw "Укажите -Thumbprint, -CertificatePath или -ManagedIdentity (синхронизация работает от имени приложения)." }
+# вход с одной повторной попыткой: сразу после пробуждения компьютера часы могут быть ещё не сверены (AADSTS700024)
+for ($try = 1; $try -le 2; $try++) {
+    try {
+        if ($ManagedIdentity)      { Connect-PnPOnline -Url $SiteUrl -ManagedIdentity }
+        elseif ($Thumbprint)       { Connect-PnPOnline -Url $SiteUrl -ClientId $ClientId -Tenant $Tenant -Thumbprint $Thumbprint }
+        elseif ($CertificatePath)  { Connect-PnPOnline -Url $SiteUrl -ClientId $ClientId -Tenant $Tenant -CertificatePath $CertificatePath -CertificatePassword $CertificatePassword }
+        break
+    } catch {
+        if ($try -eq 2) { throw }
+        Write-Warning "Вход не удался ($($_.Exception.Message.Split([Environment]::NewLine)[0])) — повтор через 60 с"; Start-Sleep -Seconds 60
+    }
+}
 Log "Подключено: $SiteUrl" "Cyan"
 if ($DryRun) { Log "Режим DryRun: изменения не записываются" "Yellow" }
 
@@ -385,8 +394,10 @@ $children = @(
 foreach ($c in $children) {
     foreach ($it in $c[1]) {
         $lk = $it[$c[2]]; if (-not $lk -or -not $HASH.ContainsKey($lk.LookupId)) { continue }
-        $h = $HASH[$lk.LookupId]
-        if ($RebuildPermissions -or (Norm $it["pmoAcl"]) -ne $h) { Set-ItemAcl $c[0] $it.Id $ACLS[$lk.LookupId] $c[3] $h }
+        # применённый статус-отчёт — только для чтения всем (история не переписывается); отметка «R» в хэше
+        $ro = $c[3] -or ($c[0] -eq $L_REP -and $it["srApplied"] -eq $true)
+        $h = $HASH[$lk.LookupId] + $(if ($c[0] -eq $L_REP -and $ro) { "R" } else { "" })
+        if ($RebuildPermissions -or (Norm $it["pmoAcl"]) -ne $h) { Set-ItemAcl $c[0] $it.Id $ACLS[$lk.LookupId] $ro $h }
     }
 }
 

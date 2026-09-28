@@ -6,7 +6,7 @@ import { isActive, isArch, byOrder, riskScore } from '../logic/status';
 import { scoreBucket } from '../logic/views';
 import { RiskDraft, validateRisk } from '../logic/forms';
 import { riskBody } from '../data/write';
-import { Frow, SegPick, DateIn, Err, PeoplePicker } from '../components/fields';
+import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts } from '../components/fields';
 import { Score } from '../components/Bits';
 
 const TYPES = ['Ризик', 'Проблема'];
@@ -72,7 +72,7 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
         <div><label className="t" htmlFor="k-owner">{fl('kOwner')}</label>
           <PeoplePicker id="k-owner" multi={false} disabled={!edit} value={d.owner ? [d.owner] : []} search={q => c.repo.searchPeople(q)} onChange={v => set({ owner: v[0] || null })} /></div>
         <div><label className="t" htmlFor="k-status">{fl('kStatus')}</label>
-          <select id="k-status" disabled={!edit} value={d.status} onChange={e => set({ status: e.target.value })}>{STATUSES.map(x => <option key={x}>{x}</option>)}</select></div>
+          <select id="k-status" disabled={!edit} value={d.status} onChange={e => set({ status: e.target.value })}><Opts values={STATUSES} /></select></div>
         <div><label className="t" htmlFor="k-due">{fl('kDue')}</label><DateIn id="k-due" disabled={!edit} value={d.due} onChange={v => set({ due: v })} /></div>
       </div>
       <Frow label={t('kMit')} htmlFor="k-mit"><textarea id="k-mit" disabled={!edit} value={d.mitigation} onChange={e => set({ mitigation: e.target.value })} /></Frow>

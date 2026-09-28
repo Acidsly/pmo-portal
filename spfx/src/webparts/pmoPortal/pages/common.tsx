@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { tv } from '../i18n/values';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
 import { Project } from '../data/types';
@@ -16,7 +17,7 @@ export const Hero: React.FC<{ title: string; sub?: string; withNew?: boolean }> 
 export function ViewSel<V extends string>(p: { views: Record<V, string>; value: V; onChange(v: V): void }): JSX.Element {
   const { t } = React.useContext(AppCtx);
   return <label className="viewsel" title={t('viewsNote')}>{t('view')}
-    <select value={p.value} onChange={e => p.onChange(e.target.value as V)}>{(Object.keys(p.views) as V[]).map(k => <option key={k} value={k}>{p.views[k]}</option>)}</select></label>;
+    <select value={p.value} onChange={e => p.onChange(e.target.value as V)}>{(Object.keys(p.views) as V[]).map(k => <option key={k} value={k}>{tv(p.views[k])}</option>)}</select></label>;
 }
 
 export function useDefsCtx(data: PortalData): DefsCtx {

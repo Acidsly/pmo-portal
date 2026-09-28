@@ -8,7 +8,7 @@ const MAX_BYTES = 10 * 1024 * 1024;
 interface Shot { blob: Blob; url: string; name: string; }
 
 /** Отзыв фокус-группы: текст, экран (адрес, с которого открыли), устройство и до 5 скриншотов — в список «Відгуки». */
-export const FeedbackForm: React.FC<{ screen: string; onCancel(): void }> = ({ screen, onCancel }) => {
+export const FeedbackForm: React.FC<{ screen: string; onCancel(): void; allUrl?: string }> = ({ screen, onCancel, allUrl }) => {
   const c = React.useContext(AppCtx); const { t } = c;
   const [text, setText] = React.useState('');
   const [shots, setShots] = React.useState<Shot[]>([]);
@@ -56,6 +56,7 @@ export const FeedbackForm: React.FC<{ screen: string; onCancel(): void }> = ({ s
       <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     <form onSubmit={save} onPaste={paste} noValidate={true}>
       <p className="note">{t('fbHint')}</p>
+      {allUrl ? <p className="note"><a href={allUrl} target="_blank" rel="noopener noreferrer">{t('fbAll')} ↗</a></p> : null}
       <Frow label={t('fbText')} htmlFor="fb-t" req={true}><textarea id="fb-t" style={{ minHeight: 120 }} value={text} onChange={e => setText(e.target.value)} /></Frow>
       <div className="frow"><span className="lbl-t">{t('fbShots')} ({shots.length}/{MAX_SHOTS})</span>
         {shots.length ? <div className="fb-shots">{shots.map((s, i) => <figure key={s.url}><img src={s.url} alt="" />

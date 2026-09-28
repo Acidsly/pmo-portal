@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { tv } from '../i18n/values';
 import { Rag } from '../logic/rag';
 import { Fresh } from '../logic/status';
 import { Person } from '../data/types';
@@ -11,7 +12,7 @@ const COLORS = ['#8764b8', '#038387', '#ca5010', '#0078d4', '#498205', '#c239b3'
 export const fmtDate = (iso: string): string => (iso ? new Date(iso + 'T12:00:00Z').toLocaleDateString('uk-UA') : '');
 
 export const RagDot: React.FC<{ v: Rag; notRated: string }> = ({ v, notRated }) =>
-  <span className="ragdot" title={v || notRated} aria-label={v || notRated} style={{ background: v ? RC[v] : 'var(--na)' }} />;
+  <span className="ragdot" title={tv(v) || notRated} aria-label={tv(v) || notRated} style={{ background: v ? RC[v] : 'var(--na)' }} />;
 
 export const FreshDate: React.FC<{ iso: string; fresh: Fresh; none: string }> = ({ iso, fresh, none }) =>
   <span className="rag"><span className="dot sm" style={{ background: FC[fresh] }} />{iso ? fmtDate(iso) : <span className="muted">{none}</span>}</span>;
@@ -34,7 +35,7 @@ export const freshColor = (f: Fresh): string => FC[f];
 
 /** Пилюля состояния с точкой (ragHtml прототипа). */
 export const RagPill: React.FC<{ v: Rag; notRated: string }> = ({ v, notRated }) =>
-  <span className="pill" style={{ ['--c' as string]: ragColor(v) } as React.CSSProperties}><span className="dot sm" />{v || notRated}</span>;
+  <span className="pill" style={{ ['--c' as string]: ragColor(v) } as React.CSSProperties}><span className="dot sm" />{tv(v) || notRated}</span>;
 
 /** Полоса выполнения (barHtml прототипа). */
 export const Progress: React.FC<{ v: number }> = ({ v }) =>

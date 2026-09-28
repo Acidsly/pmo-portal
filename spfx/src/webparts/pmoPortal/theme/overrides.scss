@@ -119,3 +119,9 @@
   .pmo-app .help th, .pmo-app .help td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
   .pmo-app .help th { color: var(--text-2); font-weight: 600; font-size: 13px; }
 }
+
+// Кнопка «CSV» в таблицах — рядом с выбором колонок
+:global {
+  .pmo-app .cmdbar .csv-btn { width: auto; padding: 0 12px; font-size: 12px; font-weight: 700; letter-spacing: .04em; }
+  .pmo-app .cmdbar .csv-btn:disabled { opacity: .45; cursor: default; }
+}

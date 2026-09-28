@@ -1,8 +1,9 @@
 import * as React from 'react';
+import { tv } from '../i18n/values';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
 import { Project, StatusReport, Risk } from '../data/types';
-import { isArch, isActive, freshness, riskScore, byOrder } from '../logic/status';
+import { isArch, isActive, freshness, riskScore, byOrder, staleFirst } from '../logic/status';
 import { donutCounts, snapshots } from '../logic/dynamics';
 import { Wp } from '../components/Wp';
 import { SimpleTable, Col } from '../components/SimpleTable';
@@ -24,7 +25,8 @@ export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
   const vis = data.projects.filter(p => !isArch(p.status)).sort(byOrder);
   const prob = vis.filter(p => isActive(p.status) && (p.rag === 'Червоний' || p.rag === 'Жовтий'))
     .sort((a, b) => (a.rag === 'Червоний' ? 0 : 1) - (b.rag === 'Червоний' ? 0 : 1));
-  const stale = vis.filter(p => isActive(p.status) && ['r', 'na'].indexOf(freshness(p.lastUpdate, today)) >= 0);   // старше 14 дней или отчётов нет
+  const stale = vis.filter(p => isActive(p.status) && ['r', 'na'].indexOf(freshness(p.lastUpdate, today)) >= 0)   // старше 14 дней или отчётов нет
+    .sort(staleFirst);   // сначала без отчётов, дальше — от самого давнего
   const dec = data.reports.filter(r => r.decision && shown(r.projectId)).sort(byDateDesc);
   const open = data.risks.filter(k => k.status !== 'Закрито' && shown(k.projectId))
     .sort((a, b) => riskScore(b.probability, b.impact) - riskScore(a.probability, a.impact)).slice(0, 6);
@@ -33,7 +35,7 @@ export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
   const stratHead = <span className="ico" title={t('cStrat')}><Compass /></span>;
   const prioHead = <span className="ico" title={t('cPrio')}><Flag /></span>;
   const stratCell = (p: Project): JSX.Element => <span className="ico">{p.type === 'Стратегічний' ? <span title={t('cStrat')}><Strat on={true} /></span> : null}</span>;
-  const prioCell = (p: Project): JSX.Element => <span className="ico" title={`${fl('prio')}: ${p.priority}`}><Prio v={p.priority} /></span>;
+  const prioCell = (p: Project): JSX.Element => <span className="ico" title={`${fl('prio')}: ${tv(p.priority)}`}><Prio v={p.priority} /></span>;
   const S: Col<Project> = { head: stratHead, cell: stratCell, cls: 'c-ico' };
   const PR: Col<Project> = { head: prioHead, cell: prioCell, cls: 'c-ico' };
   function byProject<R extends { projectId: number }>(): Col<R>[] {
@@ -47,12 +49,12 @@ export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
     { head: t('cRepDate'), cell: p => fmtDate(p.lastUpdate) }];
   const staleCols: Col<Project>[] = [S, PR, { head: fl('title'), cell: link }, { head: fl('pm'), cell: p => <PersonCell p={p.manager} /> },
     { head: fl('last'), cell: p => <FreshDate iso={p.lastUpdate} fresh={freshness(p.lastUpdate, today)} none={t('noReports')} /> },
-    { head: t('cStatusOnly'), cell: p => p.status }];
+    { head: t('cStatusOnly'), cell: p => tv(p.status) }];
   const decCols: Col<StatusReport>[] = [...byProject<StatusReport>(), { head: fl('rProj'), cell: r => link(P(r.projectId)) },
     { head: fl('rDate'), cell: r => fmtDate(r.date) }, { head: fl('rDecText'), cell: r => r.decisionText, cls: 'wide' },
     { head: fl('rAuthor'), cell: r => <PersonCell p={r.author} /> }];
   const riskCols: Col<Risk>[] = [...byProject<Risk>(), { head: fl('rProj'), cell: k => link(P(k.projectId)) },
-    { head: fl('kTitle'), cell: k => k.title, cls: 'wide' }, { head: fl('kType'), cell: k => k.type },
+    { head: fl('kTitle'), cell: k => k.title, cls: 'wide' }, { head: fl('kType'), cell: k => tv(k.type) },
     { head: fl('kScore'), cell: k => <Score s={riskScore(k.probability, k.impact)} /> },
     { head: fl('kOwner'), cell: k => <PersonCell p={k.owner} /> },
     { head: fl('kDue'), cell: k => k.due && k.due < today && k.status !== 'Закрито' ? <span className="late">{fmtDate(k.due)}</span> : fmtDate(k.due) }];

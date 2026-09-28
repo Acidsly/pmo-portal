@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { tv } from '../i18n/values';
 import { AppCtx } from '../components/ctx';
 import { PortalData, SpRepo } from '../data/SpRepo';
 import { Project, Person } from '../data/types';
@@ -80,8 +81,8 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
     <div className="ph"><div><div className="k">{p.code} · {t('listLabel')} «{t('navProjects')}»</div><h2>{p.title}</h2></div>
       <button className="x" aria-label={t('close')} onClick={onClose}>×</button></div>
     <div className="badges">
-      {p.type === 'Стратегічний' ? <span className="strat">{p.type}</span> : <span className="badge">{p.type}</span>}
-      <RagPill v={p.rag} notRated={t('notRated')} /><span className="badge">{p.status}</span><span className="badge">{p.priority}</span>
+      {p.type === 'Стратегічний' ? <span className="strat">{tv(p.type)}</span> : <span className="badge">{tv(p.type)}</span>}
+      <RagPill v={p.rag} notRated={t('notRated')} /><span className="badge">{tv(p.status)}</span><span className="badge">{tv(p.priority)}</span>
       {p.loop ? <a className="loop" href={p.loop} target="_blank" rel="noopener noreferrer">{t('openLoop')} ↗</a> : null}
     </div>
     {edit ? <div className="actbar">
@@ -112,7 +113,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
       <Kv k={fl('last')}><span className="rag"><span className="dot sm" style={{ background: freshColor(freshness(p.lastUpdate, today)) }} />{p.lastUpdate ? fmtDate(p.lastUpdate) : <span className="muted">{t('noReports')}</span>}</span></Kv>
       <Kv k={fl('budget')}>{money(p.budget)}</Kv>
       <Kv k={fl('actual')}>{money(p.actualCost)} · <span className={budgetLevel(use)}>{use}%</span></Kv>
-      <Kv k={fl('dept')}>{p.department}</Kv>
+      <Kv k={fl('dept')}>{tv(p.department)}</Kv>
     </div></div>
 
     <div className="sec"><h3>{t('secChanges')}</h3>
@@ -121,7 +122,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
           <div className="chg-h">{c.who ? <><Avatar name={c.who.name} /><b>{c.who.name}</b></> : null}<span className="muted">{c.date.length === 10 ? fmtDate(c.date) : fmtDT(c.date)}</span>
             <span className={'chg-k chg-' + c.kind}>{t(kindL[c.kind] || 'kEdit')}</span></div>
           {c.diffs.length ? <div className="diffs">{c.diffs.map((d, i) => <div key={i} className="diff"><span className="df">{fl(d.f)}</span>
-            <span className="dv"><s>{d.from || '—'}</s><span className="arr">→</span>{d.to || '—'}</span></div>)}</div> : null}
+            <span className="dv"><s>{tv(d.from) || '—'}</s><span className="arr">→</span>{tv(d.to) || '—'}</span></div>)}</div> : null}
           {c.reason ? <div className="chg-r">{c.reason}</div> : null}
         </div>)}
         {events.length > 3 ? <button className="more" onClick={() => setShowCh(!showCh)}>{showCh ? t('hideHistory') : `${t('showHistory')} (${events.length})`}</button> : null}
@@ -157,7 +158,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
     <div className="sec"><div className="sec-h"><h3>{t('secRisks')} ({risks.length})</h3>
       {edit ? <button className="more" onClick={() => c.openForm('risk:new', p.id)}><Plus /> {t('addRisk')}</button> : null}</div>
       {risks.length ? <div className="rlist">{risks.map(k => <button key={k.id} className="rrow" onClick={() => c.openForm('risk:' + k.id, p.id)}><Score s={riskScore(k.probability, k.impact)} />
-        <span className="rt">{k.title}</span><span className="muted">{k.type} · {k.status}</span></button>)}</div> : <p className="empty">{t('emptyRisks')}</p>}</div>
+        <span className="rt">{k.title}</span><span className="muted">{tv(k.type)} · {tv(k.status)}</span></button>)}</div> : <p className="empty">{t('emptyRisks')}</p>}</div>
 
     <Access p={p} />
   </>;

@@ -35,6 +35,11 @@ test('проверки проекта и риска', () => {
   expect(validateProject(draft({ title: '' }))).toBe('errTitle');
   expect(validateProject(draft({ title: 'П' }))).toBe('errPM');
   expect(validateProject(draft({ title: 'П', manager: { id: 1, name: 'M', email: 'm@x.ua' } }))).toBe('');
+  // код занят другим проектом (регистр и пробелы не важны); пустой код — назначится автоматически
+  const m = { id: 1, name: 'M', email: 'm@x.ua' };
+  expect(validateProject(draft({ title: 'П', manager: m, code: ' prj-911 ' }), ['PRJ-911'])).toBe('errCode');
+  expect(validateProject(draft({ title: 'П', manager: m, code: '' }), ['PRJ-911'])).toBe('');
+  expect(validateProject(draft({ title: 'П', manager: m, code: 'PRJ-912' }), ['PRJ-911'])).toBe('');
   const r: RiskDraft = { projectId: 1, title: ' ', type: 'Ризик', probability: 3, impact: 3, owner: null, status: 'Відкрито', due: '', mitigation: '' };
   expect(validateRisk(r)).toBe('errRiskTitle');
   expect(validateRisk({ ...r, title: 'Р' })).toBe('');

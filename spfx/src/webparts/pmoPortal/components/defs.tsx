@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { tv } from '../i18n/values';
 import { ColDef } from '../logic/table';
 import { Project, StatusReport, Risk, Comment } from '../data/types';
 import { Rag } from '../logic/rag';
@@ -29,9 +30,9 @@ function shared(x: DefsCtx): {
     prioHead: <span className="ico" title={t('cPrio')}><Flag /></span>,
     stratCell: type => <span className="ico">{type === 'Стратегічний' ? <span title={t('cStrat')}><Strat on={true} /></span> : null}</span>,
     prioCell: v => <span className="ico" title={`${fl('prio')}: ${v}`} aria-label={v}><Prio v={v} /></span>,
-    stratLabel: v => (v === 'Стратегічний' ? <span className="ilabel"><Strat on={true} />{v}</span> : v),
-    prioLabel: v => <span className="ilabel"><Prio v={v} />{v}</span>,
-    ragLabel: v => <span className="ilabel"><RagDot v={v as Rag} notRated={t('notRated')} />{v || t('notRated')}</span>,
+    stratLabel: v => (v === 'Стратегічний' ? <span className="ilabel"><Strat on={true} />{tv(v)}</span> : tv(v)),
+    prioLabel: v => <span className="ilabel"><Prio v={v} />{tv(v)}</span>,
+    ragLabel: v => <span className="ilabel"><RagDot v={v as Rag} notRated={t('notRated')} />{tv(v) || t('notRated')}</span>,
     link: p => <button className="link" onClick={() => x.open(p.id)}>{p.title}</button>
   };
 }
@@ -45,11 +46,11 @@ export function projectDefs(x: DefsCtx, archive: boolean): TableDefs<Project> {
     strat: { label: t('cStrat'), head: S.stratHead, cell: p => S.stratCell(p.type), sort: p => (p.type === 'Стратегічний' ? 0 : 1), filter: p => p.type, flabel: S.stratLabel, cls: 'w-ico' },
     title: { label: fl('title'), cell: S.link, sort: p => p.title, cls: 'w-title' },
     code: { label: t('cCode'), cell: p => p.code, sort: p => p.code },
-    type: { label: fl('type'), cell: p => p.type, sort: p => p.type, filter: p => p.type },
+    type: { label: fl('type'), cell: p => tv(p.type), sort: p => p.type, filter: p => p.type },
     pm: { label: fl('pm'), cell: p => <PersonCell p={p.manager} />, sort: p => (p.manager ? p.manager.name : ''), filter: p => (p.manager ? p.manager.name : '') },
     owner: { label: t('cOwner'), cell: p => <PersonCell p={p.owner} />, sort: p => (p.owner ? p.owner.name : ''), filter: p => (p.owner ? p.owner.name : '') },
     product: { label: fl('stakeholders'), cell: p => <People list={p.stakeholders} />, sort: p => (p.stakeholders[0] ? p.stakeholders[0].name : ''), filter: p => p.stakeholders.map(s => s.name) },
-    status: { label: t('cStatusOnly'), cell: p => p.status, sort: p => STATUSES.indexOf(p.status), filter: p => p.status, cls: 'w-min' },
+    status: { label: t('cStatusOnly'), cell: p => tv(p.status), sort: p => STATUSES.indexOf(p.status), filter: p => p.status, cls: 'w-min' },
     prio: { label: t('cPrio'), head: S.prioHead, cell: p => S.prioCell(p.priority), sort: p => p.priority, filter: p => p.priority, flabel: S.prioLabel, cls: 'w-ico' },
     rag: { label: t('cHealth'), cell: p => <RagDot v={p.rag} notRated={t('notRated')} />, sort: p => ragOrder(p.rag), filter: p => p.rag, flabel: S.ragLabel, cls: 'w-ico w-min' },
     repDate: { label: t('cRepDate'), cell: p => <span className="rag"><span className="dot sm" style={{ background: freshColor(freshness(p.lastUpdate, today)) }} />{p.lastUpdate ? fmtDate(p.lastUpdate) : t('noReports')}</span>,
@@ -72,7 +73,7 @@ export function projectDefs(x: DefsCtx, archive: boolean): TableDefs<Project> {
       sort: p => { const c = lastCm(p); return c ? c.created : ''; }, cls: 'w-wide' },
     cmtBy: { label: t('cCmtBy'), cell: p => { const c = lastCm(p); return c ? <PersonCell p={c.author} /> : <Muted />; },
       sort: p => { const c = lastCm(p); return c && c.author ? c.author.name : ''; }, filter: p => { const c = lastCm(p); return c && c.author ? c.author.name : ''; } },
-    dept: { label: fl('dept'), cell: p => p.department, sort: p => p.department, filter: p => p.department },
+    dept: { label: fl('dept'), cell: p => tv(p.department), sort: p => p.department, filter: p => p.department },
     loop: { label: 'Loop', cell: p => (p.loop ? <a className="loop" href={p.loop} target="_blank" rel="noopener noreferrer">Loop ↗</a> : null) },
     archived: { label: t('archivedAt'), cell: p => dateCell(p.archivedAt), sort: p => p.archivedAt }
   };
@@ -90,7 +91,7 @@ export function reportDefs(x: DefsCtx): TableDefs<StatusReport> {
     proj: { label: fl('rProj'), cell: r => S.link(P(r)), sort: r => P(r).title, filter: r => P(r).title, cls: 'w-title' },
     code: { label: t('cCode'), cell: r => P(r).code, sort: r => P(r).code },
     date: { label: fl('rDate'), cell: r => fmtDate(r.date), sort: r => r.date },
-    period: { label: t('cPeriod'), cell: r => r.period || '—', sort: r => r.period, filter: r => r.period },
+    period: { label: t('cPeriod'), cell: r => tv(r.period) || '—', sort: r => r.period, filter: r => r.period },
     prio: { label: t('cPrio'), head: S.prioHead, cell: r => S.prioCell(P(r).priority), sort: r => P(r).priority, filter: r => P(r).priority, flabel: S.prioLabel, cls: 'w-ico' },
     rag: { label: t('cHealth'), cell: r => <RagDot v={calc(r)} notRated={t('notRated')} />, sort: r => ragOrder(calc(r)), filter: r => calc(r), flabel: S.ragLabel, cls: 'w-ico w-min' },
     sched: dim('schedule', 'rSched'), budget: dim('budget', 'rBudget'), res: dim('resources', 'rRes'),
@@ -99,7 +100,7 @@ export function reportDefs(x: DefsCtx): TableDefs<StatusReport> {
     next: { label: t('cNextP'), cell: r => clamp(r.next), sort: r => r.next, cls: 'w-wide' },
     issues: { label: t('cIssues'), cell: r => clamp(r.issues), sort: r => r.issues, cls: 'w-wide' },
     progress: { label: fl('progress'), cell: r => (r.progress === null ? <Muted /> : <Progress v={r.progress} />), sort: r => r.progress },
-    status: { label: t('cStatusR'), cell: r => (r.status ? (r.status === 'Завершено' ? 'Архівний' : r.status) : <Muted />), sort: r => r.status, filter: r => r.status },
+    status: { label: t('cStatusR'), cell: r => (r.status ? tv(r.status === 'Завершено' ? 'Архівний' : r.status) : <Muted />), sort: r => r.status, filter: r => r.status },
     author: { label: fl('rAuthor'), cell: r => <PersonCell p={r.author} />, sort: r => (r.author ? r.author.name : ''), filter: r => (r.author ? r.author.name : '') },
     // флажок «Потрібне рішення керівництва»; при наведении — какое решение нужно
     decision: { label: t('needDecision'), cell: r => (r.decision ? <span className="flag" title={r.decisionText}>{t('yes')}</span> : <Muted />), sort: r => (r.decision ? 0 : 1), filter: r => (r.decision ? 'yes' : 'no'),
@@ -125,12 +126,12 @@ export function riskDefs(x: DefsCtx): TableDefs<Risk> {
     strat: { label: t('cStrat'), head: S.stratHead, cell: k => S.stratCell(P(k).type), sort: k => (P(k).type === 'Стратегічний' ? 0 : 1), filter: k => P(k).type, flabel: S.stratLabel, cls: 'w-ico' },
     code: { label: t('cCode'), cell: k => P(k).code, sort: k => P(k).code },
     title: { label: fl('kTitle'), cell: k => <button className="link clamp2" onClick={() => x.openRisk(k.id, 0)}>{k.title}</button>, sort: k => k.title, cls: 'w-wide' },
-    type: { label: fl('kType'), cell: k => k.type, sort: k => k.type, filter: k => k.type },
+    type: { label: fl('kType'), cell: k => tv(k.type), sort: k => k.type, filter: k => k.type },
     score: { label: fl('kScore'), cell: k => <Score s={sc(k)} />, sort: k => -sc(k), filter: k => scoreBucket(sc(k)), flabel: v => t('sc' + v) },
     prob: { label: t('cProb'), cell: k => String(k.probability), sort: k => k.probability, filter: k => String(k.probability), cls: 'num' },
     imp: { label: t('cImp'), cell: k => String(k.impact), sort: k => k.impact, filter: k => String(k.impact), cls: 'num' },
     owner: { label: fl('kOwner'), cell: k => <PersonCell p={k.owner} />, sort: k => (k.owner ? k.owner.name : ''), filter: k => (k.owner ? k.owner.name : '') },
-    status: { label: fl('kStatus'), cell: k => k.status, sort: k => k.status, filter: k => k.status },
+    status: { label: fl('kStatus'), cell: k => tv(k.status), sort: k => k.status, filter: k => k.status },
     due: { label: fl('kDue'), cell: k => (k.due && k.due < today && k.status !== 'Закрито' ? <span className="late">{fmtDate(k.due)}</span> : fmtDate(k.due)), sort: k => k.due }
   };
   return { lock: 'proj', cols, defaults: ['strat', 'prio', 'proj', 'title', 'type', 'score', 'owner', 'status', 'due'] };

@@ -15,6 +15,7 @@ import { Risks } from '../pages/Risks';
 import { ProjectCard } from '../panels/ProjectCard';
 import { ReportForm } from '../panels/ReportForm';
 import { ProjectForm } from '../panels/ProjectForm';
+import { setValueLang } from '../i18n/values';
 import { FeedbackForm } from '../panels/FeedbackForm';
 import { Help } from '../panels/Help';
 import { RiskForm } from '../panels/RiskForm';
@@ -58,6 +59,7 @@ export const App: React.FC<AppProps> = p => {
   }, []);
   const nav = (r: Route): void => { const h = format(r); if (window.location.hash !== h) window.location.hash = h; setRoute(r); };
   const tt = makeT(lang);
+  setValueLang(lang);   // значения выбора — на языке интерфейса (i18n/values.ts)
   const ctx: Ctx = { ...tt, lang, today: todayIso(), me: p.userEmail, webUrl: p.webUrl, views: route.views, canCreate: !!data && data.canCreate,
     go: (page, view) => { nav(parse('#' + page + '/' + (view || ''), route.views)); window.scrollTo(0, 0); },
     setView: (page, view) => nav({ ...route, views: { ...route.views, [page]: view } }),
@@ -71,7 +73,7 @@ export const App: React.FC<AppProps> = p => {
   let panelEl: React.ReactNode = null;
   const openFeedback = data && data.feedback ? () => ctx.openForm('feedback', route.projectId) : undefined;
   if (route.form === 'help') panelEl = <Help onCancel={back} onFeedback={openFeedback} />;
-  else if (data && route.form === 'feedback') panelEl = <FeedbackForm screen={format({ ...route, form: '' })} onCancel={back} />;
+  else if (data && route.form === 'feedback') panelEl = <FeedbackForm screen={format({ ...route, form: '' })} onCancel={back} allUrl={data.feedbackAdmin ? `${p.webUrl}/Lists/Feedback/AllItems.aspx` : undefined} />;
   else if (data && route.form === 'report') panelEl = <ReportForm data={data} projectId={route.projectId} onCancel={project ? back : close} />;
   else if (data && (route.form === 'project' || route.form === 'edit')) panelEl = <ProjectForm data={data} project={route.form === 'edit' ? project : undefined} onCancel={project ? back : close} />;
   else if (data && route.form.indexOf('risk:') === 0) panelEl = <RiskForm data={data} projectId={route.projectId} riskId={Number(route.form.slice(5)) || 0} onCancel={project ? back : close} />;

@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Person } from '../data/types';
 import { Rag, RAGS } from '../logic/rag';
 import { Avatar, ragColor } from './Bits';
+import { tv } from '../i18n/values';
 
 /** Строка формы (frow прототипа): подпись, «*» для обязательного, подсказка. */
 export const Frow: React.FC<{ label: string; htmlFor?: string; req?: boolean; hint?: string; children?: React.ReactNode }> = p =>
@@ -11,7 +12,7 @@ export const Frow: React.FC<{ label: string; htmlFor?: string; req?: boolean; hi
 export function SegPick<V extends string>(p: { name: string; options: V[]; value: V; onChange(v: V): void; dots?: boolean; disabled?: boolean }): JSX.Element {
   return <div className="opts">{p.options.map((v, i) => <React.Fragment key={v}>
     <input type="radio" id={p.name + i} name={p.name} value={v} checked={v === p.value} disabled={p.disabled} onChange={() => p.onChange(v)} />
-    <label htmlFor={p.name + i}>{p.dots ? <span className="dot sm" style={{ background: ragColor(v as unknown as Rag) }} /> : null}{v}</label>
+    <label htmlFor={p.name + i}>{p.dots ? <span className="dot sm" style={{ background: ragColor(v as unknown as Rag) }} /> : null}{tv(v)}</label>
   </React.Fragment>)}</div>;
 }
 
@@ -48,7 +49,7 @@ export const PeoplePicker: React.FC<{ id: string; value: Person[]; multi: boolea
       onKeyDown={e => {
         if (e.key === 'ArrowDown') { e.preventDefault(); setHi(Math.min(hi + 1, found.length - 1)); }
         else if (e.key === 'ArrowUp') { e.preventDefault(); setHi(Math.max(hi - 1, 0)); }
-        else if (e.key === 'Enter' && found[hi]) { e.preventDefault(); add(found[hi]); }
+        else if (e.key === 'Enter') { e.preventDefault(); if (found[hi]) add(found[hi]); }   // Enter не отправляет форму
         else if (e.key === 'Escape') { setQ(''); setFound([]); }
       }} /> : null}
     {found.length ? <div className="pop-list picker-list" role="listbox">{found.map((x, i) =>
@@ -56,3 +57,6 @@ export const PeoplePicker: React.FC<{ id: string; value: Person[]; multi: boolea
         <span className="person"><Avatar name={x.name} /><span className="pn"><b>{x.name}</b><small>{x.email}</small></span></span></button>)}</div> : null}
   </div>;
 };
+
+/** Варианты выбора: значение хранится как есть, подпись — на языке интерфейса. */
+export const Opts: React.FC<{ values: string[] }> = ({ values }) => <>{values.map(x => <option key={x} value={x}>{tv(x)}</option>)}</>;

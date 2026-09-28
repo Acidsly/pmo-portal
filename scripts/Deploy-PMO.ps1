@@ -240,6 +240,17 @@ F $P pmoAcl        Text     "Службове: права"    "System: access"  
 F $P pmAccess      Note     "Службове: доступ"   "System: access list" "Служебное: доступ"    "Hidden='TRUE' NumLines='6' RichText='FALSE'"
 F $P pmEditLog     Note     "Службове: правки картки" "System: card edits" "Служебное: правки карточки" "Hidden='TRUE' NumLines='6' RichText='FALSE'"
 $script:Loc += , @($P, "Title", "Назва проєкту", "Project name", "Название проекта")
+# код проекта уникален (индекс + запрет дублей); если дубли уже есть — предупреждение, их правят вручную
+$codeF = Get-PnPField -List $P -Identity pmCode
+if (-not $codeF.EnforceUniqueValues) {
+    $dups = @(Get-PnPListItem -List $P -PageSize 500 -Fields "pmCode" | Where-Object { $_["pmCode"] } | Group-Object { ([string]$_["pmCode"]).Trim().ToUpperInvariant() } | Where-Object Count -gt 1)
+    if ($dups) { Write-Warning ("  коды проектов повторяются ({0}) — запрет дублей не включён" -f (($dups | ForEach-Object Name) -join ", ")) }
+    else {
+        Set-PnPField -List $P -Identity pmCode -Values @{ Indexed = $true } | Out-Null
+        Set-PnPField -List $P -Identity pmCode -Values @{ EnforceUniqueValues = $true } | Out-Null
+        Write-Host "  код проекта: запрет дублей"
+    }
+}
 
 # Миграция из ранних версий: «Product» (один пользователь) -> «Стейкхолдери» (несколько)
 if (Test-Field $P "pmProduct") {
@@ -328,7 +339,7 @@ F $K riScore       Calculated "Оцінка"           "Score"               "О
     "<Formula>=[riProbability]*[riImpact]</Formula><FieldRefs><FieldRef Name='riProbability'/><FieldRef Name='riImpact'/></FieldRefs>"
 F $K riOwner       User     "Власник ризику"     "Risk owner"          "Владелец риска"       "UserSelectionMode='PeopleOnly'"
 F $K riStatus      Choice   "Статус"             "Status"              "Статус"               "Format='Dropdown'" (Choices @("Відкрито","В роботі","Закрито") "Відкрито")
-F $K riDue         DateTime "Термін"             "Due date"            "Срок"                 "Format='DateOnly'"
+F $K riDue         DateTime "Термін виконання заходів" "Mitigation due date" "Срок выполнения мер" "Format='DateOnly'"
 F $K riMitigation  Note     "Заходи реагування"  "Mitigation"          "Меры реагирования"    "NumLines='4' RichText='FALSE'"
 F $K pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='64'"
 $script:Loc += , @($K, "Title", "Ризик / проблема", "Risk / issue", "Риск / проблема")
@@ -377,6 +388,15 @@ if ($Feedback) {
     Set-PnPField -List $FB -Identity "Title" -Values @{ Required = $false } | Out-Null
     # каждый видит и правит только свои отзывы; PMO (уровень «Редагування» списка) — все
     Set-PnPList -Identity "Lists/Feedback" -ReadSecurity AllUsersReadAccessOnItemsTheyCreate -WriteSecurity WriteOnlyMyItems -EnableAttachments $true | Out-Null
+    #region feedback-format
+    # цветные метки «Статус розгляду» в списке — PMO разбирает отзывы в стандартном списке
+    $fbColors = @{ "Новий" = "#0a64d6"; "Прийнято" = "#8a5a00"; "Відхилено" = "#6b7280"; "Зроблено" = "#1e7d34" }
+    $fbBg     = @{ "Новий" = "#e3eefc"; "Прийнято" = "#fdf1d8"; "Відхилено" = "#eceef1"; "Зроблено" = "#e2f4e6" }
+    $pick = { param($map) $e = "''"; foreach ($st in $map.Keys) { $e = "if([`$fbStatus]=='$st','$($map[$st])',$e)" }; "=$e" }
+    $fmt = @{ '$schema' = "https://developer.microsoft.com/json-schemas/sp/v2/column-formatting.schema.json"; elmType = "div"; txtContent = "[`$fbStatus]"
+              style = @{ color = (& $pick $fbColors); "background-color" = (& $pick $fbBg); padding = "2px 10px"; "border-radius" = "10px"; "font-weight" = "600"; display = "inline-block" } }
+    Set-PnPField -List "Lists/Feedback" -Identity fbStatus -Values @{ CustomFormatter = [string]($fmt | ConvertTo-Json -Depth 5 -Compress) } | Out-Null
+    #endregion feedback-format
 }
 
 # ---------------------------------------------------------------------------
@@ -529,6 +549,31 @@ $ctx = Get-PnPContext
 $ql = $ctx.Web.Navigation.QuickLaunch; $ctx.Load($ql); Invoke-PnPQuery
 foreach ($nd in $ql) { if ($nd.Url -eq $archUrl) { Set-Loc $nd "Архів" "Archive" "Архив"; $nd.Update() } }
 Invoke-PnPQuery
+
+# ===========================================================================
+# 8a. Изменения — только через приложение (кроме владельцев сайта)
+# ===========================================================================
+Write-Host "  закрытие сайта: изменения только через приложение" -ForegroundColor Cyan
+# участники сайта — «Участь» (добавлять и править записи, где есть права), а не «Редагування»:
+# нельзя создавать и удалять списки, менять колонки, представления и страницы
+$ctx = Get-PnPContext; $ra = $ctx.Web.RoleAssignments; $ctx.Load($ra); Invoke-PnPQuery
+foreach ($a in $ra) { $ctx.Load($a.Member); $ctx.Load($a.RoleDefinitionBindings) }; Invoke-PnPQuery
+$memRoles = @(); foreach ($a in $ra) { if ($a.Member.Title -eq $members.Title) { $memRoles = @($a.RoleDefinitionBindings | Where-Object { -not $_.Hidden } | ForEach-Object { $_.Name }) } }
+foreach ($x in $memRoles) { if ($x -ne $ROLE_EDIT) { Set-PnPGroupPermissions -Identity $members.Title -RemoveRole $x | Out-Null; Write-Host "  $($members.Title) : снят уровень «$x» на сайте" } }
+if ($memRoles -notcontains $ROLE_EDIT) { Set-PnPGroupPermissions -Identity $members.Title -AddRole $ROLE_EDIT | Out-Null; Write-Host "  $($members.Title) : «$ROLE_EDIT» на сайте" }
+# страницы и файлы сайта — только чтение (страницу приложения никто, кроме владельцев, не правит)
+foreach ($lib in @("SitePages", "SiteAssets", "Shared Documents")) {
+    if (Get-PnPList -Identity $lib -ErrorAction SilentlyContinue) { Set-ListRoles $lib @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ } }
+}
+# списки портала не видны в «Вміст сайту» и поиске по сайту; приложение и владельцы открывают их по адресу
+$portalLists = @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/KeyChanges", "Lists/ProjectComments") + $(if ($Feedback) { @("Lists/Feedback") } else { @() })
+foreach ($u in $portalLists) {
+    $l = Get-PnPList -Identity $u -Includes Hidden
+    if (-not $l.Hidden) { Set-PnPList -Identity $u -Hidden $true | Out-Null; Write-Host "    скрыт список $u" }
+}
+# меню сайта SharePoint выключено: навигация — только в приложении
+$w = Get-PnPWeb -Includes QuickLaunchEnabled
+if ($w.QuickLaunchEnabled) { $w.QuickLaunchEnabled = $false; $w.Update(); Invoke-PnPQuery; Write-Host "    меню сайта SharePoint выключено" }
 
 #region legacy-cleanup
 # ===========================================================================

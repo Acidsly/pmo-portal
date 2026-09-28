@@ -641,6 +641,50 @@ const T = {
  kMit:['Заходи реагування','Mitigation','Меры реагирования'],
  noVisible:['У вас поки немає доступних проєктів.','You don’t have any available projects yet.','У вас пока нет доступных проектов.']
 };
+// значения выбора хранятся на украинском, показываются на языке интерфейса (как i18n/values.ts приложения)
+const VAL = {
+ 'Ініціація':['Ініціація','Initiation','Инициация'],
+ 'Планування':['Планування','Planning','Планирование'],
+ 'Реалізація':['Реалізація','Execution','Реализация'],
+ 'Призупинено':['Призупинено','On hold','Приостановлен'],
+ 'Скасовано':['Скасовано','Cancelled','Отменён'],
+ 'Архівний':['Архівний','Archived','Архивный'],
+ 'Завершено':['Завершено','Completed','Завершён'],
+ 'Зелений':['Зелений','Green','Зелёный'],
+ 'Жовтий':['Жовтий','Yellow','Жёлтый'],
+ 'Червоний':['Червоний','Red','Красный'],
+ 'Стратегічний':['Стратегічний','Strategic','Стратегический'],
+ 'Звичайний':['Звичайний','Regular','Обычный'],
+ '1 — Високий':['1 — Високий','1 — High','1 — Высокий'],
+ '2 — Середній':['2 — Середній','2 — Medium','2 — Средний'],
+ '3 — Низький':['3 — Низький','3 — Low','3 — Низкий'],
+ 'ІТ':['ІТ','IT','ИТ'],
+ 'HR та кадрове адміністрування':['HR та кадрове адміністрування','HR and personnel administration','HR и кадровое администрирование'],
+ 'Розрахунок зарплати':['Розрахунок зарплати','Payroll','Расчёт зарплаты'],
+ 'Продажі':['Продажі','Sales','Продажи'],
+ 'Фінанси':['Фінанси','Finance','Финансы'],
+ 'Операції':['Операції','Operations','Операции'],
+ 'Юридичний':['Юридичний','Legal','Юридический'],
+ 'Тиждень':['Тиждень','Week','Неделя'],
+ '2 тижні':['2 тижні','2 weeks','2 недели'],
+ 'Місяць':['Місяць','Month','Месяц'],
+ 'Квартал':['Квартал','Quarter','Квартал'],
+ 'Ризик':['Ризик','Risk','Риск'],
+ 'Проблема':['Проблема','Issue','Проблема'],
+ 'Відкрито':['Відкрито','Open','Открыт'],
+ 'В роботі':['В роботі','In progress','В работе'],
+ 'Закрито':['Закрито','Closed','Закрыт'],
+ 'Усі проєкти':['Усі проєкти','All projects','Все проекты'],
+ 'Стратегічні':['Стратегічні','Strategic','Стратегические'],
+ 'Проблемні':['Проблемні','At risk','Проблемные'],
+ 'Мої проєкти':['Мої проєкти','My projects','Мои проекты'],
+ 'Немає свіжого звіту':['Немає свіжого звіту','No recent report','Нет свежего отчёта'],
+ 'Усі звіти':['Усі звіти','All reports','Все отчёты'],
+ 'Потребують рішення':['Потребують рішення','Decision needed','Требуют решения'],
+ 'Відкриті':['Відкриті','Open','Открытые'],
+ 'Усі елементи':['Усі елементи','All items','Все элементы']
+};
+const tv = v => (v && VAL[v] ? VAL[v][LI] : (v || ''));
 const FLD = {
  title:['Назва проєкту','Project name','Название проекта'], loop:['Посилання на картку в Loop','Loop project card','Ссылка на карточку в Loop'],
  code:['Код проєкту','Project code','Код проекта'], type:['Тип проєкту','Project type','Тип проекта'],
@@ -659,7 +703,7 @@ const FLD = {
  rDec:['Потрібне рішення керівництва','Management decision needed','Требуется решение руководства'], rDecText:['Яке рішення потрібне','Decision required','Какое решение нужно'],
  rAuthor:['Автор','Created by','Автор'],
  kTitle:['Ризик / проблема','Risk / issue','Риск / проблема'], kType:['Тип','Type','Тип'], kScore:['Оцінка','Score','Оценка'], kPI:['Ймов. × вплив','Prob. × impact','Вер. × влияние'],
- kOwner:['Власник ризику','Risk owner','Владелец риска'], kStatus:['Статус','Status','Статус'], kDue:['Термін','Due date','Срок']
+ kOwner:['Власник ризику','Risk owner','Владелец риска'], kStatus:['Статус','Status','Статус'], kDue:['Термін виконання заходів','Mitigation due date','Срок выполнения мер']
 };
 const t = k => (T[k] || [k,k,k])[LI];
 const fl = k => (FLD[k] || [k,k,k])[LI];
@@ -824,7 +868,7 @@ const lastUpd = p => D(p.lastUpdate);
 const byOrder = (a, b) => (a.type === b.type ? 0 : a.type === 'Стратегічний' ? -1 : 1) || a.prio.localeCompare(b.prio) || a.title.localeCompare(b.title);
 
 /* ================= Renderers ================= */
-const ragHtml = v => v ? `<span class="pill" style="--c:${RC[v]}"><span class="dot sm"></span>${v}</span>`
+const ragHtml = v => v ? `<span class="pill" style="--c:${RC[v]}"><span class="dot sm"></span>${tv(v)}</span>`
   : `<span class="pill" style="--c:var(--na)"><span class="dot sm"></span>${t('notRated')}</span>`;
 const dotOnly = v => `<span class="dot sm" title="${v || '—'}" style="background:${v ? RC[v] : 'var(--na)'}"></span>`;
 const barHtml = v => `<span class="prog" role="img" aria-label="${v}%"><span class="track"><i style="width:${Math.min(v,100)}%;background:${v >= 100 ? 'var(--g)' : 'var(--theme)'}"></i></span><b>${v}%</b></span>`;
@@ -905,9 +949,9 @@ const state = {page:'home', pv:'all', rv:'all', kv:'open', homeMode:'tiles', pro
 function tile(p){
   const pc = p.progress >= 100 ? 'var(--g)' : 'var(--theme)', d = lastUpd(p);
   return `<div class="tile" role="button" tabindex="0" data-act="openp" data-id="${p.id}">
-    <div class="tile-top"><span class="code">${esc(p.code)}</span>${p.type === 'Стратегічний' ? `<span class="ico" title="${p.type}" aria-label="${p.type}">${icoStar(true)}</span>` : ''}${ragHtml(p.rag)}</div>
+    <div class="tile-top"><span class="code">${esc(p.code)}</span>${p.type === 'Стратегічний' ? `<span class="ico" title="${tv(p.type)}" aria-label="${tv(p.type)}">${icoStar(true)}</span>` : ''}${ragHtml(p.rag)}</div>
     <div class="tile-t">${esc(p.title)}</div>
-    <div class="tile-prog"><div class="pl"><span>${esc(p.status)}</span><b>${p.progress}%</b></div><div class="track"><i style="width:${Math.min(p.progress,100)}%;background:${pc}"></i></div></div>
+    <div class="tile-prog"><div class="pl"><span>${esc(tv(p.status))}</span><b>${p.progress}%</b></div><div class="track"><i style="width:${Math.min(p.progress,100)}%;background:${pc}"></i></div></div>
     <div class="tile-upd"><div class="ul"><span class="dot sm" style="background:${freshColor(d)}"></span>${t('latestUpd')} · ${d ? fmt(d) : t('noReports')}</div>
       <div class="tx">${esc(p.lastReport) || '<span class="muted">—</span>'}</div></div>
     <div class="tile-f">${p.loop ? `<a class="loop" href="${esc(p.loop)}" target="_blank" rel="noopener">Loop ↗</a>` : '<span></span>'}
@@ -1009,11 +1053,11 @@ const PDEF = {
   strat:{l:() => t('cStrat'), h:stratHead, main:p => stratCell(p.type), sort:p => p.type === 'Стратегічний' ? 0 : 1, filter:p => p.type, flabel:stratLabel, cls:'w-ico'},
   title:{l:() => fl('title'), main:p => pLink(p), sort:p => p.title, cls:'w-title'},
   code:{l:() => t('cCode'), main:p => esc(p.code), sort:p => p.code},
-  type:{l:() => fl('type'), main:p => esc(p.type), sort:p => p.type, filter:p => p.type},
+  type:{l:() => fl('type'), main:p => esc(tv(p.type)), sort:p => p.type, filter:p => p.type},
   pm:{l:() => fl('pm'), main:p => person(p.pm), sort:p => p.pm, filter:p => p.pm},
   owner:{l:() => t('cOwner'), main:p => p.owner ? person(p.owner) : '<span class="muted">—</span>', sort:p => p.owner, filter:p => p.owner || ''},
   product:{l:() => fl('stakeholders'), main:p => peopleCell(p.stakeholders), sort:p => (p.stakeholders || [])[0] || '', filter:p => p.stakeholders || []},
-  status:{l:() => t('cStatusOnly'), main:p => esc(p.status), sort:p => STATUSES.indexOf(p.status), filter:p => p.status, cls:'w-min'},
+  status:{l:() => t('cStatusOnly'), main:p => esc(tv(p.status)), sort:p => STATUSES.indexOf(p.status), filter:p => p.status, cls:'w-min'},
   prio:{l:() => t('cPrio'), h:prioHead, main:p => prioIcon(p.prio), sort:p => p.prio, filter:p => p.prio, flabel:prioLabel, cls:'w-ico'},
   rag:{l:() => t('cHealth'), main:p => ragDot(p.rag), sort:p => ragOrder(p.rag), filter:p => p.rag || '', flabel:ragLabel, cls:'w-ico w-min'},
   repDate:{l:() => t('cRepDate'), main:p => { const d = lastUpd(p); return `<span class="rag"><span class="dot sm" style="background:${freshColor(d)}"></span>${d ? fmt(d) : t('noReports')}</span>`; }, sort:p => p.lastUpdate || '', filter:p => freshBucket(lastUpd(p)), flabel:freshLabel},
@@ -1030,7 +1074,7 @@ const PDEF = {
   update:{l:() => fl('lastReport'), main:p => p.lastReport ? `<span class="clamp2" title="${esc(p.lastReport)}">${esc(p.lastReport)}</span>` : '<span class="muted">—</span>', sort:p => p.lastReport || '', cls:'w-upd'},
   comment:{l:() => fl('comments'), main:p => { const c = lastCm(p); return c ? `<span class="clamp2">${esc(c.txt)}</span> <button class="cnt" data-act="comments" data-id="${p.id}">${p.comments.length}</button>` : '<span class="muted">—</span>'; }, sort:p => { const c = lastCm(p); return c ? c.date : ''; }, cls:'w-wide'},
   cmtBy:{l:() => t('cCmtBy'), main:p => { const c = lastCm(p); return c ? person(c.who) : '<span class="muted">—</span>'; }, sort:p => { const c = lastCm(p); return c ? c.who : ''; }, filter:p => { const c = lastCm(p); return c ? c.who : ''; }},
-  dept:{l:() => fl('dept'), main:p => esc(p.dept), sort:p => p.dept, filter:p => p.dept},
+  dept:{l:() => fl('dept'), main:p => esc(tv(p.dept)), sort:p => p.dept, filter:p => p.dept},
   loop:{l:() => 'Loop', main:loopHtml},
   archived:{l:() => t('archivedAt'), main:p => dateCell(p.archivedAt), sort:p => p.archivedAt || ''}
 };
@@ -1041,7 +1085,7 @@ const RDEF = {
   proj:{l:() => fl('rProj'), main:r => pLink(RP(r)), sort:r => RP(r).title, filter:r => RP(r).title, cls:'w-title'},
   code:{l:() => t('cCode'), main:r => esc(RP(r).code), sort:r => RP(r).code},
   date:{l:() => fl('rDate'), main:r => fmt(r.d), sort:r => r.date},
-  period:{l:() => t('cPeriod'), main:r => esc(r.period || '—'), sort:r => r.period || '', filter:r => r.period || ''},
+  period:{l:() => t('cPeriod'), main:r => esc(tv(r.period) || '—'), sort:r => r.period || '', filter:r => r.period || ''},
   prio:{l:() => t('cPrio'), h:prioHead, main:r => prioIcon(PP(r.pid)), sort:r => PP(r.pid), filter:r => PP(r.pid), flabel:prioLabel, cls:'w-ico'},
   rag:{l:() => t('cHealth'), main:r => ragDot(r.rag), sort:r => ragOrder(r.rag), filter:r => r.rag, flabel:ragLabel, cls:'w-ico w-min'},
   sched:dimCol('sched', 'rSched'), budget:dimCol('budget', 'rBudget'), res:dimCol('res', 'rRes'),
@@ -1050,7 +1094,7 @@ const RDEF = {
   next:{l:() => t('cNextP'), main:r => `<span class="clamp2">${esc(r.next)}</span>`, sort:r => r.next, cls:'w-wide'},
   issues:{l:() => t('cIssues'), main:r => `<span class="clamp2">${esc(r.issues) || '<span class="muted">—</span>'}</span>`, sort:r => r.issues || '', cls:'w-wide'},
   progress:{l:() => fl('progress'), main:r => barHtml(r.progress), sort:r => r.progress},
-  status:{l:() => t('cStatusR'), main:r => r.status ? esc(r.status === 'Завершено' ? 'Архівний' : r.status) : '<span class="muted">—</span>', sort:r => r.status || '', filter:r => r.status || ''},
+  status:{l:() => t('cStatusR'), main:r => r.status ? esc(tv(r.status === 'Завершено' ? 'Архівний' : r.status)) : '<span class="muted">—</span>', sort:r => r.status || '', filter:r => r.status || ''},
   author:{l:() => fl('rAuthor'), main:r => person(r.author), sort:r => r.author, filter:r => r.author},
   decision:{l:() => t('cDecFlag'), main:r => r.decision ? `<span class="flag">${t('yes')}</span>` : '<span class="muted">—</span>', sort:r => r.decision ? 0 : 1, filter:r => r.decision ? 'yes' : 'no', flabel:v => v === 'yes' ? t('yes') : t('no')},
   decText:{l:() => t('cDecText'), main:r => r.decisionText ? `<span class="clamp2">${esc(r.decisionText)}</span>` : '<span class="muted">—</span>', sort:r => r.decisionText || '', cls:'w-wide'}
@@ -1062,12 +1106,12 @@ const KDEF = {
   strat:{l:() => t('cStrat'), h:stratHead, main:k => stratCell(pById(k.pid).type), sort:k => pById(k.pid).type === 'Стратегічний' ? 0 : 1, filter:k => pById(k.pid).type, flabel:stratLabel, cls:'w-ico'},
   code:{l:() => t('cCode'), main:k => esc(pById(k.pid).code), sort:k => pById(k.pid).code},
   title:{l:() => fl('kTitle'), main:k => `<button class="link clamp2" data-act="riskopen" data-src="list" data-id="${k.pid}" data-rid="${k.id}">${esc(k.title)}</button>`, sort:k => k.title, cls:'w-wide'},
-  type:{l:() => fl('kType'), main:k => esc(k.type), sort:k => k.type, filter:k => k.type},
+  type:{l:() => fl('kType'), main:k => esc(tv(k.type)), sort:k => k.type, filter:k => k.type},
   score:{l:() => fl('kScore'), main:k => scoreHtml(k.p * k.i), sort:k => -(k.p * k.i), filter:k => scoreBucket(k.p * k.i), flabel:v => t('sc' + v)},
   prob:{l:() => t('cProb'), main:k => String(k.p), sort:k => k.p, filter:k => String(k.p), cls:'num'},
   imp:{l:() => t('cImp'), main:k => String(k.i), sort:k => k.i, filter:k => String(k.i), cls:'num'},
   owner:{l:() => fl('kOwner'), main:k => person(k.owner), sort:k => k.owner, filter:k => k.owner},
-  status:{l:() => fl('kStatus'), main:k => esc(k.status), sort:k => k.status, filter:k => k.status},
+  status:{l:() => fl('kStatus'), main:k => esc(tv(k.status)), sort:k => k.status, filter:k => k.status},
   due:{l:() => fl('kDue'), main:k => { const d = D(k.due); return d < TODAY && k.status !== 'Закрито' ? `<span class="late">${fmt(d)}</span>` : fmt(d); }, sort:k => k.due}
 };
 TDEFS.projects = PDEF; TDEFAULTS.projects = ['strat','prio','title','pm','status','rag','repDate','progress','plan','update'];
@@ -1315,7 +1359,7 @@ function projectPanel(id, showCm, keep, showCh){
        <button class="btn" data-act="editproj" data-id="${p.id}">${iconEdit}${t('editProject')}</button></div>`
     : `<p class="note lock">🔒 ${isArch(p) ? t('archivedNote') : t('noEdit')}</p>`;
   openPanel(`<div class="ph"><div><div class="k">${esc(p.code)} · ${t('listLabel')} «${t('navProjects')}»</div><h2>${esc(p.title)}</h2></div>${closeBtn()}</div>
-    <div class="badges">${typeHtml(p.type)}${ragHtml(p.rag)}<span class="badge">${esc(p.status)}</span><span class="badge">${esc(p.prio)}</span>${p.loop ? `<a class="loop" href="${esc(p.loop)}" target="_blank" rel="noopener">${t('openLoop')} ↗</a>` : ''}</div>
+    <div class="badges">${typeHtml(p.type)}${ragHtml(p.rag)}<span class="badge">${esc(tv(p.status))}</span><span class="badge">${esc(tv(p.prio))}</span>${p.loop ? `<a class="loop" href="${esc(p.loop)}" target="_blank" rel="noopener">${t('openLoop')} ↗</a>` : ''}</div>
     ${actions}
     ${p.desc ? `<p class="desc">${esc(p.desc)}</p>` : ''}
     <div class="sec"><h3>${t('secPeople')}</h3>
@@ -1333,7 +1377,7 @@ function projectPanel(id, showCm, keep, showCh){
     <div class="sec"><h3>${t('secHistory')}</h3>${matrix}</div>
     <div class="sec"><h3>${t('secReports')} (${rs.length})</h3>${repList || `<p class="empty">${t('noReportsYet')}</p>`}</div>
     <div class="sec"><div class="sec-h"><h3>${t('secRisks')} (${risks.length})</h3>${edit ? `<button class="more" data-act="newrisk" data-id="${p.id}">${iconPlus} ${t('addRisk')}</button>` : ''}</div>
-      ${risks.length ? `<div class="rlist">${risks.map(k => `<button class="rrow" data-act="riskopen" data-id="${p.id}" data-rid="${k.id}">${scoreHtml(k.p * k.i)}<span class="rt">${esc(k.title)}</span><span class="muted">${esc(k.type)} · ${esc(k.status)}</span></button>`).join('')}</div>` : `<p class="empty">${t('emptyRisks')}</p>`}</div>
+      ${risks.length ? `<div class="rlist">${risks.map(k => `<button class="rrow" data-act="riskopen" data-id="${p.id}" data-rid="${k.id}">${scoreHtml(k.p * k.i)}<span class="rt">${esc(k.title)}</span><span class="muted">${esc(tv(k.type))} · ${esc(tv(k.status))}</span></button>`).join('')}</div>` : `<p class="empty">${t('emptyRisks')}</p>`}</div>
     <div class="sec"><h3>${t('accessTitle')}</h3><div class="access"><div class="muted" style="font-size:13px">${t('accessDesc')}</div><ol>${accessList(p)}</ol></div></div>`, keep);
   document.getElementById('cmform').addEventListener('submit', e => {
     e.preventDefault();
@@ -1346,16 +1390,16 @@ function projectPanel(id, showCm, keep, showCh){
 }
 
 /* ================= Forms ================= */
-const opt = (v, cur, label) => `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(label || v)}</option>`;
+const opt = (v, cur, label) => `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(label || tv(v))}</option>`;
 const peopleSelect = (id, cur, req) => `<select id="${id}">${req ? '' : `<option value="">${t('notSet')}</option>`}${Object.keys(ORG).map(n => opt(n, cur, `${n} — ${roleOf(n)} · ${email(n)}`)).join('')}</select>`;
-const segPick = (name, values, cur, colors) => `<div class="opts">${values.map((v, i) => `<input type="radio" id="${name}${i}" name="${name}" value="${esc(v)}"${v === cur ? ' checked' : ''}><label for="${name}${i}">${colors ? `<span class="dot sm" style="background:${RC[v]}"></span>` : ''}${esc(v)}</label>`).join('')}</div>`;
+const segPick = (name, values, cur, colors) => `<div class="opts">${values.map((v, i) => `<input type="radio" id="${name}${i}" name="${name}" value="${esc(v)}"${v === cur ? ' checked' : ''}><label for="${name}${i}">${colors ? `<span class="dot sm" style="background:${RC[v]}"></span>` : ''}${esc(tv(v))}</label>`).join('')}</div>`;
 const ragPick = (name, label, req, cur) => `<fieldset class="ragpick"><legend>${label}${req ? ' *' : ''}</legend>${segPick(name, RAGS, cur, true)}</fieldset>`;
 const formHead = (title, sub) => `<div class="ph"><div><div class="k">${sub}</div><h2>${title}</h2></div>${closeBtn()}</div>`;
 const fErr = form => msg => { const e = form.querySelector('.err'); e.textContent = msg; e.hidden = false; e.scrollIntoView && e.scrollIntoView({block:'nearest'}); };
 const radioVal = (form, n) => (form.querySelector(`input[name="${n}"]:checked`) || {}).value || '';
 
 function projectForm(p){
-  const isNew = !p; p = p || {pm:VIEWER, type:'Звичайний', status:'Ініціація', prio:'2 — Середній', dept:'ІТ', start:iso(TODAY)};
+  const isNew = !p; p = p || {pm:'', type:'Звичайний', status:'Ініціація', prio:'2 — Середній', dept:'ІТ', start:iso(TODAY)};
   state.panel = {kind:'form'};
   openPanel(`${formHead(isNew ? t('newProject') : t('editProject') + ': ' + esc(p.title), `${t('listLabel')} «${t('navProjects')}»`)}
   <form id="pform" novalidate>

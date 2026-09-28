@@ -2,7 +2,7 @@
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { Project, StatusReport, Risk, Comment, ChangeEntry, Person } from './types';
 import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, REPORT_SELECT, REPORT_EXPAND, RISK_SELECT, RISK_EXPAND,
-  COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, canAdd } from './map';
+  COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, canAdd, canManage } from './map';
 import { applyPending } from '../logic/overlay';
 
 export type WritableList = 'Projects' | 'StatusReports' | 'RisksIssues' | 'ProjectComments' | 'Feedback';
@@ -11,7 +11,9 @@ export interface PortalData { projects: Project[]; reports: StatusReport[]; risk
   /** Может ли пользователь заводить проекты (право добавления в «Проєкти» есть у PMO). */
   canCreate: boolean;
   /** На сайте есть список «Відгуки» (тест с фокус-группой) — показывается кнопка «Відгук». */
-  feedback: boolean; }
+  feedback: boolean;
+  /** Может разбирать все отзывы (PMO): ссылка на список «Відгуки» из формы отзыва. */
+  feedbackAdmin: boolean; }
 
 /** Чтение списков портала от имени пользователя: видны только проекты, которые ему открыла синхронизация. */
 export class SpRepo {
@@ -50,7 +52,7 @@ export class SpRepo {
       this.listPerms('Feedback').catch(() => undefined)]);
     const reports = r.map(mapReport);
     return { projects: p.map(mapProject).map(x => applyPending(x, reports)), reports, risks: k.map(mapRisk),
-      comments: c.map(mapComment), changes: h.map(mapChange), canCreate: canAdd(perm), feedback: canAdd(fbPerm) };
+      comments: c.map(mapComment), changes: h.map(mapChange), canCreate: canAdd(perm), feedback: canAdd(fbPerm), feedbackAdmin: canManage(fbPerm) };
   }
 
   private titles: Record<string, Promise<string>> = {};

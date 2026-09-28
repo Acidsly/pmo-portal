@@ -18,6 +18,12 @@ export const budgetLevel = (use: number): '' | 'warn' | 'over' => (use > 100 ? '
 export const riskScore = (p: number, i: number): number => (p || 0) * (i || 0);
 export const scoreLevel = (s: number): 'r' | 'y' | 'g' => (s >= 15 ? 'r' : s >= 8 ? 'y' : 'g');
 
+/** «Немає свіжого звіту»: сначала проекты без отчётов, дальше — от самого давнего отчёта. */
+export function staleFirst(a: { lastUpdate: string; id: number }, b: { lastUpdate: string; id: number }): number {
+  const x = a.lastUpdate || '', y = b.lastUpdate || '';
+  return x === y ? a.id - b.id : !x ? -1 : !y ? 1 : x < y ? -1 : 1;
+}
+
 /** Базовая сортировка списков — новые записи сверху (по дате создания, затем Id). */
 export function newestFirst(a: { created?: string; id: number }, b: { created?: string; id: number }): number {
   const x = a.created || '', y = b.created || '';

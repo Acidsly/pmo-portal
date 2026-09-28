@@ -44,7 +44,13 @@ export function validateReport(d: ReportDraft, p: Project): string {
   if (keyChanged(d, p) && !d.keyReason.trim()) return 'errKeyReason';
   return '';
 }
-export const validateProject = (d: ProjectDraft): string => (!d.title.trim() ? 'errTitle' : !d.manager ? 'errPM' : '');
+/** Код проекта уникален (без учёта регистра и пробелов); otherCodes — коды остальных проектов. Пустой код назначится автоматически. */
+export const codeTaken = (code: string, otherCodes: string[]): boolean => {
+  const c = code.trim().toUpperCase();
+  return !!c && otherCodes.some(x => (x || '').trim().toUpperCase() === c);
+};
+export const validateProject = (d: ProjectDraft, otherCodes: string[] = []): string =>
+  (!d.title.trim() ? 'errTitle' : !d.manager ? 'errPM' : codeTaken(d.code, otherCodes) ? 'errCode' : '');
 export const validateRisk = (d: RiskDraft): string => (!d.title.trim() ? 'errRiskTitle' : '');
 
 const names = (xs: Person[]): string => xs.map(x => x.name).join(', ');

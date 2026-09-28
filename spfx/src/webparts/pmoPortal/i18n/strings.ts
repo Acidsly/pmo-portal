@@ -1254,9 +1254,9 @@ export const FLD: Record<string, L3> = {
   "Статус"
  ],
  "kDue": [
-  "Термін",
-  "Due date",
-  "Срок"
+  "Термін виконання заходів",
+  "Mitigation due date",
+  "Срок выполнения мер"
  ]
 };
 export const EXTRA: Record<string, L3> = {
@@ -1289,6 +1289,26 @@ export const EXTRA: Record<string, L3> = {
   "Довідка",
   "Help",
   "Справка"
+ ],
+ "errCode": [
+  "Такий код уже є в іншого проєкту. Вкажіть інший або залиште поле порожнім — код призначиться автоматично.",
+  "This code is already used by another project. Enter another one or leave the field empty to assign it automatically.",
+  "Такой код уже есть у другого проекта. Укажите другой или оставьте поле пустым — код назначится автоматически."
+ ],
+ "csv": [
+  "CSV",
+  "CSV",
+  "CSV"
+ ],
+ "fbAll": [
+  "Усі відгуки учасників (для PMO)",
+  "All participants’ feedback (PMO)",
+  "Все отзывы участников (для PMO)"
+ ],
+ "csvTitle": [
+  "Вивантажити таблицю в CSV (як на екрані: фільтри й колонки)",
+  "Export the table to CSV (as shown: filters and columns)",
+  "Выгрузить таблицу в CSV (как на экране: фильтры и колонки)"
  ],
  "fbTitle": [
   "Відгук про портал",

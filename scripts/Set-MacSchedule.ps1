@@ -13,11 +13,14 @@
 
 .EXAMPLE
     pwsh -NoLogo -File scripts/Set-MacSchedule.ps1 -Env test
+    pwsh -NoLogo -File scripts/Set-MacSchedule.ps1 -Env test -AllDay      # тест с фокус-группой: круглосуточно
     pwsh -NoLogo -File scripts/Set-MacSchedule.ps1 -Env test -Remove
 #>
 param(
     [ValidateSet("test", "prod")][string]$Env = "test",
-    [switch]$Remove
+    [switch]$Remove,
+    # на время теста с фокус-группой: каждые 15 минут круглосуточно, включая выходные
+    [switch]$AllDay
 )
 $ErrorActionPreference = "Stop"
 if (-not $IsMacOS) { throw "Скрипт только для macOS." }
@@ -61,8 +64,11 @@ function Job([string]$label, [string]$action, [string[]]$slots) {
 }
 
 # пн–пт (1–5) 8:00–20:00 каждые 15 минут + каждый день 6:00 и 22:00
-$sync = foreach ($d in 1..5) { foreach ($h in 8..19) { foreach ($m in 0, 15, 30, 45) { Slot $h $m $d } }; Slot 20 0 $d }
-$sync += (Slot 6 0 $null), (Slot 22 0 $null)
+if ($AllDay) { $sync = foreach ($h in 0..23) { foreach ($m in 0, 15, 30, 45) { if (-not ($h -eq 3 -and $m -eq 0)) { Slot $h $m $null } } } }   # 3:00 в воскресенье — полный пересчёт
+else {
+    $sync = foreach ($d in 1..5) { foreach ($h in 8..19) { foreach ($m in 0, 15, 30, 45) { Slot $h $m $d } }; Slot 20 0 $d }
+    $sync += (Slot 6 0 $null), (Slot 22 0 $null)
+}
 Job "ua.pmo.sync.$Env" "sync" $sync
 # воскресенье (0) 3:00 — полный пересчёт прав
 Job "ua.pmo.rebuild.$Env" "rebuild-permissions" @(Slot 3 0 0)

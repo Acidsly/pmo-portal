@@ -32,3 +32,9 @@ test('порядок: стратегические, приоритет, назв
   ];
   expect(xs.slice().sort(S.byOrder).map(x => x.title)).toEqual(['А', 'Я', 'В', 'Б']);
 });
+
+import { staleFirst } from '../src/webparts/pmoPortal/logic/status';
+test('«Немає свіжого звіту»: без отчётов сверху, дальше от самого давнего', () => {
+  const rows = [{ id: 1, lastUpdate: '2026-09-10' }, { id: 2, lastUpdate: '' }, { id: 3, lastUpdate: '2026-08-20' }, { id: 4, lastUpdate: '' }];
+  expect(rows.sort(staleFirst).map(r => r.id)).toEqual([2, 4, 3, 1]);
+});

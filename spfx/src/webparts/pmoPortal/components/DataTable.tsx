@@ -1,4 +1,6 @@
 import * as React from 'react';
+import { tv } from '../i18n/values';
+import { toCsv } from '../logic/csv';
 import { AppCtx } from './ctx';
 import { TableDefs, Col } from './defs';
 import { applyTable, filterValues, nextSort, toggleCol, moveCol, loadState, saveState, TableState } from '../logic/table';
@@ -20,7 +22,7 @@ export function DataTable<R extends { id: number }>(p: { tkey: string; defs: Tab
   const close = React.useCallback(() => { setPop(undefined); setQ(''); }, []);
   const data = applyTable(p.rows, defs, st);
   const shownCols = st.cols.filter(c => defs[c]);
-  const fl = (d: Col<R>, v: string): React.ReactNode => (d.flabel ? d.flabel(v) : v === '' ? t('notSet') : v);
+  const fl = (d: Col<R>, v: string): React.ReactNode => (d.flabel ? d.flabel(v) : v === '' ? t('notSet') : tv(v));
 
   const chips = Object.keys(st.filters).filter(id => st.filters[id] && st.filters[id].length && defs[id]).map(id =>
     <span key={id} className="fchip">{defs[id].label}: {st.filters[id].map((v, i) => <React.Fragment key={v}>{i ? ', ' : ''}{fl(defs[id], v)}</React.Fragment>)}
@@ -66,12 +68,24 @@ export function DataTable<R extends { id: number }>(p: { tkey: string; defs: Tab
     </>;
   }
 
+  // CSV — ровно то, что на экране: видимые колонки, фильтры и сортировка; значок без текста — по его подсказке
+  const tableRef = React.useRef<HTMLDivElement>(null);
+  const exportCsv = (): void => {
+    const el = tableRef.current; if (!el) return;
+    const text = (c: Element): string => ((c as HTMLElement).innerText || '').trim() || (c.querySelector('[title]') ? (c.querySelector('[title]') as HTMLElement).title : '');
+    const rows = Array.prototype.map.call(el.querySelectorAll('tbody tr'), (tr: Element) => Array.prototype.map.call(tr.children, text) as string[]) as string[][];
+    const blob = new Blob([toCsv(shownCols.map(id => defs[id].label), rows)], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${p.tkey}-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove(); window.setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+
   return <>
     <div className="cmdbar">{p.left}<span className="spacer" />{p.right}
+      <button className="iconbtn csv-btn" title={t('csvTitle')} aria-label={t('csvTitle')} disabled={!data.length} onClick={exportCsv}>{t('csv')}</button>
       <button className="iconbtn gear-lg" aria-label={t('cols')} title={t('cols')}
         onClick={e => { const a = e.currentTarget; setPop(pop && pop.kind === 'cols' ? undefined : { kind: 'cols', anchor: a }); }}><Gear /></button></div>
     <div className="dt-bar"><span className="muted">{t('shown')} {data.length} {t('of')} {p.rows.length}</span>{chips}</div>
-    {data.length ? <div className="tablewrap dt"><table><thead><tr>{head}</tr></thead>
+    {data.length ? <div className="tablewrap dt" ref={tableRef}><table><thead><tr>{head}</tr></thead>
       <tbody>{data.map(r => <tr key={r.id} className="row">{shownCols.map(id => <td key={id} className={defs[id].cls || ''}>{defs[id].cell(r)}</td>)}</tr>)}</tbody></table></div>
       : <p className="empty">{p.empty || t('empty')}</p>}
     {pop ? <Pop anchor={pop.anchor} align={pop.kind === 'filter' ? 'left' : 'right'} onClose={close}>{popBody}</Pop> : null}

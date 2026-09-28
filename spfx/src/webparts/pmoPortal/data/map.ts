@@ -25,6 +25,11 @@ const nn = (v: any): number | null => (typeof v === 'number' ? v : null);
 export const mapPerson = (v: any): Person | null =>
   v && v.Id ? { id: v.Id, name: s(v.Title), email: s(v.EMail) } : null;
 
+/** Управление списком (ManageLists, бит 0x800) — у PMO на «Відгуки»: видит отзывы всех. */
+export function canManage(perm: { High: string; Low: string } | undefined): boolean {
+  return !!perm && (Number(perm.Low) & 0x800) !== 0;
+}
+
 /** Право добавлять элементы в список: AddListItems — бит 0x2 (новый проект заводит PMO). */
 export function canAdd(perm: { High: string; Low: string } | undefined): boolean {
   return !!perm && (Number(perm.Low) & 0x2) !== 0;

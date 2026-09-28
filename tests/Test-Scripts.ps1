@@ -27,6 +27,13 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
     if ($clash) { Bad "$($f.Name): $(($clash | ForEach-Object { $_.Group -join '/' }) -join ', ')" } else { Ok $f.Name }
 }
 
+Write-Host "1b. «Висящие» else / elseif (без if перед ними PowerShell считает их командой и падает при запуске)"
+foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "tests") -Filter *.ps1) {
+    $ast = [System.Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$null, [ref]$null)
+    $bad = $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.CommandAst] -and $args[0].GetCommandName() -in @("else", "elseif") }, $true)
+    if ($bad) { $bad | ForEach-Object { Bad "$($f.Name):$($_.Extent.StartLineNumber) висящий $($_.GetCommandName())" } } else { Ok $f.Name }
+}
+
 Write-Host "2. JSON-файлы"
 foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "config/focus-group.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
@@ -36,6 +43,8 @@ Write-Host "3. Прежнее оформление SharePoint убрано (ин
 $src = (Get-ChildItem (Join-Path $root "scripts") -Filter *.ps1 | ForEach-Object { Get-Content -Raw $_.FullName }) -join "`n"
 # блок уборки на развёрнутых сайтах упоминает прежние объекты по имени — его не считаем
 $src = [regex]::Replace($src, "(?s)#region legacy-cleanup.*?#endregion legacy-cleanup", "")
+# цвета статусов отзывов (тестовый список «Відгуки») — единственное разрешённое оформление столбца
+$src = [regex]::Replace($src, "(?s)#region feedback-format.*?#endregion feedback-format", "")
 foreach ($w in @("CustomFormatter", "Build-Dashboard", "PortfolioStats", "Update-Stats", "Update-CardInfo", "pmCardInfo", "ChartsOnly")) {
     if ($src -match [regex]::Escape($w)) { Bad "scripts/*.ps1 содержит «$w»" } else { Ok "нет «$w»" }
 }

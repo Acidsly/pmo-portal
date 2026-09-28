@@ -4,7 +4,7 @@ import { PortalData } from '../data/SpRepo';
 import { Project, Person } from '../data/types';
 import { ProjectDraft, validateProject, nextCode, cardDiff } from '../logic/forms';
 import { projectBody, projectEditBody } from '../data/write';
-import { Frow, SegPick, DateIn, Err, PeoplePicker } from '../components/fields';
+import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts } from '../components/fields';
 
 const TYPES = ['Стратегічний', 'Звичайний'];
 const PRIOS = ['1 — Високий', '2 — Середній', '3 — Низький'];
@@ -23,8 +23,7 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
         start: c.today, goLive: '', planEnd: '', status: 'Ініціація', budget: 0, description: '' });
   const [err, setErr] = React.useState('');
   const [busy, setBusy] = React.useState(false);
-  // PM нового проекта по умолчанию — текущий пользователь (как в прототипе)
-  React.useEffect(() => { if (isNew && !d.manager) c.repo.searchPeople(c.me).then(r => { const x = r.filter(y => y.email.toLowerCase() === c.me.toLowerCase())[0] || r[0]; if (x) setD(v => ({ ...v, manager: v.manager || x })); }, () => undefined); }, []);
+  // PM нового проекта не подставляется: проект заводит PMO и назначает PM сам (иначе PMO случайно становится PM)
   const set = (x: Partial<ProjectDraft>): void => setD({ ...d, ...x });
   const search = (q: string): Promise<Person[]> => c.repo.searchPeople(q);
   const withIds = async (x: ProjectDraft): Promise<ProjectDraft> => {
@@ -34,7 +33,8 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
 
   const save = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    const v = validateProject(d);
+    const others = data.projects.filter(x => !project || x.id !== project.id).map(x => x.code);
+    const v = validateProject(d, others);
     if (v) { setErr(t(v)); return; }
     setBusy(true); setErr('');
     try {
@@ -49,7 +49,11 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
         await c.repo.update('Projects', project!.id, projectEditBody(x, diff, c.me, '', project!.editLog || ''));
         await c.reload(); c.toast(t('savedEdit')); c.openProject(project!.id);
       }
-    } catch (x) { setErr(String((x as Error).message || x)); setBusy(false); }
+    } catch (x) {
+      const m = String((x as Error).message || x);
+      // запрет дублей кода на уровне списка SharePoint (проекты, которых пользователь не видит)
+      setErr(/unique|унікальн|уникальн|duplicate|already exists/i.test(m) ? t('errCode') : m); setBusy(false);
+    }
   };
 
   if (isNew && !data.canCreate) return <><div className="ph"><div><h2>{t('newProject')}</h2></div><button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
@@ -64,7 +68,7 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
         <div><label className="t" htmlFor="f-code">{fl('code')}</label>
           <input type="text" id="f-code" value={d.code} placeholder={isNew ? t('codeAuto') : ''} onChange={e => set({ code: e.target.value })} /></div>
         <div><label className="t" htmlFor="f-dept">{fl('dept')}</label>
-          <select id="f-dept" value={d.department} onChange={e => set({ department: e.target.value })}>{DEPTS.map(x => <option key={x}>{x}</option>)}</select></div>
+          <select id="f-dept" value={d.department} onChange={e => set({ department: e.target.value })}><Opts values={DEPTS} /></select></div>
       </div>
       <Frow label={fl('loop')} htmlFor="f-loop"><input type="url" id="f-loop" value={d.loop} placeholder="https://" onChange={e => set({ loop: e.target.value })} /></Frow>
       {isNew ? <fieldset className="ragpick"><legend>{fl('type')}</legend><SegPick name="f-type" options={TYPES} value={d.type} onChange={v => set({ type: v })} /></fieldset> : null}
@@ -85,13 +89,13 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
           <div><label className="t" htmlFor="f-golive">{fl('golive')}</label><DateIn id="f-golive" value={d.goLive} onChange={v => set({ goLive: v })} /></div>
           <div><label className="t" htmlFor="f-plan">{fl('plan')}</label><DateIn id="f-plan" value={d.planEnd} onChange={v => set({ planEnd: v })} /></div>
           <div><label className="t" htmlFor="f-status">{fl('status')}</label>
-            <select id="f-status" value={d.status} onChange={e => set({ status: e.target.value })}>{STATUSES.map(x => <option key={x}>{x}</option>)}</select></div>
+            <select id="f-status" value={d.status} onChange={e => set({ status: e.target.value })}><Opts values={STATUSES} /></select></div>
         </div></> : null}
 
       <h3 className="fsec">{t('secMoney')}</h3>
       <div className="fgrid2 frow">
         <div><label className="t" htmlFor="f-prio">{fl('prio')}</label>
-          <select id="f-prio" value={d.priority} onChange={e => set({ priority: e.target.value })}>{PRIOS.map(x => <option key={x}>{x}</option>)}</select></div>
+          <select id="f-prio" value={d.priority} onChange={e => set({ priority: e.target.value })}><Opts values={PRIOS} /></select></div>
         <div><label className="t" htmlFor="f-bud">{fl('budget')}, ₴</label>
           <input type="number" id="f-bud" min={0} step={10000} value={d.budget} onChange={e => set({ budget: Number(e.target.value) || 0 })} /></div>
       </div>

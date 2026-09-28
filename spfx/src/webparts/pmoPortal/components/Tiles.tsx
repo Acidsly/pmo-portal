@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { tv } from '../i18n/values';
 import { AppCtx } from './ctx';
 import { Project } from '../data/types';
 import { freshness } from '../logic/status';
@@ -11,10 +12,10 @@ const Tile: React.FC<{ p: Project }> = ({ p }) => {
   const open = (): void => openProject(p.id);
   return <div className="tile" role="button" tabIndex={0} onClick={open} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } }}>
     <div className="tile-top"><span className="code">{p.code}</span>
-      {p.type === 'Стратегічний' ? <span className="ico" title={p.type} aria-label={p.type}><Strat on={true} /></span> : null}
+      {p.type === 'Стратегічний' ? <span className="ico" title={tv(p.type)} aria-label={tv(p.type)}><Strat on={true} /></span> : null}
       <RagPill v={p.rag} notRated={t('notRated')} /></div>
     <div className="tile-t">{p.title}</div>
-    <div className="tile-prog"><div className="pl"><span>{p.status}</span><b>{p.progress}%</b></div>
+    <div className="tile-prog"><div className="pl"><span>{tv(p.status)}</span><b>{p.progress}%</b></div>
       <div className="track"><i style={{ width: `${Math.min(p.progress, 100)}%`, background: p.progress >= 100 ? 'var(--g)' : 'var(--theme)' }} /></div></div>
     <div className="tile-upd"><div className="ul"><span className="dot sm" style={{ background: freshColor(freshness(p.lastUpdate, today)) }} />
       {t('latestUpd')} · {p.lastUpdate ? fmtDate(p.lastUpdate) : t('noReports')}</div>
