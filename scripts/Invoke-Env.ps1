@@ -8,11 +8,12 @@
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action sync-dryrun
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action seed          # демонстрационные данные
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action app           # приложение SPFx на тестовый сайт
+    pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action feedback      # выгрузка отзывов в feedback-export/
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action deploy -ConfirmProduction
 #>
 param(
     [Parameter(Mandatory)][ValidateSet("test", "prod")][string]$Env,
-    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "app")][string]$Action,
+    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "app", "feedback")][string]$Action,
     [switch]$ConfirmProduction
 )
 $ErrorActionPreference = "Stop"
@@ -46,7 +47,12 @@ function Get-Auth($section) {
 $siteUrl = "https://$($cfg.TenantName).sharepoint.com/sites/$($cfg.SiteAlias)"
 Write-Host "Окружение: $Env · $siteUrl · действие: $Action" -ForegroundColor Cyan
 
-if ($Action -eq "seed") {
+if ($Action -eq "feedback") {
+    # выгрузка отзывов фокус-группы (только чтение) — в feedback-export/, вне git
+    $a = Get-Auth $cfg.Deploy
+    $a.SiteUrl = $siteUrl
+    & (Join-Path $PSScriptRoot "Export-Feedback.ps1") @a
+} elseif ($Action -eq "seed") {
     # демонстрационные данные — только на тестовом сайте, с приложением развёртывания
     if ($Env -ne "test") { throw "Действие «seed» доступно только для окружения test." }
     $a = Get-Auth $cfg.Deploy

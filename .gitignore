@@ -8,6 +8,8 @@ certs/
 config/environments.json
 # фокус-группа: e-mail сотрудников
 config/focus-group.json
+# выгрузка отзывов: ФИО и скриншоты участников
+feedback-export/
 # локальные настройки Claude Code
 .claude/settings.local.json
 # служебное
