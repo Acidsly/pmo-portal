@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { screenLabel } from '../logic/screen';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
 import { FeedbackRow } from '../data/types';
@@ -27,7 +28,7 @@ export const Feedback: React.FC<{ data: PortalData }> = ({ data }) => {
     status: { label: t('fbStatusCol'), cell: r => <FbStatus v={r.status} />, sort: r => FB_STATUSES.indexOf(r.status), filter: r => r.status },
     answer: { label: t('fbAnswer'), cell: r => (r.answer ? <span className="clamp3" title={r.answer}>{r.answer}</span> : <Muted />), sort: r => r.answer, cls: 'w-wide' },
     shots: { label: t('fbShots'), cell: r => (r.shots ? String(r.shots) : <Muted />), sort: r => r.shots },
-    screen: { label: t('fbScreen'), cell: r => (r.screen ? <code>{r.screen}</code> : <Muted />), sort: r => r.screen }
+    screen: { label: t('fbScreen'), cell: r => (r.screen ? <span title={r.screen}>{screenLabel(r.screen, t, tv)}</span> : <Muted />), sort: r => screenLabel(r.screen, t, tv) }
   } };
   const views: [FbView, string][] = [['all', t('fbViewAll')], ['mine', t('fbViewMine')], ['open', t('fbViewOpen')]];
   return <>

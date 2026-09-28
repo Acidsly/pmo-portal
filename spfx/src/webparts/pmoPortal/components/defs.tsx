@@ -95,7 +95,7 @@ export function reportDefs(x: DefsCtx): TableDefs<StatusReport> {
     prio: { label: t('cPrio'), head: S.prioHead, cell: r => S.prioCell(P(r).priority), sort: r => P(r).priority, filter: r => P(r).priority, flabel: S.prioLabel, cls: 'w-ico' },
     rag: { label: t('cHealth'), cell: r => <RagDot v={calc(r)} notRated={t('notRated')} />, sort: r => ragOrder(calc(r)), filter: r => calc(r), flabel: S.ragLabel, cls: 'w-ico w-min' },
     sched: dim('schedule', 'rSched'), budget: dim('budget', 'rBudget'), res: dim('resources', 'rRes'),
-    title: { label: fl('rTitle'), cell: r => <button className="linklike" onClick={() => x.openReport(r.id, r.projectId)}>{clamp(r.title)}</button>, sort: r => r.title, cls: 'w-upd' },
+    title: { label: fl('rTitle'), cell: r => <button className="linklike" onClick={() => x.openReport(r.id, r.projectId)}>{clamp(r.title)}</button>, sort: r => r.title, cls: 'w-rep' },
     approval: { label: fl('apStatus'), cell: r => <ApBadge v={r.approval} />, sort: r => r.approval, filter: r => r.approval || 'На погодженні', flabel: v => tv(v) },
     done: { label: t('cDone'), cell: r => clamp(r.done), sort: r => r.done, cls: 'w-wide' },
     next: { label: t('cNextP'), cell: r => clamp(r.next), sort: r => r.next, cls: 'w-wide' },

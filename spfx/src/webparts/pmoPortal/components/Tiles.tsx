@@ -17,8 +17,9 @@ const Tile: React.FC<{ p: Project }> = ({ p }) => {
     <div className="tile-t">{p.title}</div>
     <div className="tile-prog"><div className="pl"><span>{tv(p.status)}</span><b>{p.progress}%</b></div>
       <div className="track"><i style={{ width: `${Math.min(p.progress, 100)}%`, background: p.progress >= 100 ? 'var(--g)' : 'var(--theme)' }} /></div></div>
-    <div className="tile-upd"><div className="ul"><span className="dot sm" style={{ background: freshColor(freshness(p.lastUpdate, today)) }} />
-      {t('latestUpd')} · {p.lastUpdate ? fmtDate(p.lastUpdate) : t('noReports')}</div>
+    <div className="tile-upd">{p.archivedAt ? <div className="ul">{t('archivedAt')}: {fmtDate(p.archivedAt)}</div>
+      : <div className="ul"><span className="dot sm" style={{ background: freshColor(freshness(p.lastUpdate, today)) }} />
+      {t('latestUpd')} · {p.lastUpdate ? fmtDate(p.lastUpdate) : t('noReports')}</div>}
       <div className="tx">{p.lastReport || <span className="muted">—</span>}</div></div>
     <div className="tile-f">{p.links.length ? <span><a className="loop" href={p.links[0].u} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>{p.links[0].t} ↗</a>{p.links.length > 1 ? <span className="muted"> +{p.links.length - 1}</span> : null}</span> : <span />}
       {p.manager ? <span className="tile-pm" title={`${t('pmRole')}: ${p.manager.name} · ${p.manager.email}`}><Avatar name={p.manager.name} /><b>{p.manager.name}</b></span> : null}</div>

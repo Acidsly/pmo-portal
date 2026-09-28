@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Lang } from '../i18n/i18n';
-import { ProjectView, ReportView, RiskView } from '../logic/views';
+import { ProjectView, ReportView, RiskView, ArchiveView } from '../logic/views';
 import { SpRepo } from '../data/SpRepo';
 
 export type Page = 'home' | 'projects' | 'reports' | 'risks' | 'archive' | 'feedback';
-export interface Views { projects: ProjectView; reports: ReportView; risks: RiskView; }
+export interface Views { projects: ProjectView; reports: ReportView; risks: RiskView; archive: ArchiveView; }
 export interface Ctx {
   t(k: string): string; fl(k: string): string; lang: Lang; today: string;
   /** e-mail текущего пользователя (представление «Мої проєкти»). */

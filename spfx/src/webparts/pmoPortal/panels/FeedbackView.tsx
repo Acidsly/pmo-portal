@@ -1,4 +1,6 @@
 import * as React from 'react';
+import { screenLabel } from '../logic/screen';
+import { tv } from '../i18n/values';
 import { AppCtx } from '../components/ctx';
 import { FeedbackRow } from '../data/types';
 import { Frow, Err, Opts } from '../components/fields';
@@ -20,7 +22,7 @@ export const FeedbackView: React.FC<{ row: FeedbackRow | undefined; admin: boole
   return <>
     <div className="ph"><div><div className="k">{t('navFeedback')} · №{row.id}</div><h2>{row.author || t('navFeedback')}</h2></div>
       <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
-    <div className="badges"><FbStatus v={row.status} />{row.screen ? <code>{row.screen}</code> : null}</div>
+    <div className="badges"><FbStatus v={row.status} />{row.screen ? <span className="badge" title={row.screen}>{screenLabel(row.screen, t, tv)}</span> : null}</div>
     <p className="fb-text">{row.text}</p>
     {row.files.length ? <div className="fb-shots">{row.files.map(f => <a key={f.url} href={f.url} target="_blank" rel="noopener noreferrer"><figure><img src={f.url} alt={f.name} /></figure></a>)}</div>
       : row.shots ? <p className="note">{t('fbShotsHidden')} ({row.shots})</p> : null}

@@ -486,26 +486,6 @@ export const T: Record<string, L3> = {
   "Overdue",
   "Просроченные"
  ],
- "wpActions": [
-  "Мої дії",
-  "My actions",
-  "Мои действия"
- ],
- "actReturned": [
-  "Повернуто на доопрацювання",
-  "Returned for rework",
-  "Возвращено на доработку"
- ],
- "actAccepted": [
-  "Прийняті високі ризики",
-  "Accepted high risks",
-  "Принятые высокие риски"
- ],
- "actNone": [
-  "Усе зроблено — дій немає",
-  "All done — nothing to do",
-  "Всё сделано — действий нет"
- ],
  "wpRiskMap": [
   "Карта ризиків",
   "Risk map",
@@ -1525,6 +1505,11 @@ export const FLD: Record<string, L3> = {
  ]
 };
 export const EXTRA: Record<string, L3> = {
+ "scrCard": [
+  "картка проєкту",
+  "project card",
+  "карточка проекта"
+ ],
  "soon": [
   "Цей розділ з’явиться на наступному етапі.",
   "This section is coming in the next stage.",

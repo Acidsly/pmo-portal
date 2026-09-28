@@ -1,6 +1,6 @@
 import { Project, StatusReport, Risk, ChangeEntry } from '../data/types';
 import { isActive, freshness, isPlanLate, forecastDelta, riskScore } from './status';
-import { AP_PENDING, AP_RETURNED } from './approval';
+import { AP_PENDING } from './approval';
 
 /** Аналитика главной — всё по видимым пользователю проектам без архива (правила задачи 7 раунда 2). */
 const addDays = (iso: string, n: number): string => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
@@ -55,22 +55,4 @@ export function byDept(projects: Project[]): DeptRow[] {
     row[k]++; row.total++;
   });
   return Object.keys(m).map(k => m[k]).sort((a, b) => b.total - a.total || a.dept.localeCompare(b.dept, 'uk'));
-}
-
-export interface MyActions { stale: Project[]; returned: StatusReport[]; awaiting: StatusReport[]; accepted: Risk[]; }
-/** «Мої дії»: PM — мої активні проєкти без свіжого звіту (> 14 днів або немає), мої повернуті звіти (останній звіт проєкту);
- *  PMO — черга погодження (старіші вгорі), прийняті ризики з оцінкою ≥ 15. */
-export function myActions(projects: Project[], reports: StatusReport[], risks: Risk[], me: string, pmo: boolean, today: string): MyActions {
-  const mine = projects.filter(p => isActive(p.status) && p.canEdit && !!p.manager && p.manager.email.toLowerCase() === me.toLowerCase());
-  const ids: Record<number, boolean> = {}; projects.forEach(p => { ids[p.id] = true; });
-  const latest = (id: number): StatusReport | undefined => reports.filter(r => r.projectId === id)
-    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.id - a.id))[0];
-  return {
-    stale: mine.filter(p => { const f = freshness(p.lastUpdate, today); return f === 'r' || f === 'na'; }),
-    returned: mine.map(p => latest(p.id)).filter((r): r is StatusReport => !!r && r.approval === AP_RETURNED),
-    awaiting: pmo ? reports.filter(r => ids[r.projectId] && isActive((projects.filter(p => p.id === r.projectId)[0] || { status: '' }).status) && isAwaiting(r))
-      .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id)) : [],
-    accepted: pmo ? risks.filter(k => ids[k.projectId] && isHighRisk(k) && k.strategy === 'Прийняття')
-      .sort((a, b) => riskScore(b.probability, b.impact) - riskScore(a.probability, a.impact)) : []
-  };
 }

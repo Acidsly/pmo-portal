@@ -1,4 +1,4 @@
-import { kpis, riskMatrix, slips, launches, byDept, myActions } from '../src/webparts/pmoPortal/logic/analytics';
+import { kpis, riskMatrix, slips, launches, byDept } from '../src/webparts/pmoPortal/logic/analytics';
 import { Project, StatusReport, Risk, ChangeEntry } from '../src/webparts/pmoPortal/data/types';
 
 const today = '2026-09-28';
@@ -37,16 +37,4 @@ test('launches: від сьогодні до +30 днів', () => {
 });
 test('byDept: активні, розбивка за станом', () => {
   expect(byDept(projects)).toEqual([{ dept: 'ІТ', g: 0, y: 0, r: 1, na: 1, total: 2 }, { dept: 'Фінанси', g: 0, y: 1, r: 0, na: 0, total: 1 }]);
-});
-test('myActions: PM і PMO', () => {
-  const reps = [R({ id: 1, projectId: 2, date: '2026-09-01', approval: 'Повернуто' }), R({ id: 2, projectId: 1, date: '2026-09-25', approval: 'На погодженні' }),
-    R({ id: 3, projectId: 1, date: '2026-09-10', approval: 'Повернуто' })];
-  const risks = [K({ id: 1, probability: 5, impact: 4, strategy: 'Прийняття' }), K({ id: 2, probability: 2, impact: 2, strategy: 'Прийняття' }), K({ id: 3, probability: 5, impact: 5, strategy: 'Передача' })];
-  const pm = myActions(projects, reps, risks, 'PM@x.ua', false, today);
-  expect(pm.stale.map(p => p.id)).toEqual([2]);
-  expect(pm.returned.map(r => r.id)).toEqual([1]);   // у проєкту 1 останній звіт — на погодженні
-  expect(pm.awaiting).toEqual([]); expect(pm.accepted).toEqual([]);
-  const pmo = myActions(projects, reps, risks, 'x@x', true, today);
-  expect(pmo.awaiting.map(r => r.id)).toEqual([2]);
-  expect(pmo.accepted.map(k => k.id)).toEqual([1]);
 });

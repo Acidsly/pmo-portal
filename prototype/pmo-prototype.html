@@ -330,10 +330,6 @@ main{padding-bottom:40px}
 .kpi .kl{font-size:13px;color:var(--text-2)}
 .kpi small{font-size:12px;color:var(--text-3)}
 @media (max-width:520px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{padding:14px}.kpi b{font-size:26px}}
-.home-actions{margin-bottom:24px}
-.act-sec + .act-sec{margin-top:20px}
-.act-sec h3{font-size:15px;font-weight:600;margin:0 0 4px}
-.act-sec td .btn{padding:6px 12px;font-size:13px}
 .rmap{display:grid;grid-template-columns:22px minmax(0,1fr);gap:6px;align-items:stretch}
 .rm-y{writing-mode:vertical-rl;transform:rotate(180deg);text-align:center;font-size:12px;color:var(--text-2)}
 .rm-grid{display:grid;grid-template-columns:18px repeat(5,minmax(0,1fr));gap:4px}
@@ -348,6 +344,7 @@ main{padding-bottom:40px}
 .dept-row{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,2fr) 28px;gap:12px;align-items:center;font-size:14px}
 .dept-row .dn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dept-row b{text-align:right}
+.dlegend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:16px;font-size:13px;color:var(--text-2)}.dlegend span{display:inline-flex;align-items:center;gap:6px}
 .dbar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--track)}
 .dbar i{display:block;height:100%}
 @media (max-width:520px){.dept-row{grid-template-columns:minmax(0,1fr) 28px}.dept-row .dbar{grid-column:1 / -1;grid-row:2}}
@@ -644,8 +641,6 @@ const T = {
  apBy:['Погодив','Approved by','Согласовал'],
  kpiActive:['Активні проєкти','Active projects','Активные проекты'], kpiFresh:['Зі свіжим звітом','With a recent report','Со свежим отчётом'],
  kpiFreshSub:['{n} з {m}','{n} of {m}','{n} из {m}'], kpiHigh:['Високі ризики','High risks','Высокие риски'], kpiLate:['Прострочені','Overdue','Просроченные'],
- wpActions:['Мої дії','My actions','Мои действия'], actReturned:['Повернуто на доопрацювання','Returned for rework','Возвращено на доработку'],
- actAccepted:['Прийняті високі ризики','Accepted high risks','Принятые высокие риски'], actNone:['Усе зроблено — дій немає','All done — nothing to do','Всё сделано — действий нет'],
  wpRiskMap:['Карта ризиків','Risk map','Карта рисков'], rmHint:['Натисніть клітинку, щоб побачити її ризики','Click a cell to see its risks','Нажмите на ячейку, чтобы увидеть её риски'],
  wpDept:['Портфель за напрямами','Portfolio by department','Портфель по направлениям'],
  wpSlips:['Найбільші зсуви термінів','Biggest schedule slips','Наибольшие сдвиги сроков'], cSlip:['Зсув','Slip','Сдвиг'], cMoves:['Перенесень','Moves','Переносов'],
@@ -1091,9 +1086,11 @@ const PV = {
   stale:{t:'Немає свіжого звіту', f:p => isActive(p) && (!lastUpd(p) || age(lastUpd(p)) > 14)},
   late:{t:'Прострочені', f:p => isActive(p) && !!D(p.plan) && D(p.plan) < TODAY}
 };
+// вигляди архіву: без умов активності
+const AV = {all:{t:'Усі проєкти', f:() => true}, strat:{t:'Стратегічні', f:p => p.type === 'Стратегічний'}, mine:{t:'Мої проєкти', f:p => participants(p).includes(VIEWER)}};
 const RV = {all:{t:'Усі звіти', f:() => true}, decision:{t:'Потребують рішення', f:r => r.decision}, awaiting:{t:'Очікують погодження', f:r => r.approval === AP_PEND}};
 const KV = {open:{t:'Відкриті', f:k => k.status !== 'Закрито'}, high:{t:'Високі ризики', f:k => k.status !== 'Закрито' && k.p * k.i >= 15}, all:{t:'Усі елементи', f:() => true}};
-const state = {rmCell:null, page:'home', pv:'all', rv:'all', kv:'open', homeMode:'tiles', projMode:'tiles', panel:null};
+const state = {rmCell:null, page:'home', pv:'all', rv:'all', kv:'open', av:'all', homeMode:'tiles', projMode:'tiles', archmode:'tiles', panel:null};
 
 /* ================= Tiles ================= */
 function tile(p){
@@ -1102,8 +1099,9 @@ function tile(p){
     <div class="tile-top"><span class="code">${esc(p.code)}</span>${p.type === 'Стратегічний' ? `<span class="ico" title="${tv(p.type)}" aria-label="${tv(p.type)}">${icoStar(true)}</span>` : ''}${ragHtml(p.rag)}</div>
     <div class="tile-t">${esc(p.title)}</div>
     <div class="tile-prog"><div class="pl"><span>${esc(tv(p.status))}</span><b>${p.progress}%</b></div><div class="track"><i style="width:${Math.min(p.progress,100)}%;background:${pc}"></i></div></div>
-    <div class="tile-upd"><div class="ul"><span class="dot sm" style="background:${freshColor(d)}"></span>${t('latestUpd')} · ${d ? fmt(d) : t('noReports')}</div>
-      <div class="tx">${esc(p.lastReport) || '<span class="muted">—</span>'}</div></div>
+    ${isArch(p) ? `<div class="tile-upd"><div class="ul">${t('archivedAt')}: ${p.archivedAt ? fmt(D(p.archivedAt)) : '—'}</div></div>`
+      : `<div class="tile-upd"><div class="ul"><span class="dot sm" style="background:${freshColor(d)}"></span>${t('latestUpd')} · ${d ? fmt(d) : t('noReports')}</div>
+      <div class="tx">${esc(p.lastReport) || '<span class="muted">—</span>'}</div></div>`}
     <div class="tile-f">${(p.links || []).length ? `<span class="tile-l">${linkA(p.links[0])}${p.links.length > 1 ? ` <span class="muted">+${p.links.length - 1}</span>` : ''}</span>` : '<span></span>'}
       <span class="tile-pm" title="${t('pmRole')}: ${esc(p.pm)} · ${esc(email(p.pm))}">${avatar(p.pm)}<b>${esc(p.pm)}</b></span></div>
   </div>`;
@@ -1378,26 +1376,6 @@ function kpiStrip(){
     ${tile(high, t('kpiHigh'), '', high > 0, 'risks', 'high')}
     ${tile(late, t('kpiLate'), '', late > 0, 'projects', 'late')}</div>`;
 }
-function myActions(){
-  const mine = visP().filter(p => p.pm === VIEWER), pmo = isPMO();
-  if (!mine.length && !pmo) return '';
-  const C = (l, r, cls) => ({l:() => l, r, cls});
-  const secs = [];
-  const sec = (label, rows, cols) => { if (rows.length) secs.push(`<div class="act-sec"><h3>${label} (${rows.length})</h3>${table(cols, rows)}</div>`); };
-  if (pmo) sec(t('viewAwaiting'), visR().filter(r => r.approval === AP_PEND && !isArch(pById(r.pid))).sort((a, b) => a.d - b.d),
-    [C(fl('rProj'), r => pLink(pById(r.pid))), C(fl('rDate'), r => fmt(r.d)), C(t('cHealth'), r => ragDot(r.rag), 'c-ico'),
-     C(fl('rTitle'), r => `<button class="link" data-act="repopen" data-id="${r.pid}" data-rid="${esc(r.id)}">${esc(r.title)}</button>`, 'wide'), C(fl('rAuthor'), r => person(r.author))]);
-  const act = mine.filter(isActive);
-  const ret = act.map(p => ({p, r:repsOf(p).pop()})).filter(x => x.r && x.r.approval === AP_RET);
-  sec(t('actReturned'), ret, [C(fl('rProj'), x => pLink(x.p)), C(fl('rDate'), x => `${fmt(x.r.d)}${x.r.apNote ? ` · <span title="${esc(x.r.apNote)}">${esc(x.r.apNote)}</span>` : ''}`, 'wide'),
-    C('', x => `<button class="btn" data-act="newfromret" data-id="${x.p.id}" data-rid="${esc(x.r.id)}">${t('newFromReturned')}</button>`)]);
-  sec(t('wpStale'), act.filter(PV.stale.f), [C(fl('title'), pLink), C(fl('last'), freshHtml), C('', p => `<button class="btn" data-act="newrep" data-id="${p.id}">${iconPlus}${t('addReport')}</button>`)]);
-  if (pmo){
-    const acc = visK().filter(k => k.status !== 'Закрито' && k.strategy === 'Прийняття' && k.p * k.i >= 15).sort((a, b) => b.p * b.i - a.p * a.i);
-    if (acc.length) secs.push(`<div class="act-sec"><h3>${t('actAccepted')} (${acc.length})</h3><div class="rlist">${acc.map(k => `<button class="rrow" data-act="riskopen" data-src="list" data-id="${k.pid}" data-rid="${esc(k.id)}">${scoreHtml(k.p * k.i)}<span class="rt">${esc(k.title)}</span><span class="muted">${esc(pById(k.pid).title)}</span></button>`).join('')}</div></div>`);
-  }
-  return `<div class="home-actions">${wp(t('wpActions'), secs.length ? secs.join('') : `<p class="empty">${t('actNone')}</p>`)}</div>`;
-}
 const lvlColor = s => s >= 15 ? 'var(--r)' : s >= 8 ? 'var(--y)' : 'var(--g)';
 function riskMap(){
   const open = visK().filter(KV.open.f), cnt = (pp, ii) => open.filter(k => k.p === pp && k.i === ii);
@@ -1423,7 +1401,8 @@ function deptBars(){
   const segs = [['Червоний','var(--r)'],['Жовтий','var(--y)'],['Зелений','var(--g)'],['','var(--na)']];
   return `<div class="depts">${rows.map(([d, ps]) => `<div class="dept-row"><span class="dn" title="${esc(tv(d))}">${esc(tv(d))}</span>
     <span class="dbar" style="width:${Math.max(4, ps.length / max * 100)}%">${segs.map(([v, c]) => { const n = ps.filter(p => (p.rag || '') === v).length;
-      return n ? `<i style="width:${n / ps.length * 100}%;background:${c}" title="${v ? esc(tv(v)) : t('notRated')}: ${n}"></i>` : ''; }).join('')}</span><b>${ps.length}</b></div>`).join('')}</div>`;
+      return n ? `<i style="width:${n / ps.length * 100}%;background:${c}" title="${v ? esc(tv(v)) : t('notRated')}: ${n}"></i>` : ''; }).join('')}</span><b>${ps.length}</b></div>`).join('')}</div>
+  <div class="dlegend">${[['var(--g)', tv('Зелений')], ['var(--y)', tv('Жовтий')], ['var(--r)', tv('Червоний')], ['var(--na)', t('notRated')]].map(([c, l]) => `<span><i class="dot sm" style="background:${c}"></i>${esc(l)}</span>`).join('')}</div>`;
 }
 // перенесення планової дати завершення в журналі (події звітів / ключових показників)
 const planMoves = p => (p.changes || []).filter(c => c.kind === 'report' || c.kind === 'key').reduce((n, c) => n + (c.diffs || []).filter(d => d.f === 'plan').length, 0);
@@ -1456,7 +1435,6 @@ function pageHome(){
   const riskCols = [SR, PRR, C(fl('rProj'), k => pLink(pById(k.pid))), C(fl('kTitle'), k => esc(k.title), 'wide'), C(fl('kType'), k => esc(k.type)), C(fl('kScore'), k => scoreHtml(k.p * k.i)), C(fl('kOwner'), k => person(k.owner)), KC.due];
   return `${hero(t('dash'), t('visible') + vis.length, true)}
   ${kpiStrip()}
-  ${myActions()}
   <div class="grid2">${wp(t('wpHealth'), donut())}${wp(t('wpDyn'), dynamics())}</div>
   <div class="grid2">${wp(t('wpRiskMap'), riskMap(), ['risks','open'])}${wp(t('wpDept'), deptBars())}</div>
   <div class="grid2">${wp(t('wpSlips'), slipsTable())}${wp(t('wpLaunch'), launchTable())}</div>
@@ -1479,9 +1457,10 @@ function pageProjects(){
 }
 function pageArchive(){
   const s = stateScreen(); if (s) return s.replace(t('dash'), t('navArchive'));
-  const rows = visArch().sort((a, b) => String(b.archivedAt || '').localeCompare(String(a.archivedAt || '')));
-  return `${hero(t('navArchive'), t('archiveSub') + ' · ' + rows.length)}
-  <div class="listcard"><div class="cmdbar"><span class="spacer"></span>${gearBtn('archive')}</div>${dataTable('archive', rows)}</div>`;
+  const v = AV[state.av] || AV.all, rows = visArch().filter(v.f).sort((a, b) => String(b.archivedAt || '').localeCompare(String(a.archivedAt || '')));
+  const inner = state.archmode === 'tiles' ? tiles(rows) : dataTable('archive', rows);
+  return `${hero(t('navArchive'), t('archiveSub') + ' · ' + visArch().length)}
+  <div class="listcard"><div class="cmdbar">${modeSwitch('archmode')}<span class="spacer"></span>${viewSel(AV, state.av, 'av')}${state.archmode === 'list' ? gearBtn('archive') : ''}</div>${inner}</div>`;
 }
 function pageReports(){
   const s = stateScreen(); if (s) return s.replace(t('dash'), t('navReports'));
@@ -1980,7 +1959,7 @@ document.addEventListener('click', e => {
   if (a === 'nav'){ state.page = el.dataset.page; closePop(); closePanel(); render(); window.scrollTo(0, 0); }
   else if (a === 'lang'){ LI = +el.dataset.i; render(); }
   else if (a === 'theme'){ THEME = el.dataset.t; try { localStorage.setItem('pmo-theme', THEME); } catch(e) {} applyTheme(); renderChrome(); }
-  else if (a === 'goview'){ state.page = el.dataset.page; state[{projects:'pv', reports:'rv', risks:'kv'}[state.page]] = el.dataset.view; render(); window.scrollTo(0, 0); }
+  else if (a === 'goview'){ state.page = el.dataset.page; state[{projects:'pv', reports:'rv', risks:'kv', archive:'av'}[state.page]] = el.dataset.view; render(); window.scrollTo(0, 0); }
   else if (a === 'mode'){ state[el.dataset.key] = el.dataset.mode; rerenderMain(); }
   else if (a === 'openp') projectPanel(id, false);
   else if (a === 'comments') projectPanel(id, true);

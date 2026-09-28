@@ -12,6 +12,7 @@ const grab = name => {
   return new Function(`return (${src.slice(i, j + 1)});`)();
 };
 const EXTRA = {
+  scrCard: ['картка проєкту', 'project card', 'карточка проекта'],
   soon: ['Цей розділ з’явиться на наступному етапі.', 'This section is coming in the next stage.', 'Этот раздел появится на следующем этапе.'],
   loadErr: ['Не вдалося завантажити дані', 'Could not load data', 'Не удалось загрузить данные'],
   pendingNote: ['Оновлюється зі статус-звіту', 'Updating from a status report', 'Обновляется из статус-отчёта'],

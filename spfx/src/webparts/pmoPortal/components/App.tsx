@@ -3,7 +3,7 @@ import { SpRepo, PortalData } from '../data/SpRepo';
 import { Lang, LANG_CODES, langFromCulture, makeT, readLang, saveLang } from '../i18n/i18n';
 import { Theme, readTheme, saveTheme } from '../theme/theme';
 import { todayIso } from '../logic/dates';
-import { PV, RV, KV } from '../logic/views';
+import { PV, RV, KV, AV } from '../logic/views';
 import { AppCtx, Ctx, Page, Views } from './ctx';
 import { Header } from './Header';
 import { Panel } from './Panel';
@@ -29,7 +29,7 @@ export interface AppProps { repo: SpRepo; culture: string; userName: string; use
   admin?: boolean; }
 
 const PAGES: Page[] = ['home', 'projects', 'reports', 'risks', 'archive', 'feedback'];
-const DEFAULT_VIEWS: Views = { projects: 'all', reports: 'all', risks: 'open' };
+const DEFAULT_VIEWS: Views = { projects: 'all', reports: 'all', risks: 'open', archive: 'all' };
 interface Route { page: Page; views: Views; projectId: number; form: string; }
 
 /** Адрес: #<вкладка>/<представление>/<id проекта>/<форма> — назад/вперёд браузера, ссылку на карточку можно отправить. */
@@ -40,10 +40,11 @@ function parse(hash: string, prev: Views): Route {
   if (view && page === 'projects' && view in PV) views.projects = view as Views['projects'];
   if (view && page === 'reports' && view in RV) views.reports = view as Views['reports'];
   if (view && page === 'risks' && view in KV) views.risks = view as Views['risks'];
+  if (view && page === 'archive' && view in AV) views.archive = view as Views['archive'];
   return { page, views, projectId: Number(id) || 0, form: form || '' };
 }
 function format(r: Route): string {
-  const v = r.page === 'projects' || r.page === 'reports' || r.page === 'risks' ? r.views[r.page] : '';
+  const v = r.page === 'projects' || r.page === 'reports' || r.page === 'risks' || r.page === 'archive' ? r.views[r.page] : '';
   return '#' + [r.page, v, r.projectId || '', r.form].join('/').replace(/\/+$/, '');
 }
 

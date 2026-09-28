@@ -4,9 +4,11 @@ import { isActive, freshness, isPlanLate, riskScore } from './status';
 export type ProjectView = 'all' | 'strat' | 'problem' | 'mine' | 'stale' | 'late';
 export type ReportView = 'all' | 'decision' | 'awaiting';
 export type RiskView = 'open' | 'high' | 'all';
+export type ArchiveView = 'all' | 'strat' | 'mine';
 // названия представлений — украинские во всех языках, как в прототипе (подсказка viewsNote)
 export const PV: Record<ProjectView, string> = { all: 'Усі проєкти', strat: 'Стратегічні', problem: 'Проблемні', mine: 'Мої проєкти', stale: 'Немає свіжого звіту', late: 'Прострочені' };
 export const RV: Record<ReportView, string> = { all: 'Усі звіти', decision: 'Потребують рішення', awaiting: 'Очікують погодження' };
+export const AV: Record<ArchiveView, string> = { all: 'Усі проєкти', strat: 'Стратегічні', mine: 'Мої проєкти' };
 export const KV: Record<RiskView, string> = { open: 'Відкриті', high: 'Високі ризики', all: 'Усі елементи' };
 
 export const participants = (p: Project): string[] =>
@@ -22,6 +24,9 @@ export function projectView(v: ProjectView, p: Project, today: string, me: strin
     default: return true;
   }
 }
+/** Представления «Архів»: без условия «активный» (все проекты там завершены). */
+export const archiveView = (v: ArchiveView, p: Project, me: string): boolean =>
+  (v === 'strat' ? p.type === 'Стратегічний' : v === 'mine' ? participants(p).indexOf(me.toLowerCase()) >= 0 : true);
 export const reportView = (v: ReportView, r: StatusReport): boolean =>
   (v === 'decision' ? r.decision : v === 'awaiting' ? (r.approval || 'На погодженні') === 'На погодженні' : true);
 export const riskView = (v: RiskView, k: Risk): boolean =>
