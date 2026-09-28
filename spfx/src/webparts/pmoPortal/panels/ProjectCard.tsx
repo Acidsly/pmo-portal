@@ -28,7 +28,7 @@ const Who: React.FC<{ p: Person | null; repo: SpRepo; sub?: string }> = ({ p, re
 const Access: React.FC<{ p: Project }> = ({ p }) => {
   const { t, fl } = React.useContext(AppCtx);
   const a = parseAccess(p.access || '', isArch(p.status));
-  const sub = (x: AccessRow): string => (x.r === 'pm' ? t('pmRole') : x.r === 'owner' ? fl('owner') : x.r === 'stake' ? fl('stakeholders') : x.j);
+  const sub = (x: AccessRow): string => (x.r === 'pm' ? t('pmRole') : x.r === 'owner' ? fl('owner') : x.r === 'stake' ? fl('team') : x.j);
   return <div className="sec"><h3>{t('accessTitle')}</h3><div className="access"><div className="muted" style={{ fontSize: 13 }}>{a ? t('accessDesc') : t('accessPending')}</div>
     <ol>{a ? a.people.map(x => <li key={x.e}><span className="person" title={x.e}><Avatar name={x.n} /><span className="pn"><b>{x.n}</b>{sub(x) ? <small>{sub(x)}</small> : null}</span></span>
       <span className="lvl">{t(x.l === 'edit' ? 'lvlEdit' : 'lvlRead')}</span></li>) : null}

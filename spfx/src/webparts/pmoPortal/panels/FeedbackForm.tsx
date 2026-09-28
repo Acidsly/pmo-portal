@@ -65,7 +65,6 @@ export const FeedbackForm: React.FC<{ screen: string; onCancel(): void; allUrl?:
         <input ref={fileRef} type="file" accept="image/*" multiple={true} hidden={true}
           onChange={e => { const f = Array.prototype.slice.call(e.target.files || []) as File[]; e.target.value = ''; add(f).catch(() => undefined); }} />
         <p className="note fb-paste">{t('fbPaste')}</p></div>
-      <p className="note">{t('fbScreen')}: <code>{screen || '#home'}</code></p>
       <Err msg={err} />
       <div className="actions">
         <button type="submit" className="btn primary" disabled={busy}>{busy ? t('fbSending') : t('fbSend')}</button>

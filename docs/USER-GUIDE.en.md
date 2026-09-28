@@ -96,7 +96,7 @@ The status (Initiation, Planning, Execution, On hold, Cancelled, Completed) chan
 2. In **Key indicators** chooses the new **Project status** (and changes dates and % complete if needed).
 3. Fills in **Reason for changing indicators** — why the status changes; the reason goes to the history.
 4. Rates schedule, budget, resources, writes the summary → **Save**. The report goes for approval.
-5. **The PMO** approves the report — the status in the card changes, and "Report approval" and "Status report" rows appear in the history ("old → new", the reason). If the PMO returns the report, the status does not change and the PM submits a new report.
+5. **The PMO** approves the report — the status in the card changes, and "Report approval" and "Updated by status report" rows appear in the history ("old → new", the reason). If the PMO returns the report, the status does not change and the PM submits a new report.
 6. **"Completed — move to archive"** — after approval the project gets the "Archived" status and an archive date and moves to the "Archive" tab; after that it is view-only.
 
 ## Risks and issues

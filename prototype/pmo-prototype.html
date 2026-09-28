@@ -1532,7 +1532,7 @@ function accessList(p){
   add(p.pm, t('lvlEdit'), t('pmRole'));
   chain(p.pm).forEach(m => add(m, t('lvlRead'), roleOf(m)));
   add(p.owner, t('lvlRead'), fl('owner'));
-  (p.stakeholders || []).forEach(n => add(n, t('lvlRead'), fl('stakeholders')));
+  (p.stakeholders || []).forEach(n => add(n, t('lvlRead'), fl('team')));
   [p.owner].concat(p.stakeholders || []).filter(Boolean).forEach(x => chain(x).forEach(m => add(m, t('lvlRead'), roleOf(m))));
   return rows.join('') + `<li><span class="pav" style="background:var(--text-3)">PMO</span><span class="pn"><b>${t('pmoGroup')}</b></span><span class="lvl">${t('lvlPmo')}</span></li>`;
 }

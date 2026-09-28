@@ -39,7 +39,7 @@ const EXTRA = {
   csvTitle: ['Вивантажити таблицю в CSV (як на екрані: фільтри й колонки)', 'Export the table to CSV (as shown: filters and columns)', 'Выгрузить таблицу в CSV (как на экране: фильтры и колонки)'],
   fbTitle: ['Відгук про портал', 'Portal feedback', 'Отзыв о портале'],
   fbList: ['Відгуки', 'Feedback', 'Отзывы'],
-  fbHint: ['Що не так або що покращити? Опишіть, що ви робили і що очікували побачити. Екран, з якого ви відкрили відгук, і пристрій додаються самі.', 'What is wrong or what could be better? Describe what you did and what you expected. The screen you opened this from and your device are added automatically.', 'Что не так или что улучшить? Опишите, что вы делали и что ожидали увидеть. Экран, с которого вы открыли отзыв, и устройство добавляются сами.'],
+  fbHint: ['Що не так або що покращити? Опишіть, що ви робили і що очікували побачити. Вкажіть, на якому екрані це помітили; пристрій додається сам.', 'What is wrong or what could be better? Describe what you did and what you expected. Say on which screen you noticed it; your device is added automatically.', 'Что не так или что улучшить? Опишите, что вы делали и что ожидали увидеть. Укажите, на каком экране это заметили; устройство добавляется само.'],
   fbText: ['Що не так або що покращити?', 'What is wrong or what could be better?', 'Что не так или что улучшить?'],
   fbShots: ['Скриншоти', 'Screenshots', 'Скриншоты'],
   fbAdd: ['Додати скриншот', 'Add screenshot', 'Добавить скриншот'],

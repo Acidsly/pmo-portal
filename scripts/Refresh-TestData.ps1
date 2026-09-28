@@ -23,7 +23,7 @@ param(
     # демо-проекты Seed-TestData.ps1 — первые десять номеров
     [string[]]$Demo = @(1..10 | ForEach-Object { "PRJ-{0:d3}" -f $_ }),
     # тестовые учётные записи для «Команда проєкту» демо-проектов (людей фокус-группы в чужие проекты не добавляем)
-    [string[]]$People = @("j.pochobut@eclectic.group", "test.kovalenko@smarthr.kz", "test.burbega@fillin.kz"),
+    [string[]]$People = @("j.pochobut@eclectic.group", "test.kovalenko@smarthr.kz", "test.burbega@fillin.kz", "test@smarthr.kz"),
     [int]$TeamSize = 3,
     [int]$LinkCount = 3
 )
@@ -98,11 +98,20 @@ foreach ($it in (Get-PnPListItem -List "Lists/Projects" -PageSize 500 | Where-Ob
     $rows = @($teamRows | Where-Object { $_["tmProject"] -and $_["tmProject"].LookupId -eq $it.Id })
     $inTeam = @($rows | Where-Object { $_["tmUser"] } | ForEach-Object { ([string]$_["tmUser"].Email).ToLowerInvariant() })
     $pm = if ($it["pmManager"]) { ([string]$it["pmManager"].Email).ToLowerInvariant() } else { "" }
+    $own = if ($it["pmOwner"]) { ([string]$it["pmOwner"].Email).ToLowerInvariant() } else { "" }
+    # власник уже в карточке отдельно — в команде его не дублируем: строку демо-роли переводим на свободного человека
+    foreach ($r in @($rows | Where-Object { $_["tmUser"] -and $_["tmRole"] -ne "Стейкхолдер" -and ([string]$_["tmUser"].Email).ToLowerInvariant() -eq $own })) {
+        $free = @($People | ForEach-Object { $_.ToLowerInvariant() } | Where-Object { $_ -ne $pm -and $_ -ne $own -and $inTeam -notcontains $_ })[0]
+        if (-not $free) { continue }
+        Set-PnPListItem -List "Lists/ProjectTeam" -Identity $r.Id -Values @{ tmUser = $free } -UpdateType SystemUpdate | Out-Null
+        $inTeam = @($inTeam | Where-Object { $_ -ne $own }) + $free
+        Write-Host ("  ~ {0}: {1} — замість власника" -f $code, $r["tmRole"])
+    }
     $usedRoles = @($rows | ForEach-Object { [string]$_["tmRole"] })
     $k = 0
     foreach ($e in $People) {
         if ($rows.Count + $k -ge $TeamSize) { break }
-        $e = $e.ToLowerInvariant(); if ($e -eq $pm -or $inTeam -contains $e) { continue }
+        $e = $e.ToLowerInvariant(); if ($e -eq $pm -or $e -eq $own -or $inTeam -contains $e) { continue }
         $role = @($ROLES | Where-Object { $usedRoles -notcontains $_[0] })[0]; if (-not $role) { $role = $ROLES[$k % $ROLES.Count] }
         Add-PnPListItem -List "Lists/ProjectTeam" -Values @{ tmProject = $it.Id; tmUser = $e; tmRole = $role[0]; tmTopics = $role[1] } | Out-Null
         $usedRoles += $role[0]; $k++; $tAdded++
