@@ -132,9 +132,9 @@ export const T: Record<string, L3> = {
   "Новый статус-отчёт"
  ],
  "view": [
-  "Подання",
-  "View",
-  "Представление"
+  "Відображати",
+  "Show",
+  "Отображать"
  ],
  "list": [
   "Список",
@@ -1017,9 +1017,9 @@ export const T: Record<string, L3> = {
   "Только просмотр: изменять риски может только PM проекта."
  ],
  "kMit": [
-  "Заходи реагування",
-  "Mitigation",
-  "Меры реагирования"
+  "Заходи для зниження ризику",
+  "Risk reduction actions",
+  "Меры по снижению риска"
  ],
  "noVisible": [
   "У вас поки немає доступних проєктів.",
@@ -1233,6 +1233,16 @@ export const FLD: Record<string, L3> = {
   "Type",
   "Тип"
  ],
+ "kStrategy": [
+  "Стратегія реагування",
+  "Response strategy",
+  "Стратегия реагирования"
+ ],
+ "kContingency": [
+  "План дій у разі настання",
+  "Contingency plan",
+  "План действий при наступлении"
+ ],
  "kScore": [
   "Оцінка",
   "Score",
@@ -1289,6 +1299,76 @@ export const EXTRA: Record<string, L3> = {
   "Довідка",
   "Help",
   "Справка"
+ ],
+ "navFeedback": [
+  "Відгуки",
+  "Feedback",
+  "Отзывы"
+ ],
+ "feedbackNew": [
+  "Залишити відгук",
+  "Leave feedback",
+  "Оставить отзыв"
+ ],
+ "fbPageSub": [
+  "Зауваження й пропозиції учасників тесту та відповіді розробників рішення",
+  "Test participants’ comments and suggestions with the solution team’s answers",
+  "Замечания и предложения участников теста и ответы разработчиков решения"
+ ],
+ "fbDate": [
+  "Дата",
+  "Date",
+  "Дата"
+ ],
+ "fbAuthor": [
+  "Автор",
+  "Author",
+  "Автор"
+ ],
+ "fbStatusCol": [
+  "Статус розгляду",
+  "Review status",
+  "Статус рассмотрения"
+ ],
+ "fbAnswer": [
+  "Відповідь",
+  "Answer",
+  "Ответ"
+ ],
+ "fbViewAll": [
+  "Усі відгуки",
+  "All feedback",
+  "Все отзывы"
+ ],
+ "fbViewMine": [
+  "Мої відгуки",
+  "My feedback",
+  "Мои отзывы"
+ ],
+ "fbViewOpen": [
+  "Без відповіді",
+  "Not answered",
+  "Без ответа"
+ ],
+ "fbNoItems": [
+  "Відгуків ще немає.",
+  "No feedback yet.",
+  "Отзывов пока нет."
+ ],
+ "fbShotsHidden": [
+  "Скриншоти бачать автор і розробники рішення",
+  "Screenshots are visible to the author and the solution team",
+  "Скриншоты видят автор и разработчики решения"
+ ],
+ "fbNoAnswer": [
+  "Відповіді ще немає — ми її додамо після розгляду.",
+  "No answer yet — we will add it after review.",
+  "Ответа пока нет — мы добавим его после рассмотрения."
+ ],
+ "fbAnswered": [
+  "Відповідь збережено.",
+  "Answer saved.",
+  "Ответ сохранён."
  ],
  "errCode": [
   "Такий код уже є в іншого проєкту. Вкажіть інший або залиште поле порожнім — код призначиться автоматично.",

@@ -15,7 +15,7 @@ export interface ProjectDraft {
 }
 /** Черновик риска (форма riskForm прототипа). */
 export interface RiskDraft {
-  projectId: number; title: string; type: string; probability: number; impact: number; owner: Person | null; status: string; due: string; mitigation: string;
+  projectId: number; title: string; type: string; probability: number; impact: number; owner: Person | null; status: string; due: string; strategy: string; contingency: string; mitigation: string;
 }
 
 /** Следующий код проекта: максимальный номер PRJ-NNN + 1, минимум три цифры. */

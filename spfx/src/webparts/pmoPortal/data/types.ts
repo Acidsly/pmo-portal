@@ -33,9 +33,17 @@ export interface StatusReport {
 export interface Risk {
   id: number; projectId: number; title: string; type: string; probability: number; impact: number;
   owner: Person | null; status: string; due: string; mitigation: string;
+  /** Стратегія реагування (Уникнення / Зниження (пом'якшення) / Передача / Прийняття) и план на случай наступления. */
+  strategy: string; contingency: string;
   created?: string;
 }
 
 export interface Comment { id: number; projectId: number; text: string; author: Person | null; created: string; }  // created — ISO дата-время
 export interface ChangeEntry { id: number; projectId: number; date: string; who: Person | null; kind: string; field: string; from: string; to: string; reason: string; }
 export interface ChangeEvent { id: number; date: string; who: Person | null; kind: 'create' | 'key' | 'edit' | 'report'; reason: string; diffs: { f: string; from: string; to: string }[]; }
+
+/** Отзыв фокус-группы: из «Відгуки — загальні» (видят все) + свои / все для администратора (со скриншотами) из «Відгуки». */
+export interface FeedbackRow {
+  id: number; created: string; author: string; screen: string; text: string; status: string; answer: string;
+  shots: number; mine: boolean; files: { name: string; url: string }[];
+}

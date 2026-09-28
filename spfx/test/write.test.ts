@@ -36,8 +36,8 @@ test('правка карточки: без ключевых показател�
   expect(projectEditBody(draft({}), [], 'pm@x.ua', '', '')).not.toHaveProperty('pmEditLog');   // нет изменений — журнал не трогаем
 });
 test('риск и комментарий', () => {
-  expect(riskBody({ projectId: 1, title: 'Р', type: 'Ризик', probability: 4, impact: 5, owner: { id: 9, name: 'O', email: 'o@x' }, status: 'Відкрито', due: '', mitigation: '' }))
-    .toEqual({ riProjectId: 1, Title: 'Р', riType: 'Ризик', riProbability: 4, riImpact: 5, riOwnerId: 9, riStatus: 'Відкрито', riDue: null, riMitigation: '' });
+  expect(riskBody({ projectId: 1, title: 'Р', type: 'Ризик', probability: 4, impact: 5, owner: { id: 9, name: 'O', email: 'o@x' }, status: 'Відкрито', due: '', mitigation: '', strategy: 'Передача', contingency: 'План Б' }))
+    .toEqual({ riProjectId: 1, Title: 'Р', riType: 'Ризик', riProbability: 4, riImpact: 5, riOwnerId: 9, riStatus: 'Відкрито', riDue: null, riMitigation: '', riStrategy: 'Передача', riContingency: 'План Б' });
   expect(commentBody(1, 'Текст')).toEqual({ cmProjectId: 1, cmText: 'Текст' });
   expect(spDate('')).toBeNull(); expect(spDate('2026-03-05')).toBe('2026-03-05T12:00:00Z');
 });

@@ -340,7 +340,9 @@ F $K riScore       Calculated "Оцінка"           "Score"               "О
 F $K riOwner       User     "Власник ризику"     "Risk owner"          "Владелец риска"       "UserSelectionMode='PeopleOnly'"
 F $K riStatus      Choice   "Статус"             "Status"              "Статус"               "Format='Dropdown'" (Choices @("Відкрито","В роботі","Закрито") "Відкрито")
 F $K riDue         DateTime "Термін виконання заходів" "Mitigation due date" "Срок выполнения мер" "Format='DateOnly'"
-F $K riMitigation  Note     "Заходи реагування"  "Mitigation"          "Меры реагирования"    "NumLines='4' RichText='FALSE'"
+F $K riStrategy    Choice   "Стратегія реагування" "Response strategy" "Стратегия реагирования" "" (Choices @("Уникнення", "Зниження (пом'якшення)", "Передача", "Прийняття") "")
+F $K riMitigation  Note     "Заходи для зниження ризику" "Risk reduction actions" "Меры по снижению риска" "NumLines='4' RichText='FALSE'"
+F $K riContingency Note     "План дій у разі настання" "Contingency plan" "План действий при наступлении" "NumLines='4' RichText='FALSE'"
 F $K pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='64'"
 $script:Loc += , @($K, "Title", "Ризик / проблема", "Risk / issue", "Риск / проблема")
 # Подсказки к шкалам — видны под полями в форме риска
@@ -382,16 +384,32 @@ if ($Feedback) {
     F $FB fbText    Note   "Відгук"             "Feedback"            "Отзыв"                "NumLines='6' RichText='FALSE' Required='TRUE'"
     F $FB fbScreen  Text   "Екран"              "Screen"              "Экран"                "MaxLength='255'"
     F $FB fbDevice  Text   "Пристрій"           "Device"              "Устройство"           "MaxLength='255'"
-    F $FB fbStatus  Choice "Статус розгляду"    "Review status"       "Статус рассмотрения"  "" (Choices @("Новий", "Прийнято", "Відхилено", "Зроблено") "Новий")
+    $fbStatuses = @("Новий", "Прийнято", "Зроблено", "Прокоментовано", "Відхилено")
+    F $FB fbStatus  Choice "Статус розгляду"    "Review status"       "Статус рассмотрения"  "" (Choices $fbStatuses "Новий")
+    # новые варианты статуса на уже созданном поле (F не меняет существующие поля)
+    $cur = Get-PnPField -List $FB -Identity fbStatus
+    if (@($fbStatuses | Where-Object { $cur.Choices -notcontains $_ }).Count) { Set-PnPField -List $FB -Identity fbStatus -Values @{ Choices = [string[]]$fbStatuses } | Out-Null; Write-Host "    статусы отзывов: $($fbStatuses -join ', ')" }
     F $FB fbAnswer  Note   "Відповідь"          "Answer"              "Ответ"                "NumLines='4' RichText='FALSE'"
     $script:Loc += , @($FB, "Title", "Коротко", "Summary", "Кратко")
     Set-PnPField -List $FB -Identity "Title" -Values @{ Required = $false } | Out-Null
-    # каждый видит и правит только свои отзывы; PMO (уровень «Редагування» списка) — все
+    # каждый видит и правит только свои отзывы; все отзывы и ответы — на странице «Відгуки»; статусы и ответы — владельцы сайта
     Set-PnPList -Identity "Lists/Feedback" -ReadSecurity AllUsersReadAccessOnItemsTheyCreate -WriteSecurity WriteOnlyMyItems -EnableAttachments $true | Out-Null
+    # Відгуки — загальні: копия без скриншотов для страницы «Відгуки» (все видят все отзывы и ответы); пишет только синхронизация
+    $FP = Ensure-List "Lists/FeedbackPublic" "Відгуки — загальні" "Feedback — shared" "Отзывы — общие"
+    F $FP fpId      Number   "Номер відгуку"      "Feedback no."        "Номер отзыва"         "Indexed='TRUE' Decimals='0'"
+    F $FP fpCreated DateTime "Дата"               "Date"                "Дата"                 "Format='DateTime'"
+    F $FP fpAuthor  Text     "Автор"              "Author"              "Автор"                "MaxLength='255'"
+    F $FP fpScreen  Text     "Екран"              "Screen"              "Экран"                "MaxLength='255'"
+    F $FP fpText    Note     "Відгук"             "Feedback"            "Отзыв"                "NumLines='6' RichText='FALSE'"
+    F $FP fpStatus  Text     "Статус розгляду"    "Review status"       "Статус рассмотрения"  "MaxLength='50'"
+    F $FP fpAnswer  Note     "Відповідь"          "Answer"              "Ответ"                "NumLines='4' RichText='FALSE'"
+    F $FP fpShots   Number   "Скриншотів"         "Screenshots"         "Скриншотов"           "Decimals='0'"
+    $script:Loc += , @($FP, "Title", "Коротко", "Summary", "Кратко")
+    Set-PnPField -List $FP -Identity "Title" -Values @{ Required = $false } | Out-Null
     #region feedback-format
     # цветные метки «Статус розгляду» в списке — PMO разбирает отзывы в стандартном списке
-    $fbColors = @{ "Новий" = "#0a64d6"; "Прийнято" = "#8a5a00"; "Відхилено" = "#6b7280"; "Зроблено" = "#1e7d34" }
-    $fbBg     = @{ "Новий" = "#e3eefc"; "Прийнято" = "#fdf1d8"; "Відхилено" = "#eceef1"; "Зроблено" = "#e2f4e6" }
+    $fbColors = @{ "Новий" = "#0a64d6"; "Прийнято" = "#8a5a00"; "Відхилено" = "#6b7280"; "Зроблено" = "#1e7d34"; "Прокоментовано" = "#6b3fb8" }
+    $fbBg     = @{ "Новий" = "#e3eefc"; "Прийнято" = "#fdf1d8"; "Відхилено" = "#eceef1"; "Зроблено" = "#e2f4e6"; "Прокоментовано" = "#efe7fb" }
     $pick = { param($map) $e = "''"; foreach ($st in $map.Keys) { $e = "if([`$fbStatus]=='$st','$($map[$st])',$e)" }; "=$e" }
     $fmt = @{ '$schema' = "https://developer.microsoft.com/json-schemas/sp/v2/column-formatting.schema.json"; elmType = "div"; txtContent = "[`$fbStatus]"
               style = @{ color = (& $pick $fbColors); "background-color" = (& $pick $fbBg); padding = "2px 10px"; "border-radius" = "10px"; "font-weight" = "600"; display = "inline-block" } }
@@ -479,7 +497,11 @@ function Set-ListRoles([string]$Url, [hashtable]$Want) {
 }
 Set-ListRoles "Lists/Projects"   @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_EDIT }
 Set-ListRoles "Lists/KeyChanges" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
-if ($Feedback) { Set-ListRoles "Lists/Feedback" @{ $members.Title = $ROLE_EDIT; $PMO_GROUP = (Get-RoleName "Editor") } }
+# отзывы: участники и PMO — добавлять и читать свои; статусы и ответы ставят только владельцы сайта; общий список — только чтение
+if ($Feedback) {
+    Set-ListRoles "Lists/Feedback"       @{ $members.Title = $ROLE_EDIT; $PMO_GROUP = $ROLE_EDIT }
+    Set-ListRoles "Lists/FeedbackPublic" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
+}
 
 # ===========================================================================
 # 8. Представления (группировок по статусам нет; названия представлений SharePoint не переводит)
@@ -566,7 +588,7 @@ foreach ($lib in @("SitePages", "SiteAssets", "Shared Documents")) {
     if (Get-PnPList -Identity $lib -ErrorAction SilentlyContinue) { Set-ListRoles $lib @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ } }
 }
 # списки портала не видны в «Вміст сайту» и поиске по сайту; приложение и владельцы открывают их по адресу
-$portalLists = @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/KeyChanges", "Lists/ProjectComments") + $(if ($Feedback) { @("Lists/Feedback") } else { @() })
+$portalLists = @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/KeyChanges", "Lists/ProjectComments") + $(if ($Feedback) { @("Lists/Feedback", "Lists/FeedbackPublic") } else { @() })
 foreach ($u in $portalLists) {
     $l = Get-PnPList -Identity $u -Includes Hidden
     if (-not $l.Hidden) { Set-PnPList -Identity $u -Hidden $true | Out-Null; Write-Host "    скрыт список $u" }

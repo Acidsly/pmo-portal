@@ -127,6 +127,7 @@ export function riskDefs(x: DefsCtx): TableDefs<Risk> {
     code: { label: t('cCode'), cell: k => P(k).code, sort: k => P(k).code },
     title: { label: fl('kTitle'), cell: k => <button className="link clamp2" onClick={() => x.openRisk(k.id, 0)}>{k.title}</button>, sort: k => k.title, cls: 'w-wide' },
     type: { label: fl('kType'), cell: k => tv(k.type), sort: k => k.type, filter: k => k.type },
+    strategy: { label: fl('kStrategy'), cell: k => (k.strategy ? tv(k.strategy) : <Muted />), sort: k => k.strategy, filter: k => k.strategy },
     score: { label: fl('kScore'), cell: k => <Score s={sc(k)} />, sort: k => -sc(k), filter: k => scoreBucket(sc(k)), flabel: v => t('sc' + v) },
     prob: { label: t('cProb'), cell: k => String(k.probability), sort: k => k.probability, filter: k => String(k.probability), cls: 'num' },
     imp: { label: t('cImp'), cell: k => String(k.impact), sort: k => k.impact, filter: k => String(k.impact), cls: 'num' },
@@ -134,6 +135,6 @@ export function riskDefs(x: DefsCtx): TableDefs<Risk> {
     status: { label: fl('kStatus'), cell: k => tv(k.status), sort: k => k.status, filter: k => k.status },
     due: { label: fl('kDue'), cell: k => (k.due && k.due < today && k.status !== 'Закрито' ? <span className="late">{fmtDate(k.due)}</span> : fmtDate(k.due)), sort: k => k.due }
   };
-  return { lock: 'proj', cols, defaults: ['strat', 'prio', 'proj', 'title', 'type', 'score', 'owner', 'status', 'due'] };
+  return { lock: 'proj', cols, defaults: ['strat', 'prio', 'proj', 'title', 'type', 'score', 'strategy', 'owner', 'status', 'due'] };
 }
 

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- ответы REST SharePoint */
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
-import { Project, StatusReport, Risk, Comment, ChangeEntry, Person } from './types';
+import { Project, StatusReport, Risk, Comment, ChangeEntry, Person, FeedbackRow } from './types';
 import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, REPORT_SELECT, REPORT_EXPAND, RISK_SELECT, RISK_EXPAND,
   COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, canAdd, canManage } from './map';
 import { applyPending } from '../logic/overlay';
@@ -13,16 +13,18 @@ export interface PortalData { projects: Project[]; reports: StatusReport[]; risk
   /** На сайте есть список «Відгуки» (тест с фокус-группой) — показывается кнопка «Відгук». */
   feedback: boolean;
   /** Может разбирать все отзывы (PMO): ссылка на список «Відгуки» из формы отзыва. */
-  feedbackAdmin: boolean; }
+  feedbackAdmin: boolean;
+  /** Страница «Відгуки»: все отзывы с решениями (пусто, если списка нет). */
+  feedbackRows: FeedbackRow[]; }
 
 /** Чтение списков портала от имени пользователя: видны только проекты, которые ему открыла синхронизация. */
 export class SpRepo {
-  constructor(private http: SPHttpClient, private webUrl: string, private webRelUrl: string) {}
+  constructor(private http: SPHttpClient, private webUrl: string, private webRelUrl: string, private me: string = '') {}
 
   private async items(list: string, select: string, expand: string): Promise<any[]> {
     const listUrl = `${this.webRelUrl.replace(/\/$/, '')}/Lists/${list}`;
     // адрес списка — параметром @u: так SharePoint принимает закодированные символы пути
-    let url = `${this.webUrl}/_api/web/GetList(@u)/items?@u='${encodeURIComponent(listUrl)}'&$select=${select}&$expand=${expand}&$top=2000`;
+    let url = `${this.webUrl}/_api/web/GetList(@u)/items?@u='${encodeURIComponent(listUrl)}'&$select=${select}${expand ? '&$expand=' + expand : ''}&$top=2000`;
     const out: any[] = [];
     while (url) {
       const res = await this.http.get(url, SPHttpClient.configurations.v1, { headers: { Accept: 'application/json;odata=nometadata' } });
@@ -51,8 +53,27 @@ export class SpRepo {
       this.listPerms('Projects').catch(() => undefined),
       this.listPerms('Feedback').catch(() => undefined)]);
     const reports = r.map(mapReport);
+    const feedbackRows = fbPerm ? await this.loadFeedback().catch(() => []) : [];
     return { projects: p.map(mapProject).map(x => applyPending(x, reports)), reports, risks: k.map(mapRisk),
-      comments: c.map(mapComment), changes: h.map(mapChange), canCreate: canAdd(perm), feedback: canAdd(fbPerm), feedbackAdmin: canManage(fbPerm) };
+      comments: c.map(mapComment), changes: h.map(mapChange), canCreate: canAdd(perm), feedback: canAdd(fbPerm), feedbackAdmin: canManage(fbPerm), feedbackRows };
+  }
+
+  /** Отзывы: общий список (все видят все) + «Відгуки» (свои или все — у администратора) со скриншотами; свежие, ещё не скопированные синхронизацией, — тоже. */
+  private async loadFeedback(): Promise<FeedbackRow[]> {
+    const [pub, own] = await Promise.all([
+      this.items('FeedbackPublic', 'Id,fpId,fpCreated,fpAuthor,fpScreen,fpText,fpStatus,fpAnswer,fpShots', '').catch(() => [] as any[]),
+      this.items('Feedback', 'Id,Created,fbScreen,fbText,fbStatus,fbAnswer,Author/Title,Author/EMail,AttachmentFiles', 'Author,AttachmentFiles')]);
+    const me = (this.me || '').toLowerCase();
+    const byId: Record<number, FeedbackRow> = {};
+    for (const x of pub) byId[x.fpId] = { id: x.fpId, created: String(x.fpCreated || ''), author: String(x.fpAuthor || ''), screen: String(x.fpScreen || ''),
+      text: String(x.fpText || ''), status: String(x.fpStatus || 'Новий'), answer: String(x.fpAnswer || ''), shots: Number(x.fpShots) || 0, mine: false, files: [] };
+    for (const x of own) {
+      const files = (x.AttachmentFiles || []).map((a: any) => ({ name: String(a.FileName), url: String(a.ServerRelativeUrl) }));
+      byId[x.Id] = { id: x.Id, created: String(x.Created || ''), author: String((x.Author && x.Author.Title) || ''), screen: String(x.fbScreen || ''),
+        text: String(x.fbText || ''), status: String(x.fbStatus || 'Новий'), answer: String(x.fbAnswer || ''), shots: files.length,
+        mine: !!x.Author && String(x.Author.EMail || '').toLowerCase() === me, files };
+    }
+    return Object.keys(byId).map(k => byId[Number(k)]).sort((a, b) => b.id - a.id);
   }
 
   private titles: Record<string, Promise<string>> = {};

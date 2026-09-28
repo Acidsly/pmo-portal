@@ -11,6 +11,7 @@ import { Score } from '../components/Bits';
 
 const TYPES = ['Ризик', 'Проблема'];
 const STATUSES = ['Відкрито', 'В роботі', 'Закрито'];
+const STRATEGIES = ['Уникнення', 'Зниження (пом\'якшення)', 'Передача', 'Прийняття'];
 
 /** Шкала 1–5 с описанием выбранного балла (scale прототипа). */
 const Scale: React.FC<{ name: string; value: number; onChange(v: number): void; desc: string; disabled: boolean }> = p =>
@@ -28,8 +29,8 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
   const p = data.projects.filter(x => x.id === pid)[0];
   const edit = !!p && p.canEdit && !isArch(p.status);
   const [d, setD] = React.useState<RiskDraft>(() => k
-    ? { projectId: k.projectId, title: k.title, type: k.type || 'Ризик', probability: k.probability || 3, impact: k.impact || 3, owner: k.owner, status: k.status || 'Відкрито', due: k.due, mitigation: k.mitigation }
-    : { projectId: pid, title: '', type: 'Ризик', probability: 3, impact: 3, owner: p ? p.manager : null, status: 'Відкрито', due: '', mitigation: '' });
+    ? { projectId: k.projectId, title: k.title, type: k.type || 'Ризик', probability: k.probability || 3, impact: k.impact || 3, owner: k.owner, status: k.status || 'Відкрито', due: k.due, mitigation: k.mitigation, strategy: k.strategy, contingency: k.contingency }
+    : { projectId: pid, title: '', type: 'Ризик', probability: 3, impact: 3, owner: p ? p.manager : null, status: 'Відкрито', due: '', mitigation: '', strategy: '', contingency: '' });
   const [err, setErr] = React.useState('');
   const [busy, setBusy] = React.useState(false);
   const set = (x: Partial<RiskDraft>): void => setD({ ...d, ...x });
@@ -75,7 +76,10 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
           <select id="k-status" disabled={!edit} value={d.status} onChange={e => set({ status: e.target.value })}><Opts values={STATUSES} /></select></div>
         <div><label className="t" htmlFor="k-due">{fl('kDue')}</label><DateIn id="k-due" disabled={!edit} value={d.due} onChange={v => set({ due: v })} /></div>
       </div>
+      <fieldset className="ragpick"><legend>{fl('kStrategy')}</legend>
+        <SegPick name="k-str" options={STRATEGIES} value={d.strategy} disabled={!edit} onChange={v => set({ strategy: d.strategy === v ? '' : v })} /></fieldset>
       <Frow label={t('kMit')} htmlFor="k-mit"><textarea id="k-mit" disabled={!edit} value={d.mitigation} onChange={e => set({ mitigation: e.target.value })} /></Frow>
+      <Frow label={fl('kContingency')} htmlFor="k-cont"><textarea id="k-cont" disabled={!edit} value={d.contingency} onChange={e => set({ contingency: e.target.value })} /></Frow>
       <Err msg={err} />
       <div className="actions">
         {edit ? <button type="submit" className="btn primary" disabled={busy}>{t('save')}</button> : null}

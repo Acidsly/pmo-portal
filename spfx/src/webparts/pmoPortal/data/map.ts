@@ -14,7 +14,7 @@ export const REPORT_SELECT = ['Id', 'Title', 'srProjectId', 'srDate', 'srPeriod'
   'srProgress', 'srStart', 'srGoLive', 'srPlanEnd', 'srForecastEnd', 'srActualCost', 'srKeyReason', 'srDone', 'srNext', 'srIssues',
   'srDecision', 'srDecisionText', 'srApplied', 'Created', ...people('Author')].join(',');
 export const REPORT_EXPAND = 'Author';
-export const RISK_SELECT = ['Id', 'Title', 'riProjectId', 'riType', 'riProbability', 'riImpact', 'riStatus', 'riDue', 'riMitigation', 'Created',
+export const RISK_SELECT = ['Id', 'Title', 'riProjectId', 'riType', 'riProbability', 'riImpact', 'riStatus', 'riDue', 'riMitigation', 'riStrategy', 'riContingency', 'Created',
   ...people('riOwner')].join(',');
 export const RISK_EXPAND = 'riOwner';
 
@@ -62,7 +62,7 @@ export function mapReport(r: any): StatusReport {
 
 export function mapRisk(r: any): Risk {
   return { id: r.Id, projectId: r.riProjectId, title: s(r.Title), type: s(r.riType), probability: n(r.riProbability), impact: n(r.riImpact),
-    owner: mapPerson(r.riOwner), status: s(r.riStatus), due: dateOnly(r.riDue), mitigation: s(r.riMitigation), created: s(r.Created) };
+    owner: mapPerson(r.riOwner), status: s(r.riStatus), due: dateOnly(r.riDue), mitigation: s(r.riMitigation), strategy: s(r.riStrategy), contingency: s(r.riContingency), created: s(r.Created) };
 }
 
 export const COMMENT_SELECT = ['Id', 'cmProjectId', 'cmText', 'Created', ...people('Author')].join(',');

@@ -5,7 +5,7 @@ import { Theme } from '../theme/theme';
 import { Avatar } from './Bits';
 import { Sun, Moon, Chat } from './Icons';
 
-const NAV: [Page, string][] = [['home', 'navHome'], ['projects', 'navProjects'], ['reports', 'navReports'], ['risks', 'navRisks'], ['archive', 'navArchive']];
+const NAV: [Page, string][] = [['home', 'navHome'], ['projects', 'navProjects'], ['reports', 'navReports'], ['risks', 'navRisks'], ['archive', 'navArchive'], ['feedback', 'navFeedback']];
 
 /** Шапка прототипа (строки 465–481, renderChrome): логотип, вкладки, язык, тема, пользователь. */
 export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: string; userEmail: string;
@@ -17,7 +17,7 @@ export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: 
   return <header className="top"><div className="top-in">
     <div className="brand"><div className="logo" aria-hidden="true">ПП</div>
       <div><div className="brand-name">{t('siteTitle')}</div><div className="brand-sub">SharePoint · Microsoft 365</div></div></div>
-    <nav className="nav" aria-label="Navigation">{NAV.map(([pg, k]) =>
+    <nav className="nav" aria-label="Navigation">{NAV.filter(([pg]) => pg !== 'feedback' || !!p.onFeedback).map(([pg, k]) =>
       <button key={pg} aria-current={p.page === pg ? 'page' : undefined} onClick={() => p.onPage(pg)}>{t(k)}</button>)}</nav>
     <div className="controls">
       <div className="seg" role="group" aria-label="Мова / Language / Язык">{['UA', 'EN', 'RU'].map((l, i) =>

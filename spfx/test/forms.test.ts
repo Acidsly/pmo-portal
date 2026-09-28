@@ -40,7 +40,7 @@ test('проверки проекта и риска', () => {
   expect(validateProject(draft({ title: 'П', manager: m, code: ' prj-911 ' }), ['PRJ-911'])).toBe('errCode');
   expect(validateProject(draft({ title: 'П', manager: m, code: '' }), ['PRJ-911'])).toBe('');
   expect(validateProject(draft({ title: 'П', manager: m, code: 'PRJ-912' }), ['PRJ-911'])).toBe('');
-  const r: RiskDraft = { projectId: 1, title: ' ', type: 'Ризик', probability: 3, impact: 3, owner: null, status: 'Відкрито', due: '', mitigation: '' };
+  const r: RiskDraft = { projectId: 1, title: ' ', type: 'Ризик', probability: 3, impact: 3, owner: null, status: 'Відкрито', due: '', mitigation: '', strategy: '', contingency: '' };
   expect(validateRisk(r)).toBe('errRiskTitle');
   expect(validateRisk({ ...r, title: 'Р' })).toBe('');
 });

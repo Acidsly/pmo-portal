@@ -525,7 +525,7 @@ const T = {
  emptyDecision:['Відкритих запитів на рішення немає.','No open decision requests.','Открытых запросов на решение нет.'],
  emptyRisks:['Ризиків не зареєстровано.','No risks registered.','Рисков не зарегистрировано.'],
  newProject:['Новий проєкт','New project','Новый проект'], newReport:['Новий статус-звіт','New status report','Новый статус-отчёт'],
- view:['Подання','View','Представление'], list:['Список','List','Список'], tiles:['Плитки','Tiles','Плитки'],
+ view:['Відображати','Show','Отображать'], list:['Список','List','Список'], tiles:['Плитки','Tiles','Плитки'],
  viewsNote:['Назви подань SharePoint не перекладає.','SharePoint doesn’t translate view names.','Названия представлений SharePoint не переводит.'],
  hintProjects:['Червона дата завершення — термін минув, а проєкт не закрито. Світлофор звіту: зелений — до 8 днів, жовтий — 8–14, червоний — понад 14.','Red completion date means the deadline has passed and the project is still open. Report light: green up to 8 days, yellow 8–14, red over 14.','Красная дата завершения — срок прошёл, а проект не закрыт. Светофор отчёта: зелёный — до 8 дней, жёлтый — 8–14, красный — старше 14.'],
  hintRisks:['Оцінка = ймовірність × вплив. Від 15 — червоний, від 8 — жовтий.','Score = probability × impact. 15+ red, 8+ yellow.','Оценка = вероятность × влияние. От 15 — красный, от 8 — жёлтый.'],
@@ -638,7 +638,7 @@ const T = {
  i5:['5 — критичний: зрив цілей проєкту','5 — critical: project goals fail','5 — критическое: срыв целей проекта'],
  savedRisk:['Ризик збережено.','Risk saved.','Риск сохранён.'], errRiskTitle:['Опишіть ризик або проблему.','Describe the risk or issue.','Опишите риск или проблему.'],
  readOnly:['Лише перегляд: змінювати ризики може лише PM проєкту.','View only: only the project PM can change risks.','Только просмотр: изменять риски может только PM проекта.'],
- kMit:['Заходи реагування','Mitigation','Меры реагирования'],
+ kMit:['Заходи для зниження ризику','Risk reduction actions','Меры по снижению риска'],
  noVisible:['У вас поки немає доступних проєктів.','You don’t have any available projects yet.','У вас пока нет доступных проектов.']
 };
 // значения выбора хранятся на украинском, показываются на языке интерфейса (как i18n/values.ts приложения)
@@ -674,6 +674,10 @@ const VAL = {
  'Відкрито':['Відкрито','Open','Открыт'],
  'В роботі':['В роботі','In progress','В работе'],
  'Закрито':['Закрито','Closed','Закрыт'],
+ 'Уникнення':['Уникнення','Avoid','Избегание'],
+ "Зниження (пом'якшення)":["Зниження (пом'якшення)",'Reduce (mitigate)','Снижение (смягчение)'],
+ 'Передача':['Передача','Transfer','Передача'],
+ 'Прийняття':['Прийняття','Accept','Принятие'],
  'Усі проєкти':['Усі проєкти','All projects','Все проекты'],
  'Стратегічні':['Стратегічні','Strategic','Стратегические'],
  'Проблемні':['Проблемні','At risk','Проблемные'],
@@ -702,7 +706,7 @@ const FLD = {
  rNext:['План на наступний період','Plan for next period','План на следующий период'], rIssues:['Проблеми та ризики','Issues and risks','Проблемы и риски'],
  rDec:['Потрібне рішення керівництва','Management decision needed','Требуется решение руководства'], rDecText:['Яке рішення потрібне','Decision required','Какое решение нужно'],
  rAuthor:['Автор','Created by','Автор'],
- kTitle:['Ризик / проблема','Risk / issue','Риск / проблема'], kType:['Тип','Type','Тип'], kScore:['Оцінка','Score','Оценка'], kPI:['Ймов. × вплив','Prob. × impact','Вер. × влияние'],
+ kTitle:['Ризик / проблема','Risk / issue','Риск / проблема'], kType:['Тип','Type','Тип'], kStrategy:['Стратегія реагування','Response strategy','Стратегия реагирования'], kContingency:['План дій у разі настання','Contingency plan','План действий при наступлении'], kScore:['Оцінка','Score','Оценка'], kPI:['Ймов. × вплив','Prob. × impact','Вер. × влияние'],
  kOwner:['Власник ризику','Risk owner','Владелец риска'], kStatus:['Статус','Status','Статус'], kDue:['Термін виконання заходів','Mitigation due date','Срок выполнения мер']
 };
 const t = k => (T[k] || [k,k,k])[LI];
@@ -1107,6 +1111,7 @@ const KDEF = {
   code:{l:() => t('cCode'), main:k => esc(pById(k.pid).code), sort:k => pById(k.pid).code},
   title:{l:() => fl('kTitle'), main:k => `<button class="link clamp2" data-act="riskopen" data-src="list" data-id="${k.pid}" data-rid="${k.id}">${esc(k.title)}</button>`, sort:k => k.title, cls:'w-wide'},
   type:{l:() => fl('kType'), main:k => esc(tv(k.type)), sort:k => k.type, filter:k => k.type},
+  strategy:{l:() => fl('kStrategy'), main:k => k.strategy ? esc(tv(k.strategy)) : '<span class="muted">—</span>', sort:k => k.strategy || '', filter:k => k.strategy || ''},
   score:{l:() => fl('kScore'), main:k => scoreHtml(k.p * k.i), sort:k => -(k.p * k.i), filter:k => scoreBucket(k.p * k.i), flabel:v => t('sc' + v)},
   prob:{l:() => t('cProb'), main:k => String(k.p), sort:k => k.p, filter:k => String(k.p), cls:'num'},
   imp:{l:() => t('cImp'), main:k => String(k.i), sort:k => k.i, filter:k => String(k.i), cls:'num'},
@@ -1470,7 +1475,7 @@ function riskForm(pid, rid, fromList){
   if (!p) return;
   const k = rid ? (p.risks || []).find(x => x.id === rid) : null;
   const edit = canEditP(p) && !isArch(p);
-  const cur = k || {type:'Ризик', p:3, i:3, owner:p.pm, status:'Відкрито', due:'', title:'', mitigation:''};
+  const cur = k || {type:'Ризик', p:3, i:3, owner:p.pm, status:'Відкрито', due:'', title:'', mitigation:'', strategy:'', contingency:''};
   state.panel = {kind:'form'};
   const dis = edit ? '' : ' disabled';
   const scale = (name, val, pre) => `<div class="opts scale">${[1,2,3,4,5].map(n => `<input type="radio" id="${name}${n}" name="${name}" value="${n}"${+val === n ? ' checked' : ''}${dis}><label for="${name}${n}">${n}</label>`).join('')}</div><p class="scale-d" id="${name}-d">${t(pre + val)}</p>`;
@@ -1492,7 +1497,9 @@ function riskForm(pid, rid, fromList){
       <div><label class="t" for="k-status">${fl('kStatus')}</label><select id="k-status"${dis}>${['Відкрито','В роботі','Закрито'].map(v => opt(v, cur.status)).join('')}</select></div>
       <div><label class="t" for="k-due">${fl('kDue')}</label><input type="date" id="k-due" value="${cur.due || ''}"${dis}></div>
     </div>
+    <fieldset class="ragpick"><legend>${fl('kStrategy')}</legend>${segPick('k-str', ['Уникнення', "Зниження (пом'якшення)", 'Передача', 'Прийняття'], cur.strategy)}</fieldset>
     <div class="frow"><label class="t" for="k-mit">${t('kMit')}</label><textarea id="k-mit"${dis}>${esc(cur.mitigation || '')}</textarea></div>
+    <div class="frow"><label class="t" for="k-cont">${fl('kContingency')}</label><textarea id="k-cont"${dis}>${esc(cur.contingency || '')}</textarea></div>
     <p class="err" hidden></p>
     <div class="actions">${edit ? `<button type="submit" class="btn primary">${t('save')}</button>` : ''}<button type="button" class="btn" data-act="${pid && !fromList ? 'backp' : 'close'}" data-id="${pid || ''}">${edit ? t('cancel') : t('close')}</button></div>
   </form>`);
@@ -1506,7 +1513,7 @@ function riskForm(pid, rid, fromList){
     e.preventDefault(); if (!edit) return;
     if (g('k-p')) p = pById(+g('k-p').value);
     const vals = {title:g('k-title').value.trim(), type:radioVal(form, 'k-type') || 'Ризик', p:+radioVal(form, 'k-pr') || 1, i:+radioVal(form, 'k-im') || 1,
-      owner:g('k-owner').value, status:g('k-status').value, due:g('k-due').value, mitigation:g('k-mit').value.trim()};
+      owner:g('k-owner').value, status:g('k-status').value, due:g('k-due').value, mitigation:g('k-mit').value.trim(), strategy:radioVal(form, 'k-str') || '', contingency:g('k-cont').value.trim()};
     if (!vals.title){ g('k-title').focus(); return err(t('errRiskTitle')); }
     if (k) Object.assign(k, vals); else p.risks = (p.risks || []).concat([Object.assign({id:uid()}, vals)]);
     rerenderMain();

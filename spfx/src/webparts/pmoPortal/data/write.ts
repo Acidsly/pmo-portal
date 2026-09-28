@@ -46,6 +46,6 @@ export function projectEditBody(d: ProjectDraft, diffs: { f: string; from: strin
 }
 
 export const riskBody = (d: RiskDraft): Body => ({ riProjectId: d.projectId, Title: d.title.trim(), riType: d.type, riProbability: d.probability,
-  riImpact: d.impact, riOwnerId: d.owner ? d.owner.id : null, riStatus: d.status, riDue: spDate(d.due), riMitigation: d.mitigation });
+  riImpact: d.impact, riOwnerId: d.owner ? d.owner.id : null, riStatus: d.status, riDue: spDate(d.due), riMitigation: d.mitigation, riStrategy: d.strategy || null, riContingency: d.contingency });
 
 export const commentBody = (projectId: number, text: string): Body => ({ cmProjectId: projectId, cmText: text.trim() });

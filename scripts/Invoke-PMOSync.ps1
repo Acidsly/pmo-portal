@@ -59,7 +59,7 @@ $ErrorActionPreference = "Stop"
 $PMO_GROUP = "PMO-адміністратори"
 $L_PROJ = "Lists/Projects"; $L_REP = "Lists/StatusReports"; $L_RISK = "Lists/RisksIssues"
 $L_CHG  = "Lists/KeyChanges"; $L_CMT = "Lists/ProjectComments"
-$stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; access = 0; reminders = 0; warnings = 0 }
+$stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; access = 0; feedback = 0; reminders = 0; warnings = 0 }
 
 function Log([string]$m, [string]$c = "Gray") { Write-Host ("{0:HH:mm:ss} {1}" -f (Get-Date), $m) -ForegroundColor $c }
 function Warn([string]$m) { $stats.warnings++; Write-Warning $m }
@@ -260,6 +260,26 @@ foreach ($p in $PROJ.Values) {
 }
 
 # ---------------------------------------------------------------------------
+# 2b. Відгуки → «Відгуки — загальні» (тест с фокус-группой): копия без скриншотов для страницы «Відгуки»
+# ---------------------------------------------------------------------------
+if ((Get-PnPList -Identity "Lists/Feedback" -ErrorAction SilentlyContinue) -and (Get-PnPList -Identity "Lists/FeedbackPublic" -ErrorAction SilentlyContinue)) {
+    $pub = @{}
+    foreach ($x in (Get-PnPListItem -List "Lists/FeedbackPublic" -PageSize 500)) { if ($x["fpId"]) { $pub[[int]$x["fpId"]] = $x } }
+    foreach ($fb in (Get-PnPListItem -List "Lists/Feedback" -PageSize 500)) {
+        $shots = if ($fb["Attachments"]) { @(Get-PnPProperty -ClientObject $fb -Property AttachmentFiles).Count } else { 0 }
+        $vals = [ordered]@{ Title = ([string]$fb["Title"]); fpId = $fb.Id; fpCreated = $fb["Created"]; fpAuthor = [string]$fb["Author"].LookupValue
+                  fpScreen = [string]$fb["fbScreen"]; fpText = [string]$fb["fbText"]; fpStatus = ([string]$fb["fbStatus"]); fpAnswer = [string]$fb["fbAnswer"]; fpShots = $shots }
+        $old = $pub[$fb.Id]
+        $same = $old -and ((Norm $old["fpText"]) -eq $vals.fpText) -and ((Norm $old["fpStatus"]) -eq $vals.fpStatus) -and ((Norm $old["fpAnswer"]) -eq $vals.fpAnswer) -and ([int]$old["fpShots"] -eq $shots) -and ((Norm $old["fpScreen"]) -eq $vals.fpScreen)
+        if ($same) { continue }
+        $stats.feedback++
+        if ($DryRun) { Log ("  відгук #{0} → загальний список ({1})" -f $fb.Id, $vals.fpStatus); continue }
+        if ($old) { Set-PnPListItem -List "Lists/FeedbackPublic" -Identity $old.Id -Values $vals -UpdateType SystemUpdate | Out-Null }
+        else      { Add-PnPListItem -List "Lists/FeedbackPublic" -Values $vals | Out-Null }
+    }
+}
+
+# ---------------------------------------------------------------------------
 # 3. «Останній коментар»
 # ---------------------------------------------------------------------------
 $latest = @{}
@@ -439,5 +459,6 @@ if ($SendReminders) {
 
 Log ("Правок картки: {0}" -f $stats.edits)
 Log ("Списков доступа обновлено: {0}" -f $stats.access)
+Log ("Отзывов в общий список: {0}" -f $stats.feedback)
 Log ("Готово. Звітів: {0}, записів у журнал: {1}, нових проєктів: {2}, коментарів: {3}, типів: {4}, прав: {5}, нагадувань: {6}, попереджень: {7}" -f `
     $stats.reports, $stats.changes, $stats.created, $stats.comments, $stats.types, $stats.acl, $stats.reminders, $stats.warnings) "Green"
