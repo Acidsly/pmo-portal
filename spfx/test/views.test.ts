@@ -2,7 +2,7 @@ import { projectView, reportView, riskView, freshBucket, scoreBucket, participan
 import { Project, StatusReport, Risk } from '../src/webparts/pmoPortal/data/types';
 const P = (x: Partial<Project>): Project => ({ id: 1, code: '', title: 'P', type: 'Звичайний', priority: '', manager: null, owner: null, stakeholders: [],
   department: '', status: 'Реалізація', rag: '', progress: 0, start: '', goLive: '', planEnd: '', forecastEnd: '', archivedAt: '', budget: 0,
-  actualCost: 0, lastUpdate: '', lastReport: '', lastComment: '', loop: '', description: '', canEdit: false, pending: false, ...x });
+  actualCost: 0, lastUpdate: '', lastReport: '', lastComment: '', links: [], team: [], description: '', canEdit: false, pending: false, ...x });
 const me = 'a@x.ua', today = '2026-09-24';
 
 test('представления проектов', () => {

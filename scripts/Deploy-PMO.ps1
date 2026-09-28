@@ -238,6 +238,10 @@ F $P pmoAcl        Text     "Службове: права"    "System: access"  
 # Правки карточки из приложения SPFx: «было / стало» до переноса в журнал синхронизацией (она же очищает поле)
 # «Доступ до картки» — кто видит проект и что может (JSON), пишет синхронизация
 F $P pmAccess      Note     "Службове: доступ"   "System: access list" "Служебное: доступ"    "Hidden='TRUE' NumLines='6' RichText='FALSE'"
+# Посилання картки (JSON [{ "t": назва, "u": адреса }]) — вместо одной ссылки на Loop; правит PM в приложении
+F $P pmLinks       Note     "Посилання"          "Links"               "Ссылки"               "Hidden='TRUE' NumLines='6' RichText='FALSE'"
+# отметки одноразовой миграции проекта (team, links): повторный запуск удалённое PM не возвращает
+F $P pmMigrated    Text     "Службове: міграція" "System: migration"   "Служебное: миграция"  "Hidden='TRUE' MaxLength='100'"
 F $P pmEditLog     Note     "Службове: правки картки" "System: card edits" "Служебное: правки карточки" "Hidden='TRUE' NumLines='6' RichText='FALSE'"
 $script:Loc += , @($P, "Title", "Назва проєкту", "Project name", "Название проекта")
 # код проекта уникален (индекс + запрет дублей); если дубли уже есть — предупреждение, их правят вручную
@@ -315,6 +319,12 @@ F $R srDecision    Boolean  "Потрібне рішення керівницт�
 F $R srDecisionText Note    "Яке рішення потрібне" "Decision required" "Какое решение нужно"  "NumLines='3' RichText='FALSE'"
 F $R srApplied     Boolean  "Службове: застосовано" "System: applied"  "Служебное: применено" "Hidden='TRUE'" "<Default>0</Default>"
 F $R pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='64'"
+# погодження PMO: пишет синхронизация из «Погодження звітів»; в карточку попадает только «Погоджено»
+$hadApproval = [bool](Test-Field $R "srApproval")
+F $R srApproval    Choice   "Погодження"         "Approval"            "Согласование"         "Format='Dropdown'" (Choices @("На погодженні","Погоджено","Повернуто") "На погодженні")
+F $R srApprovedBy  User     "Погодив"            "Approved by"         "Согласовал"           "UserSelectionMode='PeopleOnly'"
+F $R srApprovedAt  DateTime "Дата погодження"    "Approval date"       "Дата согласования"    "Format='DateTime'"
+F $R srApprovalNote Note    "Коментар PMO"       "PMO comment"         "Комментарий PMO"      "NumLines='3' RichText='FALSE'"
 $script:Loc += , @($R, "Title", "Резюме одним рядком", "One-line summary", "Резюме одной строкой")
 
 if (-not $hadApplied) {
@@ -322,6 +332,15 @@ if (-not $hadApplied) {
     $existing = Get-PnPListItem -List $R -PageSize 500 -Fields "ID"
     foreach ($it in $existing) { Set-PnPListItem -List $R -Identity $it.Id -Values @{ srApplied = $true } -UpdateType SystemUpdate | Out-Null }
     if ($existing.Count) { Write-Host "  существующие отчёты ($($existing.Count)) отмечены как применённые" }
+}
+if (-not $hadApproval) {
+    # Миграция: отчёты, уже перенесённые в карточку до появления погодження, — «Погоджено»; остальные ждут PMO
+    $n = 0
+    foreach ($it in (Get-PnPListItem -List $R -PageSize 500 -Fields "ID","srApplied")) {
+        $v = if ($it["srApplied"] -eq $true) { "Погоджено" } else { "На погодженні" }
+        Set-PnPListItem -List $R -Identity $it.Id -Values @{ srApproval = $v } -UpdateType SystemUpdate | Out-Null; $n++
+    }
+    if ($n) { Write-Host "  миграция: погодження для $n отчётов (применённые — «Погоджено»)" }
 }
 
 # ===========================================================================
@@ -358,7 +377,10 @@ $C = Ensure-List "Lists/KeyChanges" "Зміни показників" "Indicator
 F $C kcProject     Lookup   "Проєкт"             "Project"             "Проект"               $lookup
 F $C kcDate        DateTime "Дата зміни"         "Changed on"          "Дата изменения"       "Format='DateTime' Required='TRUE'" "<Default>[today]</Default>"
 F $C kcChangedBy   User     "Хто змінив"         "Changed by"          "Кто изменил"          "UserSelectionMode='PeopleOnly'"
-F $C kcKind        Choice   "Тип зміни"          "Change type"         "Тип изменения"        "Format='Dropdown'" (Choices @("Створення","Статус-звіт","Редагування картки") "Статус-звіт")
+$kinds = @("Створення","Статус-звіт","Редагування картки","Погодження звіту")
+F $C kcKind        Choice   "Тип зміни"          "Change type"         "Тип изменения"        "Format='Dropdown'" (Choices $kinds "Статус-звіт")
+$cur = Get-PnPField -List $C -Identity kcKind
+if (@($kinds | Where-Object { $cur.Choices -notcontains $_ }).Count) { Set-PnPField -List $C -Identity kcKind -Values @{ Choices = [string[]]$kinds } | Out-Null; Write-Host "    типы изменений: $($kinds -join ', ')" }
 F $C kcField       Text     "Поле (внутр.)"      "Field (internal)"    "Поле (внутр.)"        "MaxLength='64'"
 F $C kcFrom        Note     "Було"               "Old value"           "Было"                 "NumLines='2' RichText='FALSE'"
 F $C kcTo          Note     "Стало"              "New value"           "Стало"                "NumLines='2' RichText='FALSE'"
@@ -376,6 +398,59 @@ F $M cmText        Note     "Коментар"           "Comment"             "
 F $M pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='64'"
 $script:Loc += , @($M, "Title", "Коротко", "Summary", "Кратко")
 Set-PnPField -List $M -Identity "Title" -Values @{ Required = $false } | Out-Null
+
+# 6c. Погодження звітів — решение PMO по статус-отчёту: только цвета, решение, комментарий (сам отчёт PMO не правит)
+Write-Host "6c. Список «Погодження звітів»" -ForegroundColor Cyan
+$AP = Ensure-List "Lists/ReportApprovals" "Погодження звітів" "Report approvals" "Согласование отчётов"
+$repLookup = "List='{$($R.Id)}' ShowField='ID' Required='TRUE' Indexed='TRUE' RelationshipDeleteBehavior='Restrict'"
+F $AP apReport      Lookup   "Статус-звіт"        "Status report"       "Статус-отчёт"         $repLookup
+F $AP apProject     Lookup   "Проєкт"             "Project"             "Проект"               $lookup
+F $AP apDecision    Choice   "Рішення"            "Decision"            "Решение"              "Format='Dropdown' Required='TRUE'" (Choices @("Погоджено","Повернуто"))
+F $AP apSchedule    Choice   "Терміни (PMO)"      "Schedule (PMO)"      "Сроки (PMO)"          "Format='Dropdown'" (Choices $rag)
+F $AP apBudget      Choice   "Бюджет (PMO)"       "Budget (PMO)"        "Бюджет (PMO)"         "Format='Dropdown'" (Choices $rag)
+F $AP apResources   Choice   "Ресурси (PMO)"      "Resources (PMO)"     "Ресурсы (PMO)"        "Format='Dropdown'" (Choices $rag)
+F $AP apNote        Note     "Коментар"           "Comment"             "Комментарий"          "NumLines='4' RichText='FALSE'"
+F $AP apApplied     Boolean  "Службове: застосовано" "System: applied"  "Служебное: применено" "Hidden='TRUE'" "<Default>0</Default>"
+F $AP pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='64'"
+$script:Loc += , @($AP, "Title", "Коротко", "Summary", "Кратко")
+Set-PnPField -List $AP -Identity "Title" -Values @{ Required = $false } | Out-Null
+
+# 6a. Команда проєкту — стейкхолдеры таблицей: пользователь, роль в проекте, с каких вопросов обращаться
+Write-Host "6a. Список «Команда проєкту»" -ForegroundColor Cyan
+$TM = Ensure-List "Lists/ProjectTeam" "Команда проєкту" "Project team" "Команда проекта"
+F $TM tmProject     Lookup   "Проєкт"             "Project"             "Проект"               $lookup
+F $TM tmUser        User     "Учасник"            "Member"              "Участник"             "Required='TRUE' UserSelectionMode='PeopleOnly'"
+F $TM tmRole        Text     "Роль у проєкті"     "Role in the project" "Роль в проекте"       "Required='TRUE' MaxLength='255'"
+F $TM tmTopics      Note     "З яких питань звертатися" "Contact about"  "По каким вопросам обращаться" "NumLines='3' RichText='FALSE'"
+F $TM pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='64'"
+$script:Loc += , @($TM, "Title", "Коротко", "Summary", "Кратко")
+Set-PnPField -List $TM -Identity "Title" -Values @{ Required = $false } | Out-Null
+
+# Миграция (один раз на проект, по отметке pmMigrated): стейкхолдеры → строки команды с ролью «Стейкхолдер»; pmLoop → pmLinks
+$teamOf = @{}
+foreach ($x in (Get-PnPListItem -List "Lists/ProjectTeam" -PageSize 500 -Fields "tmProject")) { if ($x["tmProject"]) { $teamOf[$x["tmProject"].LookupId] = $true } }
+foreach ($it in (Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "Title","pmStakeholders","pmLoop","pmLinks","pmMigrated")) {
+    $marks = @(([string]$it["pmMigrated"]).Split(",") | Where-Object { $_ })
+    $vals = @{}
+    if ($marks -notcontains "team") {
+        if (-not $teamOf[$it.Id]) {
+            foreach ($u in @($it["pmStakeholders"])) { if ($u -and $u.Email) {
+                Add-PnPListItem -List "Lists/ProjectTeam" -Values @{ tmProject = $it.Id; tmUser = $u.Email; tmRole = "Стейкхолдер" } | Out-Null } }
+        }
+        $marks += "team"
+    }
+    if ($marks -notcontains "links") {
+        $loop = $it["pmLoop"]
+        if ($loop -and $loop.Url -and -not [string]$it["pmLinks"]) { $vals.pmLinks = (ConvertTo-Json -InputObject @([ordered]@{ t = "Loop"; u = $loop.Url }) -Compress) }
+        $marks += "links"
+    }
+    $newMarks = ($marks | Select-Object -Unique) -join ","
+    if ($newMarks -ne [string]$it["pmMigrated"]) {
+        $vals.pmMigrated = $newMarks
+        Set-PnPListItem -List "Lists/Projects" -Identity $it.Id -Values $vals -UpdateType SystemUpdate | Out-Null
+        Write-Host "    миграция «$($it["Title"])»: $newMarks"
+    }
+}
 
 # 6b. Відгуки — замечания фокус-группы из приложения (текст, экран, устройство, скриншоты-вложения)
 if ($Feedback) {
@@ -478,7 +553,7 @@ Set-FormVisibility $P @("pmStatus","pmRAG","pmType","pmProgress","pmStart","pmGo
 Set-FormVisibility $P @("pmRAG","pmForecastEnd","pmActualCost","pmArchivedAt","pmLastUpdate","pmLastReport","pmLastComment") $false $false
 # «Стратегічний» в отчётах и рисках заполняет синхронизация
 # «Стратегічний» и «Пріоритет» в отчётах и рисках — копия из проекта, заполняет синхронизация
-Set-FormVisibility $R @("srProjectType","srProjectPriority") $false $false
+Set-FormVisibility $R @("srProjectType","srProjectPriority","srApproval","srApprovedBy","srApprovedAt","srApprovalNote") $false $false
 Set-FormVisibility $K @("riProjectType","riProjectPriority") $false $false
 
 # Права списков. Участники сайта: «Проєкти» — только чтение (новый проект заводит PMO), журнал — только чтение
@@ -497,6 +572,8 @@ function Set-ListRoles([string]$Url, [hashtable]$Want) {
 }
 Set-ListRoles "Lists/Projects"   @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_EDIT }
 Set-ListRoles "Lists/KeyChanges" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
+# погодження: добавляет только PMO (решение PMO — отдельная запись, сам отчёт PMO не правит); остальные — чтение
+Set-ListRoles "Lists/ReportApprovals" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_EDIT }
 # отзывы: участники и PMO — добавлять и читать свои; статусы и ответы ставят только владельцы сайта; общий список — только чтение
 if ($Feedback) {
     Set-ListRoles "Lists/Feedback"       @{ $members.Title = $ROLE_EDIT; $PMO_GROUP = $ROLE_EDIT }
@@ -530,7 +607,7 @@ $null     = Ensure-View $P "Немає свіжого звіту" @("pmType","pm
 $vArchive = Ensure-View $P "Архів" @("pmType","pmPriority","LinkTitle","pmManager","pmOwner","pmArchivedAt","pmPlanEnd","pmBudget","pmActualCost") `
     "<OrderBy><FieldRef Name='pmArchivedAt' Ascending='FALSE'/></OrderBy><Where><Eq><FieldRef Name='pmStatus'/><Value Type='Choice'>Архівний</Value></Eq></Where>"
 
-$rFields = @("srProjectType","srProjectPriority","srProject","srDate","srRAG","srSchedule","srBudget","srResources","LinkTitle","Author","srDecision")
+$rFields = @("srProjectType","srProjectPriority","srProject","srDate","srRAG","srSchedule","srBudget","srResources","LinkTitle","Author","srDecision","srApproval")
 $null      = Set-BaseView $R "Усі звіти" $rFields "<OrderBy><FieldRef Name='srDate' Ascending='FALSE'/></OrderBy>"
 $null      = Ensure-View $R "Потребують рішення" @("srProjectType","srProjectPriority","srProject","srDate","srDecisionText","Author") `
     "<OrderBy><FieldRef Name='srDate' Ascending='FALSE'/></OrderBy><Where><Eq><FieldRef Name='srDecision'/><Value Type='Boolean'>1</Value></Eq></Where>"
@@ -541,6 +618,8 @@ $vRisks = Ensure-View $K "Відкриті" $kFields `
     "<OrderBy><FieldRef Name='riScore' Ascending='FALSE'/></OrderBy><Where><Neq><FieldRef Name='riStatus'/><Value Type='Choice'>Закрито</Value></Neq></Where>"
 
 $null = Set-BaseView $C "Усі зміни" @("kcProject","kcDate","kcChangedBy","kcKind","LinkTitle","kcFrom","kcTo","kcReason") "<OrderBy><FieldRef Name='kcDate' Ascending='FALSE'/></OrderBy>"
+$null = Set-BaseView $AP "Усі погодження" @("apProject","apReport","apDecision","apSchedule","apBudget","apResources","apNote","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
+$null = Set-BaseView $TM "Уся команда" @("tmProject","tmUser","tmRole","tmTopics") "<OrderBy><FieldRef Name='tmProject'/></OrderBy>"
 $null = Set-BaseView $M "Усі коментарі" @("cmProject","cmText","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
 if ($Feedback) { $null = Set-BaseView $FB "Усі відгуки" @("Created","Author","fbStatus","fbScreen","fbText","Attachments","fbDevice","fbAnswer") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>" }
 
@@ -588,7 +667,7 @@ foreach ($lib in @("SitePages", "SiteAssets", "Shared Documents")) {
     if (Get-PnPList -Identity $lib -ErrorAction SilentlyContinue) { Set-ListRoles $lib @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ } }
 }
 # списки портала не видны в «Вміст сайту» и поиске по сайту; приложение и владельцы открывают их по адресу
-$portalLists = @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/KeyChanges", "Lists/ProjectComments") + $(if ($Feedback) { @("Lists/Feedback", "Lists/FeedbackPublic") } else { @() })
+$portalLists = @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/KeyChanges", "Lists/ProjectComments", "Lists/ProjectTeam", "Lists/ReportApprovals") + $(if ($Feedback) { @("Lists/Feedback", "Lists/FeedbackPublic") } else { @() })
 foreach ($u in $portalLists) {
     $l = Get-PnPList -Identity $u -Includes Hidden
     if (-not $l.Hidden) { Set-PnPList -Identity $u -Hidden $true | Out-Null; Write-Host "    скрыт список $u" }

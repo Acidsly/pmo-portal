@@ -11,6 +11,9 @@ const COLORS = ['#8764b8', '#038387', '#ca5010', '#0078d4', '#498205', '#c239b3'
 /** Даты и деньги — всегда в формате uk-UA, как в прототипе. */
 export const fmtDate = (iso: string): string => (iso ? new Date(iso + 'T12:00:00Z').toLocaleDateString('uk-UA') : '');
 
+/** Дата и время (uk-UA): комментарии, отзывы, погодження. */
+export const fmtDT = (iso: string): string => { const d = new Date(iso); return isNaN(d.getTime()) ? '' : d.toLocaleDateString('uk-UA') + ' ' + d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }); };
+
 export const RagDot: React.FC<{ v: Rag; notRated: string }> = ({ v, notRated }) =>
   <span className="ragdot" title={tv(v) || notRated} aria-label={tv(v) || notRated} style={{ background: v ? RC[v] : 'var(--na)' }} />;
 
@@ -46,5 +49,10 @@ export const People: React.FC<{ list: Person[] }> = ({ list }) => list.length
   ? <span className="plist" title={list.map(x => x.name).join(', ')}><span className="astack">{list.slice(0, 3).map(x => <Avatar key={x.id} name={x.name} />)}</span>
       <b>{list[0].name}</b>{list.length > 1 ? <span className="more-n">+{list.length - 1}</span> : null}</span>
   : <span className="muted">—</span>;
+
+/** Погодження статус-звіту: На погодженні — жёлтый, Погоджено — зелёный, Повернуто — красный. */
+const AC: Record<string, string> = { 'На погодженні': 'var(--y)', 'Погоджено': 'var(--g)', 'Повернуто': 'var(--r)' };
+export const ApBadge: React.FC<{ v: string }> = ({ v }) =>
+  <span className="pill ap" style={{ ['--c' as string]: AC[v || 'На погодженні'] } as React.CSSProperties}><span className="dot sm" />{tv(v || 'На погодженні')}</span>;
 
 export const Muted: React.FC = () => <span className="muted">—</span>;

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- ответы REST SharePoint нетипизированы, типы задаются здесь */
-import { Person, Project, StatusReport, Risk, Comment, ChangeEntry } from './types';
+import { Person, Project, StatusReport, Risk, Comment, ChangeEntry, TeamMember, Approval } from './types';
+import { parseLinks } from '../logic/team';
 import { dateOnly } from '../logic/dates';
 import { Rag } from '../logic/rag';
 
@@ -8,12 +9,12 @@ const people = (...fields: string[]): string[] => fields.reduce<string[]>((a, f)
 
 export const PROJECT_SELECT = ['Id', 'Title', 'pmCode', 'pmType', 'pmPriority', 'pmDepartment', 'pmStatus', 'pmRAG', 'pmProgress',
   'pmStart', 'pmGoLive', 'pmPlanEnd', 'pmForecastEnd', 'pmArchivedAt', 'pmBudget', 'pmActualCost', 'pmLastUpdate', 'pmLastReport',
-  'pmLastComment', 'pmLoop', 'pmDescription', 'pmEditLog', 'pmAccess', 'Created', 'EffectiveBasePermissions', ...people('pmManager', 'pmOwner', 'pmStakeholders')].join(',');
+  'pmLastComment', 'pmLoop', 'pmLinks', 'pmDescription', 'pmEditLog', 'pmAccess', 'Created', 'EffectiveBasePermissions', ...people('pmManager', 'pmOwner', 'pmStakeholders')].join(',');
 export const PROJECT_EXPAND = 'pmManager,pmOwner,pmStakeholders';
 export const REPORT_SELECT = ['Id', 'Title', 'srProjectId', 'srDate', 'srPeriod', 'srSchedule', 'srBudget', 'srResources', 'srStatus', 'srType',
   'srProgress', 'srStart', 'srGoLive', 'srPlanEnd', 'srForecastEnd', 'srActualCost', 'srKeyReason', 'srDone', 'srNext', 'srIssues',
-  'srDecision', 'srDecisionText', 'srApplied', 'Created', ...people('Author')].join(',');
-export const REPORT_EXPAND = 'Author';
+  'srDecision', 'srDecisionText', 'srApplied', 'srApproval', 'srApprovedAt', 'srApprovalNote', 'Created', ...people('Author', 'srApprovedBy')].join(',');
+export const REPORT_EXPAND = 'Author,srApprovedBy';
 export const RISK_SELECT = ['Id', 'Title', 'riProjectId', 'riType', 'riProbability', 'riImpact', 'riStatus', 'riDue', 'riMitigation', 'riStrategy', 'riContingency', 'Created',
   ...people('riOwner')].join(',');
 export const RISK_EXPAND = 'riOwner';
@@ -47,7 +48,7 @@ export function mapProject(r: any): Project {
     department: s(r.pmDepartment), status: s(r.pmStatus), rag: s(r.pmRAG) as Rag, progress: n(r.pmProgress),
     start: dateOnly(r.pmStart), goLive: dateOnly(r.pmGoLive), planEnd: dateOnly(r.pmPlanEnd), forecastEnd: dateOnly(r.pmForecastEnd),
     archivedAt: dateOnly(r.pmArchivedAt), budget: n(r.pmBudget), actualCost: n(r.pmActualCost), lastUpdate: dateOnly(r.pmLastUpdate),
-    lastReport: s(r.pmLastReport), lastComment: s(r.pmLastComment), loop: r.pmLoop ? s(r.pmLoop.Url) : '', description: s(r.pmDescription),
+    lastReport: s(r.pmLastReport), lastComment: s(r.pmLastComment), links: parseLinks(s(r.pmLinks), r.pmLoop ? s(r.pmLoop.Url) : ''), team: [], description: s(r.pmDescription),
     canEdit: canEdit(r.EffectiveBasePermissions), pending: false, editLog: s(r.pmEditLog), access: s(r.pmAccess), created: s(r.Created) };
 }
 
@@ -57,13 +58,23 @@ export function mapReport(r: any): StatusReport {
     status: s(r.srStatus), type: s(r.srType), progress: nn(r.srProgress), start: dateOnly(r.srStart), goLive: dateOnly(r.srGoLive),
     planEnd: dateOnly(r.srPlanEnd), forecastEnd: dateOnly(r.srForecastEnd), actualCost: nn(r.srActualCost), keyReason: s(r.srKeyReason),
     title: s(r.Title), done: s(r.srDone), next: s(r.srNext), issues: s(r.srIssues), decision: r.srDecision === true,
-    decisionText: s(r.srDecisionText), applied: r.srApplied === true, author: mapPerson(r.Author), created: s(r.Created) };
+    decisionText: s(r.srDecisionText), applied: r.srApplied === true, author: mapPerson(r.Author), created: s(r.Created),
+    approval: s(r.srApproval), approvedBy: mapPerson(r.srApprovedBy), approvedAt: s(r.srApprovedAt), approvalNote: s(r.srApprovalNote) };
 }
 
 export function mapRisk(r: any): Risk {
   return { id: r.Id, projectId: r.riProjectId, title: s(r.Title), type: s(r.riType), probability: n(r.riProbability), impact: n(r.riImpact),
     owner: mapPerson(r.riOwner), status: s(r.riStatus), due: dateOnly(r.riDue), mitigation: s(r.riMitigation), strategy: s(r.riStrategy), contingency: s(r.riContingency), created: s(r.Created) };
 }
+
+export const TEAM_SELECT = ['Id', 'tmProjectId', 'tmRole', 'tmTopics', ...people('tmUser')].join(',');
+export const TEAM_EXPAND = 'tmUser';
+export const mapTeam = (r: any): TeamMember => ({ id: r.Id, projectId: r.tmProjectId, user: mapPerson(r.tmUser), role: s(r.tmRole), topics: s(r.tmTopics) });
+
+export const APPROVAL_SELECT = ['Id', 'apReportId', 'apProjectId', 'apDecision', 'apSchedule', 'apBudget', 'apResources', 'apNote', 'apApplied', 'Created', ...people('Author')].join(',');
+export const APPROVAL_EXPAND = 'Author';
+export const mapApproval = (r: any): Approval => ({ id: r.Id, reportId: r.apReportId, projectId: r.apProjectId, decision: s(r.apDecision),
+  s: s(r.apSchedule), b: s(r.apBudget), r: s(r.apResources), note: s(r.apNote), author: mapPerson(r.Author), created: s(r.Created), applied: r.apApplied === true });
 
 export const COMMENT_SELECT = ['Id', 'cmProjectId', 'cmText', 'Created', ...people('Author')].join(',');
 export const COMMENT_EXPAND = 'Author';

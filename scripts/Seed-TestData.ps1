@@ -47,6 +47,7 @@ $U = @()
 foreach ($p in $People) { try { $null = New-PnPUser -LoginName "i:0#.f|membership|$p"; $U += $p } catch { Write-Warning "Пользователь $p не найден — пропущен" } }
 if (-not $U) { throw "Ни один пользователь из -People не найден в тенанте." }
 function Person([int]$i) { $U[$i % $U.Count] }
+$TOPICS = @{ "Бізнес-замовник" = "Цілі, пріоритети, бюджет"; "Ключовий користувач" = "Вимоги, тестування, навчання"; "Архітектор" = "Інтеграції, дані, безпека"; "Стейкхолдер" = "" }
 
 # Автор и дата записи — как будто её создал человек в указанный день (приложение пишет от своего имени)
 function Set-Authored($list, $id, [string]$who, [string]$when) {
@@ -198,7 +199,7 @@ foreach ($p in $projects) {
     $v = @{ Title = $p.Title; pmCode = $p.Code; pmType = $p.Type; pmPriority = $p.Priority; pmDepartment = $p.Dept
             pmManager = $pm; pmOwner = (Person $p.Owner); pmStatus = $(if ($first) { "Планування" } else { "Ініціація" })
             pmProgress = 0; pmStart = (SpDate $p.Start); pmGoLive = (SpDate $p.GoLive); pmPlanEnd = (SpDate $p.PlanEnd)
-            pmBudget = $p.Budget; pmDescription = $p.Desc; pmoAcl = "seed" }
+            pmBudget = $p.Budget; pmDescription = $p.Desc; pmoAcl = "seed"; pmMigrated = "team,links" }
     if ($p.St) { $v.pmStakeholders = @($p.St | ForEach-Object { Person $_ } | Select-Object -Unique | Where-Object { $_ -ne $pm }) }
     if (-not $v.pmStakeholders) { $v.Remove("pmStakeholders") }
     $item = Add-PnPListItem -List "Lists/Projects" -Values $v
@@ -206,6 +207,11 @@ foreach ($p in $projects) {
     Set-Authored "Lists/Projects" $id $pm (SpDate $createdOn)
     Add-Change $id "Проєкт" "Title" "—" $p.Title "Створення" $pm "" (SpDate $createdOn)
     Write-Host "  + $($p.Code) $($p.Title)" -ForegroundColor Green
+    # «Команда проєкту»: стейкхолдеры с ролями (pmStakeholders синхронизация повторит из команды)
+    $k = 0
+    foreach ($e in @($v.pmStakeholders)) { if ($e) {
+        $role = @("Бізнес-замовник", "Ключовий користувач", "Архітектор")[$k % 3]; $k++
+        Add-PnPListItem -List "Lists/ProjectTeam" -Values @{ tmProject = $id; tmUser = $e; tmRole = $role; tmTopics = $TOPICS[$role] } | Out-Null } }
 
     # отчёты — как их применила бы синхронизация
     $state = @{ pmStatus = $v.pmStatus; pmProgress = "0"; pmForecastEnd = "" }
@@ -300,15 +306,22 @@ if ($Roles) {
         if ($inGroup -notcontains $e) { Add-PnPGroupMember -Group $members -LoginName "i:0#.f|membership|$e" | Out-Null; Write-Host "  + $e — учасник сайту" }
     }
     $items = @(Get-PnPListItem -List "Lists/Projects" -PageSize 500 | Where-Object { [string]$_["pmCode"] -match '^TEST-\d+$' } | Sort-Object { [string]$_["pmCode"] })
+    $team = @(Get-PnPListItem -List "Lists/ProjectTeam" -PageSize 500)
     $plan = Get-RolePlan $who @($items | ForEach-Object { [string]$_["pmCode"] })
     foreach ($it in $items) {
         $want = $plan[[string]$it["pmCode"]]
-        $cur = @{ pm = ([string]$it["pmManager"].Email).ToLowerInvariant(); owner = ([string]$it["pmOwner"].Email).ToLowerInvariant()
-                  st = @($it["pmStakeholders"] | ForEach-Object { ([string]$_.Email).ToLowerInvariant() }) }
-        if ($cur.pm -eq $want.pm -and $cur.owner -eq $want.owner -and (($cur.st | Sort-Object) -join ",") -eq (($want.st | Sort-Object) -join ",")) { continue }
-        $vals = @{ pmManager = $want.pm; pmOwner = $(if ($want.owner) { $want.owner } else { $null }); pmStakeholders = @($want.st) }
+        # стейкхолдеры — строки «Команда проєкту» с ролью «Стейкхолдер» (строки с другими ролями, которые завёл PM, не трогаем)
+        $rows = @($team | Where-Object { $_["tmProject"] -and $_["tmProject"].LookupId -eq $it.Id })
+        $inTeam = @($rows | Where-Object { $_["tmUser"] } | ForEach-Object { ([string]$_["tmUser"].Email).ToLowerInvariant() })
+        foreach ($e in $want.st) { if ($inTeam -notcontains $e) {
+            Add-PnPListItem -List "Lists/ProjectTeam" -Values @{ tmProject = $it.Id; tmUser = $e; tmRole = "Стейкхолдер" } | Out-Null; Write-Host "  $($it["pmCode"]): + $e — стейкхолдер" } }
+        foreach ($r in $rows) { if ($r["tmRole"] -eq "Стейкхолдер" -and $r["tmUser"] -and $want.st -notcontains ([string]$r["tmUser"].Email).ToLowerInvariant()) {
+            Move-PnPListItemToRecycleBin -List "Lists/ProjectTeam" -Identity $r.Id -Force | Out-Null; Write-Host "  $($it["pmCode"]): − $($r["tmUser"].Email) — стейкхолдер (у кошик)" } }
+        $cur = @{ pm = ([string]$it["pmManager"].Email).ToLowerInvariant(); owner = ([string]$it["pmOwner"].Email).ToLowerInvariant() }
+        if ($cur.pm -eq $want.pm -and $cur.owner -eq $want.owner) { continue }
+        $vals = @{ pmManager = $want.pm; pmOwner = $(if ($want.owner) { $want.owner } else { $null }) }
         Set-PnPListItem -List "Lists/Projects" -Identity $it.Id -Values $vals | Out-Null
-        Write-Host ("  {0}: PM {1}, власник {2}, стейкхолдери {3}" -f $it["pmCode"], $want.pm, $want.owner, ($want.st -join ", "))
+        Write-Host ("  {0}: PM {1}, власник {2}" -f $it["pmCode"], $want.pm, $want.owner)
     }
     Write-Host "Ролі роздано. Права і «Доступ до картки» видасть синхронізація." -ForegroundColor Green
 }

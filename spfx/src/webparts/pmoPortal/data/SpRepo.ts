@@ -1,15 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- ответы REST SharePoint */
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
-import { Project, StatusReport, Risk, Comment, ChangeEntry, Person, FeedbackRow } from './types';
+import { Project, StatusReport, Risk, Comment, ChangeEntry, Person, FeedbackRow, Approval } from './types';
 import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, REPORT_SELECT, REPORT_EXPAND, RISK_SELECT, RISK_EXPAND,
-  COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, canAdd, canManage } from './map';
+  COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, TEAM_SELECT, TEAM_EXPAND, mapTeam, APPROVAL_SELECT, APPROVAL_EXPAND, mapApproval, canAdd, canManage } from './map';
+import { withApproval } from '../logic/approval';
+import { teamPeople } from '../logic/team';
 import { applyPending } from '../logic/overlay';
 
-export type WritableList = 'Projects' | 'StatusReports' | 'RisksIssues' | 'ProjectComments' | 'Feedback';
+export type WritableList = 'Projects' | 'StatusReports' | 'RisksIssues' | 'ProjectComments' | 'Feedback' | 'ProjectTeam' | 'ReportApprovals';
 
 export interface PortalData { projects: Project[]; reports: StatusReport[]; risks: Risk[]; comments: Comment[]; changes: ChangeEntry[];
   /** Может ли пользователь заводить проекты (право добавления в «Проєкти» есть у PMO). */
   canCreate: boolean;
+  /** Может погоджувати статус-отчёты (группа PMO: добавление в «Погодження звітів»). */
+  canApprove: boolean;
+  approvals: Approval[];
   /** На сайте есть список «Відгуки» (тест с фокус-группой) — показывается кнопка «Відгук». */
   feedback: boolean;
   /** Может разбирать все отзывы (PMO): ссылка на список «Відгуки» из формы отзыва. */
@@ -44,18 +49,26 @@ export class SpRepo {
   }
 
   async loadAll(): Promise<PortalData> {
-    const [p, r, k, c, h, perm, fbPerm] = await Promise.all([
+    const [p, r, k, c, h, tm, ap, perm, fbPerm, apPerm] = await Promise.all([
       this.items('Projects', PROJECT_SELECT, PROJECT_EXPAND),
       this.items('StatusReports', REPORT_SELECT, REPORT_EXPAND),
       this.items('RisksIssues', RISK_SELECT, RISK_EXPAND),
       this.items('ProjectComments', COMMENT_SELECT, COMMENT_EXPAND),
       this.items('KeyChanges', CHANGE_SELECT, CHANGE_EXPAND),
+      this.items('ProjectTeam', TEAM_SELECT, TEAM_EXPAND).catch(() => [] as any[]),
+      this.items('ReportApprovals', APPROVAL_SELECT, APPROVAL_EXPAND).catch(() => [] as any[]),
       this.listPerms('Projects').catch(() => undefined),
-      this.listPerms('Feedback').catch(() => undefined)]);
-    const reports = r.map(mapReport);
+      this.listPerms('Feedback').catch(() => undefined),
+      this.listPerms('ReportApprovals').catch(() => undefined)]);
+    const approvals = ap.map(mapApproval);
+    // решение PMO, ещё не перенесённое синхронизацией, видно сразу (как применение отчёта в карточку)
+    const reports = r.map(mapReport).map(x => withApproval(x, approvals));
     const feedbackRows = fbPerm ? await this.loadFeedback().catch(() => []) : [];
-    return { projects: p.map(mapProject).map(x => applyPending(x, reports)), reports, risks: k.map(mapRisk),
-      comments: c.map(mapComment), changes: h.map(mapChange), canCreate: canAdd(perm), feedback: canAdd(fbPerm), feedbackAdmin: canManage(fbPerm), feedbackRows };
+    const team = tm.map(mapTeam);
+    // стейкхолдеры — люди «Команда проєкту» (синхронизация повторяет их в pmStakeholders)
+    const withTeam = (x: Project): Project => { const own = team.filter(m => m.projectId === x.id); return { ...x, team: own, stakeholders: teamPeople(own) }; };
+    return { projects: p.map(mapProject).map(withTeam).map(x => applyPending(x, reports)), reports, risks: k.map(mapRisk),
+      comments: c.map(mapComment), changes: h.map(mapChange), canCreate: canAdd(perm), canApprove: canAdd(apPerm), approvals, feedback: canAdd(fbPerm), feedbackAdmin: canManage(fbPerm), feedbackRows };
   }
 
   /** Отзывы: общий список (все видят все) + «Відгуки» (свои или все — у администратора) со скриншотами; свежие, ещё не скопированные синхронизацией, — тоже. */
@@ -113,6 +126,13 @@ export class SpRepo {
   async update(list: WritableList, id: number, body: Record<string, unknown>): Promise<void> {
     const res = await this.http.post(`${this.listItems(list)}(${id})?${this.listQuery(list)}`, SPHttpClient.configurations.v1,
       { headers: { ...SpRepo.JSON_HEADERS, 'X-HTTP-Method': 'MERGE', 'IF-MATCH': '*' }, body: JSON.stringify(body) });
+    await this.check(res, `${list} #${id}`);
+  }
+
+  /** В корзину сайта (восстанавливается): строка команды, которую PM убрал из карточки. */
+  async recycle(list: WritableList, id: number): Promise<void> {
+    const res = await this.http.post(`${this.listItems(list)}(${id})/recycle()?${this.listQuery(list)}`, SPHttpClient.configurations.v1,
+      { headers: SpRepo.JSON_HEADERS });
     await this.check(res, `${list} #${id}`);
   }
 

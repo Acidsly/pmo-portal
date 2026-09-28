@@ -6,13 +6,13 @@ import { Rag } from '../logic/rag';
 import { freshness, isPlanLate, forecastDelta, budgetUse, budgetLevel, riskScore } from '../logic/status';
 import { daysBetween } from '../logic/dates';
 import { freshBucket, scoreBucket } from '../logic/views';
-import { RagDot, PersonCell, People, Score, Progress, Muted, fmtDate, money, freshColor } from './Bits';
+import { RagDot, PersonCell, People, Score, Progress, Muted, ApBadge, fmtDate, money, freshColor } from './Bits';
 import { Strat, Prio, Compass, Flag } from './Icons';
 
 /** Колонка = данные для движка таблицы + отрисовка (PDEF / RDEF / KDEF прототипа, строки 997–1072). */
 export interface Col<R> extends ColDef<R> { head?: JSX.Element; cell: (r: R) => React.ReactNode; cls?: string; flabel?: (v: string) => React.ReactNode; }
 export interface TableDefs<R> { lock: string; defaults: string[]; cols: Record<string, Col<R>>; }
-export interface DefsCtx { t(k: string): string; fl(k: string): string; today: string; byId: Record<number, Project>; comments: Comment[]; open(id: number): void; openRisk(id: number, projectId: number): void; }
+export interface DefsCtx { t(k: string): string; fl(k: string): string; today: string; byId: Record<number, Project>; comments: Comment[]; open(id: number): void; openRisk(id: number, projectId: number): void; openReport(id: number, projectId: number): void; }
 
 const RAG_ORDER: Record<string, number> = { 'Червоний': 0, 'Жовтий': 1, 'Зелений': 2 };
 const STATUSES = ['Ініціація', 'Планування', 'Реалізація', 'Призупинено', 'Скасовано', 'Архівний'];
@@ -74,7 +74,7 @@ export function projectDefs(x: DefsCtx, archive: boolean): TableDefs<Project> {
     cmtBy: { label: t('cCmtBy'), cell: p => { const c = lastCm(p); return c ? <PersonCell p={c.author} /> : <Muted />; },
       sort: p => { const c = lastCm(p); return c && c.author ? c.author.name : ''; }, filter: p => { const c = lastCm(p); return c && c.author ? c.author.name : ''; } },
     dept: { label: fl('dept'), cell: p => tv(p.department), sort: p => p.department, filter: p => p.department },
-    loop: { label: 'Loop', cell: p => (p.loop ? <a className="loop" href={p.loop} target="_blank" rel="noopener noreferrer">Loop ↗</a> : null) },
+    loop: { label: fl('links'), cell: p => (p.links.length ? <>{p.links.map((l, i) => <React.Fragment key={i}>{i ? ', ' : ''}<a className="loop" href={l.u} target="_blank" rel="noopener noreferrer">{l.t} ↗</a></React.Fragment>)}</> : null) },
     archived: { label: t('archivedAt'), cell: p => dateCell(p.archivedAt), sort: p => p.archivedAt }
   };
   return { lock: 'title', cols,
@@ -95,7 +95,8 @@ export function reportDefs(x: DefsCtx): TableDefs<StatusReport> {
     prio: { label: t('cPrio'), head: S.prioHead, cell: r => S.prioCell(P(r).priority), sort: r => P(r).priority, filter: r => P(r).priority, flabel: S.prioLabel, cls: 'w-ico' },
     rag: { label: t('cHealth'), cell: r => <RagDot v={calc(r)} notRated={t('notRated')} />, sort: r => ragOrder(calc(r)), filter: r => calc(r), flabel: S.ragLabel, cls: 'w-ico w-min' },
     sched: dim('schedule', 'rSched'), budget: dim('budget', 'rBudget'), res: dim('resources', 'rRes'),
-    title: { label: fl('rTitle'), cell: r => clamp(r.title), sort: r => r.title, cls: 'w-upd' },
+    title: { label: fl('rTitle'), cell: r => <button className="linklike" onClick={() => x.openReport(r.id, r.projectId)}>{clamp(r.title)}</button>, sort: r => r.title, cls: 'w-upd' },
+    approval: { label: fl('apStatus'), cell: r => <ApBadge v={r.approval} />, sort: r => r.approval, filter: r => r.approval || 'На погодженні', flabel: v => tv(v) },
     done: { label: t('cDone'), cell: r => clamp(r.done), sort: r => r.done, cls: 'w-wide' },
     next: { label: t('cNextP'), cell: r => clamp(r.next), sort: r => r.next, cls: 'w-wide' },
     issues: { label: t('cIssues'), cell: r => clamp(r.issues), sort: r => r.issues, cls: 'w-wide' },
@@ -107,7 +108,7 @@ export function reportDefs(x: DefsCtx): TableDefs<StatusReport> {
       flabel: v => (v === 'yes' ? t('yes') : t('no')) },
     decText: { label: t('cDecText'), cell: r => clamp(r.decisionText), sort: r => r.decisionText, cls: 'w-wide' }
   };
-  return { lock: 'proj', cols, defaults: ['strat', 'prio', 'proj', 'date', 'rag', 'sched', 'budget', 'res', 'title', 'author', 'decision'] };
+  return { lock: 'proj', cols, defaults: ['strat', 'prio', 'proj', 'date', 'rag', 'sched', 'budget', 'res', 'title', 'author', 'approval', 'decision'] };
 }
 // общий стан отчёта — худшая из трёх оценок (как calcRag)
 function calc(r: StatusReport): Rag {

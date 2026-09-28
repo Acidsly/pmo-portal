@@ -202,11 +202,29 @@ svg text{font-family:inherit}
 .pmcard .role{margin-left:auto;font-size:12px;font-weight:600;color:var(--theme);background:var(--theme-soft);padding:3px 10px;border-radius:999px;white-space:nowrap}
 .people2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:10px}
 .people2 > div{background:var(--bg-alt);border-radius:16px;padding:12px 14px}
+.people2.one{grid-template-columns:minmax(0,1fr)}
+table.team{min-width:520px}
+table.team th,table.team td{padding:10px 10px;vertical-align:top}
+table.team th:first-child,table.team td:first-child{padding-left:0}
+table.team td.wrap{min-width:160px}
+.lnks{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center}
+.lnk-sec{margin:-8px 0 20px}
+.lnk-sec .k{margin-bottom:4px}
+.tile-l{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ed-rows{display:grid;gap:8px;margin-bottom:8px}
+.ed-row{display:grid;gap:8px;align-items:center}
+.tm-row{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1.3fr) auto}
+.ln-row{grid-template-columns:minmax(0,1fr) minmax(0,1.6fr) auto}
+.btn.rm{padding:8px 12px;font-size:16px;line-height:1}
+.btn.add{padding:8px 14px;font-size:14px}
+@media (max-width:640px){.tm-row,.ln-row{grid-template-columns:minmax(0,1fr) auto;background:var(--bg-alt);border-radius:14px;padding:8px}.tm-row > :not(.rm),.ln-row > :not(.rm){grid-column:1}.ed-row .rm{grid-column:2;grid-row:1}.ed-row input,.ed-row select{background:var(--bg)!important}}
 @media (max-width:520px){.people2{grid-template-columns:minmax(0,1fr)}}
 .access{background:var(--bg-alt);border-radius:16px;padding:14px 16px;font-size:14px}
 .access ol{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:8px}
 .access li{display:flex;align-items:center;gap:10px}
 .access .lvl{margin-left:auto;font-size:12px;color:var(--text-2);white-space:nowrap}
+.access .pn{min-width:0}
+@media (max-width:640px){.access .lvl{white-space:normal;text-align:right;max-width:45%}}
 .access .arrow{color:var(--text-3);font-size:12px;padding-left:9px}
 .matrix td,.matrix th{padding:8px 8px;text-align:center;border-bottom:1px solid var(--line)}
 .matrix td:first-child,.matrix th:first-child{text-align:left;color:var(--text-2);font-weight:400}
@@ -263,6 +281,24 @@ fieldset.ragpick{border:0;margin:0 0 14px;padding:0}
 .chg-k{margin-left:auto;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--bg);color:var(--text-2)}
 .chg-key{background:var(--theme-soft);color:var(--theme)}
 .chg-create{background:color-mix(in srgb,var(--g) 18%,transparent);color:var(--text)}
+.chg-approval{background:color-mix(in srgb,var(--y) 22%,transparent);color:var(--text)}
+.rep-open{cursor:pointer;transition:background-color .15s}
+.rep-open:hover{background:var(--track)}
+.rep-open:focus-visible{outline:3px solid var(--theme-soft)}
+.rep-h .pill.ap{margin-left:auto}
+.apnote{border-radius:14px;padding:10px 14px;margin:0 0 16px;font-size:14px;background:color-mix(in srgb,var(--y) 14%,transparent)}
+.apnote.ret{background:color-mix(in srgb,var(--r) 12%,transparent)}
+.apnote .btn{margin-top:10px}
+.apnote .link{margin-left:6px}
+.rv-meta{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:0 0 18px;font-size:14px;color:var(--text-2)}
+.rv-text p{margin:6px 0;font-size:14px}
+.rv-text .lbl{color:var(--text-2)}
+.apbox{background:var(--bg-alt);border-radius:16px;padding:14px 16px}
+.apbox form input[type=text],.apbox form textarea{background:var(--bg)}
+.apbox .ragpick .opts{background:var(--bg)}
+.apbox .ragpick input:checked + label{background:var(--bg-alt)}
+.apdone{background:var(--bg-alt);border-radius:16px;padding:12px 16px;font-size:14px}
+.apdone p{margin:6px 0 0}
 .diffs{display:grid;gap:4px;margin:8px 0 0 30px}
 .diff{display:flex;justify-content:space-between;gap:12px;font-size:13px;flex-wrap:wrap}
 .df{color:var(--text-2)}
@@ -285,6 +321,36 @@ form .fsec:first-child{margin-top:0}
 main{padding-bottom:40px}
 /* v5 */
 .dash{display:grid;gap:24px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.kpi{background:var(--bg);border:0;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:4px;min-width:0;transition:background-color .15s}
+.kpi:hover{background:var(--bg-alt)}
+.kpi:focus-visible{outline:3px solid var(--theme-soft)}
+.kpi b{font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1.1}
+.kpi.bad b{color:var(--r)}
+.kpi .kl{font-size:13px;color:var(--text-2)}
+.kpi small{font-size:12px;color:var(--text-3)}
+@media (max-width:520px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{padding:14px}.kpi b{font-size:26px}}
+.home-actions{margin-bottom:24px}
+.act-sec + .act-sec{margin-top:20px}
+.act-sec h3{font-size:15px;font-weight:600;margin:0 0 4px}
+.act-sec td .btn{padding:6px 12px;font-size:13px}
+.rmap{display:grid;grid-template-columns:22px minmax(0,1fr);gap:6px;align-items:stretch}
+.rm-y{writing-mode:vertical-rl;transform:rotate(180deg);text-align:center;font-size:12px;color:var(--text-2)}
+.rm-grid{display:grid;grid-template-columns:18px repeat(5,minmax(0,1fr));gap:4px}
+.rm-ax{display:grid;place-items:center;font-size:11px;color:var(--text-3)}
+.rm-cell{aspect-ratio:1.4;min-height:30px;border:0;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;color:var(--text);background:color-mix(in srgb,var(--c) 45%,transparent)}
+.rm-cell:disabled{cursor:default;opacity:.35;background:color-mix(in srgb,var(--c) 18%,transparent);font-weight:400}
+.rm-cell.on{outline:3px solid var(--text);outline-offset:-3px}
+.rm-cell:not(:disabled):hover{background:color-mix(in srgb,var(--c) 65%,transparent)}
+.rm-xl{grid-column:2 / -1;text-align:center;font-size:12px;color:var(--text-2)}
+.rm-list{margin-top:14px}
+.depts{display:grid;gap:12px}
+.dept-row{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,2fr) 28px;gap:12px;align-items:center;font-size:14px}
+.dept-row .dn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dept-row b{text-align:right}
+.dbar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--track)}
+.dbar i{display:block;height:100%}
+@media (max-width:520px){.dept-row{grid-template-columns:minmax(0,1fr) 28px}.dept-row .dbar{grid-column:1 / -1;grid-row:2}}
 .dash td,.dash th{white-space:normal}
 .dash td.wide{width:45%}
 .c1{line-height:1.35}
@@ -536,11 +602,16 @@ const T = {
  secPeople:['Учасники','Stakeholders','Участники'], secDates:['Терміни','Timeline','Сроки'], secMoney:['Бюджет і виконання','Budget and progress','Бюджет и выполнение'],
  secHistory:['Історія станів','Health history','История состояний'], secChanges:['Історія змін','Change history','История изменений'],
  secReports:['Статус-звіти','Status reports','Статус-отчёты'], secRisks:['Ризики та проблеми','Risks and issues','Риски и проблемы'],
- noReportsYet:['Статус-звітів ще немає. Перший звіт задасть стан проєкту.','No status reports yet. The first report sets the project health.','Статус-отчётов пока нет. Первый отчёт задаст состояние проекта.'],
+ noReportsYet:['Статус-звітів ще немає. Перший погоджений звіт задасть стан проєкту.','No status reports yet. The first approved report sets the project health.','Статус-отчётов пока нет. Первый согласованный отчёт задаст состояние проекта.'],
  noChanges:['Змін ще не було.','No changes yet.','Изменений пока не было.'],
  done:['Зроблено','Done','Сделано'], plan:['План','Plan','План'], issues:['Проблеми','Issues','Проблемы'],
  needDecision:['Потрібне рішення','Decision needed','Требуется решение'], days:['дн.','days','дн.'],
  openLoop:['Відкрити в Loop','Open in Loop','Открыть в Loop'],
+ addMember:['+ Додати учасника','+ Add member','+ Добавить участника'], addLink:['+ Додати посилання','+ Add link','+ Добавить ссылку'],
+ rmRow:['Прибрати','Remove','Убрать'],
+ errRole:['Вкажіть роль для кожного учасника команди','Enter a role for every team member','Укажите роль для каждого участника команды'],
+ errUrl:['Посилання має починатися з https://','A link must start with https://','Ссылка должна начинаться с https://'],
+ noTeam:['Команду ще не додано','No team members yet','Команда ещё не добавлена'], noLinks:['Посилань немає','No links','Ссылок нет'],
  showHistory:['Показати всю історію','Show full history','Показать всю историю'], hideHistory:['Згорнути','Collapse','Свернуть'],
  addComment:['Додати коментар','Add comment','Добавить комментарий'], cmtPh:['Що змінилося?','What changed?','Что изменилось?'],
  noComments:['Коментарів ще немає.','No comments yet.','Комментариев пока нет.'],
@@ -558,6 +629,30 @@ const T = {
  errReason:['Вкажіть причину зміни.','Enter the reason for the change.','Укажите причину изменения.'],
  errNothing:['Жоден показник не змінено.','No indicator was changed.','Ни один показатель не изменён.'],
  savedReport:['Статус-звіт збережено, картку проєкту оновлено.','Status report saved, project card updated.','Статус-отчёт сохранён, карточка проекта обновлена.'],
+ savedReportPending:['Звіт надіслано на погодження PMO','Report sent to PMO for approval','Отчёт отправлен на согласование PMO'],
+ apTitle:['Погодження звіту','Report approval','Согласование отчёта'],
+ apHint:['PMO змінює лише оцінки. У картку звіт потрапить після погодження.','PMO can change only the ratings. The report reaches the card after approval.','PMO меняет только оценки. В карточку отчёт попадёт после согласования.'],
+ approve:['Погодити','Approve','Согласовать'], approveChanged:['Погодити зі зміною оцінок','Approve with changed ratings','Согласовать с изменением оценок'],
+ returnRep:['Повернути на доопрацювання','Return for rework','Вернуть на доработку'],
+ errApNote:['Додайте коментар: він обов\'язковий, якщо змінено оцінки або звіт повернуто','Add a comment: it is required if the ratings were changed or the report is returned','Добавьте комментарий: он обязателен, если изменены оценки или отчёт возвращён'],
+ savedApproval:['Рішення збережено','Decision saved','Решение сохранено'],
+ kApproval:['Погодження звіту','Report approval','Согласование отчёта'],
+ pendingApproval:['Статус-звіт від {date} на погодженні PMO — картка оновиться після погодження','Status report of {date} is awaiting PMO approval — the card updates after approval','Статус-отчёт от {date} на согласовании PMO — карточка обновится после согласования'],
+ returnedNote:['Звіт від {date} повернуто на доопрацювання: {comment}','Report of {date} returned for rework: {comment}','Отчёт от {date} возвращён на доработку: {comment}'],
+ newFromReturned:['Новий звіт на основі повернутого','New report based on the returned one','Новый отчёт на основе возвращённого'],
+ openReport:['Відкрити звіт','Open report','Открыть отчёт'],
+ apBy:['Погодив','Approved by','Согласовал'],
+ kpiActive:['Активні проєкти','Active projects','Активные проекты'], kpiFresh:['Зі свіжим звітом','With a recent report','Со свежим отчётом'],
+ kpiFreshSub:['{n} з {m}','{n} of {m}','{n} из {m}'], kpiHigh:['Високі ризики','High risks','Высокие риски'], kpiLate:['Прострочені','Overdue','Просроченные'],
+ wpActions:['Мої дії','My actions','Мои действия'], actReturned:['Повернуто на доопрацювання','Returned for rework','Возвращено на доработку'],
+ actAccepted:['Прийняті високі ризики','Accepted high risks','Принятые высокие риски'], actNone:['Усе зроблено — дій немає','All done — nothing to do','Всё сделано — действий нет'],
+ wpRiskMap:['Карта ризиків','Risk map','Карта рисков'], rmHint:['Натисніть клітинку, щоб побачити її ризики','Click a cell to see its risks','Нажмите на ячейку, чтобы увидеть её риски'],
+ wpDept:['Портфель за напрямами','Portfolio by department','Портфель по направлениям'],
+ wpSlips:['Найбільші зсуви термінів','Biggest schedule slips','Наибольшие сдвиги сроков'], cSlip:['Зсув','Slip','Сдвиг'], cMoves:['Перенесень','Moves','Переносов'],
+ emptySlips:['Зсувів термінів немає','No schedule slips','Сдвигов сроков нет'],
+ wpLaunch:['Запуски в найближчі 30 днів','Go-lives in the next 30 days','Запуски в ближайшие 30 дней'], emptyLaunch:['Запусків у найближчі 30 днів немає','No go-lives in the next 30 days','Запусков в ближайшие 30 дней нет'],
+ viewAwaiting:['Очікують погодження','Awaiting approval','Ожидают согласования'],
+ apDecided:['Рішення PMO','PMO decision','Решение PMO'], repIndicators:['Ключові показники у звіті','Key indicators in the report','Ключевые показатели в отчёте'],
  savedProject:['Проєкт створено.','Project created.','Проект создан.'],
  savedEdit:['Зміни збережено.','Changes saved.','Изменения сохранены.'],
  savedKey:['Показники оновлено, зміну записано в історію.','Indicators updated and logged to history.','Показатели обновлены, изменение записано в историю.'],
@@ -599,11 +694,11 @@ const T = {
  signedIn:['Ви увійшли як','Signed in as','Вы вошли как'],
  switchUser:['Прототип: увійти як інший користувач','Prototype: sign in as another user','Прототип: войти как другой пользователь'],
  keySec:['Ключові показники','Key indicators','Ключевые показатели'],
- keySecHint:['Змінюються лише через статус-звіт. Кожна зміна потрапляє в історію.','Changed only through a status report. Every change is logged.','Меняются только через статус-отчёт. Каждое изменение попадает в историю.'],
+ keySecHint:['Змінюються лише через статус-звіт — у картку потрапляють після погодження PMO. Кожна зміна потрапляє в історію.','Changed only through a status report — they reach the card after PMO approval. Every change is logged.','Меняются только через статус-отчёт — в карточку попадают после согласования PMO. Каждое изменение попадает в историю.'],
  keyReason:['Причина зміни показників','Reason for changing indicators','Причина изменения показателей'],
  errKeyReason:['Ви змінили статус, тип або дати — вкажіть причину.','You changed status, type or dates — enter a reason.','Вы изменили статус, тип или даты — укажите причину.'],
  completeArch:['Завершено — перенести в архів','Completed — move to archive','Завершено — перенести в архив'],
- completeHint:['Після збереження проєкт отримає статус «Архівний» і перейде у вкладку «Архів».','After saving, the project gets the “Архівний” status and moves to the Archive tab.','После сохранения проект получит статус «Архівний» и перейдёт во вкладку «Архив».'],
+ completeHint:['Після погодження звіту PMO проєкт отримає статус «Архівний» і перейде у вкладку «Архів».','After PMO approves the report, the project gets the “Архівний” status and moves to the Archive tab.','После согласования отчёта PMO проект получит статус «Архівний» и перейдёт во вкладку «Архів».'],
  savedArch:['Статус-звіт збережено, проєкт перенесено в архів.','Status report saved, project moved to archive.','Статус-отчёт сохранён, проект перенесён в архив.'],
  cStake:['Власник / Product','Owner / Product','Собственник / Product'], cStart:['Старт / запуск','Start / go-live','Старт / запуск'],
  cFinish:['Завершення: план / прогноз','Completion: plan / forecast','Завершение: план / прогноз'], cBudget:['Бюджет / факт','Budget / actual','Бюджет / факт'],
@@ -686,12 +781,21 @@ const VAL = {
  'Усі звіти':['Усі звіти','All reports','Все отчёты'],
  'Потребують рішення':['Потребують рішення','Decision needed','Требуют решения'],
  'Відкриті':['Відкриті','Open','Открытые'],
- 'Усі елементи':['Усі елементи','All items','Все элементы']
+ 'Усі елементи':['Усі елементи','All items','Все элементы'],
+ 'Очікують погодження':['Очікують погодження','Awaiting approval','Ожидают согласования'],
+ 'Високі ризики':['Високі ризики','High risks','Высокие риски'],
+ 'Прострочені':['Прострочені','Overdue','Просроченные'],
+ 'На погодженні':['На погодженні','Awaiting approval','На согласовании'],
+ 'Погоджено':['Погоджено','Approved','Согласовано'],
+ 'Повернуто':['Повернуто','Returned for rework','Возвращено на доработку']
 };
 const tv = v => (v && VAL[v] ? VAL[v][LI] : (v || ''));
 const FLD = {
  title:['Назва проєкту','Project name','Название проекта'], loop:['Посилання на картку в Loop','Loop project card','Ссылка на карточку в Loop'],
  code:['Код проєкту','Project code','Код проекта'], type:['Тип проєкту','Project type','Тип проекта'],
+ team:['Команда проєкту','Project team','Команда проекта'], tmPerson:['Учасник','Member','Участник'], tmRole:['Роль','Role','Роль'],
+ tmTopics:['З яких питань звертатися','Contact about','По каким вопросам обращаться'],
+ links:['Посилання','Links','Ссылки'], linkTitle:['Назва посилання','Link title','Название ссылки'], linkUrl:['Адреса','Address','Адрес'],
  pm:['PM','PM','PM'], owner:['Власник','Owner','Собственник'], product:['Стейкхолдери','Stakeholders','Стейкхолдеры'], stakeholders:['Стейкхолдери','Stakeholders','Стейкхолдеры'],
  dept:['Напрям','Area','Направление'], status:['Статус проєкту','Project status','Статус проекта'], prio:['Пріоритет','Priority','Приоритет'],
  rag:['Загальний стан','Overall health','Общее состояние'], progress:['% виконання','% complete','% выполнения'],
@@ -706,6 +810,7 @@ const FLD = {
  rNext:['План на наступний період','Plan for next period','План на следующий период'], rIssues:['Проблеми та ризики','Issues and risks','Проблемы и риски'],
  rDec:['Потрібне рішення керівництва','Management decision needed','Требуется решение руководства'], rDecText:['Яке рішення потрібне','Decision required','Какое решение нужно'],
  rAuthor:['Автор','Created by','Автор'],
+ apStatus:['Погодження','Approval','Согласование'], apNote:['Коментар PMO','PMO comment','Комментарий PMO'],
  kTitle:['Ризик / проблема','Risk / issue','Риск / проблема'], kType:['Тип','Type','Тип'], kStrategy:['Стратегія реагування','Response strategy','Стратегия реагирования'], kContingency:['План дій у разі настання','Contingency plan','План действий при наступлении'], kScore:['Оцінка','Score','Оценка'], kPI:['Ймов. × вплив','Prob. × impact','Вер. × влияние'],
  kOwner:['Власник ризику','Risk owner','Владелец риска'], kStatus:['Статус','Status','Статус'], kDue:['Термін виконання заходів','Mitigation due date','Срок выполнения мер']
 };
@@ -718,6 +823,9 @@ const RC = {'Зелений':'var(--g)', 'Жовтий':'var(--y)', 'Черво�
 /* Overall health formula: 2+ red -> red; 1 red or 2+ yellow -> yellow; otherwise green */
 const calcRag = r => { const v = [r.sched, r.budget, r.res]; if (v.some(x => !x)) return r.rag || '';
   return v.includes('Червоний') ? 'Червоний' : v.includes('Жовтий') ? 'Жовтий' : 'Зелений'; };
+// погодження статус-звіту PMO: у картку потрапляє лише погоджений звіт
+const AP_PEND = 'На погодженні', AP_OK = 'Погоджено', AP_RET = 'Повернуто';
+const isApproved = r => (r.approval || AP_OK) === AP_OK;
 const STATUSES = ['Ініціація','Планування','Реалізація','Призупинено','Скасовано','Архівний'];
 const REPORT_STATUSES = ['Ініціація','Планування','Реалізація','Призупинено','Скасовано'];
 const TYPES = ['Стратегічний','Звичайний'];
@@ -749,6 +857,8 @@ const roleOf = n => ORG[n] ? ORG[n].role[LI] : '';
 const chain = n => { const c = []; let m = ORG[n] && ORG[n].mgr; while (m){ c.push(m); m = ORG[m] && ORG[m].mgr; } return c; };
 let VIEWER = ME;
 const isPMO = () => !!(ORG[VIEWER] && ORG[VIEWER].pmo);
+// команда проекта: p.team = [{n, role, topics}]; p.stakeholders — производное (уникальные участники команды)
+const syncStakeholders = p => { p.stakeholders = [...new Set((p.team || []).map(m => m.n).filter(Boolean))]; return p; };
 const participants = p => [p.pm, p.owner].concat(p.stakeholders || []).filter(Boolean);
 const canSee = p => isPMO() || participants(p).some(x => x === VIEWER || chain(x).includes(VIEWER));
 // править проект, отчёты и риски может только PM; руководители, собственник, стейкхолдеры и PMO — смотрят и комментируют
@@ -761,10 +871,10 @@ function buildSeed(){
  const P = [
  {id:1,code:'PRJ-001',title:'Впровадження Twenty CRM',type:'Стратегічний',pm:ME,owner:'Сергій Литвиненко',product:'Дмитро Савчук',dept:'ІТ',status:'Реалізація',prio:'1 — Високий',progress:45,start:'2026-03-02',golive:'2026-12-01',plan:'2026-12-15',fc:'2027-01-29',budget:1800000,actual:950000,ago:3,hist:'GGYYYY',decision:'Затвердити перенесення запуску на кінець січня 2027',note:'Інтеграція з 1С відстає на 3 тижні, запуск у продакшн переноситься',
   cm:[[62,'Олег Коваленко','Узгоджено перелік полів для міграції клієнтів'],[33,ME,'Підрядник підтвердив команду з 4 людей'],[3,ME,'Запит на перенесення go-live винесено на правління']],
-  ch:[[20,ME,'Затримка інтеграції з 1С',[['fc','2026-12-15','2027-01-29']]]]},
+  ch:[[48,ME,'Уточнено обсяг міграції даних',[['plan','2026-11-30','2026-12-15']]],[20,ME,'Затримка інтеграції з 1С',[['fc','2026-12-15','2027-01-29']]]]},
  {id:2,code:'PRJ-002',title:'Міграція корпоративних сайтів на GitOps',type:'Звичайний',pm:'Андрій Мельник',owner:ME,product:'Анна Лисенко',dept:'ІТ',status:'Реалізація',prio:'2 — Середній',progress:30,start:'2026-05-04',golive:'2026-09-01',plan:'2026-09-15',fc:'2026-11-02',budget:250000,actual:272000,ago:16,hist:'GYYRR',decision:'Погодити додатковий бюджет на аудит безпеки',note:'Перевитрата бюджету, повторний злам двох сайтів',
   cm:[[40,'Андрій Мельник','Перші три сайти перенесено'],[16,'Андрій Мельник','Два сайти зламано повторно до перенесення, відновлено з бекапу']],
-  ch:[[30,'Андрій Мельник','Повторні злами, потрібен аудит',[['fc','2026-09-15','2026-11-02']]]]},
+  ch:[[70,'Андрій Мельник','Розширено перелік сайтів',[['plan','2026-08-31','2026-09-15']]],[30,'Андрій Мельник','Повторні злами, потрібен аудит',[['fc','2026-09-15','2026-11-02']]]]},
  {id:3,code:'PRJ-003',title:'Mini App обліку робочого часу',type:'Стратегічний',pm:'Ірина Бондаренко',owner:'Віктор Олійник',product:'Дмитро Савчук',dept:'Операції',status:'Реалізація',prio:'1 — Високий',progress:70,start:'2026-04-06',golive:'2026-10-15',plan:'2026-10-30',fc:'2026-10-30',budget:400000,actual:258000,ago:5,hist:'YGGGGG',note:'Пілот на трьох об’єктах клієнта пройшов успішно, готуємо запуск',
   cm:[[20,'Ірина Бондаренко','Старт пілоту на об’єктах клієнта'],[5,'Ірина Бондаренко','Пілот завершено, 94% змін відмічено вчасно']],
   ch:[[60,'Віктор Олійник','Рішення правління: проєкт стратегічний',[['type','Звичайний','Стратегічний'],['prio','2 — Середній','1 — Високий']]]]},
@@ -787,10 +897,27 @@ function buildSeed(){
  const NEXT = ['Запуск пілоту на реальних даних','Навантажувальне тестування','Погодження плану впровадження','Перенесення довідників','Приймання етапу'];
  const ISS = {G:'Суттєвих проблем немає',Y:'Залежність від суміжної команди 1С',R:'Потрібне рішення щодо термінів і бюджету'};
  const RISKS = [
-  [1,'Нестабільний обмін даними з 1С','Ризик',4,4,'Олег Коваленко','В роботі','2026-10-15'],[1,'Опір менеджерів переходу на CRM','Ризик',3,3,ME,'Відкрито','2026-11-01'],
-  [2,'Повторний злам сайтів до завершення міграції','Проблема',5,4,'Андрій Мельник','В роботі','2026-09-30'],[5,'Зміна форми звітності з ЄСВ','Ризик',3,5,'Наталія Шевчук','Відкрито','2026-11-15'],
+  [1,'Нестабільний обмін даними з 1С','Ризик',4,4,'Олег Коваленко','В роботі','2026-10-15',"Зниження (пом'якшення)"],[1,'Опір менеджерів переходу на CRM','Ризик',3,3,ME,'Відкрито','2026-11-01'],
+  [2,'Повторний злам сайтів до завершення міграції','Проблема',5,4,'Андрій Мельник','В роботі','2026-09-30','Зниження (пом\'якшення)'],[5,'Зміна форми звітності з ЄСВ','Ризик',3,5,'Наталія Шевчук','Відкрито','2026-11-15','Прийняття'],
   [3,'Низька активність працівників на об’єктах','Ризик',2,3,'Ірина Бондаренко','Відкрито','2026-10-20'],[4,'Ліцензії Fabric дорожчі за бюджет','Ризик',2,2,ME,'Відкрито','2026-11-10'],
   [7,'Немає власника з боку HR','Проблема',4,3,'Марина Ткаченко','Відкрито','2026-10-05'],[8,'Недостатня якість скан-копій','Проблема',2,2,'Марина Ткаченко','Закрито','2026-07-30']];
+ const TEAM = {
+  1:[{n:'Дмитро Савчук', role:'Бізнес-замовник', topics:'Вимоги, пріоритети беклогу, приймання етапів'},
+     {n:'Олег Коваленко', role:'Архітектор', topics:'Інтеграція з 1С, міграція даних'},
+     {n:'Олександра Мороз', role:'Ключовий користувач', topics:'Звітність PMO у CRM'}],
+  3:[{n:'Дмитро Савчук', role:'Бізнес-замовник', topics:'Функції Mini App, умови пілоту'},
+     {n:'Анна Лисенко', role:'Ключовий користувач', topics:'Сценарії обліку змін на об’єктах'}]
+ };
+ const EXTRA = {
+  2:[{ago:2, dims:['Жовтий','Зелений','Жовтий'], dp:10, dc:60000, title:'Аудит безпеки завершено, перенесення відновлено',
+     done:'Проведено аудит безпеки, закрито критичні вразливості', next:'Перенесення решти сайтів', issues:'Бракує DevOps-інженера на період перенесення'}],
+  4:[{ago:1, dims:['Зелений','Жовтий','Зелений'], dp:10, dc:25000, title:'Отримано пробну ліцензію, стартувало тестування',
+     done:'Налаштовано тестовий контур Fabric', next:'Порівняння вартості з поточним рішенням', issues:'Вартість ліцензій може перевищити бюджет', dec:'Погодити розширення бюджету на ліцензії'}],
+  3:[{ago:2, dims:['Зелений','Зелений','Зелений'], dp:15, dc:40000, title:'Пілот завершено, готуємо тиражування',
+     done:'Пілот на об’єктах клієнта завершено', next:'Тиражування на всі об’єкти', issues:'', ap:'Повернуто', apBy:'Олександра Мороз', apAgo:1,
+     apNote:'Оцінка ресурсів занадто оптимістична: команди на тиражування ще немає. Уточніть план і оцінку ресурсів.'}]
+ };
+ Object.values(EXTRA).forEach(l => l.forEach(e => { e.ap = e.ap || 'На погодженні'; }));
  return P.map(p => {
   const h = p.hist.split('').filter(Boolean), n = h.length;
   const reports = h.map((c, i) => {
@@ -799,18 +926,23 @@ function buildSeed(){
    return {id:uid() + i, date:iso(daysAgo(p.ago + (n - 1 - i) * 14)), rag, sched:dm[0], budget:dm[1], res:dm[3], period:'2 тижні',
     progress: Math.round(p.progress * (i + 1) / n), title: latest && p.note ? p.note : POOL[c][(p.id + i) % 3],
     done: DONE[(p.id + i) % 5], next: NEXT[(p.id + i) % 5], issues: ISS[c], author: p.pm,
-    decision: !!(latest && p.decision), decisionText: latest && p.decision ? p.decision : ''};
+    decision: !!(latest && p.decision), decisionText: latest && p.decision ? p.decision : '', approval:'Погоджено'};
   });
   const last = reports[reports.length - 1];
-  return {id:p.id, code:p.code, title:p.title, type:p.type, pm:p.pm, owner:p.owner, stakeholders:[p.product].concat(({1:['Олег Коваленко'],3:['Анна Лисенко'],5:['Віктор Олійник']})[p.id] || []).filter(Boolean), dept:p.dept, status:p.status, prio:p.prio,
+  (EXTRA[p.id] || []).forEach(e => reports.push({id:uid() + 'x', date:iso(daysAgo(e.ago)), sched:e.dims[0], budget:e.dims[1], res:e.dims[2], period:'2 тижні',
+    progress:Math.min(100, p.progress + e.dp), status:p.status, type:p.type, start:p.start, golive:p.golive, plan:p.plan, fc:e.fc || p.fc, cost:p.actual + e.dc,
+    keyReason:e.kr || '', title:e.title, done:e.done, next:e.next, issues:e.issues, author:p.pm, decision:!!e.dec, decisionText:e.dec || '',
+    approval:e.ap, apBy:e.apBy || '', apAt:e.apBy ? daysAgo(e.apAgo).toISOString() : '', apNote:e.apNote || ''}));
+  const team = TEAM[p.id] || [p.product].concat(({5:['Віктор Олійник']})[p.id] || []).filter(Boolean).map(n => ({n, role:'Стейкхолдер', topics:''}));
+  return {id:p.id, code:p.code, title:p.title, type:p.type, pm:p.pm, owner:p.owner, team, stakeholders:[...new Set(team.map(m => m.n))], dept:p.dept, status:p.status, prio:p.prio,
    progress:p.progress, start:p.start, golive:p.golive, plan:p.plan, fc:p.fc, budget:p.budget, actual:p.actual,
-   loop:'https://loop.cloud.microsoft/', desc:'', archivedAt: p.arch ? iso(daysAgo(p.arch)) : '',
+   links:[{t:'Loop', u:'https://loop.cloud.microsoft/'}].concat(p.id === 1 ? [{t:'Технічне завдання', u:'https://company.sharepoint.com/sites/pmo/Shared%20Documents/TZ-CRM.docx'}] : []), desc:'', archivedAt: p.arch ? iso(daysAgo(p.arch)) : '',
    rag: last ? last.rag : '', lastUpdate: last ? last.date : '', lastReport: last ? last.title : '',
    reports,
    comments: p.cm.map(([a, who, txt]) => ({id:uid(), date:daysAgo(a).toISOString(), who, txt})),
    changes: [{id:uid(), date:D(p.start).toISOString(), who:p.pm, kind:'create', reason:'', diffs:[]}].concat(
      p.ch.map(([a, who, reason, diffs]) => ({id:uid(), date:daysAgo(a).toISOString(), who, kind:'key', reason, diffs:diffs.map(([f, from, to]) => ({f, from, to}))}))),
-   risks: RISKS.filter(r => r[0] === p.id).map(([, title, type, pr, im, owner, status, due]) => ({id:uid(), title, type, p:pr, i:im, owner, status, due}))
+   risks: RISKS.filter(r => r[0] === p.id).map(([, title, type, pr, im, owner, status, due, strategy]) => ({id:uid(), title, type, p:pr, i:im, owner, status, due, strategy:strategy || ''}))
   };
  });
 }
@@ -824,8 +956,14 @@ const parse = (o) => {
   const p = Object.assign({}, JSON.parse(JSON.stringify(o)), {id:+o.id});
   if (!Array.isArray(p.stakeholders)) p.stakeholders = p.product ? [p.product] : [];
   delete p.product;
-  (p.reports || []).forEach(r => { r.rag = calcRag(r); });
-  const last = (p.reports || []).slice().sort((a, b) => String(a.date).localeCompare(String(b.date))).pop();
+  if (!Array.isArray(p.team)) p.team = p.stakeholders.map(n => ({n, role:'Стейкхолдер', topics:''}));
+  p.team = p.team.filter(m => m && m.n).map(m => ({n:m.n, role:m.role || '', topics:m.topics || ''}));
+  if (!Array.isArray(p.links)) p.links = p.loop ? [{t:'Loop', u:p.loop}] : [];
+  p.links = p.links.filter(l => l && l.u).map(l => ({t:l.t || '', u:l.u}));
+  delete p.loop;
+  syncStakeholders(p);
+  (p.reports || []).forEach(r => { r.rag = calcRag(r); if (!r.approval) r.approval = AP_OK; });
+  const last = (p.reports || []).filter(isApproved).sort((a, b) => String(a.date).localeCompare(String(b.date))).pop();
   if (last) p.rag = last.rag;
   return p;
 };
@@ -874,6 +1012,7 @@ const byOrder = (a, b) => (a.type === b.type ? 0 : a.type === 'Стратегі�
 /* ================= Renderers ================= */
 const ragHtml = v => v ? `<span class="pill" style="--c:${RC[v]}"><span class="dot sm"></span>${tv(v)}</span>`
   : `<span class="pill" style="--c:var(--na)"><span class="dot sm"></span>${t('notRated')}</span>`;
+const apBadge = v => { v = v || AP_OK; return `<span class="pill ap" style="--c:${v === AP_OK ? 'var(--g)' : v === AP_RET ? 'var(--r)' : 'var(--y)'}"><span class="dot sm"></span>${esc(tv(v))}</span>`; };
 const dotOnly = v => `<span class="dot sm" title="${v || '—'}" style="background:${v ? RC[v] : 'var(--na)'}"></span>`;
 const barHtml = v => `<span class="prog" role="img" aria-label="${v}%"><span class="track"><i style="width:${Math.min(v,100)}%;background:${v >= 100 ? 'var(--g)' : 'var(--theme)'}"></i></span><b>${v}%</b></span>`;
 const freshColor = d => !d ? 'var(--na)' : age(d) > 14 ? 'var(--r)' : age(d) > 8 ? 'var(--y)' : 'var(--g)';
@@ -882,7 +1021,12 @@ const planHtml = p => { const d = D(p.plan); if (!d) return ''; return d < TODAY
 const useHtml = p => { const u = p.budget ? Math.round(p.actual / p.budget * 100) : 0; return `<span class="${u > 100 ? 'over' : u > 90 ? 'warn' : ''}">${u}%</span>`; };
 const scoreHtml = s => `<span class="chip" style="background:${s >= 15 ? 'var(--r)' : s >= 8 ? 'var(--y)' : 'var(--g)'}">${s}</span>`;
 const typeHtml = v => v === 'Стратегічний' ? `<span class="strat">${v}</span>` : `<span class="badge">${esc(v)}</span>`;
-const loopHtml = p => p.loop ? `<a class="loop" href="${esc(p.loop)}" target="_blank" rel="noopener">Loop ↗</a>` : '';
+const linkHost = u => { try { return new URL(u).host || u; } catch(e) { return u; } };
+const linkT = l => l.t || linkHost(l.u);
+const linkA = l => `<a class="loop" href="${esc(l.u)}" target="_blank" rel="noopener">${esc(linkT(l))} ↗</a>`;
+const linksHtml = p => (p.links || []).length ? `<span class="lnks">${p.links.map(linkA).join('')}</span>` : '';
+const teamStr = tm => (tm || []).map(m => m.role ? m.n + ' — ' + m.role : m.n).join('; ');
+const linksStr = ls => (ls || []).map(linkT).join(', ');
 const pLink = p => `<button class="link" data-act="openp" data-id="${p.id}">${esc(p.title)}</button>`;
 const avatar = (n, cls) => `<span class="pav${cls ? ' ' + cls : ''}" style="background:${pcolor(n)}" aria-hidden="true">${initials(n)}</span>`;
 const person = (n, sub) => n ? `<span class="person" title="${esc(email(n))}">${avatar(n)}<span class="pn"><b>${esc(n)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span></span>` : '<span class="muted">—</span>';
@@ -893,7 +1037,8 @@ const valFmt = (f, v) => {
   if (['start','golive','plan','fc'].includes(f)) return fmt(D(v));
   if (f === 'budget') return money(+v);
   if (f === 'progress') return v + '%';
-  if (f === 'rag') return ragHtml(v);
+  if (f === 'rag' || f === 'rSched' || f === 'rBudget' || f === 'rRes') return ragHtml(v);
+  if (f === 'apStatus') return apBadge(v);
   return esc(v);
 };
 
@@ -915,7 +1060,7 @@ function table(cols, rows, opt = {}){
 }
 const col = (k, r, cls) => ({l:() => fl(k), r, cls});
 const PC = {
-  title:col('title', pLink), loop:col('loop', loopHtml), type:col('type', p => typeHtml(p.type)),
+  title:col('title', pLink), loop:{l:() => fl('links'), r:linksHtml}, type:col('type', p => typeHtml(p.type)),
   pm:col('pm', p => person(p.pm)), status:col('status', p => esc(p.status)), rag:col('rag', p => ragHtml(p.rag)),
   prog:col('progress', p => barHtml(p.progress)), start:col('start', p => fmt(D(p.start))), golive:col('golive', p => fmt(D(p.golive))),
   plan:col('plan', planHtml), fc:col('fc', p => fmt(D(p.fc))), last:col('last', freshHtml), comments:col('comments', cmtHtml),
@@ -943,11 +1088,12 @@ const PV = {
   strat:{t:'Стратегічні', f:p => isActive(p) && p.type === 'Стратегічний'},
   problem:{t:'Проблемні', f:p => isActive(p) && (p.rag === 'Червоний' || p.rag === 'Жовтий')},
   mine:{t:'Мої проєкти', f:p => participants(p).includes(VIEWER)},
-  stale:{t:'Немає свіжого звіту', f:p => isActive(p) && (!lastUpd(p) || age(lastUpd(p)) > 14)}
+  stale:{t:'Немає свіжого звіту', f:p => isActive(p) && (!lastUpd(p) || age(lastUpd(p)) > 14)},
+  late:{t:'Прострочені', f:p => isActive(p) && !!D(p.plan) && D(p.plan) < TODAY}
 };
-const RV = {all:{t:'Усі звіти', f:() => true}, decision:{t:'Потребують рішення', f:r => r.decision}};
-const KV = {open:{t:'Відкриті', f:k => k.status !== 'Закрито'}, all:{t:'Усі елементи', f:() => true}};
-const state = {page:'home', pv:'all', rv:'all', kv:'open', homeMode:'tiles', projMode:'tiles', panel:null};
+const RV = {all:{t:'Усі звіти', f:() => true}, decision:{t:'Потребують рішення', f:r => r.decision}, awaiting:{t:'Очікують погодження', f:r => r.approval === AP_PEND}};
+const KV = {open:{t:'Відкриті', f:k => k.status !== 'Закрито'}, high:{t:'Високі ризики', f:k => k.status !== 'Закрито' && k.p * k.i >= 15}, all:{t:'Усі елементи', f:() => true}};
+const state = {rmCell:null, page:'home', pv:'all', rv:'all', kv:'open', homeMode:'tiles', projMode:'tiles', panel:null};
 
 /* ================= Tiles ================= */
 function tile(p){
@@ -958,7 +1104,7 @@ function tile(p){
     <div class="tile-prog"><div class="pl"><span>${esc(tv(p.status))}</span><b>${p.progress}%</b></div><div class="track"><i style="width:${Math.min(p.progress,100)}%;background:${pc}"></i></div></div>
     <div class="tile-upd"><div class="ul"><span class="dot sm" style="background:${freshColor(d)}"></span>${t('latestUpd')} · ${d ? fmt(d) : t('noReports')}</div>
       <div class="tx">${esc(p.lastReport) || '<span class="muted">—</span>'}</div></div>
-    <div class="tile-f">${p.loop ? `<a class="loop" href="${esc(p.loop)}" target="_blank" rel="noopener">Loop ↗</a>` : '<span></span>'}
+    <div class="tile-f">${(p.links || []).length ? `<span class="tile-l">${linkA(p.links[0])}${p.links.length > 1 ? ` <span class="muted">+${p.links.length - 1}</span>` : ''}</span>` : '<span></span>'}
       <span class="tile-pm" title="${t('pmRole')}: ${esc(p.pm)} · ${esc(email(p.pm))}">${avatar(p.pm)}<b>${esc(p.pm)}</b></span></div>
   </div>`;
 }
@@ -990,7 +1136,7 @@ function dynamics(){
   const pts = [];
   for (let k = 6; k >= 0; k--){
     const tt = daysAgo(k * 14), c = {'Зелений':0,'Жовтий':0,'Червоний':0};
-    visAll().forEach(p => { const rs = repsOf(p).filter(r => r.d <= tt); if (!rs.length) return;
+    visAll().forEach(p => { const rs = repsOf(p).filter(r => r.d <= tt && isApproved(r)); if (!rs.length) return;
       if (isArch(p) && tt > lastUpd(p)) return; c[rs[rs.length - 1].rag]++; });
     pts.push({tt, c});
   }
@@ -1037,7 +1183,7 @@ const prioLabel = v => `<span class="ilabel">${PRIO_I[v] || ''}${esc(v)}</span>`
 const stratCell = type => type === 'Стратегічний' ? `<span class="ico" title="${t('cStrat')}">${icoStar(true)}</span>` : '';
 const stratLabel = v => v === 'Стратегічний' ? `<span class="ilabel">${icoStar(true)}${v}</span>` : esc(v);
 const ragDot = v => `<span class="ragdot" title="${v || t('notRated')}" aria-label="${v || t('notRated')}" style="background:${v ? RC[v] : 'var(--na)'}"></span>`;
-const ragLabel = v => `<span class="ilabel">${ragDot(v)}${v || t('notRated')}</span>`;
+const ragLabel = v => `<span class="ilabel">${ragDot(v)}${v ? esc(tv(v)) : t('notRated')}</span>`;
 const freshBucket = d => !d ? '3' : age(d) > 14 ? '2' : age(d) > 8 ? '1' : '0';
 const freshLabel = v => `<span class="ilabel"><span class="dot sm" style="background:${['var(--g)','var(--y)','var(--r)','var(--na)'][+v]}"></span>${t('fr' + v)}</span>`;
 const scoreBucket = s => s >= 15 ? '0' : s >= 8 ? '1' : '2';
@@ -1079,7 +1225,7 @@ const PDEF = {
   comment:{l:() => fl('comments'), main:p => { const c = lastCm(p); return c ? `<span class="clamp2">${esc(c.txt)}</span> <button class="cnt" data-act="comments" data-id="${p.id}">${p.comments.length}</button>` : '<span class="muted">—</span>'; }, sort:p => { const c = lastCm(p); return c ? c.date : ''; }, cls:'w-wide'},
   cmtBy:{l:() => t('cCmtBy'), main:p => { const c = lastCm(p); return c ? person(c.who) : '<span class="muted">—</span>'; }, sort:p => { const c = lastCm(p); return c ? c.who : ''; }, filter:p => { const c = lastCm(p); return c ? c.who : ''; }},
   dept:{l:() => fl('dept'), main:p => esc(tv(p.dept)), sort:p => p.dept, filter:p => p.dept},
-  loop:{l:() => 'Loop', main:loopHtml},
+  loop:{l:() => fl('links'), main:linksHtml},
   archived:{l:() => t('archivedAt'), main:p => dateCell(p.archivedAt), sort:p => p.archivedAt || ''}
 };
 const RP = r => pById(r.pid);
@@ -1088,12 +1234,13 @@ const RDEF = {
   strat:{l:() => t('cStrat'), h:stratHead, main:r => stratCell(RP(r).type), sort:r => RP(r).type === 'Стратегічний' ? 0 : 1, filter:r => RP(r).type, flabel:stratLabel, cls:'w-ico'},
   proj:{l:() => fl('rProj'), main:r => pLink(RP(r)), sort:r => RP(r).title, filter:r => RP(r).title, cls:'w-title'},
   code:{l:() => t('cCode'), main:r => esc(RP(r).code), sort:r => RP(r).code},
-  date:{l:() => fl('rDate'), main:r => fmt(r.d), sort:r => r.date},
+  date:{l:() => fl('rDate'), main:r => `<button class="link" data-act="repopen" data-id="${r.pid}" data-rid="${esc(r.id)}">${fmt(r.d)}</button>`, sort:r => r.date},
   period:{l:() => t('cPeriod'), main:r => esc(tv(r.period) || '—'), sort:r => r.period || '', filter:r => r.period || ''},
   prio:{l:() => t('cPrio'), h:prioHead, main:r => prioIcon(PP(r.pid)), sort:r => PP(r.pid), filter:r => PP(r.pid), flabel:prioLabel, cls:'w-ico'},
   rag:{l:() => t('cHealth'), main:r => ragDot(r.rag), sort:r => ragOrder(r.rag), filter:r => r.rag, flabel:ragLabel, cls:'w-ico w-min'},
   sched:dimCol('sched', 'rSched'), budget:dimCol('budget', 'rBudget'), res:dimCol('res', 'rRes'),
-  title:{l:() => fl('rTitle'), main:r => `<span class="clamp2" title="${esc(r.title)}">${esc(r.title)}</span>`, sort:r => r.title, cls:'w-upd'},
+  title:{l:() => fl('rTitle'), main:r => `<button class="link clamp2" data-act="repopen" data-id="${r.pid}" data-rid="${esc(r.id)}" title="${esc(r.title)}">${esc(r.title)}</button>`, sort:r => r.title, cls:'w-upd'},
+  approval:{l:() => fl('apStatus'), main:r => apBadge(r.approval), sort:r => [AP_PEND, AP_RET, AP_OK].indexOf(r.approval || AP_OK), filter:r => r.approval || AP_OK, flabel:v => esc(tv(v))},
   done:{l:() => t('cDone'), main:r => `<span class="clamp2">${esc(r.done)}</span>`, sort:r => r.done, cls:'w-wide'},
   next:{l:() => t('cNextP'), main:r => `<span class="clamp2">${esc(r.next)}</span>`, sort:r => r.next, cls:'w-wide'},
   issues:{l:() => t('cIssues'), main:r => `<span class="clamp2">${esc(r.issues) || '<span class="muted">—</span>'}</span>`, sort:r => r.issues || '', cls:'w-wide'},
@@ -1121,7 +1268,7 @@ const KDEF = {
 };
 TDEFS.projects = PDEF; TDEFAULTS.projects = ['strat','prio','title','pm','status','rag','repDate','progress','plan','update'];
 TDEFS.archive = PDEF; TDEFAULTS.archive = ['strat','prio','title','pm','owner','archived','plan','budget','actual'];
-TDEFS.reports = RDEF; TDEFAULTS.reports = ['strat','prio','proj','date','rag','sched','budget','res','title','author','decision'];
+TDEFS.reports = RDEF; TDEFAULTS.reports = ['strat','prio','proj','date','rag','sched','budget','res','title','approval','author','decision'];
 TDEFS.risks = KDEF; TDEFAULTS.risks = ['strat','prio','proj','title','type','score','owner','status','due'];
 
 const icoSort = d => d === 'asc' ? '↑' : d === 'desc' ? '↓' : '';
@@ -1217,6 +1364,81 @@ function stateScreen(){
   if (MODE === 'empty') return `${hero(t('dash'), '', true)}<div class="wp empty-state"><p>${t('emptyDb')}</p><button class="btn" data-act="seed">${t('seed')}</button></div>`;
   return null;
 }
+/* ================= Home analytics (видимі проєкти без архіву; без бюджетних сум) ================= */
+const goBtn = (page, view, inner, cls) => `<button class="${cls}" data-act="goview" data-page="${page}" data-view="${view}">${inner}</button>`;
+function kpiStrip(){
+  const act = visP().filter(isActive), m = act.length;
+  const fresh = act.filter(p => lastUpd(p) && age(lastUpd(p)) <= 14).length, pct = m ? Math.round(fresh / m * 100) : 0;
+  const high = visK().filter(KV.high.f).length, late = act.filter(PV.late.f).length;
+  const tile = (n, label, sub, bad, page, view) => goBtn(page, view, `<b>${n}</b><span class="kl">${label}</span>${sub ? `<small>${sub}</small>` : ''}`, 'kpi' + (bad ? ' bad' : ''));
+  return `<div class="kpis">
+    ${tile(m, t('kpiActive'), '', false, 'projects', 'all')}
+    ${tile(m ? pct + '%' : '—', t('kpiFresh'), t('kpiFreshSub').replace('{n}', fresh).replace('{m}', m), m > 0 && pct < 70, 'projects', 'stale')}
+    ${isPMO() ? (n => tile(n, t('viewAwaiting'), '', n > 0, 'reports', 'awaiting'))(visR().filter(r => r.approval === AP_PEND && !isArch(pById(r.pid))).length) : ''}
+    ${tile(high, t('kpiHigh'), '', high > 0, 'risks', 'high')}
+    ${tile(late, t('kpiLate'), '', late > 0, 'projects', 'late')}</div>`;
+}
+function myActions(){
+  const mine = visP().filter(p => p.pm === VIEWER), pmo = isPMO();
+  if (!mine.length && !pmo) return '';
+  const C = (l, r, cls) => ({l:() => l, r, cls});
+  const secs = [];
+  const sec = (label, rows, cols) => { if (rows.length) secs.push(`<div class="act-sec"><h3>${label} (${rows.length})</h3>${table(cols, rows)}</div>`); };
+  if (pmo) sec(t('viewAwaiting'), visR().filter(r => r.approval === AP_PEND && !isArch(pById(r.pid))).sort((a, b) => a.d - b.d),
+    [C(fl('rProj'), r => pLink(pById(r.pid))), C(fl('rDate'), r => fmt(r.d)), C(t('cHealth'), r => ragDot(r.rag), 'c-ico'),
+     C(fl('rTitle'), r => `<button class="link" data-act="repopen" data-id="${r.pid}" data-rid="${esc(r.id)}">${esc(r.title)}</button>`, 'wide'), C(fl('rAuthor'), r => person(r.author))]);
+  const act = mine.filter(isActive);
+  const ret = act.map(p => ({p, r:repsOf(p).pop()})).filter(x => x.r && x.r.approval === AP_RET);
+  sec(t('actReturned'), ret, [C(fl('rProj'), x => pLink(x.p)), C(fl('rDate'), x => `${fmt(x.r.d)}${x.r.apNote ? ` · <span title="${esc(x.r.apNote)}">${esc(x.r.apNote)}</span>` : ''}`, 'wide'),
+    C('', x => `<button class="btn" data-act="newfromret" data-id="${x.p.id}" data-rid="${esc(x.r.id)}">${t('newFromReturned')}</button>`)]);
+  sec(t('wpStale'), act.filter(PV.stale.f), [C(fl('title'), pLink), C(fl('last'), freshHtml), C('', p => `<button class="btn" data-act="newrep" data-id="${p.id}">${iconPlus}${t('addReport')}</button>`)]);
+  if (pmo){
+    const acc = visK().filter(k => k.status !== 'Закрито' && k.strategy === 'Прийняття' && k.p * k.i >= 15).sort((a, b) => b.p * b.i - a.p * a.i);
+    if (acc.length) secs.push(`<div class="act-sec"><h3>${t('actAccepted')} (${acc.length})</h3><div class="rlist">${acc.map(k => `<button class="rrow" data-act="riskopen" data-src="list" data-id="${k.pid}" data-rid="${esc(k.id)}">${scoreHtml(k.p * k.i)}<span class="rt">${esc(k.title)}</span><span class="muted">${esc(pById(k.pid).title)}</span></button>`).join('')}</div></div>`);
+  }
+  return `<div class="home-actions">${wp(t('wpActions'), secs.length ? secs.join('') : `<p class="empty">${t('actNone')}</p>`)}</div>`;
+}
+const lvlColor = s => s >= 15 ? 'var(--r)' : s >= 8 ? 'var(--y)' : 'var(--g)';
+function riskMap(){
+  const open = visK().filter(KV.open.f), cnt = (pp, ii) => open.filter(k => k.p === pp && k.i === ii);
+  let cells = '';
+  for (let pp = 5; pp >= 1; pp--){
+    cells += `<span class="rm-ax">${pp}</span>`;
+    for (let ii = 1; ii <= 5; ii++){ const n = cnt(pp, ii).length, key = pp + '-' + ii;
+      cells += `<button class="rm-cell${state.rmCell === key ? ' on' : ''}" style="--c:${lvlColor(pp * ii)}" data-act="rmcell" data-k="${key}"${n ? '' : ' disabled'} aria-label="${t('cProb')} ${pp} × ${t('cImp')} ${ii}: ${n}">${n || ''}</button>`; }
+  }
+  cells += '<span></span>' + [1, 2, 3, 4, 5].map(ii => `<span class="rm-ax">${ii}</span>`).join('') + `<span class="rm-xl">${t('cImp')}</span>`;
+  let list = '';
+  if (state.rmCell){ const [pp, ii] = state.rmCell.split('-').map(Number), ks = cnt(pp, ii);
+    if (ks.length) list = `<div class="rm-list rlist">${ks.map(k => `<button class="rrow" data-act="riskopen" data-src="list" data-id="${k.pid}" data-rid="${esc(k.id)}">${scoreHtml(k.p * k.i)}<span class="rt">${esc(k.title)}</span><span class="muted">${esc(pById(k.pid).title)}</span></button>`).join('')}</div>`;
+    else state.rmCell = null; }
+  return `<div class="rmap"><span class="rm-y">${t('cProb')}</span><div class="rm-grid">${cells}</div></div>${list}<p class="hint" style="margin:12px 0 0">${t('rmHint')}</p>`;
+}
+function deptBars(){
+  const act = visP().filter(isActive), g = {};
+  act.forEach(p => { const k = p.dept || '—'; (g[k] = g[k] || []).push(p); });
+  const rows = Object.entries(g).sort((a, b) => b[1].length - a[1].length || tv(a[0]).localeCompare(tv(b[0])));
+  if (!rows.length) return `<p class="empty">${t('empty')}</p>`;
+  const max = rows[0][1].length;
+  const segs = [['Червоний','var(--r)'],['Жовтий','var(--y)'],['Зелений','var(--g)'],['','var(--na)']];
+  return `<div class="depts">${rows.map(([d, ps]) => `<div class="dept-row"><span class="dn" title="${esc(tv(d))}">${esc(tv(d))}</span>
+    <span class="dbar" style="width:${Math.max(4, ps.length / max * 100)}%">${segs.map(([v, c]) => { const n = ps.filter(p => (p.rag || '') === v).length;
+      return n ? `<i style="width:${n / ps.length * 100}%;background:${c}" title="${v ? esc(tv(v)) : t('notRated')}: ${n}"></i>` : ''; }).join('')}</span><b>${ps.length}</b></div>`).join('')}</div>`;
+}
+// перенесення планової дати завершення в журналі (події звітів / ключових показників)
+const planMoves = p => (p.changes || []).filter(c => c.kind === 'report' || c.kind === 'key').reduce((n, c) => n + (c.diffs || []).filter(d => d.f === 'plan').length, 0);
+function slipsTable(){
+  const C = (l, r, cls) => ({l:() => l, r, cls});
+  const rows = visP().filter(p => isActive(p) && D(p.fc) && D(p.plan) && D(p.fc) > D(p.plan))
+    .map(p => ({p, dd:Math.round((D(p.fc) - D(p.plan)) / DAY)})).sort((a, b) => b.dd - a.dd).slice(0, 5);
+  return table([C(fl('rProj'), x => pLink(x.p)), C(fl('plan'), x => fmt(D(x.p.plan))), C(fl('fc'), x => fmt(D(x.p.fc))),
+    C(t('cSlip'), x => `<span class="late">+${x.dd} ${t('days')}</span>`, 'num'), C(t('cMoves'), x => String(planMoves(x.p)), 'num')], rows, {empty:t('emptySlips')});
+}
+function launchTable(){
+  const C = (l, r, cls) => ({l:() => l, r, cls}), until = new Date(TODAY.getTime() + 30 * DAY);
+  const rows = visP().filter(p => isActive(p) && D(p.golive) && D(p.golive) >= TODAY && D(p.golive) <= until).sort((a, b) => D(a.golive) - D(b.golive));
+  return table([C(fl('golive'), p => fmt(D(p.golive))), C(fl('rProj'), pLink), C(t('cHealth'), p => ragDot(p.rag), 'c-ico'), C(fl('pm'), p => person(p.pm))], rows, {empty:t('emptyLaunch')});
+}
 function pageHome(){
   const s = stateScreen(); if (s) return s;
   const vis = visP();
@@ -1233,7 +1455,11 @@ function pageHome(){
   const decCols = [SR, PRR, C(fl('rProj'), r => pLink(pById(r.pid))), C(fl('rDate'), r => fmt(r.d)), C(fl('rDecText'), r => esc(r.decisionText), 'wide'), C(fl('rAuthor'), r => person(r.author))];
   const riskCols = [SR, PRR, C(fl('rProj'), k => pLink(pById(k.pid))), C(fl('kTitle'), k => esc(k.title), 'wide'), C(fl('kType'), k => esc(k.type)), C(fl('kScore'), k => scoreHtml(k.p * k.i)), C(fl('kOwner'), k => person(k.owner)), KC.due];
   return `${hero(t('dash'), t('visible') + vis.length, true)}
+  ${kpiStrip()}
+  ${myActions()}
   <div class="grid2">${wp(t('wpHealth'), donut())}${wp(t('wpDyn'), dynamics())}</div>
+  <div class="grid2">${wp(t('wpRiskMap'), riskMap(), ['risks','open'])}${wp(t('wpDept'), deptBars())}</div>
+  <div class="grid2">${wp(t('wpSlips'), slipsTable())}${wp(t('wpLaunch'), launchTable())}</div>
   <div class="dash">
     ${wp(t('wpProblem'), table(probCols, prob, {empty:t('emptyProblem')}), ['projects','problem'])}
     ${wp(t('wpStale'), table(staleCols, stale, {empty:t('emptyStale')}), ['projects','stale'])}
@@ -1242,7 +1468,7 @@ function pageHome(){
   </div>`;
 }
 const viewSel = (views, cur, key) => `<label class="viewsel" title="${t('viewsNote')}">${t('view')}
-  <select data-act="view" data-key="${key}">${Object.entries(views).map(([k, v]) => `<option value="${k}"${k === cur ? ' selected' : ''}>${v.t}</option>`).join('')}</select></label>`;
+  <select data-act="view" data-key="${key}">${Object.entries(views).map(([k, v]) => `<option value="${k}"${k === cur ? ' selected' : ''}>${esc(tv(v.t))}</option>`).join('')}</select></label>`;
 function pageProjects(){
   const s = stateScreen(); if (s) return s.replace(t('dash'), t('navProjects'));
   const v = PV[state.pv], rows = visP().filter(v.f).sort(byOrder);
@@ -1295,6 +1521,9 @@ function render(){
   if (state.panel && state.panel.kind === 'project'){
     const p = pById(state.panel.id);
     if (p && canSee(p)) projectPanel(p.id, state.panel.showCm, true, state.panel.showCh); else closePanel();
+  } else if (state.panel && state.panel.kind === 'report'){
+    const p = pById(state.panel.id);
+    if (p && canSee(p)) reportView(p.id, state.panel.rid, true); else closePanel();
   }
 }
 const rerenderMain = () => { renderChrome(); main.innerHTML = PAGES[state.page](); };
@@ -1330,7 +1559,7 @@ function accessList(p){
 function changesHtml(p, showAll){
   const list = (p.changes || []).slice().sort((a, b) => D(b.date) - D(a.date));
   if (!list.length) return `<p class="empty">${t('noChanges')}</p>`;
-  const kindL = {create:'kCreate', key:'kKey', edit:'kEdit', report:'kReport'};
+  const kindL = {create:'kCreate', key:'kKey', edit:'kEdit', report:'kReport', approval:'kApproval'};
   const item = c => `<div class="chg">
     <div class="chg-h">${avatar(c.who, 'sm')}<b>${esc(c.who)}</b><span class="muted">${fmtDT(D(c.date))}</span><span class="chg-k chg-${c.kind}">${t(kindL[c.kind] || 'kEdit')}</span></div>
     ${c.diffs && c.diffs.length ? `<div class="diffs">${c.diffs.map(d => `<div class="diff"><span class="df">${fl(d.f)}</span><span class="dv"><s>${valFmt(d.f, d.from)}</s><span class="arr">→</span>${valFmt(d.f, d.to)}</span></div>`).join('')}</div>` : ''}
@@ -1342,15 +1571,15 @@ function changesHtml(p, showAll){
 function projectPanel(id, showCm, keep, showCh){
   const p = pById(id); if (!p) return;
   state.panel = {kind:'project', id, showCm:!!showCm, showCh:!!showCh};
-  const rs = repsOf(p), last8 = rs.slice(-8), edit = canEditP(p) && !isArch(p);
+  const rs = repsOf(p), last8 = rs.filter(isApproved).slice(-8), edit = canEditP(p) && !isArch(p);
   let dev = '';
   if (p.fc && p.plan){ const dd = Math.round((D(p.fc) - D(p.plan)) / DAY); dev = dd > 0 ? ` <span class="late">+${dd} ${t('days')}</span>` : dd < 0 ? ` <span class="muted">${dd} ${t('days')}</span>` : ''; }
   const dims = [['rag','rag'],['sched','rSched'],['budget','rBudget'],['res','rRes']];
   const matrix = last8.length ? `<div class="tablewrap"><table class="matrix"><thead><tr><th></th>${last8.map(r => `<th>${fmtShort(r.d)}</th>`).join('')}</tr></thead><tbody>
     ${dims.map(([k, l]) => `<tr><td>${fl(l)}</td>${last8.map(r => `<td>${dotOnly(r[k])}</td>`).join('')}</tr>`).join('')}
     <tr><td>${fl('progress')}</td>${last8.map(r => `<td class="muted">${r.progress}</td>`).join('')}</tr></tbody></table></div>` : `<p class="empty">${t('noReportsYet')}</p>`;
-  const repList = rs.slice().reverse().map(r => `<div class="rep">
-    <div class="rep-h"><b>${fmt(r.d)}</b>${ragHtml(r.rag)}${person(r.author)}${r.decision ? `<span class="flag">${t('needDecision')}</span>` : ''}</div>
+  const repList = rs.slice().reverse().map(r => `<div class="rep rep-open" role="button" tabindex="0" data-act="repopen" data-id="${p.id}" data-rid="${esc(r.id)}">
+    <div class="rep-h"><b>${fmt(r.d)}</b>${ragHtml(r.rag)}${person(r.author)}${r.decision ? `<span class="flag">${t('needDecision')}</span>` : ''}${apBadge(r.approval)}</div>
     <p><b>${esc(r.title)}</b></p><p><span class="lbl">${t('done')}:</span> ${esc(r.done)}</p><p><span class="lbl">${t('plan')}:</span> ${esc(r.next)}</p>
     ${r.issues ? `<p><span class="lbl">${t('issues')}:</span> ${esc(r.issues)}</p>` : ''}${r.decisionText ? `<p><span class="lbl">${t('needDecision')}:</span> ${esc(r.decisionText)}</p>` : ''}</div>`).join('');
   const cms = (p.comments || []).slice().reverse();
@@ -1363,13 +1592,23 @@ function projectPanel(id, showCm, keep, showCh){
     ? `<div class="actbar"><button class="btn primary" data-act="newrep" data-id="${p.id}">${iconPlus}${t('addReport')}</button>
        <button class="btn" data-act="editproj" data-id="${p.id}">${iconEdit}${t('editProject')}</button></div>`
     : `<p class="note lock">🔒 ${isArch(p) ? t('archivedNote') : t('noEdit')}</p>`;
+  const lastR = rs[rs.length - 1];
+  const apNotes = rs.filter(r => r.approval === AP_PEND).reverse().map(r => `<div class="apnote">${esc(t('pendingApproval').replace('{date}', fmt(r.d)))}${isPMO() ? `<button class="link" data-act="repopen" data-id="${p.id}" data-rid="${esc(r.id)}">${t('apTitle')} →</button>` : ''}</div>`).join('')
+    + (lastR && lastR.approval === AP_RET ? `<div class="apnote ret">${esc(t('returnedNote').replace('{date}', fmt(lastR.d)).replace('{comment}', lastR.apNote || '—'))}
+       <button class="link" data-act="repopen" data-id="${p.id}" data-rid="${esc(lastR.id)}">${t('openReport')} →</button>
+       ${edit ? `<div><button class="btn" data-act="newfromret" data-id="${p.id}" data-rid="${esc(lastR.id)}">${iconPlus}${t('newFromReturned')}</button></div>` : ''}</div>` : '');
   openPanel(`<div class="ph"><div><div class="k">${esc(p.code)} · ${t('listLabel')} «${t('navProjects')}»</div><h2>${esc(p.title)}</h2></div>${closeBtn()}</div>
-    <div class="badges">${typeHtml(p.type)}${ragHtml(p.rag)}<span class="badge">${esc(tv(p.status))}</span><span class="badge">${esc(tv(p.prio))}</span>${p.loop ? `<a class="loop" href="${esc(p.loop)}" target="_blank" rel="noopener">${t('openLoop')} ↗</a>` : ''}</div>
+    <div class="badges">${typeHtml(p.type)}${ragHtml(p.rag)}<span class="badge">${esc(tv(p.status))}</span><span class="badge">${esc(tv(p.prio))}</span></div>
+    ${(p.links || []).length ? `<div class="lnk-sec"><div class="k">${fl('links')}</div>${linksHtml(p)}</div>` : ''}
     ${actions}
+    ${apNotes ? `<div style="margin-top:14px">${apNotes}</div>` : ''}
     ${p.desc ? `<p class="desc">${esc(p.desc)}</p>` : ''}
     <div class="sec"><h3>${t('secPeople')}</h3>
       <div class="pmcard">${avatar(p.pm, 'lg')}<span class="pn"><b>${esc(p.pm)}</b><small>${esc(roleOf(p.pm))} · ${esc(email(p.pm))}</small></span><span class="role">${t('pmRole')}</span></div>
-      <div class="people2"><div><div class="k">${fl('owner')}</div>${person(p.owner, roleOf(p.owner))}</div><div><div class="k">${fl('stakeholders')}</div><div class="plist-v">${(p.stakeholders || []).length ? p.stakeholders.map(n => person(n, roleOf(n))).join('') : '<span class="muted">—</span>'}</div></div></div></div>
+      <div class="people2 one"><div><div class="k">${fl('owner')}</div>${person(p.owner, roleOf(p.owner))}</div></div></div>
+    <div class="sec"><h3>${fl('team')}</h3>${(p.team || []).length
+      ? `<div class="tablewrap"><table class="team"><thead><tr><th>${fl('tmPerson')}</th><th>${fl('tmRole')}</th><th>${fl('tmTopics')}</th></tr></thead><tbody>${p.team.map(m => `<tr><td>${person(m.n, roleOf(m.n))}</td><td class="wrap">${esc(m.role)}</td><td class="wrap">${m.topics ? esc(m.topics) : '<span class="muted">—</span>'}</td></tr>`).join('')}</tbody></table></div>`
+      : `<p class="muted">${t('noTeam')}</p>`}</div>
     <div class="sec"><h3>${t('secDates')}</h3><div class="group">
       ${kv('start', fmt(D(p.start)))}${kv('golive', fmt(D(p.golive)))}${kv('plan', planHtml(p))}${kv('fc', p.fc ? fmt(D(p.fc)) + dev : '')}${p.archivedAt ? kv('archived', fmt(D(p.archivedAt))) : ''}</div></div>
     <div class="sec"><h3>${t('secMoney')}</h3><div class="group">
@@ -1403,6 +1642,12 @@ const formHead = (title, sub) => `<div class="ph"><div><div class="k">${sub}</di
 const fErr = form => msg => { const e = form.querySelector('.err'); e.textContent = msg; e.hidden = false; e.scrollIntoView && e.scrollIntoView({block:'nearest'}); };
 const radioVal = (form, n) => (form.querySelector(`input[name="${n}"]:checked`) || {}).value || '';
 
+const rmBtn = () => `<button type="button" class="btn rm" data-ed="rm" aria-label="${t('rmRow')}" title="${t('rmRow')}">×</button>`;
+const tmRow = m => `<div class="ed-row tm-row"><select class="tm-n" aria-label="${fl('tmPerson')}"><option value="">${t('notSet')}</option>${Object.keys(ORG).map(n => opt(n, m.n, `${n} — ${roleOf(n)}`)).join('')}</select>`
+  + `<input type="text" class="tm-r" aria-label="${fl('tmRole')}" placeholder="${fl('tmRole')} *" value="${esc(m.role || '')}">`
+  + `<input type="text" class="tm-t" aria-label="${fl('tmTopics')}" placeholder="${fl('tmTopics')}" value="${esc(m.topics || '')}">${rmBtn()}</div>`;
+const lnRow = l => `<div class="ed-row ln-row"><input type="text" class="ln-t" aria-label="${fl('linkTitle')}" placeholder="${fl('linkTitle')}" value="${esc(l.t || '')}">`
+  + `<input type="text" inputmode="url" class="ln-u" aria-label="${fl('linkUrl')}" placeholder="https://" value="${esc(l.u || '')}">${rmBtn()}</div>`;
 function projectForm(p){
   const isNew = !p; p = p || {pm:'', type:'Звичайний', status:'Ініціація', prio:'2 — Середній', dept:'ІТ', start:iso(TODAY)};
   state.panel = {kind:'form'};
@@ -1414,15 +1659,18 @@ function projectForm(p){
       <div><label class="t" for="p-code">${fl('code')}</label><input type="text" id="p-code" value="${esc(p.code || '')}" placeholder="${t('codeAuto')}"></div>
       <div><label class="t" for="p-dept">${fl('dept')}</label><select id="p-dept">${DEPTS.map(d => opt(d, p.dept)).join('')}</select></div>
     </div>
-    <div class="frow"><label class="t" for="p-loop">${fl('loop')}</label><input type="text" inputmode="url" id="p-loop" value="${esc(p.loop || '')}" placeholder="https://loop.cloud.microsoft/…"></div>
     ${isNew ? `<fieldset class="ragpick"><legend>${fl('type')} *</legend>${segPick('p-type', TYPES, p.type)}</fieldset>` : ''}
     <h3 class="fsec">${t('fPeople')}</h3>
     <div class="frow"><label class="t" for="p-pm">${fl('pm')} * <span class="muted">· ${t('m365')}</span></label>${peopleSelect('p-pm', p.pm, true)}</div>
     <div class="fgrid2 frow">
       <div><label class="t" for="p-owner">${fl('owner')}</label>${peopleSelect('p-owner', p.owner)}</div>
     </div>
-    <div class="frow"><span class="t lbl-t">${fl('stakeholders')} <span class="muted">· ${t('m365')}</span></span>
-      <div class="pmulti" id="p-st">${Object.keys(ORG).map(n => `<label class="pop-row"><input type="checkbox" value="${esc(n)}"${(p.stakeholders || []).includes(n) ? ' checked' : ''}>${person(n, roleOf(n))}</label>`).join('')}</div></div>
+    <div class="frow"><span class="t lbl-t">${fl('team')} <span class="muted">· ${t('m365')}</span></span>
+      <div class="ed-rows" id="p-team">${((p.team || []).length ? p.team : [{}]).map(tmRow).join('')}</div>
+      <button type="button" class="btn add" data-ed="addtm">${t('addMember')}</button></div>
+    <div class="frow"><span class="t lbl-t">${fl('links')}</span>
+      <div class="ed-rows" id="p-links">${(p.links || []).map(lnRow).join('')}</div>
+      <button type="button" class="btn add" data-ed="addln">${t('addLink')}</button></div>
     ${isNew ? '' : `<p class="note">${t('accessRecalc')}</p>`}
     ${isNew ? `<h3 class="fsec">${t('fDates')}</h3>
     <div class="fgrid frow">
@@ -1441,26 +1689,51 @@ function projectForm(p){
     <div class="actions"><button type="submit" class="btn primary">${t('save')}</button><button type="button" class="btn" data-act="${isNew ? 'close' : 'backp'}" data-id="${p.id || ''}">${t('cancel')}</button></div>
   </form>`);
   const form = document.getElementById('pform'), err = fErr(form), g = id => form.querySelector('#' + id);
+  form.addEventListener('click', e => {
+    const b = e.target.closest('[data-ed]');
+    if (!b) return;
+    if (b.dataset.ed === 'addtm'){ g('p-team').insertAdjacentHTML('beforeend', tmRow({})); g('p-team').lastElementChild.querySelector('select').focus(); }
+    else if (b.dataset.ed === 'addln'){ g('p-links').insertAdjacentHTML('beforeend', lnRow({})); g('p-links').lastElementChild.querySelector('input').focus(); }
+    else if (b.dataset.ed === 'rm') b.closest('.ed-row').remove();
+  });
   form.addEventListener('submit', e => {
     e.preventDefault();
-    const vals = {title:g('p-title').value.trim(), code:g('p-code').value.trim(), dept:g('p-dept').value, loop:g('p-loop').value.trim(),
-      pm:g('p-pm').value, owner:g('p-owner').value, stakeholders:[...form.querySelectorAll('#p-st input:checked')].map(x => x.value), prio:g('p-prio').value, budget:+g('p-budget').value || 0, desc:g('p-desc').value.trim()};
+    const vals = {title:g('p-title').value.trim(), code:g('p-code').value.trim(), dept:g('p-dept').value,
+      pm:g('p-pm').value, owner:g('p-owner').value, prio:g('p-prio').value, budget:+g('p-budget').value || 0, desc:g('p-desc').value.trim()};
     if (!vals.title) return err(t('errTitle'));
     if (!vals.pm) return err(t('errPM'));
+    const team = [], links = [];
+    for (const r of form.querySelectorAll('#p-team .tm-row')){
+      const n = r.querySelector('.tm-n').value, role = r.querySelector('.tm-r').value.trim(), topics = r.querySelector('.tm-t').value.trim();
+      if (!n) continue;                               // пустая строка или строка без участника
+      if (!role) return err(t('errRole'));
+      if (!team.some(m => m.n === n)) team.push({n, role, topics});   // повтор участника — остаётся первая строка
+    }
+    for (const r of form.querySelectorAll('#p-links .ln-row')){
+      const lt = r.querySelector('.ln-t').value.trim(), u = r.querySelector('.ln-u').value.trim();
+      if (!lt && !u) continue;
+      if (!/^https:\/\//i.test(u)) return err(t('errUrl'));
+      links.push({t:lt || 'Посилання', u});
+    }
+    vals.team = team; vals.links = links;
     if (isNew){
       const id = Math.max(0, ...PROJ.map(x => x.id)) + 1;
       const np = Object.assign({id, type:radioVal(form, 'p-type') || 'Звичайний', status:g('p-status').value, progress:0,
         start:g('p-start').value, golive:g('p-golive').value, plan:g('p-plan').value, fc:'', actual:0, rag:'', lastUpdate:'', lastReport:'',
         reports:[], comments:[], risks:[], changes:[{id:uid(), date:new Date().toISOString(), who:VIEWER, kind:'create', reason:'', diffs:[]}]}, vals);
+      syncStakeholders(np);
       if (!np.code) np.code = 'PRJ-' + String(id).padStart(3, '0');
       PROJ.push(np);
       rerenderMain();
       if (canSee(np)) projectPanel(id, false); else closePanel();
       persist(np); toast(t('savedProject'));
     } else {
-      const diffs = Object.keys(vals).filter(k => String(p[k] ?? '') !== String(vals[k] ?? '')).map(k => ({f:k, from:p[k] ?? '', to:vals[k]}));
+      const LST = {team:teamStr, links:linksStr};
+      const same = k => LST[k] ? JSON.stringify(p[k] || []) === JSON.stringify(vals[k]) : String(p[k] ?? '') === String(vals[k] ?? '');
+      const diffs = Object.keys(vals).filter(k => !same(k)).map(k => LST[k] ? {f:k, from:LST[k](p[k]), to:LST[k](vals[k])} : {f:k, from:p[k] ?? '', to:vals[k]});
       if (!diffs.length){ projectPanel(p.id, false); return; }
       Object.assign(p, vals);
+      syncStakeholders(p);
       p.changes = (p.changes || []).concat([{id:uid(), date:new Date().toISOString(), who:VIEWER, kind:'edit', reason:'', diffs:diffs.filter(d => d.f !== 'desc')}]);
       rerenderMain();
       if (canSee(p)) projectPanel(p.id, false); else closePanel();
@@ -1522,11 +1795,15 @@ function riskForm(pid, rid, fromList){
   });
 }
 
-function reportForm(pid){
+function reportForm(pid, base){
   state.panel = {kind:'form'};
   const act = visP().filter(p => isActive(p) && canEditP(p)).sort(byOrder);
   if (!act.length) return;
-  const sel = (pid && act.find(p => p.id === pid)) || act[0];
+  const p0 = (pid && act.find(p => p.id === pid)) || act[0];
+  // «новий звіт на основі повернутого»: оцінки, показники й тексти беруться з повернутого звіту
+  const b = base || {}, bv = (k, d) => b[k] != null && b[k] !== '' ? b[k] : d, bt = k => b[k] && b[k] !== '—' ? b[k] : '';
+  const sel = base ? Object.assign({}, p0, {status:bv('status', p0.status), progress:bv('progress', p0.progress), type:bv('type', p0.type),
+    start:bv('start', p0.start), golive:bv('golive', p0.golive), plan:bv('plan', p0.plan), fc:bv('fc', p0.fc), actual:bv('cost', p0.actual)}) : p0;
   openPanel(`${formHead(t('newReport'), `${t('listLabel')} «${t('navReports')}»`)}
   <form id="repform" novalidate>
     <div class="frow"><label class="t" for="f-p">${fl('rProj')} *</label><select id="f-p">${act.map(p => `<option value="${p.id}"${p.id === sel.id ? ' selected' : ''}>${esc(p.title)}</option>`).join('')}</select></div>
@@ -1535,12 +1812,12 @@ function reportForm(pid){
       <div><label class="t" for="f-per">${fl('rPeriod')}</label><select id="f-per"><option>Тиждень</option><option selected>2 тижні</option><option>Місяць</option><option>Квартал</option></select></div>
       <div></div>
     </div>
-    <div class="dims">${ragPick('sched', fl('rSched'), true)}${ragPick('budget', fl('rBudget'), true)}${ragPick('res', fl('rRes'), true)}</div>
-    <div class="ragcalc"><span class="k">${t('ragCalc')}</span><span id="f-ragv">${ragLabel('')}</span><span class="note">${t('ragRule')}</span></div>
+    <div class="dims">${ragPick('sched', fl('rSched'), true, b.sched)}${ragPick('budget', fl('rBudget'), true, b.budget)}${ragPick('res', fl('rRes'), true, b.res)}</div>
+    <div class="ragcalc"><span class="k">${t('ragCalc')}</span><span id="f-ragv">${ragLabel(base ? calcRag(b) : '')}</span><span class="note">${t('ragRule')}</span></div>
     <div class="keysec">
       <h3 class="fsec">${t('keySec')}</h3><p class="note" style="margin:-6px 0 14px">${t('keySecHint')}</p>
       <div class="fgrid2 frow">
-        <div><label class="t" for="f-st">${fl('status')}</label><select id="f-st">${REPORT_STATUSES.map(v => opt(v, sel.status)).join('')}<option value="Завершено">${t('completeArch')}</option></select></div>
+        <div><label class="t" for="f-st">${fl('status')}</label><select id="f-st">${REPORT_STATUSES.map(v => opt(v, sel.status)).join('')}<option value="Завершено"${sel.status === 'Завершено' ? ' selected' : ''}>${t('completeArch')}</option></select></div>
         <div><label class="t" for="f-pr">${fl('progress')}</label><input type="number" id="f-pr" min="0" max="100" value="${sel.progress}"></div>
       </div>
       <p class="note" id="f-arch" hidden style="margin:-4px 0 14px">${t('completeHint')}</p>
@@ -1552,14 +1829,14 @@ function reportForm(pid){
         <div><label class="t" for="f-fc">${fl('fc')}</label><input type="date" id="f-fc" value="${sel.fc || ''}"></div>
       </div>
       <div class="frow"><label class="t" for="f-c">${fl('rCost')}, ₴</label><input type="number" id="f-c" min="0" step="1000" value="${sel.actual || 0}"></div>
-      <div class="frow" id="f-kr-wrap" hidden><label class="t" for="f-kr">${t('keyReason')} *</label><textarea id="f-kr" placeholder="${t('reasonPh')}"></textarea></div>
+      <div class="frow" id="f-kr-wrap" hidden><label class="t" for="f-kr">${t('keyReason')} *</label><textarea id="f-kr" placeholder="${t('reasonPh')}">${esc(b.keyReason || '')}</textarea></div>
     </div>
-    <div class="frow"><label class="t" for="f-t">${fl('rTitle')} *</label><input type="text" id="f-t" placeholder="${t('summaryPh')}"></div>
-    <div class="frow"><label class="t" for="f-done">${fl('rDone')}</label><textarea id="f-done"></textarea></div>
-    <div class="frow"><label class="t" for="f-next">${fl('rNext')}</label><textarea id="f-next"></textarea></div>
-    <div class="frow"><label class="t" for="f-iss">${fl('rIssues')}</label><textarea id="f-iss"></textarea></div>
-    <div class="frow"><label class="check"><input type="checkbox" id="f-dec"> ${fl('rDec')}</label></div>
-    <div class="frow" id="f-dec-wrap" hidden><label class="t" for="f-dect">${fl('rDecText')}</label><textarea id="f-dect"></textarea></div>
+    <div class="frow"><label class="t" for="f-t">${fl('rTitle')} *</label><input type="text" id="f-t" placeholder="${t('summaryPh')}" value="${esc(bt('title'))}"></div>
+    <div class="frow"><label class="t" for="f-done">${fl('rDone')}</label><textarea id="f-done">${esc(bt('done'))}</textarea></div>
+    <div class="frow"><label class="t" for="f-next">${fl('rNext')}</label><textarea id="f-next">${esc(bt('next'))}</textarea></div>
+    <div class="frow"><label class="t" for="f-iss">${fl('rIssues')}</label><textarea id="f-iss">${esc(bt('issues'))}</textarea></div>
+    <div class="frow"><label class="check"><input type="checkbox" id="f-dec"${b.decision ? ' checked' : ''}> ${fl('rDec')}</label></div>
+    <div class="frow" id="f-dec-wrap"${b.decision ? '' : ' hidden'}><label class="t" for="f-dect">${fl('rDecText')}</label><textarea id="f-dect">${esc(b.decisionText || '')}</textarea></div>
     <p class="err" hidden></p>
     <div class="actions"><button type="submit" class="btn primary">${t('save')}</button><button type="button" class="btn" data-act="close">${t('cancel')}</button></div>
   </form>`);
@@ -1578,6 +1855,7 @@ function reportForm(pid){
     const rr = form.querySelector(`input[name="rag"][value="${p.rag}"]`); if (rr) rr.checked = true;
     syncKey(); });
   g('f-dec').addEventListener('change', e => { g('f-dec-wrap').hidden = !e.target.checked; });
+  if (base) syncKey();
   form.addEventListener('submit', e => {
     e.preventDefault();
     const dims = dimsNow(), title = g('f-t').value.trim(), dstr = g('f-d').value;
@@ -1589,20 +1867,100 @@ function reportForm(pid){
     const kr = g('f-kr').value.trim();
     if (keyChanged() && !kr){ g('f-kr').focus(); return err(t('errKeyReason')); }
     const progress = Math.max(0, Math.min(100, +g('f-pr').value || 0)), cost = Math.max(0, +g('f-c').value || 0), dec = g('f-dec').checked;
-    const complete = g('f-st').value === 'Завершено';
+    // звіт зберігається «На погодженні»; картку оновить applyReport після погодження PMO
     p.reports = (p.reports || []).concat([{id:uid(), date:dstr, rag, sched:dims.sched, budget:dims.budget, res:dims.res,
-      progress, status:g('f-st').value, period:g('f-per').value, title, done:g('f-done').value.trim() || '—', next:g('f-next').value.trim() || '—', issues:g('f-iss').value.trim(), author:VIEWER, decision:dec, decisionText:dec ? g('f-dect').value.trim() : ''}]);
-    const vals = {status: complete ? 'Архівний' : g('f-st').value, type: radioVal(form, 'f-type') || p.type,
-      start:g('f-start').value, golive:g('f-golive').value, plan:g('f-plan').value, fc:g('f-fc').value, progress};
-    const newer = !p.lastUpdate || D(dstr) >= D(p.lastUpdate);
-    if (newer) vals.rag = rag;
-    const diffs = Object.keys(vals).filter(k => String(p[k] ?? '') !== String(vals[k] ?? '')).map(k => ({f:k, from:p[k] ?? '', to:vals[k]}));
-    Object.assign(p, vals, {actual:cost});
-    if (newer) Object.assign(p, {lastUpdate:dstr, lastReport:title});
-    if (complete) p.archivedAt = dstr;
-    if (diffs.length) p.changes = (p.changes || []).concat([{id:uid(), date:new Date().toISOString(), who:VIEWER, kind:'report', reason: kr ? kr + ' · ' + title : title, diffs}]);
-    rerenderMain(); projectPanel(p.id, false); persist(p); toast(complete ? t('savedArch') : t('savedReport'));
+      progress, status:g('f-st').value, type:radioVal(form, 'f-type') || p.type, start:g('f-start').value, golive:g('f-golive').value, plan:g('f-plan').value, fc:g('f-fc').value,
+      cost, keyReason:keyChanged() ? kr : '', period:g('f-per').value, title, done:g('f-done').value.trim() || '—', next:g('f-next').value.trim() || '—', issues:g('f-iss').value.trim(),
+      author:VIEWER, decision:dec, decisionText:dec ? g('f-dect').value.trim() : '', approval:AP_PEND, apBy:'', apAt:'', apNote:''}]);
+    rerenderMain(); projectPanel(p.id, false); persist(p); toast(t('savedReportPending'));
   });
+}
+
+// показники картки, які змінює звіт (поля, яких у звіті немає, не змінюються)
+function reportVals(p, r){
+  const vals = {};
+  if (r.status) vals.status = r.status === 'Завершено' ? 'Архівний' : r.status;
+  ['type','start','golive','plan','fc'].forEach(k => { if (r[k] != null) vals[k] = r[k]; });
+  if (r.progress != null) vals.progress = r.progress;
+  if (!p.lastUpdate || D(r.date) >= D(p.lastUpdate)) vals.rag = calcRag(r);
+  return vals;
+}
+// застосувати погоджений звіт до картки — так само, як раніше при збереженні звіту
+function applyReport(p, r, when){
+  const complete = r.status === 'Завершено', vals = reportVals(p, r), newer = 'rag' in vals;
+  const diffs = Object.keys(vals).filter(k => String(p[k] ?? '') !== String(vals[k] ?? '')).map(k => ({f:k, from:p[k] ?? '', to:vals[k]}));
+  Object.assign(p, vals);
+  if (r.cost != null) p.actual = r.cost;
+  if (newer) Object.assign(p, {lastUpdate:r.date, lastReport:r.title});
+  if (complete) p.archivedAt = r.date;
+  if (diffs.length) p.changes = (p.changes || []).concat([{id:uid(), date:when || new Date().toISOString(), who:r.author, kind:'report', reason: r.keyReason ? r.keyReason + ' · ' + r.title : r.title, diffs}]);
+  return complete;
+}
+const DIMS = [['sched','rSched'],['budget','rBudget'],['res','rRes']];
+// рішення PMO щодо звіту; повертає текст помилки або ''
+function decideReport(p, r, decision, dims, note){
+  if (!r || r.approval !== AP_PEND || !isPMO()) return '';
+  const changed = DIMS.filter(([k]) => dims[k] && dims[k] !== r[k]);
+  if ((changed.length || decision === AP_RET) && !note) return t('errApNote');
+  const now = new Date();
+  const diffs = changed.length ? changed.map(([k, l]) => ({f:l, from:r[k], to:dims[k]})) : [{f:'apStatus', from:AP_PEND, to:decision}];
+  changed.forEach(([k]) => { r[k] = dims[k]; });
+  r.rag = calcRag(r);
+  Object.assign(r, {approval:decision, apBy:VIEWER, apAt:now.toISOString(), apNote:note});
+  p.changes = (p.changes || []).concat([{id:uid(), date:now.toISOString(), who:VIEWER, kind:'approval', reason:note, diffs}]);
+  if (decision === AP_OK) applyReport(p, r, new Date(now.getTime() + 1).toISOString());
+  return '';
+}
+
+/* ================= Report view ================= */
+function reportView(pid, rid, keep){
+  const p = pById(pid); if (!p) return;
+  const r = (p.reports || []).find(x => String(x.id) === String(rid)); if (!r) return projectPanel(pid, false);
+  state.panel = {kind:'report', id:p.id, rid:String(r.id)};
+  const d = D(r.date), pend = r.approval === AP_PEND, applied = isApproved(r);
+  const IND = [['status','status'],['type','type'],['progress','progress'],['start','start'],['golive','golive'],['plan','plan'],['fc','fc'],['cost','rCost']];
+  const show = (k, v) => v === '' || v == null ? '<span class="muted">—</span>' : k === 'progress' ? v + '%' : k === 'cost' ? money(+v)
+    : ['start','golive','plan','fc'].includes(k) ? fmt(D(v)) : esc(tv(v === 'Завершено' ? 'Архівний' : v));
+  const cardK = k => k === 'cost' ? 'actual' : k;
+  const ind = IND.filter(([k]) => r[k] != null).map(([k, l]) => {
+    const cur = p[cardK(k)], nv = k === 'status' && r[k] === 'Завершено' ? 'Архівний' : r[k];
+    const ch = !applied && String(cur ?? '') !== String(nv ?? '');
+    return `<div class="kv"><span class="k">${fl(l)}</span><span class="v">${ch ? `<span class="dv"><s>${show(k, cur)}</s><span class="arr">→</span>${show(k, r[k])}</span>` : show(k, r[k])}</span></div>`;
+  }).join('');
+  const txt = (l, v) => v && v !== '—' ? `<p><span class="lbl">${l}:</span> ${esc(v)}</p>` : '';
+  const decided = !pend && r.apBy ? `<div class="sec"><h3>${t('apDecided')}</h3><div class="apdone">
+      <div class="rep-h">${apBadge(r.approval)}<span class="muted">${t('apBy')}:</span>${person(r.apBy, roleOf(r.apBy))}<span class="muted">${r.apAt ? fmtDT(D(r.apAt)) : ''}</span></div>
+      ${r.apNote ? `<p><span class="muted">${fl('apNote')}:</span> ${esc(r.apNote)}</p>` : ''}</div></div>` : '';
+  const apForm = pend && isPMO() ? `<div class="sec"><h3>${t('apTitle')}</h3><div class="apbox"><form id="apform" novalidate>
+      <p class="note" style="margin:0 0 12px">${t('apHint')}</p>
+      <div class="dims">${DIMS.map(([k, l]) => ragPick('ap-' + k, fl(l), true, r[k])).join('')}</div>
+      <div class="ragcalc"><span class="k">${t('ragCalc')}</span><span id="ap-ragv">${ragLabel(calcRag(r))}</span></div>
+      <div class="frow"><label class="t" for="ap-note">${fl('apNote')}</label><textarea id="ap-note"></textarea></div>
+      <p class="err" hidden></p>
+      <div class="actions"><button type="submit" class="btn primary" id="ap-ok">${t('approve')}</button><button type="button" class="btn" id="ap-ret">${t('returnRep')}</button></div>
+    </form></div></div>` : '';
+  openPanel(`<div class="ph"><div><div class="k">${esc(p.code)} · ${t('listLabel')} «${t('navReports')}»</div><h2>${esc(r.title)}</h2></div>${closeBtn()}</div>
+    <div class="rv-meta"><button class="link" data-act="openp" data-id="${p.id}">${esc(p.title)}</button><span>${fl('rDate')}: <b>${fmt(d)}</b></span>${r.period ? `<span>${fl('rPeriod')}: <b>${esc(tv(r.period))}</b></span>` : ''}${apBadge(r.approval)}</div>
+    ${apForm}
+    <div class="sec"><div class="group">${kv('rag', ragHtml(r.rag))}${DIMS.map(([k, l]) => kv(l, ragHtml(r[k]))).join('')}</div></div>
+    ${ind ? `<div class="sec"><h3>${t('repIndicators')}</h3><div class="group">${ind}${r.keyReason ? `<div class="kv"><span class="k">${t('keyReason')}</span><span class="v">${esc(r.keyReason)}</span></div>` : ''}</div></div>` : ''}
+    <div class="sec"><div class="rep rv-text">
+      <div class="rep-h">${person(r.author, fl('rAuthor'))}${r.decision ? `<span class="flag">${t('needDecision')}</span>` : ''}</div>
+      ${txt(fl('rDone'), r.done)}${txt(fl('rNext'), r.next)}${txt(fl('rIssues'), r.issues)}${r.decision ? txt(fl('rDecText'), r.decisionText || '—') : ''}</div></div>
+    ${decided}`, keep);
+  const form = document.getElementById('apform');
+  if (!form) return;
+  const err = fErr(form), dimsNow = () => Object.fromEntries(DIMS.map(([k]) => [k, radioVal(form, 'ap-' + k)]));
+  const sync = () => { const dm = dimsNow(), ch = DIMS.some(([k]) => dm[k] !== r[k]);
+    form.querySelector('#ap-ok').textContent = ch ? t('approveChanged') : t('approve'); form.querySelector('#ap-ragv').innerHTML = ragLabel(calcRag(dm)); };
+  form.addEventListener('change', sync);
+  const decide = decision => {
+    const msg = decideReport(p, r, decision, dimsNow(), form.querySelector('#ap-note').value.trim());
+    if (msg){ form.querySelector('#ap-note').focus(); return err(msg); }
+    rerenderMain(); reportView(p.id, r.id, true); persist(p); toast(t('savedApproval'));
+  };
+  form.addEventListener('submit', e => { e.preventDefault(); decide(AP_OK); });
+  form.querySelector('#ap-ret').addEventListener('click', () => decide(AP_RET));
 }
 
 /* ================= Theme, toast, events ================= */
@@ -1629,6 +1987,9 @@ document.addEventListener('click', e => {
   else if (a === 'togglecm') projectPanel(state.panel.id, !state.panel.showCm, true, state.panel.showCh);
   else if (a === 'togglech') projectPanel(state.panel.id, state.panel.showCm, true, !state.panel.showCh);
   else if (a === 'newrep') reportForm(id);
+  else if (a === 'repopen') reportView(id, el.dataset.rid);
+  else if (a === 'rmcell'){ state.rmCell = state.rmCell === el.dataset.k ? null : el.dataset.k; rerenderMain(); }
+  else if (a === 'newfromret'){ const p = pById(id), r = p && (p.reports || []).find(x => String(x.id) === el.dataset.rid); reportForm(id, r); }
   else if (a === 'newrisk') riskForm(id, null);
   else if (a === 'riskopen') riskForm(id, el.dataset.rid, el.dataset.src === 'list');
   else if (a === 'newproj') projectForm(null);

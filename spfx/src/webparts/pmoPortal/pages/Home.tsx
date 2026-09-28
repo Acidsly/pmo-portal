@@ -5,6 +5,10 @@ import { PortalData } from '../data/SpRepo';
 import { Project, StatusReport, Risk } from '../data/types';
 import { isArch, isActive, freshness, riskScore, byOrder, staleFirst } from '../logic/status';
 import { donutCounts, snapshots } from '../logic/dynamics';
+import { calcRag } from '../logic/rag';
+import { kpis, riskMatrix, slips, launches, byDept, myActions, Slip } from '../logic/analytics';
+import { KpiStrip, RiskMap, DeptBars } from '../components/Analytics';
+import { Page } from '../components/ctx';
 import { Wp } from '../components/Wp';
 import { SimpleTable, Col } from '../components/SimpleTable';
 import { Donut } from '../components/Donut';
@@ -16,7 +20,7 @@ const byDateDesc = (a: StatusReport, b: StatusReport): number => (a.date < b.dat
 
 /** Главная — порядок блоков и колонки pageHome прототипа (строки 1167–1190). */
 export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
-  const { t, fl, today, go, openProject, openForm } = React.useContext(AppCtx);
+  const { t, fl, today, go, openProject, openForm, me } = React.useContext(AppCtx);
   const byId: Record<number, Project> = {};
   data.projects.forEach(p => { byId[p.id] = p; });
   const P = (id: number): Project => byId[id];
@@ -27,6 +31,13 @@ export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
     .sort((a, b) => (a.rag === 'Червоний' ? 0 : 1) - (b.rag === 'Червоний' ? 0 : 1));
   const stale = vis.filter(p => isActive(p.status) && ['r', 'na'].indexOf(freshness(p.lastUpdate, today)) >= 0)   // старше 14 дней или отчётов нет
     .sort(staleFirst);   // сначала без отчётов, дальше — от самого давнего
+  // аналитика (задача 7): по видимым проектам без архива
+  const k = kpis(vis, data.reports, data.risks, today);
+  const acts = myActions(vis, data.reports, data.risks, me, data.canApprove, today);
+  const isPm = vis.some(p => p.canEdit && !!p.manager && p.manager.email.toLowerCase() === me.toLowerCase());
+  const nActs = acts.stale.length + acts.returned.length + acts.awaiting.length + acts.accepted.length;
+  const sl = slips(vis, data.changes);
+  const ln = launches(vis, today);
   const dec = data.reports.filter(r => r.decision && shown(r.projectId)).sort(byDateDesc);
   const open = data.risks.filter(k => k.status !== 'Закрито' && shown(k.projectId))
     .sort((a, b) => riskScore(b.probability, b.impact) - riskScore(a.probability, a.impact)).slice(0, 6);
@@ -53,6 +64,22 @@ export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
   const decCols: Col<StatusReport>[] = [...byProject<StatusReport>(), { head: fl('rProj'), cell: r => link(P(r.projectId)) },
     { head: fl('rDate'), cell: r => fmtDate(r.date) }, { head: fl('rDecText'), cell: r => r.decisionText, cls: 'wide' },
     { head: fl('rAuthor'), cell: r => <PersonCell p={r.author} /> }];
+  const apCols: Col<StatusReport>[] = [...byProject<StatusReport>(), { head: fl('rProj'), cell: r => link(P(r.projectId)) },
+    { head: fl('rDate'), cell: r => fmtDate(r.date) },
+    { head: t('cHealth'), cell: r => <RagDot v={calcRag(r.schedule, r.budget, r.resources)} notRated={t('notRated')} />, cls: 'c-ico' },
+    { head: fl('rTitle'), cell: r => <button className="link" onClick={() => openForm('rep:' + r.id, r.projectId)}>{r.title}</button>, cls: 'wide' },
+    { head: fl('rAuthor'), cell: r => <PersonCell p={r.author} /> }];
+  const retCols: Col<StatusReport>[] = [{ head: fl('rProj'), cell: r => link(P(r.projectId)) },
+    { head: fl('rDate'), cell: r => <>{fmtDate(r.date)}{r.approvalNote ? <> · <span title={r.approvalNote}>{r.approvalNote}</span></> : null}</>, cls: 'wide' },
+    { head: '', cell: r => <button className="btn" onClick={() => openForm('report-from:' + r.id, r.projectId)}>{t('newFromReturned')}</button> }];
+  const myStaleCols: Col<Project>[] = [{ head: fl('title'), cell: link },
+    { head: fl('last'), cell: p => <FreshDate iso={p.lastUpdate} fresh={freshness(p.lastUpdate, today)} none={t('noReports')} /> },
+    { head: '', cell: p => <button className="btn" onClick={() => openForm('report', p.id)}><Plus />{t('addReport')}</button> }];
+  const slipCols: Col<Slip>[] = [{ head: fl('rProj'), cell: x => link(x.p) }, { head: fl('plan'), cell: x => fmtDate(x.p.planEnd) },
+    { head: fl('fc'), cell: x => fmtDate(x.p.forecastEnd) }, { head: t('cSlip'), cell: x => <span className="late">+{x.days} {t('days')}</span>, cls: 'num' },
+    { head: t('cMoves'), cell: x => String(x.moves), cls: 'num' }];
+  const lnCols: Col<Project>[] = [{ head: fl('golive'), cell: p => fmtDate(p.goLive) }, { head: fl('rProj'), cell: link },
+    { head: t('cHealth'), cell: p => <RagDot v={p.rag} notRated={t('notRated')} />, cls: 'c-ico' }, { head: fl('pm'), cell: p => <PersonCell p={p.manager} /> }];
   const riskCols: Col<Risk>[] = [...byProject<Risk>(), { head: fl('rProj'), cell: k => link(P(k.projectId)) },
     { head: fl('kTitle'), cell: k => k.title, cls: 'wide' }, { head: fl('kType'), cell: k => tv(k.type) },
     { head: fl('kScore'), cell: k => <Score s={riskScore(k.probability, k.impact)} /> },
@@ -64,9 +91,26 @@ export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
       <div><h1 className="page-title">{t('dash')}</h1><p className="page-sub">{t('visible') + vis.length}</p></div>
       {data.canCreate ? <button className="btn primary" onClick={() => openForm('project')}><Plus />{t('newProject')}</button> : null}
     </div>
+    <KpiStrip k={k} pmo={data.canApprove} t={t} go={(pg, v) => go(pg as Page, v)} />
+    {isPm || data.canApprove ? <div className="home-actions"><Wp title={t('wpActions')}>{nActs ? <>
+      {acts.awaiting.length ? <div className="act-sec"><h3>{t('viewAwaiting')} ({acts.awaiting.length})</h3><SimpleTable cols={apCols} rows={acts.awaiting} empty="" /></div> : null}
+      {acts.returned.length ? <div className="act-sec"><h3>{t('actReturned')} ({acts.returned.length})</h3><SimpleTable cols={retCols} rows={acts.returned} empty="" /></div> : null}
+      {acts.stale.length ? <div className="act-sec"><h3>{t('wpStale')} ({acts.stale.length})</h3><SimpleTable cols={myStaleCols} rows={acts.stale} empty="" /></div> : null}
+      {acts.accepted.length ? <div className="act-sec"><h3>{t('actAccepted')} ({acts.accepted.length})</h3><div className="rlist">{acts.accepted.map(x =>
+        <button key={x.id} className="rrow" onClick={() => openForm('risk:' + x.id, x.projectId)}><Score s={riskScore(x.probability, x.impact)} />
+          <span className="rt">{x.title}</span><span className="muted">{P(x.projectId) ? P(x.projectId).title : ''}</span></button>)}</div></div> : null}
+    </> : <p className="empty">{t('actNone')}</p>}</Wp></div> : null}
     <div className="grid2">
       <Wp title={t('wpHealth')}><Donut c={donutCounts(vis)} label={t('wpHealth')} active={t('active')} notRated={t('notRated')} /></Wp>
-      <Wp title={t('wpDyn')}><Dynamics pts={snapshots(data.projects, data.reports, today)} label={t('wpDyn')} today={t('today')} hint={t('dynHint')} /></Wp>
+      <Wp title={t('wpDyn')}><Dynamics pts={snapshots(data.projects, data.reports.filter(r => r.approval === 'Погоджено'), today)} label={t('wpDyn')} today={t('today')} hint={t('dynHint')} /></Wp>
+    </div>
+    <div className="grid2">
+      <Wp title={t('wpRiskMap')} more={() => go('risks', 'open')} moreLabel={t('showAll')}><RiskMap m={riskMatrix(vis, data.risks)} byId={byId} t={t} openRisk={(id, pid) => openForm('risk:' + id, pid)} /></Wp>
+      <Wp title={t('wpDept')}><DeptBars rows={byDept(vis)} t={t} empty={t('emptyProblem')} /></Wp>
+    </div>
+    <div className="grid2">
+      <Wp title={t('wpSlips')}><SimpleTable cols={slipCols} rows={sl} empty={t('emptySlips')} /></Wp>
+      <Wp title={t('wpLaunch')}><SimpleTable cols={lnCols} rows={ln} empty={t('emptyLaunch')} /></Wp>
     </div>
     <div className="dash">
       <Wp title={t('wpProblem')} more={() => go('projects', 'problem')} moreLabel={t('showAll')}><SimpleTable cols={probCols} rows={prob} empty={t('emptyProblem')} /></Wp>

@@ -35,7 +35,7 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "config/focus-group.example.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "config/focus-group.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
@@ -87,6 +87,16 @@ Invoke-Expression $fn.Extent.Text
 # общие тест-векторы — их же проверяет Jest в spfx/test
 $cases = Get-Content -Raw (Join-Path $root "tests/cases/rag.json") | ConvertFrom-Json
 foreach ($c in $cases) { $r = CalcRag $c.s $c.b $c.r; if ($r -eq $c.out) { Ok "$($c.s)/$($c.b)/$($c.r) -> $r" } else { Bad "$($c.s)/$($c.b)/$($c.r) -> $r, ожидалось $($c.out)" } }
+
+Write-Host "4c. Погодження статус-звітів (Get-ApprovalResult, tests/cases/approval.json)"
+$fn = $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Get-ApprovalResult" }, $true) | Select-Object -First 1
+Invoke-Expression $fn.Extent.Text
+foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/approval.json") | ConvertFrom-Json)) {
+    $res = Get-ApprovalResult $c.report $c.approval
+    $got = "$($res.valid)|$($res.decision)|$($res.s)|$($res.b)|$($res.r)|$($res.rag)|$($res.apply)|$(@($res.changed) -join ',')"
+    $e = $c.expect; $exp = "$($e.valid)|$($e.decision)|$($e.s)|$($e.b)|$($e.r)|$($e.rag)|$($e.apply)|$(@($e.changed) -join ',')"
+    if ($got -eq $exp) { Ok $c.name } else { Bad "$($c.name): $got — ожидалось $exp" }
+}
 
 Write-Host "4a. Даты «только дата» (Invoke-PMOSync.ps1: DateOnly / ToSpDate)"
 foreach ($n in @("DateOnly", "ToSpDate")) {

@@ -58,8 +58,8 @@ param(
 $ErrorActionPreference = "Stop"
 $PMO_GROUP = "PMO-адміністратори"
 $L_PROJ = "Lists/Projects"; $L_REP = "Lists/StatusReports"; $L_RISK = "Lists/RisksIssues"
-$L_CHG  = "Lists/KeyChanges"; $L_CMT = "Lists/ProjectComments"
-$stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; access = 0; feedback = 0; reminders = 0; warnings = 0 }
+$L_CHG  = "Lists/KeyChanges"; $L_CMT = "Lists/ProjectComments"; $L_TEAM = "Lists/ProjectTeam"; $L_AP = "Lists/ReportApprovals"
+$stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; access = 0; feedback = 0; approvals = 0; reminders = 0; warnings = 0 }
 
 function Log([string]$m, [string]$c = "Gray") { Write-Host ("{0:HH:mm:ss} {1}" -f (Get-Date), $m) -ForegroundColor $c }
 function Warn([string]$m) { $stats.warnings++; Write-Warning $m }
@@ -129,6 +129,27 @@ function CalcRag($s, $b, $r) {
     return "Зелений"
 }
 
+# Решение PMO по статус-отчёту (общие векторы tests/cases/approval.json). $rep: s, b, r, approval; $ap: decision, s, b, r, note или $null.
+# Пустой цвет PMO — без изменений; смена цвета или возврат — только с комментарием; решённый отчёт повторно не решается.
+function Get-ApprovalResult($rep, $ap) {
+    $cur = if ($rep.approval) { [string]$rep.approval } else { "На погодженні" }
+    $out = [ordered]@{ valid = $true; decision = $cur; s = [string]$rep.s; b = [string]$rep.b; r = [string]$rep.r; rag = ""; apply = ($cur -eq "Погоджено"); changed = @() }
+    if ($ap) {
+        $note = ([string]$ap.note).Trim()
+        $new = @{ s = $(if ($ap.s) { [string]$ap.s } else { $out.s }); b = $(if ($ap.b) { [string]$ap.b } else { $out.b }); r = $(if ($ap.r) { [string]$ap.r } else { $out.r }) }
+        $chg = @(@("s", "b", "r") | Where-Object { $new[$_] -ne $out[$_] })
+        if ($cur -ne "На погодженні") { $out.valid = $false }
+        elseif ($ap.decision -eq "Повернуто") { if ($note) { $out.decision = "Повернуто" } else { $out.valid = $false } }
+        elseif ($ap.decision -eq "Погоджено") {
+            if ($chg.Count -and -not $note) { $out.valid = $false }
+            else { $out.decision = "Погоджено"; $out.apply = $true; $out.changed = $chg; foreach ($k in $chg) { $out[$k] = $new[$k] } }
+        }
+        else { $out.valid = $false }
+    }
+    $out.rag = CalcRag $out.s $out.b $out.r
+    return [pscustomobject]$out
+}
+
 $DISPLAY = [ordered]@{
     pmStatus = "Статус проєкту"; pmRAG = "Загальний стан"; pmType = "Тип проєкту"; pmProgress = "% виконання"
     pmStart = "Дата старту"; pmGoLive = "Дата запуску (продакшн)"; pmPlanEnd = "Дата завершення (план)"; pmForecastEnd = "Прогноз завершення"
@@ -142,11 +163,13 @@ $DATE_FIELDS = @("pmStart","pmGoLive","pmPlanEnd","pmForecastEnd","pmLastUpdate"
 
 # Правки карточки из приложения SPFx (поле pmEditLog): ключ прототипа -> внутреннее имя, подпись строки журнала
 $EDIT_DISPLAY = @{ Title = "Назва проєкту"; pmCode = "Код проєкту"; pmDepartment = "Напрям"; pmLoop = "Посилання на картку в Loop"; pmPriority = "Пріоритет"
-                   pmManager = "PM"; pmOwner = "Власник"; pmStakeholders = "Стейкхолдери"; pmBudget = "Бюджет (план)" }
+                   pmManager = "PM"; pmOwner = "Власник"; pmStakeholders = "Стейкхолдери"; pmBudget = "Бюджет (план)"
+                   pmTeam = "Команда проєкту"; pmLinks = "Посилання"
+                   srSchedule = "Терміни"; srBudget = "Бюджет"; srResources = "Ресурси"; srApproval = "Погодження звіту" }
 function EditLogRows([string]$json) {
     # {"entries":[{"when","who","reason","diffs":[{"f","from","to"}]}]} -> строки журнала; повреждённое содержимое — пусто
     $key = @{ title = "Title"; code = "pmCode"; dept = "pmDepartment"; loop = "pmLoop"; prio = "pmPriority"; pm = "pmManager"
-              owner = "pmOwner"; stakeholders = "pmStakeholders"; budget = "pmBudget" }
+              owner = "pmOwner"; stakeholders = "pmStakeholders"; budget = "pmBudget"; team = "pmTeam"; links = "pmLinks" }
     if (-not $json) { return @() }
     try { $log = $json | ConvertFrom-Json -ErrorAction Stop } catch { return @() }
     $rows = @()
@@ -178,6 +201,24 @@ $projects = Get-PnPListItem -List $L_PROJ -PageSize 500
 $reports  = Get-PnPListItem -List $L_REP  -PageSize 500
 $risks    = Get-PnPListItem -List $L_RISK -PageSize 500
 $comments = Get-PnPListItem -List $L_CMT  -PageSize 500
+# команда проекта: люди из строк команды — стейкхолдеры (просмотр и комментарии)
+# новые списки раунда 2 появляются с Deploy-PMO.ps1; до развёртывания синхронизация работает по-прежнему
+$HAS_TEAM = [bool](Get-PnPList -Identity $L_TEAM -ErrorAction SilentlyContinue)
+$HAS_AP   = [bool](Get-PnPList -Identity $L_AP -ErrorAction SilentlyContinue)
+function Get-ItemsIfExists([string]$list, [bool]$has) { if ($has) { return @(Get-PnPListItem -List $list -PageSize 500) } return @() }
+$teamItems = Get-ItemsIfExists $L_TEAM $HAS_TEAM
+$TEAM = @{}
+foreach ($it in @($teamItems)) { if (-not $it) { continue }
+    $lk = $it["tmProject"]; $e = Email $it["tmUser"]
+    if (-not $lk -or -not $e) { continue }
+    if (-not $TEAM.ContainsKey($lk.LookupId)) { $TEAM[$lk.LookupId] = @() }
+    if ($TEAM[$lk.LookupId] -notcontains $e) { $TEAM[$lk.LookupId] += $e }
+}
+function Get-Stakeholders($item) {
+    # после миграции (Deploy-PMO.ps1, отметка «team») источник — «Команда проєкту»; до неё — pmStakeholders
+    if ($HAS_TEAM -and ([string]$item["pmMigrated"]).Split(",") -contains "team") { return @($TEAM[$item.Id] ?? @()) }
+    return @(Emails $item["pmStakeholders"])
+}
 $PROJ = @{}
 foreach ($it in $projects) {
     $PROJ[$it.Id] = [pscustomobject]@{ Item = $it; Values = @{} }
@@ -198,9 +239,49 @@ foreach ($p in $PROJ.Values) {
 }
 
 # ---------------------------------------------------------------------------
-# 1. Статус-отчёты -> карточка проекта, журнал, архив
+# 0. Погодження PMO -> статус-отчёт (решение, цвета, комментарий), журнал «Погодження звіту»
 # ---------------------------------------------------------------------------
-$pending = $reports | Where-Object { $_["srApplied"] -ne $true } |
+$PMO_EMAILS = @(Get-PnPGroupMember -Group $PMO_GROUP | ForEach-Object { ([string]$_.Email).ToLowerInvariant() } | Where-Object { $_ })
+$REPBYID = @{}; foreach ($r in $reports) { $REPBYID[$r.Id] = $r }
+$RAGF = [ordered]@{ s = "srSchedule"; b = "srBudget"; r = "srResources" }
+$approvals = Get-ItemsIfExists $L_AP $HAS_AP
+foreach ($a in (@($approvals) | Where-Object { $_ } | Where-Object { $_["apApplied"] -ne $true } | Sort-Object Id)) {
+    $lk = $a["apReport"]; $r = if ($lk) { $REPBYID[$lk.LookupId] } else { $null }
+    $who = Email $a["Author"]
+    $done = $true
+    if (-not $r) { Warn "Погодження #$($a.Id): звіт не знайдено" }
+    elseif ($PMO_EMAILS -notcontains $who -and $OWNER_EMAILS -notcontains $who) { Warn "Погодження #$($a.Id) від $who — не PMO: не застосовано" }
+    else {
+        $res = Get-ApprovalResult @{ s = (Norm $r["srSchedule"]); b = (Norm $r["srBudget"]); r = (Norm $r["srResources"]); approval = (Norm $r["srApproval"]) } `
+                                  @{ decision = (Norm $a["apDecision"]); s = (Norm $a["apSchedule"]); b = (Norm $a["apBudget"]); r = (Norm $a["apResources"]); note = [string]$a["apNote"] }
+        if (-not $res.valid) { Warn "Погодження #$($a.Id) звіту #$($r.Id) не прийнято: звіт уже вирішено або немає коментаря" }
+        else {
+            $stats.approvals++
+            $note = ([string]$a["apNote"]).Trim()
+            $when = $a["Created"].ToUniversalTime().ToString("o")
+            $pid_ = $r["srProject"].LookupId
+            Log "  погодження #$($a.Id): звіт #$($r.Id) — $($res.decision)$(if ($res.changed.Count) { ', оцінки: ' + ($res.changed -join ',') })"
+            $vals = @{ srApproval = $res.decision; srApprovedBy = $who; srApprovedAt = $when; srApprovalNote = $note }
+            foreach ($k in $res.changed) {
+                $vals[$RAGF[$k]] = $res.$k
+                Add-Change $pid_ $RAGF[$k] (Norm $r[$RAGF[$k]]) $res.$k "Погодження звіту" $who $note $when
+            }
+            if (-not $res.changed.Count) { Add-Change $pid_ "srApproval" "На погодженні" $res.decision "Погодження звіту" $who $note $when }
+            if (-not $DryRun) {
+                try { Set-PnPListItem -List $L_REP -Identity $r.Id -Values $vals -UpdateType SystemUpdate | Out-Null }
+                catch { Warn "Звіт #$($r.Id): $($_.Exception.Message)"; $done = $false }
+            }
+            # в памяти — для переноса в карточку ниже (и в пробном запуске)
+            foreach ($k in @("srApproval") + @($res.changed | ForEach-Object { $RAGF[$_] })) { $r[$k] = $vals[$k] }
+        }
+    }
+    if ($done -and -not $DryRun) { Set-PnPListItem -List $L_AP -Identity $a.Id -Values @{ apApplied = $true } -UpdateType SystemUpdate | Out-Null }
+}
+
+# ---------------------------------------------------------------------------
+# 1. Статус-отчёты -> карточка проекта, журнал, архив (только погоджені PMO)
+# ---------------------------------------------------------------------------
+$pending = $reports | Where-Object { $_["srApplied"] -ne $true -and (-not $HAS_AP -or (Norm $_["srApproval"]) -eq "Погоджено") } |
     Sort-Object @{ Expression = { DateOnly $_["srDate"] } }, @{ Expression = { $_.Id } }
 foreach ($r in $pending) {
     $lk = $r["srProject"]; if (-not $lk) { continue }
@@ -387,7 +468,17 @@ Log "Права доступа…"
 $HASH = @{}; $ACLS = @{}
 $chainOf = { param($e) Get-Chain $e }
 foreach ($p in $PROJ.Values) {
-    $access = Get-Access (Email $p.Item["pmManager"]) (Email $p.Item["pmOwner"]) (Emails $p.Item["pmStakeholders"]) $chainOf ($p.Values.pmStatus -eq "Архівний")
+    $st = Get-Stakeholders $p.Item
+    # pmStakeholders повторяет команду (представления списка, совместимость)
+    $old = @(Emails $p.Item["pmStakeholders"])
+    if ((@($old | Sort-Object) -join ";") -ne (@($st | Sort-Object) -join ";")) {
+        if ($DryRun) { Log "  стейкхолдери «$($p.Item["Title"])»: $($st -join ', ')" }
+        else {
+            try { Set-PnPListItem -List $L_PROJ -Identity $p.Item.Id -Values @{ pmStakeholders = @($st) } -UpdateType SystemUpdate | Out-Null }
+            catch { Warn "Стейкхолдери «$($p.Item["Title"])»: $($_.Exception.Message)" }
+        }
+    }
+    $access = Get-Access (Email $p.Item["pmManager"]) (Email $p.Item["pmOwner"]) $st $chainOf ($p.Values.pmStatus -eq "Архівний")
     $acl = Get-Acl $access
     $h = Get-Hash $acl
     # «Доступ до картки» в приложении: имя и должность из Entra ID, пишется только при изменении
@@ -409,13 +500,16 @@ $children = @(
     @($L_REP,  (Get-PnPListItem -List $L_REP  -PageSize 500), "srProject", $false),
     @($L_RISK, (Get-PnPListItem -List $L_RISK -PageSize 500), "riProject", $false),
     @($L_CMT,  (Get-PnPListItem -List $L_CMT  -PageSize 500), "cmProject", $true),
-    @($L_CHG,  (Get-PnPListItem -List $L_CHG  -PageSize 500), "kcProject", $true)
+    @($L_CHG,  (Get-PnPListItem -List $L_CHG  -PageSize 500), "kcProject", $true),
+    @($L_TEAM, (Get-ItemsIfExists $L_TEAM $HAS_TEAM), "tmProject", $false),
+    @($L_AP,   (Get-ItemsIfExists $L_AP $HAS_AP), "apProject", $true)
 )
 foreach ($c in $children) {
     foreach ($it in $c[1]) {
         $lk = $it[$c[2]]; if (-not $lk -or -not $HASH.ContainsKey($lk.LookupId)) { continue }
         # применённый статус-отчёт — только для чтения всем (история не переписывается); отметка «R» в хэше
-        $ro = $c[3] -or ($c[0] -eq $L_REP -and $it["srApplied"] -eq $true)
+        # статус-отчёт — только чтение после первой синхронизации (PMO погоджує, PM больше не правит отправленный)
+        $ro = $c[3] -or $c[0] -eq $L_REP
         $h = $HASH[$lk.LookupId] + $(if ($c[0] -eq $L_REP -and $ro) { "R" } else { "" })
         if ($RebuildPermissions -or (Norm $it["pmoAcl"]) -ne $h) { Set-ItemAcl $c[0] $it.Id $ACLS[$lk.LookupId] $ro $h }
     }
@@ -460,5 +554,6 @@ if ($SendReminders) {
 Log ("Правок картки: {0}" -f $stats.edits)
 Log ("Списков доступа обновлено: {0}" -f $stats.access)
 Log ("Отзывов в общий список: {0}" -f $stats.feedback)
+Log ("Решений PMO по отчётам: {0}" -f $stats.approvals)
 Log ("Готово. Звітів: {0}, записів у журнал: {1}, нових проєктів: {2}, коментарів: {3}, типів: {4}, прав: {5}, нагадувань: {6}, попереджень: {7}" -f `
     $stats.reports, $stats.changes, $stats.created, $stats.comments, $stats.types, $stats.acl, $stats.reminders, $stats.warnings) "Green"

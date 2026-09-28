@@ -44,9 +44,9 @@ export function moveCol(st: TableState, id: string, dir: -1 | 1, lock: string): 
 /** Состояние из localStorage; неизвестные колонки отбрасываются, закреплённая всегда есть (позиция 2). */
 export function loadState(key: string, defaults: string[], known: string[], lock: string): TableState {
   let st: TableState = { cols: defaults.slice(), sort: null, filters: {} };
-  try { const raw = localStorage.getItem('pmo-table5-' + key); if (raw) st = { ...st, ...JSON.parse(raw) }; } catch { /* нет хранилища */ }
+  try { const raw = localStorage.getItem('pmo-table6-' + key); if (raw) st = { ...st, ...JSON.parse(raw) }; } catch { /* нет хранилища */ }
   st.cols = st.cols.filter(c => known.indexOf(c) >= 0);
   if (st.cols.indexOf(lock) < 0) st.cols.splice(Math.min(2, st.cols.length), 0, lock);
   return st;
 }
-export function saveState(key: string, st: TableState): void { try { localStorage.setItem('pmo-table5-' + key, JSON.stringify(st)); } catch { /* нет хранилища */ } }
+export function saveState(key: string, st: TableState): void { try { localStorage.setItem('pmo-table6-' + key, JSON.stringify(st)); } catch { /* нет хранилища */ } }

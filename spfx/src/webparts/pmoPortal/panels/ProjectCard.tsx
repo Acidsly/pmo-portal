@@ -8,12 +8,11 @@ import { isArch, isPlanLate, forecastDelta, budgetUse, budgetLevel, freshness, r
 import { ofProject } from '../logic/views';
 import { toEvents, editLogEvents } from '../logic/changes';
 import { parseAccess, AccessRow } from '../logic/access';
-import { Avatar, RagPill, RagDot, Progress, Score, fmtDate, money, freshColor } from '../components/Bits';
+import { Avatar, RagPill, RagDot, Progress, Score, fmtDate, money, freshColor, ApBadge, fmtDT } from '../components/Bits';
 import { Plus } from '../components/Icons';
 import { commentBody } from '../data/write';
 import { Err } from '../components/fields';
 
-const fmtDT = (iso: string): string => { const d = new Date(iso); return isNaN(d.getTime()) ? '' : d.toLocaleDateString('uk-UA') + ' ' + d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }); };
 const byDateDesc = <T extends { date: string; id: number }>(a: T, b: T): number => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.id - a.id);
 
 /** Человек с должностью из профиля (person прототипа). */
@@ -67,9 +66,12 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
   const events = [...(p.pendingEvents || []), ...editLogEvents(p.editLog || '', people), ...toEvents(ofProject(data.changes, p.id))]
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
   const edit = p.canEdit && !isArch(p.status);
+  // погодження PMO: самый ранний отчёт на погодженні; последний отчёт повернуто — комментарий PMO и «новий звіт на основі повернутого»
+  const awaitingAll = reps.slice().reverse().filter(r => (r.approval || 'На погодженні') === 'На погодженні');
+  const returned = reps[0] && reps[0].approval === 'Повернуто' ? reps[0] : undefined;
   const dev = forecastDelta(p.planEnd, p.forecastEnd);
   const use = budgetUse(p.budget, p.actualCost);
-  const kindL: Record<string, string> = { create: 'kCreate', key: 'kKey', edit: 'kEdit', report: 'kReport' };
+  const kindL: Record<string, string> = { create: 'kCreate', key: 'kKey', edit: 'kEdit', report: 'kReport', approval: 'kApproval' };
   const dims: [string, (r: typeof reps[0]) => React.ReactNode][] = [
     [fl('rag'), r => <RagDot v={calcRag(r.schedule, r.budget, r.resources)} notRated={t('notRated')} />],
     [fl('rSched'), r => <RagDot v={r.schedule} notRated={t('notRated')} />],
@@ -83,22 +85,31 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
     <div className="badges">
       {p.type === 'Стратегічний' ? <span className="strat">{tv(p.type)}</span> : <span className="badge">{tv(p.type)}</span>}
       <RagPill v={p.rag} notRated={t('notRated')} /><span className="badge">{tv(p.status)}</span><span className="badge">{tv(p.priority)}</span>
-      {p.loop ? <a className="loop" href={p.loop} target="_blank" rel="noopener noreferrer">{t('openLoop')} ↗</a> : null}
     </div>
+    {p.links.length ? <div className="lnk-sec"><div className="k">{fl('links')}</div><span className="lnks">{p.links.map((l, i) =>
+      <a key={i} className="loop" href={l.u} target="_blank" rel="noopener noreferrer">{l.t || l.u} ↗</a>)}</span></div> : null}
     {edit ? <div className="actbar">
       <button className="btn primary" onClick={() => c.openForm('report', p.id)}><Plus />{t('addReport')}</button>
       <button className="btn" onClick={() => c.openForm('edit', p.id)}>{t('editProject')}</button></div>
       : <p className="note lock">🔒 {isArch(p.status) ? t('archivedNote') : t('noEdit')}</p>}
     {p.pending ? <p className="note">{t('pendingNote')}</p> : null}
+    {awaitingAll.length || returned ? <div style={{ marginTop: 14 }}>
+      {awaitingAll.map(r => <div key={r.id} className="apnote">{t('pendingApproval').replace('{date}', fmtDate(r.date))}
+        {data.canApprove ? <button className="link" onClick={() => c.openForm('rep:' + r.id, p.id)}>{t('apTitle')} →</button> : null}</div>)}
+      {returned ? <div className="apnote ret">{t('returnedNote').replace('{date}', fmtDate(returned.date)).replace('{comment}', returned.approvalNote || '—')}
+        <button className="link" onClick={() => c.openForm('rep:' + returned.id, p.id)}>{t('openReport')} →</button>
+        {edit ? <div><button className="btn" onClick={() => c.openForm('report-from:' + returned.id, p.id)}><Plus />{t('newFromReturned')}</button></div> : null}</div> : null}
+    </div> : null}
     {p.description ? <p className="desc">{p.description}</p> : null}
 
     <div className="sec"><h3>{t('secPeople')}</h3>
       {p.manager ? <div className="pmcard"><Avatar name={p.manager.name} /><span className="pn"><b>{p.manager.name}</b>
         <small>{[pmTitle, p.manager.email].filter(Boolean).join(' · ')}</small></span><span className="role">{t('pmRole')}</span></div> : null}
-      <div className="people2">
-        <div><div className="k">{fl('owner')}</div><Who p={p.owner} repo={repo} /></div>
-        <div><div className="k">{fl('stakeholders')}</div><div className="plist-v">{p.stakeholders.length ? p.stakeholders.map(s => <Who key={s.id} p={s} repo={repo} />) : <span className="muted">—</span>}</div></div>
-      </div></div>
+      <div className="people2 one"><div><div className="k">{fl('owner')}</div><Who p={p.owner} repo={repo} /></div></div></div>
+    <div className="sec"><h3>{fl('team')}</h3>{p.team.length ? <div className="tablewrap"><table className="team">
+      <thead><tr><th>{fl('tmPerson')}</th><th>{fl('tmRole')}</th><th>{fl('tmTopics')}</th></tr></thead>
+      <tbody>{p.team.map(m => <tr key={m.id}><td><Who p={m.user} repo={repo} /></td><td className="wrap">{m.role}</td><td className="wrap">{m.topics || <span className="muted">—</span>}</td></tr>)}</tbody>
+    </table></div> : <p className="muted">{t('noTeam')}</p>}</div>
 
     <div className="sec"><h3>{t('secDates')}</h3><div className="group">
       <Kv k={fl('start')}>{fmtDate(p.start)}</Kv>
@@ -144,11 +155,13 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
         : <p className="empty">{t('noReportsYet')}</p>}</div>
 
     <div className="sec"><h3>{t('secReports')} ({reps.length})</h3>
-      {reps.length ? reps.map(r => <div key={r.id} className="rep">
+      {reps.length ? reps.map(r => <div key={r.id} className="rep rep-open" role="button" tabIndex={0} onClick={() => c.openForm('rep:' + r.id, p.id)}
+        onKeyDown={e => { if (e.key === 'Enter') c.openForm('rep:' + r.id, p.id); }}>
         <div className="rep-h"><b>{fmtDate(r.date)}</b><RagPill v={calcRag(r.schedule, r.budget, r.resources)} notRated={t('notRated')} />
           {r.author ? <span className="person"><Avatar name={r.author.name} /><span className="pn"><b>{r.author.name}</b></span></span> : null}
-          {r.decision ? <span className="flag">{t('needDecision')}</span> : null}</div>
+          {r.decision ? <span className="flag">{t('needDecision')}</span> : null}<ApBadge v={r.approval} /></div>
         <p><b>{r.title}</b></p>
+        {r.approval === 'Повернуто' && r.approvalNote ? <p><span className="lbl">{fl('apNote')}:</span> {r.approvalNote}</p> : null}
         <p><span className="lbl">{t('done')}:</span> {r.done || '—'}</p>
         <p><span className="lbl">{t('plan')}:</span> {r.next || '—'}</p>
         {r.issues ? <p><span className="lbl">{t('issues')}:</span> {r.issues}</p> : null}

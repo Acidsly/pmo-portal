@@ -4,13 +4,19 @@ import { donutCounts, snapshots } from '../src/webparts/pmoPortal/logic/dynamics
 
 const P = (x: Partial<Project>): Project => ({ id: 1, code: '', title: 'P', type: 'Звичайний', priority: '2 — Середній', manager: { id: 1, name: 'Y', email: 'y@x' }, owner: null,
   stakeholders: [], department: '', status: 'Реалізація', rag: '', progress: 0, start: '', goLive: '', planEnd: '', forecastEnd: '',
-  archivedAt: '', budget: 0, actualCost: 0, lastUpdate: '', lastReport: '', lastComment: '', loop: '', description: '',
+  archivedAt: '', budget: 0, actualCost: 0, lastUpdate: '', lastReport: '', lastComment: '', links: [], team: [], description: '',
   canEdit: false, pending: false, ...x });
 const R = (x: Partial<StatusReport>): StatusReport => ({ id: 1, projectId: 1, date: '2026-09-20', period: '2 тижні', schedule: 'Зелений',
   budget: 'Зелений', resources: 'Зелений', status: '', type: '', progress: null, start: '', goLive: '', planEnd: '', forecastEnd: '',
-  actualCost: null, keyReason: '', title: 'Звіт', done: '', next: '', issues: '', decision: false, decisionText: '', applied: false, author: { id: 1, name: 'Y', email: 'Y@x' }, ...x });
+  actualCost: null, keyReason: '', title: 'Звіт', done: '', next: '', issues: '', decision: false, decisionText: '', applied: false, author: { id: 1, name: 'Y', email: 'Y@x' },
+  approval: 'Погоджено', approvedBy: null, approvedAt: '', approvalNote: '', ...x });
 
 describe('applyPending — как шаг 1 Invoke-PMOSync.ps1', () => {
+  test('не погоджений PMO или повернутий отчёт карточку не меняет', () => {
+    const base = P({ lastUpdate: '2026-09-01', rag: 'Зелений' });
+    expect(applyPending(base, [R({ approval: 'На погодженні', budget: 'Червоний' })])).toBe(base);
+    expect(applyPending(base, [R({ approval: 'Повернуто', budget: 'Червоний' })])).toBe(base);
+  });
   test('новый отчёт переносит показатели, стан, дату и «Останній апдейт»', () => {
     const p = applyPending(P({ lastUpdate: '2026-09-01', rag: 'Зелений' }),
       [R({ status: 'Призупинено', progress: 40, actualCost: 100, budget: 'Червоний', title: 'Стоп', planEnd: '2026-12-01' })]);

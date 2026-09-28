@@ -217,9 +217,9 @@ export const T: Record<string, L3> = {
   "Риски и проблемы"
  ],
  "noReportsYet": [
-  "Статус-звітів ще немає. Перший звіт задасть стан проєкту.",
-  "No status reports yet. The first report sets the project health.",
-  "Статус-отчётов пока нет. Первый отчёт задаст состояние проекта."
+  "Статус-звітів ще немає. Перший погоджений звіт задасть стан проєкту.",
+  "No status reports yet. The first approved report sets the project health.",
+  "Статус-отчётов пока нет. Первый согласованный отчёт задаст состояние проекта."
  ],
  "noChanges": [
   "Змін ще не було.",
@@ -255,6 +255,41 @@ export const T: Record<string, L3> = {
   "Відкрити в Loop",
   "Open in Loop",
   "Открыть в Loop"
+ ],
+ "addMember": [
+  "+ Додати учасника",
+  "+ Add member",
+  "+ Добавить участника"
+ ],
+ "addLink": [
+  "+ Додати посилання",
+  "+ Add link",
+  "+ Добавить ссылку"
+ ],
+ "rmRow": [
+  "Прибрати",
+  "Remove",
+  "Убрать"
+ ],
+ "errRole": [
+  "Вкажіть роль для кожного учасника команди",
+  "Enter a role for every team member",
+  "Укажите роль для каждого участника команды"
+ ],
+ "errUrl": [
+  "Посилання має починатися з https://",
+  "A link must start with https://",
+  "Ссылка должна начинаться с https://"
+ ],
+ "noTeam": [
+  "Команду ще не додано",
+  "No team members yet",
+  "Команда ещё не добавлена"
+ ],
+ "noLinks": [
+  "Посилань немає",
+  "No links",
+  "Ссылок нет"
  ],
  "showHistory": [
   "Показати всю історію",
@@ -355,6 +390,181 @@ export const T: Record<string, L3> = {
   "Статус-звіт збережено, картку проєкту оновлено.",
   "Status report saved, project card updated.",
   "Статус-отчёт сохранён, карточка проекта обновлена."
+ ],
+ "savedReportPending": [
+  "Звіт надіслано на погодження PMO",
+  "Report sent to PMO for approval",
+  "Отчёт отправлен на согласование PMO"
+ ],
+ "apTitle": [
+  "Погодження звіту",
+  "Report approval",
+  "Согласование отчёта"
+ ],
+ "apHint": [
+  "PMO змінює лише оцінки. У картку звіт потрапить після погодження.",
+  "PMO can change only the ratings. The report reaches the card after approval.",
+  "PMO меняет только оценки. В карточку отчёт попадёт после согласования."
+ ],
+ "approve": [
+  "Погодити",
+  "Approve",
+  "Согласовать"
+ ],
+ "approveChanged": [
+  "Погодити зі зміною оцінок",
+  "Approve with changed ratings",
+  "Согласовать с изменением оценок"
+ ],
+ "returnRep": [
+  "Повернути на доопрацювання",
+  "Return for rework",
+  "Вернуть на доработку"
+ ],
+ "errApNote": [
+  "Додайте коментар: він обов'язковий, якщо змінено оцінки або звіт повернуто",
+  "Add a comment: it is required if the ratings were changed or the report is returned",
+  "Добавьте комментарий: он обязателен, если изменены оценки или отчёт возвращён"
+ ],
+ "savedApproval": [
+  "Рішення збережено",
+  "Decision saved",
+  "Решение сохранено"
+ ],
+ "kApproval": [
+  "Погодження звіту",
+  "Report approval",
+  "Согласование отчёта"
+ ],
+ "pendingApproval": [
+  "Статус-звіт від {date} на погодженні PMO — картка оновиться після погодження",
+  "Status report of {date} is awaiting PMO approval — the card updates after approval",
+  "Статус-отчёт от {date} на согласовании PMO — карточка обновится после согласования"
+ ],
+ "returnedNote": [
+  "Звіт від {date} повернуто на доопрацювання: {comment}",
+  "Report of {date} returned for rework: {comment}",
+  "Отчёт от {date} возвращён на доработку: {comment}"
+ ],
+ "newFromReturned": [
+  "Новий звіт на основі повернутого",
+  "New report based on the returned one",
+  "Новый отчёт на основе возвращённого"
+ ],
+ "openReport": [
+  "Відкрити звіт",
+  "Open report",
+  "Открыть отчёт"
+ ],
+ "apBy": [
+  "Погодив",
+  "Approved by",
+  "Согласовал"
+ ],
+ "kpiActive": [
+  "Активні проєкти",
+  "Active projects",
+  "Активные проекты"
+ ],
+ "kpiFresh": [
+  "Зі свіжим звітом",
+  "With a recent report",
+  "Со свежим отчётом"
+ ],
+ "kpiFreshSub": [
+  "{n} з {m}",
+  "{n} of {m}",
+  "{n} из {m}"
+ ],
+ "kpiHigh": [
+  "Високі ризики",
+  "High risks",
+  "Высокие риски"
+ ],
+ "kpiLate": [
+  "Прострочені",
+  "Overdue",
+  "Просроченные"
+ ],
+ "wpActions": [
+  "Мої дії",
+  "My actions",
+  "Мои действия"
+ ],
+ "actReturned": [
+  "Повернуто на доопрацювання",
+  "Returned for rework",
+  "Возвращено на доработку"
+ ],
+ "actAccepted": [
+  "Прийняті високі ризики",
+  "Accepted high risks",
+  "Принятые высокие риски"
+ ],
+ "actNone": [
+  "Усе зроблено — дій немає",
+  "All done — nothing to do",
+  "Всё сделано — действий нет"
+ ],
+ "wpRiskMap": [
+  "Карта ризиків",
+  "Risk map",
+  "Карта рисков"
+ ],
+ "rmHint": [
+  "Натисніть клітинку, щоб побачити її ризики",
+  "Click a cell to see its risks",
+  "Нажмите на ячейку, чтобы увидеть её риски"
+ ],
+ "wpDept": [
+  "Портфель за напрямами",
+  "Portfolio by department",
+  "Портфель по направлениям"
+ ],
+ "wpSlips": [
+  "Найбільші зсуви термінів",
+  "Biggest schedule slips",
+  "Наибольшие сдвиги сроков"
+ ],
+ "cSlip": [
+  "Зсув",
+  "Slip",
+  "Сдвиг"
+ ],
+ "cMoves": [
+  "Перенесень",
+  "Moves",
+  "Переносов"
+ ],
+ "emptySlips": [
+  "Зсувів термінів немає",
+  "No schedule slips",
+  "Сдвигов сроков нет"
+ ],
+ "wpLaunch": [
+  "Запуски в найближчі 30 днів",
+  "Go-lives in the next 30 days",
+  "Запуски в ближайшие 30 дней"
+ ],
+ "emptyLaunch": [
+  "Запусків у найближчі 30 днів немає",
+  "No go-lives in the next 30 days",
+  "Запусков в ближайшие 30 дней нет"
+ ],
+ "viewAwaiting": [
+  "Очікують погодження",
+  "Awaiting approval",
+  "Ожидают согласования"
+ ],
+ "apDecided": [
+  "Рішення PMO",
+  "PMO decision",
+  "Решение PMO"
+ ],
+ "repIndicators": [
+  "Ключові показники у звіті",
+  "Key indicators in the report",
+  "Ключевые показатели в отчёте"
  ],
  "savedProject": [
   "Проєкт створено.",
@@ -652,9 +862,9 @@ export const T: Record<string, L3> = {
   "Ключевые показатели"
  ],
  "keySecHint": [
-  "Змінюються лише через статус-звіт. Кожна зміна потрапляє в історію.",
-  "Changed only through a status report. Every change is logged.",
-  "Меняются только через статус-отчёт. Каждое изменение попадает в историю."
+  "Змінюються лише через статус-звіт — у картку потрапляють після погодження PMO. Кожна зміна потрапляє в історію.",
+  "Changed only through a status report — they reach the card after PMO approval. Every change is logged.",
+  "Меняются только через статус-отчёт — в карточку попадают после согласования PMO. Каждое изменение попадает в историю."
  ],
  "keyReason": [
   "Причина зміни показників",
@@ -672,9 +882,9 @@ export const T: Record<string, L3> = {
   "Завершено — перенести в архив"
  ],
  "completeHint": [
-  "Після збереження проєкт отримає статус «Архівний» і перейде у вкладку «Архів».",
-  "After saving, the project gets the “Архівний” status and moves to the Archive tab.",
-  "После сохранения проект получит статус «Архівний» и перейдёт во вкладку «Архив»."
+  "Після погодження звіту PMO проєкт отримає статус «Архівний» і перейде у вкладку «Архів».",
+  "After PMO approves the report, the project gets the “Архівний” status and moves to the Archive tab.",
+  "После согласования отчёта PMO проект получит статус «Архівний» и перейдёт во вкладку «Архів»."
  ],
  "savedArch": [
   "Статус-звіт збережено, проєкт перенесено в архів.",
@@ -1048,6 +1258,41 @@ export const FLD: Record<string, L3> = {
   "Project type",
   "Тип проекта"
  ],
+ "team": [
+  "Команда проєкту",
+  "Project team",
+  "Команда проекта"
+ ],
+ "tmPerson": [
+  "Учасник",
+  "Member",
+  "Участник"
+ ],
+ "tmRole": [
+  "Роль",
+  "Role",
+  "Роль"
+ ],
+ "tmTopics": [
+  "З яких питань звертатися",
+  "Contact about",
+  "По каким вопросам обращаться"
+ ],
+ "links": [
+  "Посилання",
+  "Links",
+  "Ссылки"
+ ],
+ "linkTitle": [
+  "Назва посилання",
+  "Link title",
+  "Название ссылки"
+ ],
+ "linkUrl": [
+  "Адреса",
+  "Address",
+  "Адрес"
+ ],
  "pm": [
   "PM",
   "PM",
@@ -1222,6 +1467,16 @@ export const FLD: Record<string, L3> = {
   "Автор",
   "Created by",
   "Автор"
+ ],
+ "apStatus": [
+  "Погодження",
+  "Approval",
+  "Согласование"
+ ],
+ "apNote": [
+  "Коментар PMO",
+  "PMO comment",
+  "Комментарий PMO"
  ],
  "kTitle": [
   "Ризик / проблема",

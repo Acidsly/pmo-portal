@@ -5,11 +5,11 @@ import editCases from '../../tests/cases/card-edit.json';
 
 const P = (x: Partial<Project>): Project => ({ id: 1, code: '', title: 'P', type: 'Звичайний', priority: '', manager: null, owner: null, stakeholders: [],
   department: '', status: 'Реалізація', rag: '', progress: 0, start: '', goLive: '', planEnd: '', forecastEnd: '', archivedAt: '', budget: 0,
-  actualCost: 0, lastUpdate: '', lastReport: '', lastComment: '', loop: '', description: '', canEdit: false, pending: false, ...x });
+  actualCost: 0, lastUpdate: '', lastReport: '', lastComment: '', links: [], team: [], description: '', canEdit: false, pending: false, ...x });
 const p = P({ progress: 40, planEnd: '2026-12-01', actualCost: 100 });
 const d = { ...reportFromProject(p, '2026-09-26'), schedule: 'Зелений' as const, budget: 'Зелений' as const, resources: 'Жовтий' as const, title: 'Резюме' };
-const draft = (x: Partial<ProjectDraft>): ProjectDraft => ({ title: 'Н', code: '', department: 'ІТ', loop: '', type: 'Звичайний', priority: '2 — Середній',
-  manager: { id: 5, name: 'M', email: 'm@x.ua' }, owner: null, stakeholders: [], start: '2026-09-26', goLive: '', planEnd: '', status: 'Ініціація', budget: 0, description: '', ...x });
+const draft = (x: Partial<ProjectDraft>): ProjectDraft => ({ title: 'Н', code: '', department: 'ІТ', links: [], type: 'Звичайний', priority: '2 — Середній',
+  manager: { id: 5, name: 'M', email: 'm@x.ua' }, owner: null, team: [], start: '2026-09-26', goLive: '', planEnd: '', status: 'Ініціація', budget: 0, description: '', ...x });
 
 test('отчёт: только изменённые ключевые показатели, srApplied=false, даты — полдень UTC', () => {
   const b = reportBody({ ...d, progress: 55, planEnd: '2027-01-15', keyReason: 'Зсув' }, p);
@@ -21,9 +21,11 @@ test('отчёт: только изменённые ключевые показ�
   expect(reportBody(d, p).srProgress).toBe(40);   // % пишется и без изменения
 });
 test('новый проект', () => {
-  expect(projectBody(draft({ stakeholders: [{ id: 6, name: 'A', email: 'a@x' }, { id: 7, name: 'B', email: 'b@x' }], loop: 'https://loop/x' }), 'PRJ-011'))
-    .toMatchObject({ Title: 'Н', pmCode: 'PRJ-011', pmType: 'Звичайний', pmManagerId: 5, pmStakeholdersId: [6, 7], pmStatus: 'Ініціація',
-      pmStart: '2026-09-26T12:00:00Z', pmGoLive: null, pmProgress: 0, pmLoop: { Url: 'https://loop/x', Description: 'Loop' } });
+  const b = projectBody(draft({ links: [{ t: 'Loop', u: 'https://loop/x' }] }), 'PRJ-011');
+  expect(b).toMatchObject({ Title: 'Н', pmCode: 'PRJ-011', pmType: 'Звичайний', pmManagerId: 5, pmStatus: 'Ініціація',
+    pmStart: '2026-09-26T12:00:00Z', pmGoLive: null, pmProgress: 0, pmLinks: '[{"t":"Loop","u":"https://loop/x"}]' });
+  // стейкхолдеров пишет синхронизация из «Команда проєкту»
+  expect(b).not.toHaveProperty('pmStakeholdersId'); expect(b).not.toHaveProperty('pmLoop');
 });
 test('правка карточки: без ключевых показателей, журнал дописывается', () => {
   const e = projectEditBody(draft({ title: 'Б' }), [{ f: 'title', from: 'А', to: 'Б' }], 'pm@x.ua', '', '');

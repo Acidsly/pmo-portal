@@ -1,16 +1,17 @@
 import { Project, StatusReport, ChangeEvent } from '../data/types';
 import { calcRag } from './rag';
+import { AP_OK } from './approval';
 
 const byDateThenId = (a: StatusReport, b: StatusReport): number => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id);
 
 const SHOWN: [keyof Project, string][] = [['status', 'status'], ['rag', 'rag'], ['type', 'type'], ['progress', 'progress'],
   ['start', 'start'], ['goLive', 'golive'], ['planEnd', 'plan'], ['forecastEnd', 'fc']];
 
-/** Накладывает неприменённые отчёты (srApplied = нет) на карточку — те же правила, что шаг 1 Invoke-PMOSync.ps1. */
+/** Накладывает неприменённые погоджені отчёты (srApplied = нет, «Погоджено» — в отчёте или свежим решением PMO) на карточку — те же правила, что шаг 1 Invoke-PMOSync.ps1. */
 export function applyPending(project: Project, reports: StatusReport[]): Project {
   // как синхронизация: карточку меняет только отчёт PM проекта
   const pm = project.manager ? project.manager.email.toLowerCase() : '';
-  const pending = reports.filter(r => r.projectId === project.id && !r.applied && !!pm && !!r.author && r.author.email.toLowerCase() === pm).sort(byDateThenId);
+  const pending = reports.filter(r => r.projectId === project.id && !r.applied && r.approval === AP_OK && !!pm && !!r.author && r.author.email.toLowerCase() === pm).sort(byDateThenId);
   if (!pending.length) return project;
   const p: Project = { ...project, pending: true };
   const events: ChangeEvent[] = [];

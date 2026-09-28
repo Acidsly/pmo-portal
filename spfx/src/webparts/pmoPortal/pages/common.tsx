@@ -24,5 +24,6 @@ export function useDefsCtx(data: PortalData): DefsCtx {
   const c = React.useContext(AppCtx);
   const byId: Record<number, Project> = {};
   data.projects.forEach(p => { byId[p.id] = p; });
-  return { t: c.t, fl: c.fl, today: c.today, byId, comments: data.comments, open: c.openProject, openRisk: (id, pid) => c.openForm('risk:' + id, pid) };
+  return { t: c.t, fl: c.fl, today: c.today, byId, comments: data.comments, open: c.openProject, openRisk: (id, pid) => c.openForm('risk:' + id, pid),
+    openReport: (id, pid) => c.openForm('rep:' + id, pid) };
 }

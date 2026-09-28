@@ -1,11 +1,11 @@
-import { Project } from './types';
+import { Project, TeamMember } from './types';
+import { TeamRow } from '../logic/team';
 import { ReportDraft, ProjectDraft, RiskDraft } from '../logic/forms';
 
 type Body = Record<string, unknown>;
 
 /** Дата «только дата» для записи — полдень UTC, как ToSpDate синхронизации; пусто — null. */
 export const spDate = (iso: string): string | null => (iso ? `${iso}T12:00:00Z` : null);
-const loop = (url: string): { Url: string; Description: string } | null => (url ? { Url: url, Description: 'Loop' } : null);
 
 /** Новый статус-отчёт. Статус, тип, даты и затраты — только изменённые (синхронизация переносит лишь заполненные поля); % — всегда. */
 export function reportBody(d: ReportDraft, p: Project): Body {
@@ -22,20 +22,20 @@ export function reportBody(d: ReportDraft, p: Project): Body {
   return b;
 }
 
-const people = (d: ProjectDraft): Body => ({ pmManagerId: d.manager ? d.manager.id : null, pmOwnerId: d.owner ? d.owner.id : null,
-  pmStakeholdersId: (d.stakeholders || []).map(s => s.id) });
+// стейкхолдеров (pmStakeholders) пишет синхронизация из «Команда проєкту»
+const people = (d: ProjectDraft): Body => ({ pmManagerId: d.manager ? d.manager.id : null, pmOwnerId: d.owner ? d.owner.id : null });
 
 /** Новый проект: статус, тип и даты задаются при создании (дальше — только через отчёт). */
 export function projectBody(d: ProjectDraft, code: string): Body {
   return { Title: d.title.trim(), pmCode: code, pmType: d.type, pmPriority: d.priority, pmDepartment: d.department, ...people(d),
     pmStatus: d.status, pmStart: spDate(d.start), pmGoLive: spDate(d.goLive), pmPlanEnd: spDate(d.planEnd), pmBudget: d.budget || 0,
-    pmDescription: d.description, pmLoop: loop(d.loop), pmProgress: 0 };
+    pmDescription: d.description, pmLinks: JSON.stringify(d.links), pmProgress: 0 };
 }
 
 /** Правка карточки: без ключевых показателей; изменения дописываются в pmEditLog — синхронизация перенесёт их в журнал. */
 export function projectEditBody(d: ProjectDraft, diffs: { f: string; from: string; to: string }[], who: string, reason: string, prevLog: string): Body {
   const b: Body = { Title: d.title.trim(), pmCode: d.code, pmPriority: d.priority, pmDepartment: d.department, ...people(d),
-    pmBudget: d.budget || 0, pmDescription: d.description, pmLoop: loop(d.loop) };
+    pmBudget: d.budget || 0, pmDescription: d.description, pmLinks: JSON.stringify(d.links) };
   if (diffs.length) {
     let entries: unknown[] = [];
     try { const prev = prevLog ? JSON.parse(prevLog) : undefined; if (prev && Array.isArray(prev.entries)) entries = prev.entries; } catch { /* повреждённый журнал — начинаем заново */ }
@@ -47,5 +47,9 @@ export function projectEditBody(d: ProjectDraft, diffs: { f: string; from: strin
 
 export const riskBody = (d: RiskDraft): Body => ({ riProjectId: d.projectId, Title: d.title.trim(), riType: d.type, riProbability: d.probability,
   riImpact: d.impact, riOwnerId: d.owner ? d.owner.id : null, riStatus: d.status, riDue: spDate(d.due), riMitigation: d.mitigation, riStrategy: d.strategy || null, riContingency: d.contingency });
+
+/** Строка «Команда проєкту» (человек должен иметь id на сайте — ensureUser). */
+export const teamBody = (projectId: number, r: TeamRow): Body => ({ tmProjectId: projectId, tmUserId: r.user ? r.user.id : null, tmRole: r.role, tmTopics: r.topics });
+export const teamRows = (team: TeamMember[]): TeamRow[] => team.map(x => ({ id: x.id, user: x.user, role: x.role, topics: x.topics }));
 
 export const commentBody = (projectId: number, text: string): Body => ({ cmProjectId: projectId, cmText: text.trim() });

@@ -4,13 +4,12 @@ import { PortalData } from '../data/SpRepo';
 import { FeedbackRow } from '../data/types';
 import { DataTable } from '../components/DataTable';
 import { TableDefs } from '../components/defs';
-import { Muted } from '../components/Bits';
+import { Muted, fmtDT } from '../components/Bits';
 import { tv } from '../i18n/values';
 import { Hero } from './common';
 
 export const FB_STATUSES = ['Новий', 'Прийнято', 'Зроблено', 'Прокоментовано', 'Відхилено'];
 type FbView = 'all' | 'mine' | 'open';
-const fmtDT = (iso: string): string => { const d = new Date(iso); return isNaN(d.getTime()) ? '' : d.toLocaleDateString('uk-UA') + ' ' + d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }); };
 
 /** Цветная метка статуса разбора (как в списке «Відгуки»). */
 export const FbStatus: React.FC<{ v: string }> = ({ v }) => <span className={'fbst fbst-' + FB_STATUSES.indexOf(v)}>{tv(v)}</span>;

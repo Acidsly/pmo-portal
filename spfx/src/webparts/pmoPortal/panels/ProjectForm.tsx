@@ -3,7 +3,8 @@ import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
 import { Project, Person } from '../data/types';
 import { ProjectDraft, validateProject, nextCode, cardDiff } from '../logic/forms';
-import { projectBody, projectEditBody } from '../data/write';
+import { projectBody, projectEditBody, teamBody, teamRows } from '../data/write';
+import { TeamRow, cleanTeam, cleanLinks, teamPlan } from '../logic/team';
 import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts } from '../components/fields';
 
 const TYPES = ['Стратегічний', 'Звичайний'];
@@ -16,37 +17,50 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
   const c = React.useContext(AppCtx); const { t, fl } = c;
   const isNew = !project;
   const [d, setD] = React.useState<ProjectDraft>(() => project
-    ? { title: project.title, code: project.code, department: project.department, loop: project.loop, type: project.type, priority: project.priority,
-        manager: project.manager, owner: project.owner, stakeholders: project.stakeholders, start: project.start, goLive: project.goLive,
+    ? { title: project.title, code: project.code, department: project.department, links: project.links, type: project.type, priority: project.priority,
+        manager: project.manager, owner: project.owner, team: project.team.length ? teamRows(project.team) : [{ user: null, role: '', topics: '' }], start: project.start, goLive: project.goLive,
         planEnd: project.planEnd, status: project.status, budget: project.budget, description: project.description }
-    : { title: '', code: '', department: 'ІТ', loop: '', type: 'Звичайний', priority: '2 — Середній', manager: null, owner: null, stakeholders: [],
+    : { title: '', code: '', department: 'ІТ', links: [], type: 'Звичайний', priority: '2 — Середній', manager: null, owner: null, team: [{ user: null, role: '', topics: '' }],
         start: c.today, goLive: '', planEnd: '', status: 'Ініціація', budget: 0, description: '' });
   const [err, setErr] = React.useState('');
   const [busy, setBusy] = React.useState(false);
   // PM нового проекта не подставляется: проект заводит PMO и назначает PM сам (иначе PMO случайно становится PM)
   const set = (x: Partial<ProjectDraft>): void => setD({ ...d, ...x });
+  const setRow = (i: number, x: Partial<TeamRow>): void => set({ team: d.team.map((r, j) => (j === i ? { ...r, ...x } : r)) });
+  const setLink = (i: number, x: Partial<ProjectDraft['links'][0]>): void => set({ links: d.links.map((l, j) => (j === i ? { ...l, ...x } : l)) });
   const search = (q: string): Promise<Person[]> => c.repo.searchPeople(q);
   const withIds = async (x: ProjectDraft): Promise<ProjectDraft> => {
     const fix = async (p: Person | null): Promise<Person | null> => (p && !p.id ? { ...p, id: await c.repo.ensureUser(p.email) } : p);
-    return { ...x, manager: await fix(x.manager), owner: await fix(x.owner), stakeholders: await Promise.all(x.stakeholders.map(s => fix(s) as Promise<Person>)) };
+    return { ...x, manager: await fix(x.manager), owner: await fix(x.owner), team: await Promise.all(x.team.map(async r => ({ ...r, user: await fix(r.user) }))) };
   };
 
   const save = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     const others = data.projects.filter(x => !project || x.id !== project.id).map(x => x.code);
-    const v = validateProject(d, others);
+    const clean = { ...d, team: cleanTeam(d.team), links: cleanLinks(d.links) };
+    const v = validateProject(clean, others);
     if (v) { setErr(t(v)); return; }
     setBusy(true); setErr('');
     try {
-      const x = await withIds(d);
+      const x = await withIds(clean);
+      const writeTeam = async (projectId: number, before: Project['team']): Promise<void> => {
+        const plan = teamPlan(before, x.team);
+        for (const r of plan.create) await c.repo.create('ProjectTeam', teamBody(projectId, r));
+        for (const r of plan.update) await c.repo.update('ProjectTeam', r.id!, teamBody(projectId, r));
+        for (const id of plan.remove) await c.repo.recycle('ProjectTeam', id);
+      };
       if (isNew) {
         const code = d.code.trim() || nextCode(data.projects.map(p => p.code));
         const id = await c.repo.create('Projects', projectBody(x, code));
+        await writeTeam(id, []);
         await c.reload(); c.toast(t('savedProject')); c.openProject(id);
       } else {
         const diff = cardDiff(project!, x);
-        if (!diff.length && x.description === project!.description) { onCancel(); return; }
+        const plan = teamPlan(project!.team, x.team);
+        const teamChanged = plan.create.length + plan.update.length + plan.remove.length > 0;
+        if (!diff.length && !teamChanged && x.description === project!.description) { onCancel(); return; }
         await c.repo.update('Projects', project!.id, projectEditBody(x, diff, c.me, '', project!.editLog || ''));
+        await writeTeam(project!.id, project!.team);
         await c.reload(); c.toast(t('savedEdit')); c.openProject(project!.id);
       }
     } catch (x) {
@@ -70,17 +84,27 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
         <div><label className="t" htmlFor="f-dept">{fl('dept')}</label>
           <select id="f-dept" value={d.department} onChange={e => set({ department: e.target.value })}><Opts values={DEPTS} /></select></div>
       </div>
-      <Frow label={fl('loop')} htmlFor="f-loop"><input type="url" id="f-loop" value={d.loop} placeholder="https://" onChange={e => set({ loop: e.target.value })} /></Frow>
       {isNew ? <fieldset className="ragpick"><legend>{fl('type')}</legend><SegPick name="f-type" options={TYPES} value={d.type} onChange={v => set({ type: v })} /></fieldset> : null}
 
       <h3 className="fsec">{t('fPeople')}</h3>
-      {!isNew ? <p className="note">{t('accessRecalc')}</p> : null}
       <Frow label={fl('pm')} htmlFor="f-pm" req={true}><PeoplePicker id="f-pm" multi={false} value={d.manager ? [d.manager] : []} search={search}
         onChange={v => set({ manager: v[0] || null })} /></Frow>
       <Frow label={fl('owner')} htmlFor="f-own"><PeoplePicker id="f-own" multi={false} value={d.owner ? [d.owner] : []} search={search}
         onChange={v => set({ owner: v[0] || null })} /></Frow>
-      <Frow label={fl('stakeholders')} htmlFor="f-st"><PeoplePicker id="f-st" multi={true} value={d.stakeholders} search={search}
-        onChange={v => set({ stakeholders: v })} /></Frow>
+      <div className="frow"><span className="t lbl-t">{fl('team')}</span>
+        <div className="ed-rows">{d.team.map((r, i) => <div className="ed-row tm-row" key={r.id || 'n' + i}>
+          <PeoplePicker id={`f-tm${i}`} multi={false} value={r.user ? [r.user] : []} search={search} onChange={v => setRow(i, { user: v[0] || null })} />
+          <input type="text" aria-label={fl('tmRole')} placeholder={`${fl('tmRole')} *`} value={r.role} onChange={e => setRow(i, { role: e.target.value })} />
+          <input type="text" aria-label={fl('tmTopics')} placeholder={fl('tmTopics')} value={r.topics} onChange={e => setRow(i, { topics: e.target.value })} />
+          <button type="button" className="btn rm" aria-label={t('rmRow')} title={t('rmRow')} onClick={() => set({ team: d.team.filter((_, j) => j !== i) })}>×</button></div>)}</div>
+        <button type="button" className="btn add" onClick={() => set({ team: [...d.team, { user: null, role: '', topics: '' }] })}>{t('addMember')}</button></div>
+      <div className="frow"><span className="t lbl-t">{fl('links')}</span>
+        <div className="ed-rows">{d.links.map((l, i) => <div className="ed-row ln-row" key={'l' + i}>
+          <input type="text" aria-label={fl('linkTitle')} placeholder={fl('linkTitle')} value={l.t} onChange={e => setLink(i, { t: e.target.value })} />
+          <input type="text" inputMode="url" aria-label={fl('linkUrl')} placeholder="https://" value={l.u} onChange={e => setLink(i, { u: e.target.value })} />
+          <button type="button" className="btn rm" aria-label={t('rmRow')} title={t('rmRow')} onClick={() => set({ links: d.links.filter((_, j) => j !== i) })}>×</button></div>)}</div>
+        <button type="button" className="btn add" onClick={() => set({ links: [...d.links, { t: '', u: '' }] })}>{t('addLink')}</button></div>
+      {!isNew ? <p className="note">{t('accessRecalc')}</p> : null}
 
       {isNew ? <>
         <h3 className="fsec">{t('fDates')}</h3>

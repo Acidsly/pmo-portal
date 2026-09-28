@@ -5,7 +5,7 @@ import { mapProject, mapReport, mapRisk, canEdit } from '../src/webparts/pmoPort
 test('mapProject', () => {
   const p = mapProject(projectRaw);
   expect(p).toMatchObject({ id: 7, code: 'PRJ-007', type: 'Стратегічний', status: 'Реалізація', rag: 'Червоний', progress: 35,
-    start: '2026-04-27', planEnd: '2026-11-08', goLive: '', lastUpdate: '2026-09-19', loop: 'https://loop.cloud.microsoft/p/x',
+    start: '2026-04-27', planEnd: '2026-11-08', goLive: '', lastUpdate: '2026-09-19', links: [{ t: 'Loop', u: 'https://loop.cloud.microsoft/p/x' }], team: [],
     budget: 1800000, actualCost: 1350000, lastComment: '', canEdit: true, pending: false });
   expect(p.manager).toEqual({ id: 11, name: 'Test Kovalenko', email: 'test.kovalenko@smarthr.kz' });
   expect(p.owner).toBeNull(); expect(p.stakeholders).toHaveLength(1);

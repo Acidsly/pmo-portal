@@ -4,7 +4,7 @@ import { PortalData } from '../data/SpRepo';
 import { Project } from '../data/types';
 import { isActive, byOrder } from '../logic/status';
 import { calcRag, Rag } from '../logic/rag';
-import { ReportDraft, reportFromProject, keyChanged, validateReport } from '../logic/forms';
+import { ReportDraft, reportFromProject, reportFromReturned, keyChanged, validateReport } from '../logic/forms';
 import { reportBody } from '../data/write';
 import { Frow, RagPick, SegPick, DateIn, Err, Opts } from '../components/fields';
 import { RagDot } from '../components/Bits';
@@ -14,11 +14,13 @@ const TYPES = ['Стратегічний', 'Звичайний'];
 const PERIODS = ['Тиждень', '2 тижні', 'Місяць', 'Квартал'];
 
 /** Новый статус-отчёт (reportForm прототипа, строки 1470–1550): подстановка показателей, живой стан, причина при смене показателей. */
-export const ReportForm: React.FC<{ data: PortalData; projectId: number; onCancel(): void }> = ({ data, projectId, onCancel }) => {
+export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?: number; onCancel(): void }> = ({ data, projectId, fromId, onCancel }) => {
   const c = React.useContext(AppCtx); const { t, fl } = c;
   const act = data.projects.filter(p => isActive(p.status) && p.canEdit).sort(byOrder);
   const first = act.filter(p => p.id === projectId)[0] || act[0];
-  const [d, setD] = React.useState<ReportDraft | undefined>(first ? reportFromProject(first, c.today) : undefined);
+  // «Новий звіт на основі повернутого» — черновик из повернутого PMO отчёта этого проекта
+  const from = fromId ? data.reports.filter(r => r.id === fromId && r.projectId === (first && first.id))[0] : undefined;
+  const [d, setD] = React.useState<ReportDraft | undefined>(first ? (from ? reportFromReturned(from, first, c.today) : reportFromProject(first, c.today)) : undefined);
   const [err, setErr] = React.useState('');
   const [busy, setBusy] = React.useState(false);
   if (!first || !d) return <><div className="ph"><div><h2>{t('newReport')}</h2></div><button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
@@ -36,7 +38,7 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; onCance
     try {
       await c.repo.create('StatusReports', reportBody(d, p));
       await c.reload();
-      c.toast(t(d.status === 'Завершено' ? 'savedArch' : 'savedReport'));
+      c.toast(t('savedReportPending'));
       c.openProject(p.id);
     } catch (x) { setErr(String((x as Error).message || x)); setBusy(false); }
   };

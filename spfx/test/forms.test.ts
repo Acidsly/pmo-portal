@@ -4,10 +4,10 @@ import { Project } from '../src/webparts/pmoPortal/data/types';
 
 const P = (x: Partial<Project>): Project => ({ id: 1, code: '', title: 'P', type: 'Звичайний', priority: '', manager: null, owner: null, stakeholders: [],
   department: '', status: 'Реалізація', rag: '', progress: 0, start: '', goLive: '', planEnd: '', forecastEnd: '', archivedAt: '', budget: 0,
-  actualCost: 0, lastUpdate: '', lastReport: '', lastComment: '', loop: '', description: '', canEdit: false, pending: false, ...x });
+  actualCost: 0, lastUpdate: '', lastReport: '', lastComment: '', links: [], team: [], description: '', canEdit: false, pending: false, ...x });
 const p = P({ status: 'Реалізація', type: 'Звичайний', progress: 40, planEnd: '2026-12-01', actualCost: 100 });
-const draft = (x: Partial<ProjectDraft>): ProjectDraft => ({ title: '', code: '', department: 'ІТ', loop: '', type: 'Звичайний', priority: '2 — Середній',
-  manager: null, owner: null, stakeholders: [], start: '', goLive: '', planEnd: '', status: 'Ініціація', budget: 0, description: '', ...x });
+const draft = (x: Partial<ProjectDraft>): ProjectDraft => ({ title: '', code: '', department: 'ІТ', links: [], type: 'Звичайний', priority: '2 — Середній',
+  manager: null, owner: null, team: [], start: '', goLive: '', planEnd: '', status: 'Ініціація', budget: 0, description: '', ...x });
 
 test('nextCode: максимальный PRJ + 1, трёхзначный', () => {
   expect(nextCode(['PRJ-001', 'PRJ-012', 'TEST-99', ''])).toBe('PRJ-013');
