@@ -54,7 +54,7 @@ Everything is counted only over the projects you can see (excluding the archive)
 Click a project and its card opens on the right (full screen on a phone):
 - at the top — type, health, status, priority and **Links** (Loop, documents, etc.); **Add status report** and **Edit** buttons (PM only);
 - approval notes: "Status report of … is awaiting PMO approval" or "Report of … returned for rework" with the PMO's comment;
-- **Stakeholders**: PM, owner and **Project team** — a table: member, role in the project, what to contact them about;
+- **Stakeholders**: PM, owner and **Project team** — a table: member, role, what to contact them about;
 - **Timeline** (with the forecast deviation), **Budget and progress**;
 - **Change history** — who changed what and when: "old → new", the reason (including PMO decisions — "Report approval");
 - **Comments** — the feed and "Add comment";
@@ -74,7 +74,7 @@ You can share a link to the card: the browser address points exactly to it.
 6. **Save.** The report goes **to the PMO for approval**; the card updates after approval. A submitted report cannot be changed.
 7. If the PMO **returned** the report, the PMO's comment is shown in the card and in the report itself. Click **New report based on the returned one**: the form is filled with the returned report's data — fix it and save.
 
-The **"Completed"** status sends the project to the archive once the report is approved — after that the project is view-only.
+The **"Completed — move to archive"** status option sends the project to the archive once the report is approved — after that the project is view-only.
 
 ## Approving status reports (for the PMO)
 
@@ -97,7 +97,7 @@ The status (Initiation, Planning, Execution, On hold, Cancelled, Completed) chan
 3. Fills in **Reason for changing indicators** — why the status changes; the reason goes to the history.
 4. Rates schedule, budget, resources, writes the summary → **Save**. The report goes for approval.
 5. **The PMO** approves the report — the status in the card changes, and "Report approval" and "Status report" rows appear in the history ("old → new", the reason). If the PMO returns the report, the status does not change and the PM submits a new report.
-6. **"Completed"** — after approval the project gets the "Archived" status and an archive date and moves to the "Archive" tab; after that it is view-only.
+6. **"Completed — move to archive"** — after approval the project gets the "Archived" status and an archive date and moves to the "Archive" tab; after that it is view-only.
 
 ## Risks and issues
 
@@ -116,7 +116,7 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
 
 - A **New project** is created by the PMO: the name and the PM are required (the PM is not prefilled — choose one); the project number is assigned by the system in order (PRJ-001, PRJ-002…) — it is unique and cannot be changed by hand.
 - Only the PM can **Edit** the card: name, department, priority, owner, budget, description, and also:
-  - **Project team** — "+ Add member": a person, their **role in the project** (required) and what to contact them about; × removes the member;
+  - **Project team** — "+ Add member": a person, their **role** (required) and what to contact them about; × removes the member;
   - **Links** — "+ Add link": a name and an address (starting with `https://`); × removes it.
 - Status, health, dates and costs change only through a status report (see "How to change the project status").
 - After the team changes, access rights are recalculated automatically: team members see the project and can comment.
