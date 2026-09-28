@@ -25,6 +25,9 @@ param(
 $ErrorActionPreference = "Stop"
 if (-not $IsMacOS) { throw "Скрипт только для macOS." }
 $root   = Split-Path -Parent $PSScriptRoot
+# задания запускают scripts/ из последнего коммита (git archive HEAD) на момент установки расписания: незаконченные
+# правки рабочей копии в синхронизацию по расписанию не попадают. После выкладки и коммита — перезапустить этот скрипт.
+$snap   = Join-Path $HOME "Library/Application Support/PMO-sync/$Env"
 $agents = Join-Path $HOME "Library/LaunchAgents"
 $log    = Join-Path $HOME "Library/Logs/pmo-sync-$Env.log"
 # постоянная ссылка Homebrew, а не путь с номером версии (иначе после brew upgrade расписание сломается)
@@ -48,7 +51,7 @@ function Job([string]$label, [string]$action, [string[]]$slots) {
   <key>Label</key><string>$label</string>
   <key>ProgramArguments</key><array>
     <string>$pwsh</string><string>-NoLogo</string><string>-NonInteractive</string><string>-File</string>
-    <string>$root/scripts/Invoke-Env.ps1</string><string>-Env</string><string>$Env</string><string>-Action</string><string>$action</string>
+    <string>$snap/scripts/Invoke-Env.ps1</string><string>-Env</string><string>$Env</string><string>-Action</string><string>$action</string><string>-RepoRoot</string><string>$root</string>
   </array>
   <key>WorkingDirectory</key><string>$root</string>
   <key>EnvironmentVariables</key><dict><key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string></dict>
@@ -61,6 +64,14 @@ function Job([string]$label, [string]$action, [string[]]$slots) {
     Set-Content -Path $path -Value $xml -Encoding utf8NoBOM
     & launchctl bootstrap "gui/$uid" $path
     Write-Host "  + $label — $($slots.Count) запусков в расписании"
+}
+
+if (-not $Remove) {
+    if (Test-Path $snap) { Remove-Item -Recurse -Force $snap }
+    New-Item -ItemType Directory -Force -Path $snap | Out-Null
+    & /bin/sh -c "git -C '$root' archive HEAD scripts | tar -x -C '$snap'"
+    if ($LASTEXITCODE -or -not (Test-Path (Join-Path $snap "scripts/Invoke-Env.ps1"))) { throw "Не удалось взять scripts/ из последнего коммита." }
+    Write-Host "  скрипты коммита $(& git -C $root rev-parse --short HEAD): $snap"
 }
 
 # пн–пт (1–5) 8:00–20:00 каждые 15 минут + каждый день 6:00 и 22:00

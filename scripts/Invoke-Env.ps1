@@ -14,10 +14,12 @@
 param(
     [Parameter(Mandatory)][ValidateSet("test", "prod")][string]$Env,
     [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "app", "feedback")][string]$Action,
-    [switch]$ConfirmProduction
+    [switch]$ConfirmProduction,
+    # корень репозитория (config/, certs/), если скрипты запущены из копии — так делает расписание Set-MacSchedule.ps1
+    [string]$RepoRoot
 )
 $ErrorActionPreference = "Stop"
-$root = Split-Path -Parent $PSScriptRoot
+$root = if ($RepoRoot) { $RepoRoot } else { Split-Path -Parent $PSScriptRoot }
 $cfgFile = Join-Path $root "config/environments.json"
 if (-not (Test-Path $cfgFile)) { throw "Нет config/environments.json. Скопируйте config/environments.example.json и заполните." }
 $cfg = (Get-Content -Raw $cfgFile | ConvertFrom-Json).$Env
