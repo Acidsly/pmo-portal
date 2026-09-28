@@ -115,8 +115,8 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
 
 ## New project and editing
 
-- A **New project** is created by the PMO: the name and the PM are required (the PM is not prefilled — choose one); if no code is given, one is assigned automatically (PRJ-001, PRJ-002…), and a code entered by hand must be unique.
-- Only the PM can **Edit** the card: name, code, department, priority, owner, budget, description, and also:
+- A **New project** is created by the PMO: the name and the PM are required (the PM is not prefilled — choose one); the project number is assigned by the system in order (PRJ-001, PRJ-002…) — it is unique and cannot be changed by hand.
+- Only the PM can **Edit** the card: name, department, priority, owner, budget, description, and also:
   - **Project team** — "+ Add member": a person, their **role in the project** (required) and what to contact them about; × removes the member;
   - **Links** — "+ Add link": a name and an address (starting with `https://`); × removes it.
 - Status, health, dates and costs change only through a status report (see "How to change the project status").

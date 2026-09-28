@@ -65,7 +65,7 @@ foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/acl.json") | Conv
 Write-Host "3b. Роли фокус-группы (Get-RolePlan, Seed-TestData.ps1)"
 $seedAst = [System.Management.Automation.Language.Parser]::ParseInput((Get-Content -Raw (Join-Path $root "scripts/Seed-TestData.ps1")), [ref]$null, [ref]$null)
 Invoke-Expression ($seedAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Get-RolePlan" }, $true) | Select-Object -First 1).Extent.Text
-$codes = 1..10 | ForEach-Object { "TEST-{0:d2}" -f $_ }
+$codes = 1..10 | ForEach-Object { "PRJ-{0:d3}" -f $_ }
 foreach ($k in @(3, 5, 10, 13)) {
     $em = 1..$k | ForEach-Object { "u$_@c" }
     $plan = Get-RolePlan $em $codes

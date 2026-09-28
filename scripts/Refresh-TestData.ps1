@@ -2,11 +2,11 @@
 #Requires -Modules PnP.PowerShell
 <#
 .SYNOPSIS
-    Освежает демонстрационные данные ТЕСТОВОГО сайта: проекты TEST-NN со старым отчётом получают свежий погоджений
+    Освежает демонстрационные данные ТЕСТОВОГО сайта: демо-проекты (PRJ-001…PRJ-010) со старым отчётом получают свежий погоджений
     статус-отчёт от своего PM (в карточку его переносит синхронизация), просроченные открытые риски — новый срок.
 
 .DESCRIPTION
-    Только тестовый сайт (…/sites/*-test), только проекты TEST-NN; проекты и отчёты фокус-группы не трогаются.
+    Только тестовый сайт (…/sites/*-test), только демо-проекты PRJ-001…PRJ-010; проекты и отчёты фокус-группы не трогаются.
     Идемпотентен: у проекта со свежим отчётом (не старше -FreshDays) ничего не добавляется.
     Проекты из -KeepStale остаются без свежего отчёта — чтобы на главной было что показать в «Немає свіжого звіту».
     Запуск: Invoke-Env.ps1 -Env test -Action refresh, затем -Action sync.
@@ -19,7 +19,9 @@ param(
     [string]$CertificatePath,
     [SecureString]$CertificatePassword,
     [int]$FreshDays = 8,
-    [string[]]$KeepStale = @("TEST-08")
+    [string[]]$KeepStale = @("PRJ-008"),
+    # демо-проекты Seed-TestData.ps1 — первые десять номеров
+    [string[]]$Demo = @(1..10 | ForEach-Object { "PRJ-{0:d3}" -f $_ })
 )
 $ErrorActionPreference = "Stop"
 if ($SiteUrl -notmatch '-test/?$') { throw "Refresh-TestData.ps1 работает только с тестовым сайтом (…/sites/*-test), получено: $SiteUrl" }
@@ -31,7 +33,7 @@ $today = (Get-Date).Date
 function SpDate([datetime]$d) { $d.ToString("yyyy-MM-dd") + "T12:00:00Z" }
 function DateOnly($v) { if ($v) { return ([datetime]$v).ToUniversalTime().AddHours(12).Date } return $null }
 
-$items = @(Get-PnPListItem -List "Lists/Projects" -PageSize 500 | Where-Object { [string]$_["pmCode"] -match '^TEST-\d+$' -and $_["pmStatus"] -ne "Архівний" } |
+$items = @(Get-PnPListItem -List "Lists/Projects" -PageSize 500 | Where-Object { $Demo -contains [string]$_["pmCode"] -and $_["pmStatus"] -ne "Архівний" } |
     Sort-Object { [string]$_["pmCode"] })
 # самый свежий отчёт проекта — по списку отчётов (в том числе ещё не перенесённых синхронизацией), а не по карточке
 $lastRep = @{}
@@ -62,7 +64,7 @@ foreach ($it in $items) {
     Write-Host ("  + {0}: звіт від {1:dd.MM.yyyy}, {2}, {3}%" -f $code, $date, $sched, $prog) -ForegroundColor Green
 }
 
-# просроченные открытые риски TEST-проектов — новый срок через 1–4 недели
+# просроченные открытые риски демо-проектов — новый срок через 1–4 недели
 $ids = @{}; foreach ($it in $items) { $ids[$it.Id] = [string]$it["pmCode"] }
 $moved = 0; $k = 0
 foreach ($ri in (Get-PnPListItem -List "Lists/RisksIssues" -PageSize 500)) {

@@ -50,8 +50,14 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
         for (const id of plan.remove) await c.repo.recycle('ProjectTeam', id);
       };
       if (isNew) {
-        const code = d.code.trim() || nextCode(data.projects.map(p => p.code));
-        const id = await c.repo.create('Projects', projectBody(x, code));
+        // номер — только автоматически: следующий PRJ-###; если его успел занять другой PMO (уникальность списка) — следующий
+        const codes = data.projects.map(p => p.code);
+        let id = 0;
+        for (let i = 0; !id; i++) {
+          const code = nextCode(codes);
+          try { id = await c.repo.create('Projects', projectBody(x, code)); }
+          catch (er) { if (i < 5 && /unique|унікальн|уникальн|duplicate|already exists/i.test(String((er as Error).message || er))) codes.push(code); else throw er; }
+        }
         await writeTeam(id, []);
         await c.reload(); c.toast(t('savedProject')); c.openProject(id);
       } else {
@@ -80,7 +86,7 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
       <Frow label={fl('title')} htmlFor="f-title" req={true}><input type="text" id="f-title" value={d.title} onChange={e => set({ title: e.target.value })} /></Frow>
       <div className="fgrid2 frow">
         <div><label className="t" htmlFor="f-code">{fl('code')}</label>
-          <input type="text" id="f-code" value={d.code} placeholder={isNew ? t('codeAuto') : ''} onChange={e => set({ code: e.target.value })} /></div>
+          <input type="text" id="f-code" value={d.code} placeholder={t('codeAuto')} readOnly={true} disabled={true} /></div>
         <div><label className="t" htmlFor="f-dept">{fl('dept')}</label>
           <select id="f-dept" value={d.department} onChange={e => set({ department: e.target.value })}><Opts values={DEPTS} /></select></div>
       </div>

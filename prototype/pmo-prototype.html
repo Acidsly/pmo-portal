@@ -1636,7 +1636,7 @@ function projectForm(p){
     <h3 class="fsec">${t('fGeneral')}</h3>
     <div class="frow"><label class="t" for="p-title">${fl('title')} *</label><input type="text" id="p-title" value="${esc(p.title || '')}"></div>
     <div class="fgrid2 frow">
-      <div><label class="t" for="p-code">${fl('code')}</label><input type="text" id="p-code" value="${esc(p.code || '')}" placeholder="${t('codeAuto')}"></div>
+      <div><label class="t" for="p-code">${fl('code')}</label><input type="text" id="p-code" value="${esc(p.code || '')}" placeholder="${t('codeAuto')}" readonly disabled></div>
       <div><label class="t" for="p-dept">${fl('dept')}</label><select id="p-dept">${DEPTS.map(d => opt(d, p.dept)).join('')}</select></div>
     </div>
     ${isNew ? `<fieldset class="ragpick"><legend>${fl('type')} *</legend>${segPick('p-type', TYPES, p.type)}</fieldset>` : ''}

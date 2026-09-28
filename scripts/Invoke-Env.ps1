@@ -7,14 +7,15 @@
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action deploy
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action sync-dryrun
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action seed          # демонстрационные данные
-    pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action refresh       # освежить демо-данные TEST-NN
+    pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action renumber      # единая нумерация PRJ-001…
+    pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action refresh       # освежить демо-данные PRJ-001…010
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action app           # приложение SPFx на тестовый сайт
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action feedback      # выгрузка отзывов в feedback-export/
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action deploy -ConfirmProduction
 #>
 param(
     [Parameter(Mandatory)][ValidateSet("test", "prod")][string]$Env,
-    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "refresh", "app", "feedback")][string]$Action,
+    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "refresh", "renumber", "renumber-dryrun", "app", "feedback")][string]$Action,
     [switch]$ConfirmProduction,
     # корень репозитория (config/, certs/), если скрипты запущены из копии — так делает расписание Set-MacSchedule.ps1
     [string]$RepoRoot
@@ -65,11 +66,17 @@ if ($Action -eq "feedback") {
     if (Test-Path $fg) { $a.Roles = $fg }
     & (Join-Path $PSScriptRoot "Seed-TestData.ps1") @a
 } elseif ($Action -eq "refresh") {
-    # освежить демонстрационные данные TEST-NN (свежие отчёты, сроки рисков) — только тест
+    # освежить демонстрационные данные PRJ-001…010 (свежие отчёты, сроки рисков) — только тест
     if ($Env -ne "test") { throw "Действие «refresh» доступно только для окружения test." }
     $a = Get-Auth $cfg.Deploy
     $a.SiteUrl = $siteUrl
     & (Join-Path $PSScriptRoot "Refresh-TestData.ps1") @a
+} elseif ($Action -in @("renumber", "renumber-dryrun")) {
+    # единая нумерация PRJ-001… по порядку создания; на тесте — сразу, на проде — только с -ConfirmProduction (проверка выше)
+    $a = Get-Auth $cfg.Deploy
+    $a.SiteUrl = $siteUrl
+    if ($Action -eq "renumber-dryrun") { $a.DryRun = $true }
+    & (Join-Path $PSScriptRoot "Renumber-Projects.ps1") @a
 } elseif ($Action -eq "app") {
     # приложение SPFx: сборка, каталог приложений сайта, страница на весь экран; этап 1 — только test
     if ($Env -ne "test") { throw "Действие «app» на этапе 1 — только для окружения test." }

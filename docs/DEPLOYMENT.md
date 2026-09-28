@@ -222,11 +222,13 @@ New-ApplicationAccessPolicy -AppId <PMO Sync> -PolicyScopeGroupId "PMO Sync send
 ## Фокус-группа на тестовом сайте
 
 1. Скопируйте `config/focus-group.example.json` в `config/focus-group.json` (файл не попадает в git — в нём e-mail сотрудников): `people` — кто получит роли, `noRole` — кто зайдёт без ролей (проверить, что чужие проекты не видны).
-2. `Invoke-Env.ps1 -Env test -Action seed` — все добавляются в «Учасники сайта», роли в проектах TEST-NN раздаются по кругу: каждый (если людей не больше 10) будет PM одного проекта, собственником другого, стейкхолдером третьего. Повторный запуск ничего не меняет.
+2. `Invoke-Env.ps1 -Env test -Action seed` — все добавляются в «Учасники сайта», роли в демо-проектах PRJ-001…PRJ-010 раздаются по кругу: каждый (если людей не больше 10) будет PM одного проекта, собственником другого, стейкхолдером третьего. Повторный запуск ничего не меняет.
 3. `Invoke-Env.ps1 -Env test -Action sync` — права и «Доступ до картки».
 4. После теста удалите `config/focus-group.json`.
 5. Отзывы: `Invoke-Env.ps1 -Env test -Action feedback` выгружает текст, экран, устройство и скриншоты в `feedback-export/` (вне git).
 6. На время теста расписание на Mac — круглосуточно: `scripts/Set-MacSchedule.ps1 -Env test -AllDay`.
+7. Освежить демо-данные (свежие отчёты, сроки рисков демо-проектов PRJ-001…PRJ-010): `Invoke-Env.ps1 -Env test -Action refresh`, затем `-Action sync`.
+8. Единая нумерация проектов (PRJ-001… по порядку создания, журнал «було → стало»): `Invoke-Env.ps1 -Env test -Action renumber-dryrun`, затем `-Action renumber`. Номер нового проекта — только автоматический.
 
 ## Приложение SPFx
 
