@@ -2,7 +2,7 @@
 #Requires -Modules PnP.PowerShell
 <#
 .SYNOPSIS
-    Освежает демонстрационные данные ТЕСТОВОГО сайта: демо-проекты (PRJ-001…PRJ-010) со старым отчётом получают свежий погоджений
+    Освежает демонстрационные данные ТЕСТОВОГО сайта (команда из нескольких человек, несколько ссылок): демо-проекты (PRJ-001…PRJ-010) со старым отчётом получают свежий погоджений
     статус-отчёт от своего PM (в карточку его переносит синхронизация), просроченные открытые риски — новый срок.
 
 .DESCRIPTION
@@ -21,7 +21,11 @@ param(
     [int]$FreshDays = 8,
     [string[]]$KeepStale = @("PRJ-008"),
     # демо-проекты Seed-TestData.ps1 — первые десять номеров
-    [string[]]$Demo = @(1..10 | ForEach-Object { "PRJ-{0:d3}" -f $_ })
+    [string[]]$Demo = @(1..10 | ForEach-Object { "PRJ-{0:d3}" -f $_ }),
+    # тестовые учётные записи для «Команда проєкту» демо-проектов (людей фокус-группы в чужие проекты не добавляем)
+    [string[]]$People = @("j.pochobut@eclectic.group", "test.kovalenko@smarthr.kz", "test.burbega@fillin.kz"),
+    [int]$TeamSize = 3,
+    [int]$LinkCount = 3
 )
 $ErrorActionPreference = "Stop"
 if ($SiteUrl -notmatch '-test/?$') { throw "Refresh-TestData.ps1 работает только с тестовым сайтом (…/sites/*-test), получено: $SiteUrl" }
@@ -76,4 +80,49 @@ foreach ($ri in (Get-PnPListItem -List "Lists/RisksIssues" -PageSize 500)) {
     $moved++
     Write-Host ("  ~ {0}: ризик «{1}» — термін {2:dd.MM.yyyy}" -f $ids[$lk.LookupId], $ri["Title"], $nd)
 }
+# «Команда проєкту» и «Посилання»: у каждого демо-проекта — несколько записей (идемпотентно: добавляются только недостающие)
+$ROLES = @(
+    @("Бізнес-замовник", "Цілі, пріоритети, бюджет"),
+    @("Ключовий користувач", "Вимоги, тестування, навчання"),
+    @("Архітектор", "Інтеграції, дані, безпека"),
+    @("Фінансовий контролер", "Витрати, акти, закриття етапів"))
+$LINKSET = @(
+    @("Loop", "https://loop.cloud.microsoft/demo/{0}"),
+    @("Технічне завдання", "https://example.com/pmo-demo/{0}/tz"),
+    @("План-графік", "https://example.com/pmo-demo/{0}/plan"),
+    @("Протокол установчої зустрічі", "https://example.com/pmo-demo/{0}/kickoff"))
+$teamRows = @(Get-PnPListItem -List "Lists/ProjectTeam" -PageSize 500)
+$tAdded = 0; $lAdded = 0
+foreach ($it in (Get-PnPListItem -List "Lists/Projects" -PageSize 500 | Where-Object { $Demo -contains [string]$_["pmCode"] })) {
+    $code = [string]$it["pmCode"]
+    $rows = @($teamRows | Where-Object { $_["tmProject"] -and $_["tmProject"].LookupId -eq $it.Id })
+    $inTeam = @($rows | Where-Object { $_["tmUser"] } | ForEach-Object { ([string]$_["tmUser"].Email).ToLowerInvariant() })
+    $pm = if ($it["pmManager"]) { ([string]$it["pmManager"].Email).ToLowerInvariant() } else { "" }
+    $usedRoles = @($rows | ForEach-Object { [string]$_["tmRole"] })
+    $k = 0
+    foreach ($e in $People) {
+        if ($rows.Count + $k -ge $TeamSize) { break }
+        $e = $e.ToLowerInvariant(); if ($e -eq $pm -or $inTeam -contains $e) { continue }
+        $role = @($ROLES | Where-Object { $usedRoles -notcontains $_[0] })[0]; if (-not $role) { $role = $ROLES[$k % $ROLES.Count] }
+        Add-PnPListItem -List "Lists/ProjectTeam" -Values @{ tmProject = $it.Id; tmUser = $e; tmRole = $role[0]; tmTopics = $role[1] } | Out-Null
+        $usedRoles += $role[0]; $k++; $tAdded++
+        Write-Host ("  + {0}: команда — {1}" -f $code, $role[0])
+    }
+    # ссылки: pmLinks — JSON [{t,u}]; добавляем недостающие по названию
+    $links = @(); try { if ([string]$it["pmLinks"]) { $links = @([string]$it["pmLinks"] | ConvertFrom-Json) } } catch { $links = @() }
+    $titles = @($links | ForEach-Object { [string]$_.t })
+    $before = $links.Count
+    foreach ($l in $LINKSET) {
+        if ($links.Count -ge $LinkCount) { break }
+        if ($titles -contains $l[0]) { continue }
+        $links += [pscustomobject]@{ t = $l[0]; u = ($l[1] -f $code.ToLowerInvariant()) }
+    }
+    if ($links.Count -ne $before) {
+        $json = ConvertTo-Json -InputObject @($links | ForEach-Object { [ordered]@{ t = [string]$_.t; u = [string]$_.u } }) -Compress
+        Set-PnPListItem -List "Lists/Projects" -Identity $it.Id -Values @{ pmLinks = $json } -UpdateType SystemUpdate | Out-Null
+        $lAdded += $links.Count - $before
+        Write-Host ("  + {0}: посилань {1}" -f $code, $links.Count)
+    }
+}
+Write-Host ("Команда: +{0} записів, посилання: +{1}." -f $tAdded, $lAdded)
 Write-Host ("Готово: свіжих звітів {0}, перенесених термінів ризиків {1}. Далі — Invoke-Env.ps1 -Env test -Action sync." -f $added, $moved) -ForegroundColor Green
