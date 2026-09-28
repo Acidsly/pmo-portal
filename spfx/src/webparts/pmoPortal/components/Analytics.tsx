@@ -42,7 +42,7 @@ export const RiskMap: React.FC<{ m: Risk[][][]; byId: Record<number, Project>; t
     </>;
   };
 
-/** Портфель за напрямами (deptBars прототипа): смуги за станом, довжина — від найбільшого напряму. */
+/** Портфель за напрямами (deptBars прототипа): смуги за станом, довжина — від найбільшого напряму; у кожному кольорі — число проєктів, як у «Динаміці». */
 export const DeptBars: React.FC<{ rows: DeptRow[]; t(k: string): string; empty: string }> = ({ rows, t, empty }) => {
   if (!rows.length) return <p className="empty">{empty}</p>;
   const max = Math.max(...rows.map(r => r.total));
@@ -50,7 +50,7 @@ export const DeptBars: React.FC<{ rows: DeptRow[]; t(k: string): string; empty: 
   return <div className="depts">{rows.map(r => <div key={r.dept} className="dept-row">
     <span className="dn" title={tv(r.dept)}>{tv(r.dept)}</span>
     <span className="dbar" style={{ width: `${Math.max(4, r.total / max * 100)}%` }}>{segs.map(([k, c, l]) => { const n = r[k] as number;
-      return n ? <i key={k} style={{ width: `${n / r.total * 100}%`, background: c }} title={`${l}: ${n}`} /> : null; })}</span>
+      return n ? <i key={k} className={k === 'na' ? 'na' : undefined} style={{ width: `${n / r.total * 100}%`, background: c }} title={`${l}: ${n}`}>{n}</i> : null; })}</span>
     <b>{r.total}</b></div>)}
     <div className="dlegend">{[['var(--g)', tv('Зелений')], ['var(--y)', tv('Жовтий')], ['var(--r)', tv('Червоний')], ['var(--na)', t('notRated')]].map(([c, l]) =>
       <span key={l}><i className="dot sm" style={{ background: c }} />{l}</span>)}</div></div>;

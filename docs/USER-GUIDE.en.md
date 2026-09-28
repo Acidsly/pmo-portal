@@ -37,7 +37,7 @@ An archived project is view-only for everyone. If the portal is empty for you, y
 - **My actions** — what is waiting for you. PM: reports returned for rework (the "New report based on the returned one" button) and your own projects without a recent report (the "Add status report" button). PMO: reports awaiting approval and accepted high risks.
 - **Portfolio by health** — a ring: how many active projects are green, yellow, red and not rated yet; **Portfolio health over time** — how health changed over the last 12 weeks (based on approved reports).
 - **Risk map** 5 × 5: rows are probability, columns are impact, each cell shows the number of open risks. Click a cell to list its risks below the map.
-- **Portfolio by department** — active projects of each department broken down by health.
+- **Portfolio by department** — active projects of each department broken down by health; the number inside each coloured part of the bar is how many projects are in that state.
 - **Biggest schedule slips** — projects whose forecast completion is later than planned: by how many days and how many times the plan was moved. **Go-lives in the next 30 days** — go-live date, health, PM.
 - Below — **Projects at risk**, **No recent status report**, **Management decisions needed**, **Open risks**; "See all" opens the full list.
 
