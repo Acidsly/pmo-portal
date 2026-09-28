@@ -29,6 +29,10 @@ td:first-child,th:first-child{width:7%;white-space:nowrap;color:#586176}
 td:nth-child(2){width:48%}
 td:nth-child(3){width:45%}
 .tablewrap{overflow:visible}
+table:has(th:nth-child(4)) :is(td,th):first-child{width:14%;white-space:normal;color:#1a1e29;font-weight:600}
+table:has(th:nth-child(4)) :is(td,th):nth-child(2){width:22%}
+table:has(th:nth-child(4)) :is(td,th):nth-child(3){width:38%}
+table:has(th:nth-child(4)) :is(td,th):nth-child(4){width:26%}
 `;
 for (const f of readdirSync(here).filter(x => /^test-plan-.*\.uk\.md$/.test(x))) {
   const md = readFileSync(join(here, f), 'utf8');
