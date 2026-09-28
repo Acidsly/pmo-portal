@@ -136,11 +136,11 @@ Anything you save in the forms appears on screen immediately; so do PMO decision
 
 ## Feedback
 
-The **Feedback** button at the top: describe what is wrong or what could be better and add up to 5 screenshots:
+The **Feedback** tab → **Leave feedback** (or the "Feedback" button in Help): describe what is wrong or what could be better and add up to 5 screenshots:
 - on a computer — take a screenshot and paste it into the form: **Ctrl+V** (Windows) or **Cmd+V** (Mac); or use "Add screenshot";
 - on a phone or tablet — "Add screenshot" → gallery or camera.
 
-The screen you opened the feedback from and your device are added automatically.
+Your device is added automatically; in the text, say on which screen you noticed the problem.
 
 The **Feedback** tab lists all participants' feedback: the text, the author, the review status (New, Accepted, Done, Commented, Rejected) and the developers' answer. Screenshots are visible only to the author and the developers. The status and the answer are set by the solution's developers.
 

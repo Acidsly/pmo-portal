@@ -3,14 +3,14 @@ import { AppCtx, Page } from './ctx';
 import { Lang } from '../i18n/i18n';
 import { Theme } from '../theme/theme';
 import { Avatar } from './Bits';
-import { Sun, Moon, Chat } from './Icons';
+import { Sun, Moon } from './Icons';
 
 const NAV: [Page, string][] = [['home', 'navHome'], ['projects', 'navProjects'], ['reports', 'navReports'], ['risks', 'navRisks'], ['archive', 'navArchive'], ['feedback', 'navFeedback']];
 
 /** Шапка прототипа (строки 465–481, renderChrome): логотип, вкладки, язык, тема, пользователь. */
 export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: string; userEmail: string;
   onPage(p: Page): void; onLang(l: Lang): void; onTheme(v: 'light' | 'dark'): void;
-  /** Кнопка «Відгук» — только если на сайте есть список «Відгуки» (тест с фокус-группой). */
+  /** Вкладка «Відгуки» — только если на сайте есть список «Відгуки» (тест с фокус-группой); отзыв оставляют на ней. */
   onFeedback?: () => void; onHelp(): void }> = p => {
   const { t } = React.useContext(AppCtx);
   const dark = p.theme === 'dark' || (p.theme === '' && !!window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -27,7 +27,6 @@ export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: 
         <button aria-pressed={dark} title={t('themeDark')} aria-label={t('themeDark')} onClick={() => p.onTheme('dark')}><Moon /></button>
       </div>
       <button className="hbtn round" title={t('help')} aria-label={t('help')} onClick={p.onHelp}>?</button>
-      {p.onFeedback ? <button className="hbtn" title={t('fbTitle')} onClick={p.onFeedback}><Chat /><span className="hlabel">{t('feedback')}</span></button> : null}
       <button className="me" title={`${t('signedIn')}: ${p.userName} · ${p.userEmail}`} aria-label={`${t('signedIn')}: ${p.userName}`}><Avatar name={p.userName} /></button>
     </div>
   </div></header>;
