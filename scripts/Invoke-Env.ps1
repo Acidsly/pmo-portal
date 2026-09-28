@@ -15,7 +15,7 @@
 #>
 param(
     [Parameter(Mandatory)][ValidateSet("test", "prod")][string]$Env,
-    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "refresh", "renumber", "renumber-dryrun", "app", "feedback")][string]$Action,
+    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "refresh", "renumber", "renumber-dryrun", "feedback-answers", "app", "feedback")][string]$Action,
     [switch]$ConfirmProduction,
     # корень репозитория (config/, certs/), если скрипты запущены из копии — так делает расписание Set-MacSchedule.ps1
     [string]$RepoRoot
@@ -77,6 +77,12 @@ if ($Action -eq "feedback") {
     $a.SiteUrl = $siteUrl
     if ($Action -eq "renumber-dryrun") { $a.DryRun = $true }
     & (Join-Path $PSScriptRoot "Renumber-Projects.ps1") @a
+} elseif ($Action -eq "feedback-answers") {
+    # разбор отзывов: статусы, ответы, отзывы из писем — файл feedback-export/answers.json (вне git)
+    if ($Env -ne "test") { throw "Действие «feedback-answers» доступно только для окружения test." }
+    $a = Get-Auth $cfg.Deploy
+    $a.SiteUrl = $siteUrl; $a.File = Join-Path $root "feedback-export/answers.json"
+    & (Join-Path $PSScriptRoot "Set-FeedbackAnswers.ps1") @a
 } elseif ($Action -eq "app") {
     # приложение SPFx: сборка, каталог приложений сайта, страница на весь экран; этап 1 — только test
     if ($Env -ne "test") { throw "Действие «app» на этапе 1 — только для окружения test." }

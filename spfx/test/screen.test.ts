@@ -12,4 +12,5 @@ test('экран отзыва — понятная подпись', () => {
   expect(screenLabel('#risks/open/3/risk:7', t, tv)).toBe('Ризики · Відкриті · картка проєкту · Ризики та проблеми');
   expect(screenLabel('#archive', t, tv)).toBe('Архів');
   expect(screenLabel('', t, tv)).toBe('Головна');
+  expect(screenLabel('Лист PMO', t, tv)).toBe('Лист PMO');
 });
