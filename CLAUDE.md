@@ -11,7 +11,10 @@
 | `scripts/Invoke-PMOSync.ps1` | Логика по расписанию: погодження PMO → отчёт, погоджений отчёт → карточка, журнал, архив, комментарии, права по иерархии, напоминания, правки карточки → журнал |
 | `scripts/Register-PMOApps.ps1` | Регистрация приложений Entra ID (выполняет человек) |
 | `scripts/Invoke-Env.ps1` | **Единственный способ запускать скрипты против SharePoint**: берёт параметры из `config/environments.json` |
-| `scripts/Seed-TestData.ps1` | Демонстрационные данные для тестового сайта (`-Env test -Action seed`). На прод не запускается |
+| `scripts/Seed-TestData.ps1` | Демонстрационные данные для тестового сайта (`-Env test -Action seed`): демо-проекты PRJ-001…PRJ-010. На прод не запускается |
+| `scripts/Refresh-TestData.ps1` | Освежить демо-данные (`-Action refresh`): свежие погоджені отчёты, сроки рисков |
+| `scripts/Renumber-Projects.ps1` | Единая нумерация PRJ-001… по порядку создания (`-Action renumber` / `renumber-dryrun`); номер нового проекта — только автоматический |
+| `scripts/Set-FeedbackAnswers.ps1` | Разбор отзывов: статусы, ответы, отзывы из писем (`-Action feedback-answers`, файл `feedback-export/answers.json` вне git) |
 | `spfx/` | Приложение SPFx (React) по прототипу: `logic/` — правила с тестами, `data/` — чтение SharePoint, `components/`, `pages/`. Спецификация и планы — `docs/superpowers/` |
 | `scripts/spfx.sh` | Команды в `spfx/` под Node 22: `scripts/spfx.sh npm run test:unit`, `scripts/spfx.sh npm run build` |
 | `scripts/Deploy-App.ps1` | Установка приложения на сайт (`-Env test -Action app`): каталог приложений сайта, страница `Portal` на весь экран — главная |
@@ -34,6 +37,8 @@ pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action deploy
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action sync-dryrun
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action sync
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action seed          # демонстрационные данные, повторный запуск ничего не дублирует
+pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action refresh       # освежить демо-данные, затем sync
+pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action feedback-answers   # статусы и ответы на отзывы
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action sync-dryrun
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action deploy -ConfirmProduction   # только после подтверждения
 ```

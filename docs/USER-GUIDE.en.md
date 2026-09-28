@@ -7,7 +7,7 @@ A portal where the company keeps all its projects in one place:
 - the PM regularly submits a **status report** — it is the only way to change the project's key indicators (status, health, % complete, dates, costs);
 - **the PMO approves** every status report: a report reaches the card only after approval;
 - project **risks and issues** are scored as "probability × impact", and each gets a response strategy;
-- the **home page** shows the state of the portfolio: key figures, "My actions", the risk map, schedule slips, upcoming go-lives, the portfolio by department.
+- the **home page** shows the state of the portfolio: key figures, the risk map, schedule slips, upcoming go-lives, the portfolio by department.
 
 Everyone sees only the projects where they or their direct reports have a role.
 
@@ -34,7 +34,6 @@ An archived project is view-only for everyone. If the portal is empty for you, y
 ## Home
 
 - **Key figures strip** at the top: active projects; the share of projects with a recent report (no older than 14 days); for the PMO — reports awaiting approval; high risks (open, score 15 and above); overdue projects (the plan date has passed but the project is open). Click a figure to open the filtered list.
-- **My actions** — what is waiting for you. PM: reports returned for rework (the "New report based on the returned one" button) and your own projects without a recent report (the "Add status report" button). PMO: reports awaiting approval and accepted high risks.
 - **Portfolio by health** — a ring: how many active projects are green, yellow, red and not rated yet; **Portfolio health over time** — how health changed over the last 12 weeks (based on approved reports).
 - **Risk map** 5 × 5: rows are probability, columns are impact, each cell shows the number of open risks. Click a cell to list its risks below the map.
 - **Portfolio by department** — active projects of each department broken down by health; the number inside each coloured part of the bar is how many projects are in that state.
@@ -73,13 +72,13 @@ You can share a link to the card: the browser address points exactly to it.
 4. If you changed the status, type or a date, fill in **Reason for changing indicators** (required, goes to the history).
 5. A **One-line summary** (required), what was done, the plan, issues; tick **Management decision needed** if one is needed and describe it.
 6. **Save.** The report goes **to the PMO for approval**; the card updates after approval. A submitted report cannot be changed.
-7. If the PMO **returned** the report, the PMO's comment is shown in the card and in "My actions". Click **New report based on the returned one**: the form is filled with the returned report's data — fix it and save.
+7. If the PMO **returned** the report, the PMO's comment is shown in the card and in the report itself. Click **New report based on the returned one**: the form is filled with the returned report's data — fix it and save.
 
 The **"Completed"** status sends the project to the archive once the report is approved — after that the project is view-only.
 
 ## Approving status reports (for the PMO)
 
-1. Reports waiting for you are in "My actions" on the home page and in "Status reports" → "Show: Awaiting approval".
+1. Reports waiting for you: the "Awaiting approval" figure on the home page and "Status reports" → "Show: Awaiting approval".
 2. Open the report: ratings, the key indicators it changes, what was done, the plan, issues.
 3. In the **Report approval** block:
    - **Approve** — the report reaches the card with the PM's ratings;
@@ -124,7 +123,7 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
 
 ## Archive
 
-The "Archive" tab lists completed projects with their archive date. Cards are view-only.
+The "Archive" tab lists completed projects with their archive date, view-only. Navigation is the same as in "Projects": **List** or **Tiles**, "Show" (All projects, Strategic, My projects), CSV and column choice; tiles show the archive date.
 
 ## Language and theme
 
