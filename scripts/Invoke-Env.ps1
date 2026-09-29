@@ -121,5 +121,7 @@ if ($Action -eq "feedback") {
         "reminders"           { $a.SendReminders = $true; $a.ReminderFrom = $cfg.ReminderFrom }
         "rebuild-permissions" { $a.RebuildPermissions = $true }
     }
+    # кэш оргструктуры между запусками (обновляется раз в сутки) — вне репозитория и вне копии скриптов расписания
+    $a.ManagerCache = Join-Path $HOME ".pmo-sync/managers-$Env.json"
     & (Join-Path $PSScriptRoot "Invoke-PMOSync.ps1") @a
 }

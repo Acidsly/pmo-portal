@@ -52,6 +52,9 @@ param(
     [string]$ReminderFrom,
     [int]$ReminderDays = 7,
     [int]$MaxManagerDepth = 10,
+    # кэш оргструктуры (руководители, имена, должности) между запусками; пусто — только на время запуска
+    [string]$ManagerCache,
+    [int]$ManagerCacheHours = 24,
     [switch]$DryRun
 )
 
@@ -407,7 +410,22 @@ foreach ($pair in @(@($L_REP, $reports, "srProject", "srProjectType", "srProject
 # ---------------------------------------------------------------------------
 # 5. Права по иерархии
 # ---------------------------------------------------------------------------
-$MGR = @{}; $PEOPLE = @{}
+$MGR = @{}; $PEOPLE = @{}; $MGRFAIL = @{}
+# оргструктура из Entra ID меняется редко: руководители, имена и должности читаются не чаще раза в -ManagerCacheHours
+# (по умолчанию сутки); полный пересчёт прав (-RebuildPermissions) кэш не использует и читает всё заново
+$cacheSaved = $null
+if ($ManagerCache -and -not $RebuildPermissions -and (Test-Path $ManagerCache)) {
+    try {
+        $c = Get-Content -Raw $ManagerCache | ConvertFrom-Json -AsHashtable
+        $age = (Get-Date).ToUniversalTime() - ([datetime]$c.saved).ToUniversalTime()
+        if ($age.TotalHours -lt $ManagerCacheHours) {
+            $cacheSaved = ([datetime]$c.saved).ToUniversalTime().ToString("o")
+            foreach ($k in $c.mgr.Keys) { $MGR[$k] = [string]$c.mgr[$k] }
+            foreach ($k in $c.people.Keys) { $PEOPLE[$k] = @{ n = [string]$c.people[$k].n; j = [string]$c.people[$k].j } }
+            Log ("Оргструктура из кэша ({0:n0} ч назад): {1} человек" -f $age.TotalHours, $MGR.Count)
+        }
+    } catch { Warn "Кэш оргструктуры не прочитан, читаю Entra ID: $($_.Exception.Message)" }
+}
 # человек из Entra ID: имя и должность для «Доступ до картки» (кэш на запуск)
 function Get-Person([string]$email) {
     if (-not $email) { return @{ n = ""; j = "" } }
@@ -427,7 +445,11 @@ function Get-Chain([string]$email) {
                 $m = Invoke-PnPGraphMethod -Url ("v1.0/users/{0}/manager?`$select=mail,userPrincipalName,displayName,jobTitle" -f [uri]::EscapeDataString($cur)) -Method Get
                 $MGR[$cur] = ([string]($m.mail ?? $m.userPrincipalName)).ToLowerInvariant()
                 if ($MGR[$cur] -and -not $PEOPLE.ContainsKey($MGR[$cur])) { $PEOPLE[$MGR[$cur]] = @{ n = [string]$m.displayName; j = [string]$m.jobTitle } }
-            } catch { $MGR[$cur] = "" }
+            } catch {
+                # «нет руководителя» (404) — сохраняем; другой сбой — только на этот запуск, в кэш не пишем
+                $MGR[$cur] = ""
+                if ([string]$_.Exception.Message -notmatch 'Request_ResourceNotFound|NotFound|404|does not exist|not present') { $MGRFAIL[$cur] = 1 }
+            }
         }
         $cur = $MGR[$cur]
         if ($cur -and $chain -notcontains $cur -and $cur -ne $email) { $chain += $cur } else { break }
@@ -609,4 +631,14 @@ Log ("Решений PMO по отчётам: {0}" -f $stats.approvals)
 Log ("Добавлено участников сайта: {0}" -f $stats.members)
 Log ("Готово. Звітів: {0}, записів у журнал: {1}, нових проєктів: {2}, коментарів: {3}, типів: {4}, прав: {5}, нагадувань: {6}, попереджень: {7}" -f `
     $stats.reports, $stats.changes, $stats.created, $stats.comments, $stats.types, $stats.acl, $stats.reminders, $stats.warnings) "Green"
+if ($ManagerCache -and -not $DryRun) {
+    try {
+        $mgrOut = [ordered]@{}; foreach ($k in $MGR.Keys) { if (-not $MGRFAIL.ContainsKey($k)) { $mgrOut[$k] = $MGR[$k] } }
+        $pplOut = [ordered]@{}; foreach ($k in $PEOPLE.Keys) { $pplOut[$k] = [ordered]@{ n = $PEOPLE[$k].n; j = $PEOPLE[$k].j } }
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $ManagerCache) | Out-Null
+        # срок кэша — от первого чтения Entra ID: новые люди дописываются, но не продлевают его
+        $saved = if ($cacheSaved) { $cacheSaved } else { (Get-Date).ToUniversalTime().ToString("o") }
+        [ordered]@{ saved = $saved; mgr = $mgrOut; people = $pplOut } | ConvertTo-Json -Depth 4 | Set-Content -Path $ManagerCache -Encoding utf8
+    } catch { Warn "Кэш оргструктуры не сохранён: $($_.Exception.Message)" }
+}
 if ($LOCK) { Remove-Item $LOCK -ErrorAction SilentlyContinue }
