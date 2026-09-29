@@ -47,6 +47,7 @@ Everything is counted only over the projects you can see (excluding the archive)
 - **Tiles** or **List** — the switch at the top. Tiles are handier on a phone.
 - **Show:** All projects, Strategic, At risk, My projects (where I am PM, owner or on the team), No recent report, Overdue.
 - **In the list:** click a column header to sort; the funnel ▽ filters by value; the gear ⚙ chooses columns; **CSV** exports the table as shown (the file opens in Excel). New records are on top.
+- **Status** is a coloured label: Initiation — purple, Planning — blue, Execution — green, On hold — orange, Archived — grey. The dot next to it is the project health (green, yellow, red, grey — not rated).
 - **Colours:** a red completion date means the deadline has passed and the project is still open. Report light: green — up to 8 days, yellow — 8–14, red — over 14.
 
 ## Project card
@@ -105,7 +106,7 @@ The status (Initiation, Planning, Execution, On hold, Cancelled, Completed) chan
 - **Probability** and **impact** are 1 to 5; the **score** = probability × impact: 15–25 — high (red), 8–14 — medium (yellow), 1–7 — low (green).
 - **Response strategy:** Avoid, Reduce (mitigate), Transfer, Accept (clicking the selected one again clears the choice).
 - **Risk reduction actions** — what we do now; **Contingency plan** — what we do if the risk occurs.
-- Set the risk owner, status (Open, In progress, Closed) and the **Mitigation due date**. An overdue open risk is shown in red.
+- Set the risk owner, status (Open — orange label, In progress — blue, Closed — green) and the **Mitigation due date**. An overdue open risk is shown in red.
 - "Show: High risks" — open risks with a score of 15 and above.
 
 ## Comments
