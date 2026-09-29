@@ -59,7 +59,7 @@ $ErrorActionPreference = "Stop"
 $PMO_GROUP = "PMO-адміністратори"
 $L_PROJ = "Lists/Projects"; $L_REP = "Lists/StatusReports"; $L_RISK = "Lists/RisksIssues"
 $L_CHG  = "Lists/KeyChanges"; $L_CMT = "Lists/ProjectComments"; $L_TEAM = "Lists/ProjectTeam"; $L_AP = "Lists/ReportApprovals"
-$stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; access = 0; feedback = 0; approvals = 0; reminders = 0; warnings = 0 }
+$stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; access = 0; feedback = 0; approvals = 0; members = 0; reminders = 0; warnings = 0 }
 
 function Log([string]$m, [string]$c = "Gray") { Write-Host ("{0:HH:mm:ss} {1}" -f (Get-Date), $m) -ForegroundColor $c }
 function Warn([string]$m) { $stats.warnings++; Write-Warning $m }
@@ -508,6 +508,20 @@ foreach ($p in $PROJ.Values) {
         Set-ItemAcl $L_PROJ $p.Item.Id $acl $false $h
     }
 }
+# участники сайта: каждый, у кого есть права хотя бы на один проект (PM, власник, команда, их руководители), должен открыть портал —
+# страница портала доступна только участникам сайта. Только добавляем: людей из группы синхронизация не убирает.
+$MEMBERS = Get-PnPGroup -AssociatedMemberGroup
+$inMembers = @{}
+foreach ($x in @(Get-PnPGroupMember -Group $MEMBERS)) { foreach ($k in @([string]$x.Email, ([string]$x.LoginName -replace '^.*\|', ''))) { if ($k) { $inMembers[$k.ToLowerInvariant()] = 1 } } }
+$needed = @($ACLS.Values | ForEach-Object { $_.Keys } | ForEach-Object { ([string]$_).ToLowerInvariant() } | Sort-Object -Unique)
+foreach ($e in $needed) {
+    if ($inMembers.ContainsKey($e)) { continue }
+    $stats.members++
+    if ($DryRun) { Log "  учасник сайту: + $e"; continue }
+    try { Add-PnPGroupMember -Group $MEMBERS -LoginName "i:0#.f|membership|$e" | Out-Null; Log "  учасник сайту: + $e" }
+    catch { Warn "Не удалось добавить $e в участники сайта: $($_.Exception.Message)" }
+}
+
 # дочерние элементы (перечитываем журнал и комментарии — в этом запуске могли появиться новые строки)
 $children = @(
     @($L_REP,  (Get-PnPListItem -List $L_REP  -PageSize 500), "srProject", $false),
@@ -568,6 +582,7 @@ Log ("Правок картки: {0}" -f $stats.edits)
 Log ("Списков доступа обновлено: {0}" -f $stats.access)
 Log ("Отзывов в общий список: {0}" -f $stats.feedback)
 Log ("Решений PMO по отчётам: {0}" -f $stats.approvals)
+Log ("Добавлено участников сайта: {0}" -f $stats.members)
 Log ("Готово. Звітів: {0}, записів у журнал: {1}, нових проєктів: {2}, коментарів: {3}, типів: {4}, прав: {5}, нагадувань: {6}, попереджень: {7}" -f `
     $stats.reports, $stats.changes, $stats.created, $stats.comments, $stats.types, $stats.acl, $stats.reminders, $stats.warnings) "Green"
 if ($LOCK) { Remove-Item $LOCK -ErrorAction SilentlyContinue }
