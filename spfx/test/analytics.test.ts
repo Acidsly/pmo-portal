@@ -32,8 +32,10 @@ test('slips: прогноз пізніше плану, топ за днями, �
   const ch = [{ projectId: 1, field: 'pmPlanEnd', kind: 'Статус-звіт' }, { projectId: 1, field: 'pmPlanEnd', kind: 'Статус-звіт' }, { projectId: 2, field: 'pmGoLive', kind: 'Статус-звіт' }] as ChangeEntry[];
   expect(slips(projects, ch).map(s => [s.p.id, s.days, s.moves])).toEqual([[1, 60, 2], [2, 10, 0]]);
 });
-test('launches: від сьогодні до +30 днів', () => {
-  expect(launches(projects, today).map(p => p.id)).toEqual([3, 1]);
+test('launches: від сьогодні до +7 днів (тиждень)', () => {
+  expect(launches(projects, today).map(p => p.id)).toEqual([3]);
+  const edge = [P({ id: 7, goLive: '2026-10-05' }), P({ id: 8, goLive: '2026-10-06' }), P({ id: 9, goLive: '2026-09-27' })];
+  expect(launches(edge, today).map(p => p.id)).toEqual([7]);
 });
 test('byDept: активні, розбивка за станом', () => {
   expect(byDept(projects)).toEqual([{ dept: 'ІТ', g: 0, y: 0, r: 1, na: 1, total: 2 }, { dept: 'Фінанси', g: 0, y: 1, r: 0, na: 0, total: 1 }]);

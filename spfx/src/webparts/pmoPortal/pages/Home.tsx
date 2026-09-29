@@ -61,10 +61,10 @@ export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
   const decCols: Col<StatusReport>[] = [...byProject<StatusReport>(), { head: fl('rProj'), cell: r => link(P(r.projectId)) },
     { head: fl('rDate'), cell: r => fmtDate(r.date) }, { head: fl('rDecText'), cell: r => r.decisionText, cls: 'wide' },
     { head: fl('rAuthor'), cell: r => <PersonCell p={r.author} /> }];
-  const slipCols: Col<Slip>[] = [{ head: fl('rProj'), cell: x => link(x.p) }, { head: fl('plan'), cell: x => fmtDate(x.p.planEnd) },
-    { head: fl('fc'), cell: x => fmtDate(x.p.forecastEnd) }, { head: t('cSlip'), cell: x => <span className="late">+{x.days} {t('days')}</span>, cls: 'num' },
-    { head: t('cMoves'), cell: x => String(x.moves), cls: 'num' }];
-  const lnCols: Col<Project>[] = [{ head: fl('golive'), cell: p => fmtDate(p.goLive) }, { head: fl('rProj'), cell: link },
+  const slipCols: Col<Slip>[] = [{ head: fl('rProj'), cell: x => link(x.p) }, { head: fl('plan'), cell: x => fmtDate(x.p.planEnd), cls: 'fit' },
+    { head: fl('fc'), cell: x => fmtDate(x.p.forecastEnd), cls: 'fit' }, { head: t('cSlip'), cell: x => <span className="late">+{x.days} {t('days')}</span>, cls: 'num fit' },
+    { head: t('cMoves'), cell: x => String(x.moves), cls: 'num fit' }];
+  const lnCols: Col<Project>[] = [{ head: fl('golive'), cell: p => fmtDate(p.goLive), cls: 'fit' }, { head: fl('rProj'), cell: link },
     { head: t('cHealth'), cell: p => <RagDot v={p.rag} notRated={t('notRated')} />, cls: 'c-ico' }, { head: fl('pm'), cell: p => <PersonCell p={p.manager} /> }];
   const riskCols: Col<Risk>[] = [...byProject<Risk>(), { head: fl('rProj'), cell: k => link(P(k.projectId)) },
     { head: fl('kTitle'), cell: k => k.title, cls: 'wide' }, { head: fl('kType'), cell: k => tv(k.type) },

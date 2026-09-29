@@ -119,7 +119,8 @@ tr.grp.collapsed .chev{transform:rotate(-90deg)}
 .prog .track{flex:1;height:6px;border-radius:3px;background:var(--track);overflow:hidden;min-width:70px}
 .prog .track i{display:block;height:100%;border-radius:3px}
 .prog b{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
-.late{color:var(--r);font-weight:600}
+.late{color:var(--r);font-weight:600;white-space:nowrap}
+.grid2 th.fit,.grid2 td.fit{width:1%;padding-left:8px;padding-right:8px}.grid2 td.fit{white-space:nowrap}
 .warn{color:var(--y);font-weight:600}
 .over{color:var(--r);font-weight:600}
 .chip{display:inline-block;min-width:30px;text-align:center;padding:2px 8px;border-radius:8px;color:#fff;font-weight:700;font-size:12px}
@@ -645,7 +646,7 @@ const T = {
  wpDept:['Портфель за напрямами','Portfolio by department','Портфель по направлениям'],
  wpSlips:['Найбільші зсуви термінів','Biggest schedule slips','Наибольшие сдвиги сроков'], cSlip:['Зсув','Slip','Сдвиг'], cMoves:['Перенесень','Moves','Переносов'],
  emptySlips:['Зсувів термінів немає','No schedule slips','Сдвигов сроков нет'],
- wpLaunch:['Запуски в найближчі 30 днів','Go-lives in the next 30 days','Запуски в ближайшие 30 дней'], emptyLaunch:['Запусків у найближчі 30 днів немає','No go-lives in the next 30 days','Запусков в ближайшие 30 дней нет'],
+ wpLaunch:['Запуски в найближчі 7 днів','Go-lives in the next 7 days','Запуски в ближайшие 7 дней'], emptyLaunch:['Запусків у найближчі 7 днів немає','No go-lives in the next 7 days','Запусков в ближайшие 7 дней нет'],
  viewAwaiting:['Очікують погодження','Awaiting approval','Ожидают согласования'],
  apDecided:['Рішення PMO','PMO decision','Решение PMO'], repIndicators:['Ключові показники у звіті','Key indicators in the report','Ключевые показатели в отчёте'],
  savedProject:['Проєкт створено.','Project created.','Проект создан.'],
@@ -1416,14 +1417,14 @@ const planMoves = p => (p.changes || []).filter(c => c.kind === 'report' || c.ki
 function slipsTable(){
   const C = (l, r, cls) => ({l:() => l, r, cls});
   const rows = visP().filter(p => isActive(p) && D(p.fc) && D(p.plan) && D(p.fc) > D(p.plan))
-    .map(p => ({p, dd:Math.round((D(p.fc) - D(p.plan)) / DAY)})).sort((a, b) => b.dd - a.dd).slice(0, 5);
-  return table([C(fl('rProj'), x => pLink(x.p)), C(fl('plan'), x => fmt(D(x.p.plan))), C(fl('fc'), x => fmt(D(x.p.fc))),
-    C(t('cSlip'), x => `<span class="late">+${x.dd} ${t('days')}</span>`, 'num'), C(t('cMoves'), x => String(planMoves(x.p)), 'num')], rows, {empty:t('emptySlips')});
+    .map(p => ({p, dd:Math.round((D(p.fc) - D(p.plan)) / DAY)})).sort((a, b) => b.dd - a.dd).slice(0, 3);
+  return table([C(fl('rProj'), x => pLink(x.p)), C(fl('plan'), x => fmt(D(x.p.plan)), 'fit'), C(fl('fc'), x => fmt(D(x.p.fc)), 'fit'),
+    C(t('cSlip'), x => `<span class="late">+${x.dd} ${t('days')}</span>`, 'num fit'), C(t('cMoves'), x => String(planMoves(x.p)), 'num fit')], rows, {empty:t('emptySlips')});
 }
 function launchTable(){
-  const C = (l, r, cls) => ({l:() => l, r, cls}), until = new Date(TODAY.getTime() + 30 * DAY);
+  const C = (l, r, cls) => ({l:() => l, r, cls}), until = new Date(TODAY.getTime() + 7 * DAY);
   const rows = visP().filter(p => isActive(p) && D(p.golive) && D(p.golive) >= TODAY && D(p.golive) <= until).sort((a, b) => D(a.golive) - D(b.golive));
-  return table([C(fl('golive'), p => fmt(D(p.golive))), C(fl('rProj'), pLink), C(t('cHealth'), p => ragDot(p.rag), 'c-ico'), C(fl('pm'), p => person(p.pm))], rows, {empty:t('emptyLaunch')});
+  return table([C(fl('golive'), p => fmt(D(p.golive)), 'fit'), C(fl('rProj'), pLink), C(t('cHealth'), p => ragDot(p.rag), 'c-ico'), C(fl('pm'), p => person(p.pm))], rows, {empty:t('emptyLaunch')});
 }
 function pageHome(){
   const s = stateScreen(); if (s) return s;

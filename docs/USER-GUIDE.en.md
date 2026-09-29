@@ -37,7 +37,7 @@ An archived project is view-only for everyone. If the portal is empty for you, y
 - **Portfolio by health** — a ring: how many active projects are green, yellow, red and not rated yet; **Portfolio health over time** — how health changed over the last 12 weeks: every project as of the snapshot date by its latest approved report, grey — no approved report yet; today's column matches the ring.
 - **Risk map** 5 × 5: rows are probability, columns are impact, each cell shows the number of open risks. Click a cell to list its risks below the map.
 - **Portfolio by department** — active projects of each department broken down by health; the number inside each coloured part of the bar is how many projects are in that state.
-- **Biggest schedule slips** — projects whose forecast completion is later than planned: by how many days and how many times the plan was moved. **Go-lives in the next 30 days** — go-live date, health, PM.
+- **Biggest schedule slips** — the three projects whose forecast completion is later than planned: by how many days and how many times the plan was moved. **Go-lives in the next 7 days** — go-live date, health, PM.
 - Below — **Projects at risk**, **No recent status report**, **Management decisions needed**, **Open risks**; "See all" opens the full list.
 
 Everything is counted only over the projects you can see (excluding the archive).

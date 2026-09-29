@@ -114,7 +114,8 @@ tr.grp.collapsed .chev{transform:rotate(-90deg)}
 .prog .track{flex:1;height:6px;border-radius:3px;background:var(--track);overflow:hidden;min-width:70px}
 .prog .track i{display:block;height:100%;border-radius:3px}
 .prog b{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
-.late{color:var(--r);font-weight:600}
+.late{color:var(--r);font-weight:600;white-space:nowrap}
+.grid2 th.fit,.grid2 td.fit{width:1%;padding-left:8px;padding-right:8px}.grid2 td.fit{white-space:nowrap}
 .warn{color:var(--y);font-weight:600}
 .over{color:var(--r);font-weight:600}
 .chip{display:inline-block;min-width:30px;text-align:center;padding:2px 8px;border-radius:8px;color:#fff;font-weight:700;font-size:12px}

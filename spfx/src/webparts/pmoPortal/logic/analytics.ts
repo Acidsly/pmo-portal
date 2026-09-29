@@ -31,14 +31,14 @@ export function riskMatrix(projects: Project[], risks: Risk[]): Risk[][][] {
 
 export interface Slip { id: number; p: Project; days: number; moves: number; }
 /** Найбільші зсуви термінів: активні з прогнозом пізніше плану, топ-N за днями; moves — скільки разів змінювали план завершення (журнал). */
-export function slips(projects: Project[], changes: ChangeEntry[], n = 5): Slip[] {
+export function slips(projects: Project[], changes: ChangeEntry[], n = 3): Slip[] {
   return projects.filter(p => isActive(p.status)).map(p => ({ id: p.id, p, days: forecastDelta(p.planEnd, p.forecastEnd) || 0,
     moves: changes.filter(c => c.projectId === p.id && c.field === 'pmPlanEnd' && c.kind !== 'Створення').length }))
     .filter(x => x.days > 0).sort((a, b) => b.days - a.days || b.moves - a.moves || a.p.id - b.p.id).slice(0, n);
 }
 
 /** Найближчі запуски: активні з датою запуску від сьогодні до +days днів, раніші — вгорі. */
-export const launches = (projects: Project[], today: string, days = 30): Project[] => {
+export const launches = (projects: Project[], today: string, days = 7): Project[] => {
   const end = addDays(today, days);
   return projects.filter(p => isActive(p.status) && !!p.goLive && p.goLive >= today && p.goLive <= end)
     .sort((a, b) => (a.goLive < b.goLive ? -1 : a.goLive > b.goLive ? 1 : a.id - b.id));
