@@ -581,7 +581,7 @@ const T = {
  wpRisks:['Відкриті ризики','Open risks','Открытые риски'],
  showAll:['Показати все','See all','Показать все'],
  active:['активних','active','активных'], notRated:['не оцінено','not rated','не оценено'], noReports:['немає звітів','no reports','нет отчётов'],
- dynHint:['Стан кожного проєкту за останнім статус-звітом на дату зрізу.','Each project’s health from its latest status report as of the snapshot date.','Состояние каждого проекта по последнему статус-отчёту на дату среза.'],
+ dynHint:['Стан кожного проєкту на дату зрізу за останнім погодженим статус-звітом; сірий — ще немає погодженого звіту.','Each project’s health as of the snapshot date from its latest approved status report; grey — no approved report yet.','Состояние каждого проекта на дату среза по последнему согласованному статус-отчёту; серый — согласованного отчёта ещё нет.'],
  today:['сьогодні','today','сегодня'],
  empty:['У цьому поданні немає елементів.','There are no items in this view.','В этом представлении нет элементов.'],
  emptyProblem:['Проблемних проєктів немає.','No projects at risk.','Проблемных проектов нет.'],
@@ -1134,20 +1134,23 @@ function donut(){
 function dynamics(){
   const pts = [];
   for (let k = 6; k >= 0; k--){
-    const tt = daysAgo(k * 14), c = {'Зелений':0,'Жовтий':0,'Червоний':0};
-    visAll().forEach(p => { const rs = repsOf(p).filter(r => r.d <= tt && isApproved(r)); if (!rs.length) return;
-      if (isArch(p) && tt > lastUpd(p)) return; c[rs[rs.length - 1].rag]++; });
+    const tt = daysAgo(k * 14), c = {'Зелений':0,'Жовтий':0,'Червоний':0,'':0};
+    // кожен проєкт, що вже існував на дату зрізу (і ще не в архіві): стан останнього погодженого звіту; немає звіту — сірий
+    visAll().forEach(p => { if (p.status === 'Скасовано') return;
+      const cr = (p.changes || []).find(x => x.kind === 'create'); if (cr && new Date(cr.date) > tt) return;
+      if (isArch(p) && tt > lastUpd(p)) return;
+      const rs = repsOf(p).filter(r => r.d <= tt && isApproved(r)); c[rs.length ? rs[rs.length - 1].rag : '']++; });
     pts.push({tt, c});
   }
   const W = 500, H = 230, L = 30, B = 30, TP = 12;
-  const max = Math.max(1, ...pts.map(p => p.c['Зелений'] + p.c['Жовтий'] + p.c['Червоний']));
+  const max = Math.max(1, ...pts.map(p => p.c['Зелений'] + p.c['Жовтий'] + p.c['Червоний'] + p.c['']));
   const slot = (W - L - 8) / pts.length, bw = slot * 0.5, y = v => H - B - v / max * (H - B - TP);
   let g = '';
   [0, Math.ceil(max / 2), max].forEach(v => { g += `<line x1="${L}" x2="${W - 4}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--text-2)">${v}</text>`; });
   pts.forEach((p, i) => { const x = L + i * slot + (slot - bw) / 2; let base = 0;
-    RAGS.forEach(k => { const v = p.c[k]; if (!v) return; const y1 = y(base + v), h = y(base) - y1;
-      g += `<rect x="${x}" y="${y1}" width="${bw}" height="${Math.max(h - 2, 1)}" rx="5" fill="${RC[k]}"><title>${fmt(p.tt)}: ${k} — ${v}</title></rect>`;
-      if (h > 16) g += `<text x="${x + bw / 2}" y="${y1 + h / 2 + 3}" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">${v}</text>`; base += v; });
+    RAGS.concat(['']).forEach(k => { const v = p.c[k]; if (!v) return; const y1 = y(base + v), h = y(base) - y1;
+      g += `<rect x="${x}" y="${y1}" width="${bw}" height="${Math.max(h - 2, 1)}" rx="5" fill="${k ? RC[k] : 'var(--na)'}"><title>${fmt(p.tt)}: ${k ? tv(k) : t('notRated')} — ${v}</title></rect>`;
+      if (h > 16) g += `<text x="${x + bw / 2}" y="${y1 + h / 2 + 3}" text-anchor="middle" font-size="11" font-weight="600" fill="${k ? '#fff' : 'var(--text)'}">${v}</text>`; base += v; });
     g += `<text x="${x + bw / 2}" y="${H - 10}" text-anchor="middle" font-size="11" fill="var(--text-2)">${i === pts.length - 1 ? t('today') : fmtShort(p.tt)}</text>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('wpDyn')}">${g}</svg><p class="hint">${t('dynHint')}</p>`;
 }
@@ -1426,7 +1429,7 @@ function pageHome(){
   const prob = vis.filter(PV.problem.f).sort((a, b) => (a.rag === 'Червоний' ? 0 : 1) - (b.rag === 'Червоний' ? 0 : 1));
   const stale = vis.filter(PV.stale.f);
   const dec = visR().filter(r => r.decision && !isArch(pById(r.pid))).sort((a, b) => b.d - a.d);
-  const open = visK().filter(k => KV.open.f(k) && !isArch(pById(k.pid))).sort((a, b) => b.p * b.i - a.p * a.i).slice(0, 6);
+  const openAll = visK().filter(k => KV.open.f(k) && !isArch(pById(k.pid))).sort((a, b) => b.p * b.i - a.p * a.i), open = openAll.slice(0, 6);
   const C = (l, r, cls) => ({l:() => l, r, cls});
   const S = {l:stratHead, r:p => stratCell(p.type), cls:'c-ico'}, PR = {l:prioHead, r:p => prioIcon(p.prio), cls:'c-ico'};
   const SR = {l:stratHead, r:x => stratCell(pById(x.pid).type), cls:'c-ico'}, PRR = {l:prioHead, r:x => prioIcon(PP(x.pid)), cls:'c-ico'};
@@ -1443,7 +1446,7 @@ function pageHome(){
     ${wp(t('wpProblem'), table(probCols, prob, {empty:t('emptyProblem')}), ['projects','problem'])}
     ${wp(t('wpStale'), table(staleCols, stale, {empty:t('emptyStale')}), ['projects','stale'])}
     ${wp(t('wpDecision'), table(decCols, dec, {empty:t('emptyDecision')}), ['reports','decision'])}
-    ${wp(t('wpRisks'), table(riskCols, open, {empty:t('emptyRisks')}), ['risks','open'])}
+    ${wp(t('wpRisks'), table(riskCols, open, {empty:t('emptyRisks')}) + (openAll.length > open.length ? `<p class="hint">${t('shown')} ${open.length} ${t('of')} ${openAll.length}</p>` : ''), ['risks','open'])}
   </div>`;
 }
 const viewSel = (views, cur, key) => `<label class="viewsel" title="${t('viewsNote')}">${t('view')}

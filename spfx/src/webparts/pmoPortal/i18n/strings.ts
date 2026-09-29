@@ -87,9 +87,9 @@ export const T: Record<string, L3> = {
   "нет отчётов"
  ],
  "dynHint": [
-  "Стан кожного проєкту за останнім статус-звітом на дату зрізу.",
-  "Each project’s health from its latest status report as of the snapshot date.",
-  "Состояние каждого проекта по последнему статус-отчёту на дату среза."
+  "Стан кожного проєкту на дату зрізу за останнім погодженим статус-звітом; сірий — ще немає погодженого звіту.",
+  "Each project’s health as of the snapshot date from its latest approved status report; grey — no approved report yet.",
+  "Состояние каждого проекта на дату среза по последнему согласованному статус-отчёту; серый — согласованного отчёта ещё нет."
  ],
  "today": [
   "сьогодні",

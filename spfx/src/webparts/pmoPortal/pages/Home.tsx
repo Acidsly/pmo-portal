@@ -35,8 +35,9 @@ export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
   const sl = slips(vis, data.changes);
   const ln = launches(vis, today);
   const dec = data.reports.filter(r => r.decision && shown(r.projectId)).sort(byDateDesc);
-  const open = data.risks.filter(k => k.status !== 'Закрито' && shown(k.projectId))
-    .sort((a, b) => riskScore(b.probability, b.impact) - riskScore(a.probability, a.impact)).slice(0, 6);
+  const openAll = data.risks.filter(k => k.status !== 'Закрито' && shown(k.projectId))
+    .sort((a, b) => riskScore(b.probability, b.impact) - riskScore(a.probability, a.impact));
+  const open = openAll.slice(0, 6);   // на главной — шесть самых высоких; сколько всего — подписью под таблицей
 
   const link = (p: Project): JSX.Element => <button className="link" onClick={() => openProject(p.id)}>{p.title}</button>;
   const stratHead = <span className="ico" title={t('cStrat')}><Compass /></span>;
@@ -79,7 +80,7 @@ export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
     <KpiStrip k={k} pmo={data.canApprove} t={t} go={(pg, v) => go(pg as Page, v)} />
     <div className="grid2">
       <Wp title={t('wpHealth')}><Donut c={donutCounts(vis)} label={t('wpHealth')} active={t('active')} notRated={t('notRated')} /></Wp>
-      <Wp title={t('wpDyn')}><Dynamics pts={snapshots(data.projects, data.reports.filter(r => r.approval === 'Погоджено'), today)} label={t('wpDyn')} today={t('today')} hint={t('dynHint')} /></Wp>
+      <Wp title={t('wpDyn')}><Dynamics pts={snapshots(data.projects, data.reports.filter(r => r.approval === 'Погоджено'), today)} label={t('wpDyn')} today={t('today')} hint={t('dynHint')} notRated={t('notRated')} /></Wp>
     </div>
     <div className="grid2">
       <Wp title={t('wpRiskMap')} more={() => go('risks', 'open')} moreLabel={t('showAll')}><RiskMap m={riskMatrix(vis, data.risks)} byId={byId} t={t} openRisk={(id, pid) => openForm('risk:' + id, pid)} /></Wp>
@@ -93,7 +94,8 @@ export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
       <Wp title={t('wpProblem')} more={() => go('projects', 'problem')} moreLabel={t('showAll')}><SimpleTable cols={probCols} rows={prob} empty={t('emptyProblem')} /></Wp>
       <Wp title={t('wpStale')} more={() => go('projects', 'stale')} moreLabel={t('showAll')}><SimpleTable cols={staleCols} rows={stale} empty={t('emptyStale')} /></Wp>
       <Wp title={t('wpDecision')} more={() => go('reports', 'decision')} moreLabel={t('showAll')}><SimpleTable cols={decCols} rows={dec} empty={t('emptyDecision')} /></Wp>
-      <Wp title={t('wpRisks')} more={() => go('risks', 'open')} moreLabel={t('showAll')}><SimpleTable cols={riskCols} rows={open} empty={t('emptyRisks')} /></Wp>
+      <Wp title={t('wpRisks')} more={() => go('risks', 'open')} moreLabel={t('showAll')}><SimpleTable cols={riskCols} rows={open} empty={t('emptyRisks')} />
+        {openAll.length > open.length ? <p className="hint">{t('shown')} {open.length} {t('of')} {openAll.length}</p> : null}</Wp>
     </div>
   </>;
 };

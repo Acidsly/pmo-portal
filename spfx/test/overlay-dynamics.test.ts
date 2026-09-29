@@ -57,9 +57,30 @@ describe('кольцо и динамика — как в прототипе', ()
                 R({ id: 3, projectId: 2, date: '2026-08-20', budget: 'Червоний' })];
     const s = snapshots(ps, rs, today);
     expect(s.map(x => x.date)).toEqual(['2026-07-02', '2026-07-16', '2026-07-30', '2026-08-13', '2026-08-27', '2026-09-10', '2026-09-24']);
-    expect(s[6]).toEqual({ date: '2026-09-24', g: 1, y: 0, r: 0 });
-    expect(s[5]).toEqual({ date: '2026-09-10', g: 0, y: 1, r: 0 });
-    expect(s[4]).toEqual({ date: '2026-08-27', g: 0, y: 1, r: 1 });
+    expect(s[6]).toEqual({ date: '2026-09-24', g: 1, y: 0, r: 0, na: 0 });
+    expect(s[5]).toEqual({ date: '2026-09-10', g: 0, y: 1, r: 0, na: 0 });
+    expect(s[4]).toEqual({ date: '2026-08-27', g: 0, y: 1, r: 1, na: 0 });
+    // 13.08: у проекта 1 уже есть отчёт, у проекта 2 — ещё нет: серый
+    expect(s[3]).toEqual({ date: '2026-08-13', g: 0, y: 1, r: 0, na: 1 });
+  });
+  test('snapshots: проект без погодженого отчёта — серый; до даты создания — не считается', () => {
+    const today = '2026-09-24';
+    const ps = [P({ id: 1, created: '2026-06-01T10:00:00Z' }), P({ id: 2, created: '2026-09-20T10:00:00Z' }), P({ id: 3, status: 'Скасовано', created: '2026-06-01T10:00:00Z' })];
+    const rs = [R({ projectId: 1, date: '2026-09-01', budget: 'Жовтий' })];
+    const s = snapshots(ps, rs, today);
+    expect(s[0]).toEqual({ date: '2026-07-02', g: 0, y: 0, r: 0, na: 1 });      // проект 1 есть, отчёта ещё нет; 2 ещё не создан
+    expect(s[5]).toEqual({ date: '2026-09-10', g: 0, y: 1, r: 0, na: 0 });
+    expect(s[6]).toEqual({ date: '2026-09-24', g: 0, y: 1, r: 0, na: 1 });      // проект 2 создан 20.09, отчёта нет
+  });
+  test('последний срез «Динаміки» совпадает с кольцом «Портфель за станом»', () => {
+    const today = '2026-09-24';
+    const ps = [P({ id: 1, rag: 'Жовтий', lastUpdate: '2026-09-01', created: '2026-06-01T10:00:00Z' }), P({ id: 2, rag: 'Зелений', lastUpdate: '2026-09-20', created: '2026-06-01T10:00:00Z' }),
+      P({ id: 3, rag: '', created: '2026-09-22T10:00:00Z' }), P({ id: 4, status: 'Архівний', rag: 'Зелений', archivedAt: '2026-08-01', created: '2026-06-01T10:00:00Z' }),
+      P({ id: 5, status: 'Скасовано', rag: '', created: '2026-06-01T10:00:00Z' })];
+    const rs = [R({ projectId: 1, date: '2026-09-01', budget: 'Жовтий' }), R({ id: 2, projectId: 2, date: '2026-09-20' }), R({ id: 3, projectId: 4, date: '2026-07-20' })];
+    const last = snapshots(ps, rs, today)[6]; const d = donutCounts(ps);
+    expect({ g: last.g, y: last.y, r: last.r, na: last.na }).toEqual({ g: d.g, y: d.y, r: d.r, na: d.none });
+    expect(last.g + last.y + last.r + last.na).toBe(d.total);
   });
 });
 
