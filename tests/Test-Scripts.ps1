@@ -71,7 +71,7 @@ $fc = Get-Content -Raw (Join-Path $root "tests/cases/folders.json") | ConvertFro
 if ((Get-FolderName 12) -eq "P12") { Ok "папка проекта 12 — P12" } else { Bad "Get-FolderName 12 -> $(Get-FolderName 12)" }
 foreach ($c in $fc.role) { $r = Get-FolderRole $c.list $c.level; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $r, ожидалось $($c.out)" } }
 foreach ($c in $fc.frozen) { $r = Test-ArchiveFrozen $c.status $c.mark $c.ready $c.rebuild; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $r, ожидалось $($c.out)" } }
-foreach ($c in $fc.row) { $r = Get-RowAction $c.dir $c.expected $c.acl; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): «$r», ожидалось «$($c.out)»" } }
+foreach ($c in $fc.row) { $r = Get-RowAction $c.dir $c.expected $c.acl $c.ready; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): «$r», ожидалось «$($c.out)»" } }
 foreach ($c in $fc.mark) { $r = Get-AclMark $c.hash $c.archived; if ($r -eq $c.out) { Ok "отметка $($c.hash)/$($c.archived) -> $r" } else { Bad "отметка: $r, ожидалось $($c.out)" } }
 # все запросы CSOM синхронизации — с повтором при 429 (Invoke-PnPQuery -RetryCount), без голого ExecuteQuery()
 if ((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")) -match 'ExecuteQuery\(\)') { Bad "Invoke-PMOSync.ps1: ExecuteQuery() без повтора" } else { Ok "запросы CSOM — с повтором при 429" }

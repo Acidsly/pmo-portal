@@ -226,9 +226,11 @@ function Get-AclMark([string]$aclHash, [bool]$archived) { if ($archived) { retur
 function Test-ArchiveFrozen([string]$status, [string]$pmoAcl, [bool]$foldersReady, [bool]$rebuild) {
     return ($status -eq "Архівний") -and $pmoAcl.StartsWith("arch:") -and $foldersReady -and -not $rebuild
 }
-# Что сделать с записью дочернего списка: «move» — не в папке своего проекта; «reset» — в своей папке, но с личными правами
-# (непустой pmoAcl — его писала прежняя выдача прав записи); пусто — ничего.
-function Get-RowAction([string]$dir, [string]$expected, [string]$pmoAcl) {
+# Что сделать с записью дочернего списка: «move» — не в папке своего проекта (перенос + сброс личных прав); «reset» — в своей папке,
+# но с личными правами (непустой pmoAcl — его писала прежняя выдача прав записи); пусто — ничего.
+# Пока папке не выданы права проекта ($folderReady), запись не трогаем: иначе после сброса она наследовала бы права всего списка.
+function Get-RowAction([string]$dir, [string]$expected, [string]$pmoAcl, [bool]$folderReady) {
+    if (-not $folderReady) { return "" }
     if ($dir.TrimEnd("/") -ne $expected.TrimEnd("/")) { return "move" }
     if ($pmoAcl) { return "reset" }
     return ""
@@ -576,7 +578,7 @@ function Set-ItemAcl([string]$list, [int]$id, $acl, [string]$aclMark, [string]$w
 }
 
 Log "Права доступа…"
-$ACLS = @{}
+$ACLS = @{}; $MARK = @{}
 $frozen = 0
 $chainOf = { param($e) Get-Chain $e }
 foreach ($p in $PROJ.Values) {
@@ -594,7 +596,7 @@ foreach ($p in $PROJ.Values) {
     $name = Get-FolderName $p.Item.Id
     $ready = -not @($CHILD.Keys | Where-Object { -not $FOLDERS[$_].ContainsKey($name) -or $FOLDERS[$_][$name].mark -ne $p.Values.pmoAcl }).Count
     # архив, права которого уже выданы проекту и папкам: без Entra ID, без «Доступ до картки», без прав (пересчёт — воскресный rebuild)
-    if (Test-ArchiveFrozen $p.Values.pmStatus $p.Values.pmoAcl $ready ([bool]$RebuildPermissions)) { $frozen++; continue }
+    if (Test-ArchiveFrozen $p.Values.pmStatus $p.Values.pmoAcl $ready ([bool]$RebuildPermissions)) { $frozen++; $MARK[$p.Item.Id] = $p.Values.pmoAcl; continue }
     $access = Get-Access (Email $p.Item["pmManager"]) (Email $p.Item["pmOwner"]) $st $chainOf $archived
     $acl = Get-Acl $access
     $h = Get-AclMark (Get-Hash $acl) $archived
@@ -606,7 +608,7 @@ foreach ($p in $PROJ.Values) {
         if ($DryRun) { Log "  доступ «$($p.Item["Title"])»: $($access.Count) людей" }
         else { Set-PnPListItem -List $L_PROJ -Identity $p.Item.Id -Values @{ pmAccess = $json } -UpdateType SystemUpdate | Out-Null }
     }
-    $ACLS[$p.Item.Id] = $acl
+    $ACLS[$p.Item.Id] = $acl; $MARK[$p.Item.Id] = $h
     if ($RebuildPermissions -or $p.Values.pmoAcl -ne $h) {
         Log "  проєкт «$($p.Item["Title"])»: $($acl.Count) користувачів"
         Set-ItemAcl $L_PROJ $p.Item.Id $acl $h "проєкт #$($p.Item.Id)" | Out-Null
@@ -651,9 +653,10 @@ foreach ($l in $CHILD.Keys) {
         $lk = $it[$CHILD[$l]]; if (-not $lk -or -not $PROJ.ContainsKey($lk.LookupId)) { continue }
         $name = Get-FolderName $lk.LookupId
         $dir = "$WEBREL/$l/$name"
-        $act = Get-RowAction ([string]$it["FileDirRef"]) $dir ([string]$it["pmoAcl"])
+        # папка с правами проекта: отметка папки = отметке проекта этого запуска (в пробном запуске права не выдаются — считаем готовой)
+        $f = $FOLDERS[$l][$name]
+        $act = Get-RowAction ([string]$it["FileDirRef"]) $dir ([string]$it["pmoAcl"]) ($DryRun -or ($f -and $f.mark -and $f.mark -eq $MARK[$lk.LookupId]))
         if (-not $act) { continue }
-        if (-not $FOLDERS[$l].ContainsKey($name) -and -not $DryRun) { continue }
         if ($act -eq "move") { $stats.moved++ } else { $stats.reset++ }
         if ($DryRun) { Log ("    {0}: {1} #{2} -> {3}" -f $(if ($act -eq "move") { "перенос" } else { "сброс прав" }), $l, $it.Id, $name); continue }
         try {
@@ -661,7 +664,8 @@ foreach ($l in $CHILD.Keys) {
                 $file = $CTX.Web.GetFileByServerRelativePath([Microsoft.SharePoint.Client.ResourcePath]::FromDecodedUrl([string]$it["FileRef"]))
                 $file.MoveToUsingPath([Microsoft.SharePoint.Client.ResourcePath]::FromDecodedUrl("$dir/$($it["FileLeafRef"])"), [Microsoft.SharePoint.Client.MoveOperations]::None)
             }
-            if ($it["pmoAcl"]) {
+            # после переноса — всегда сброс: запись могла остаться с частично выданными личными правами без отметки
+            if ($act -eq "move" -or $it["pmoAcl"]) {
                 $x = (Get-ListObj $l).GetItemById($it.Id)
                 $x.ResetRoleInheritance(); $x["pmoAcl"] = ""; $x.SystemUpdate()
             }

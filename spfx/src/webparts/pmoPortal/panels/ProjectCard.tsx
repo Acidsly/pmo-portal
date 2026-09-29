@@ -65,9 +65,11 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
   const people = [p.manager, p.owner, ...p.stakeholders].filter(Boolean) as Person[];
   // весь журнал проекта — при каждом открытии карточки и после перезагрузки данных (синхронизация могла перенести правки карточки в журнал)
   const [journal, setJournal] = React.useState<ChangeEntry[] | undefined>(undefined);
+  const [journalErr, setJournalErr] = React.useState(false);
+  React.useEffect(() => { setJournal(undefined); }, [p.id]);   // другой проект — «Завантаження…»; после перезагрузки данных прежний журнал виден до ответа
   React.useEffect(() => {
-    let live = true; setJournal(undefined);
-    repo.loadChanges(p.id).then(x => { if (live) setJournal(x); }, () => { if (live) setJournal(ofProject(data.changes, p.id)); });
+    let live = true;
+    repo.loadChanges(p.id).then(x => { if (live) { setJournal(x); setJournalErr(false); } }, () => { if (live) { setJournal(j => j || []); setJournalErr(true); } });
     return () => { live = false; };
   }, [p.id, data]);
   const events = [...(p.pendingEvents || []), ...editLogEvents(p.editLog || '', people), ...toEvents(journal || [])]
@@ -145,7 +147,8 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
         </div>)}
         {events.length > 3 ? <button className="more" onClick={() => setShowCh(!showCh)}>{showCh ? t('hideHistory') : `${t('showHistory')} (${events.length})`}</button> : null}
       </div> : journal ? <p className="empty">{t('noChanges')}</p> : null}
-      {journal ? null : <p className="muted">{t('loading')}</p>}</div>
+      {journal ? null : <p className="muted">{t('loading')}</p>}
+      {journalErr ? <p className="muted">{t('loadErr')}</p> : null}</div>
 
     <div className="sec"><h3>{fl('comments')}</h3>
       {cms.length ? <div className="cmts">{(showCm ? cms : cms.slice(0, 1)).map(c =>
