@@ -78,6 +78,11 @@ export const mapApproval = (r: any): Approval => ({ id: r.Id, reportId: r.apRepo
 
 export const COMMENT_SELECT = ['Id', 'cmProjectId', 'cmText', 'Created', ...people('Author')].join(',');
 export const COMMENT_EXPAND = 'Author';
+/** Папки проектов P<ID> в дочерних списках (права папки — синхронизация): REST items возвращает и их — отбрасываем. */
+export const withoutFolders = (rows: any[]): any[] => rows.filter(r => r.FileSystemObjectType !== 1);
+/** Журнал при загрузке приложения — только переносы плановой даты («Зсуви термінів»); весь журнал проекта — при открытии карточки. */
+export const CHANGES_ON_LOAD = "kcField eq 'pmPlanEnd'";
+export const changesOf = (projectId: number): string => `kcProjectId eq ${Math.floor(projectId)}`;
 export const CHANGE_SELECT = ['Id', 'kcProjectId', 'kcDate', 'kcKind', 'kcField', 'kcFrom', 'kcTo', 'kcReason', ...people('kcChangedBy')].join(',');
 export const CHANGE_EXPAND = 'kcChangedBy';
 export const mapComment = (r: any): Comment => ({ id: r.Id, projectId: r.cmProjectId, text: s(r.cmText), created: s(r.Created), author: mapPerson(r.Author) });

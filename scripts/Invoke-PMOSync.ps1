@@ -16,11 +16,12 @@
          и строка «Створення» для новых проектов.
       3. «Останній коментар» в карточке — из списка «Коментарі».
       4. «Стратегічний» и «Пріоритет» в статус-отчётах и рисках — копия из проекта.
-      5. Права уровня элементов: PM, его руководители и Собственник — редактирование;
-         стейкхолдеры и руководители Собственника и стейкхолдеров — просмотр и комментарии;
-         группа PMO и владельцы сайта — полный доступ. Цепочка руководителей берётся из Entra ID.
-         Отчёты и риски проекта получают тот же круг, комментарии и журнал — только чтение.
-         Архивный проект — только чтение для всех, кроме PMO и владельцев сайта.
+      5. Права: PM — редактирование; его руководители, Собственник, команда и их руководители — просмотр и комментарии;
+         группа PMO — просмотр, владельцы сайта — полный доступ. Цепочка руководителей берётся из Entra ID.
+         Права выдаются записи проекта и папке проекта P<ID> в каждом дочернем списке; записи наследуют права папки
+         (синхронизация переносит в папку записи, созданные в корне списка). Отчёты, комментарии, журнал и погодження —
+         только чтение; риски и команду правит PM. Архивный проект — только чтение; после выдачи прав архива обычный
+         запуск его не пересчитывает (пересчёт — -RebuildPermissions).
       6. (-SendReminders) письмо каждому PM со списком его активных проектов без свежего отчёта.
 
 .PARAMETER SiteUrl          https://contoso.sharepoint.com/sites/pmo
@@ -62,7 +63,7 @@ $ErrorActionPreference = "Stop"
 $PMO_GROUP = "PMO-адміністратори"
 $L_PROJ = "Lists/Projects"; $L_REP = "Lists/StatusReports"; $L_RISK = "Lists/RisksIssues"
 $L_CHG  = "Lists/KeyChanges"; $L_CMT = "Lists/ProjectComments"; $L_TEAM = "Lists/ProjectTeam"; $L_AP = "Lists/ReportApprovals"
-$stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; access = 0; feedback = 0; approvals = 0; members = 0; reminders = 0; warnings = 0 }
+$stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; folders = 0; moved = 0; reset = 0; access = 0; feedback = 0; approvals = 0; members = 0; reminders = 0; warnings = 0 }
 
 function Log([string]$m, [string]$c = "Gray") { Write-Host ("{0:HH:mm:ss} {1}" -f (Get-Date), $m) -ForegroundColor $c }
 function Warn([string]$m) { $stats.warnings++; Write-Warning $m }
@@ -201,23 +202,73 @@ function Add-Change($projectId, [string]$field, [string]$from, [string]$to, [str
     $vals = @{ Title = ($DISPLAY[$field] ?? $EDIT_DISPLAY[$field] ?? "Проєкт"); kcProject = $projectId; kcDate = ($when ?? (Get-Date).ToUniversalTime().ToString("o"))
                kcKind = $kind; kcField = $field; kcFrom = $from; kcTo = $to; kcReason = $reason }
     if ($who) { $vals.kcChangedBy = $who }
-    try { Add-PnPListItem -List $L_CHG -Values $vals | Out-Null }
-    catch { if ($who) { $vals.Remove("kcChangedBy"); Add-PnPListItem -List $L_CHG -Values $vals | Out-Null } else { throw } }
+    # сразу в папку проекта (права папки), если она уже есть; иначе — в корень, раздел 5 перенесёт в этом же запуске
+    $dir = @{}; if ($FOLDERS[$L_CHG] -and $FOLDERS[$L_CHG].ContainsKey((Get-FolderName $projectId))) { $dir.Folder = Get-FolderName $projectId }
+    try { Add-PnPListItem -List $L_CHG -Values $vals @dir | Out-Null }
+    catch { if ($who) { $vals.Remove("kcChangedBy"); Add-PnPListItem -List $L_CHG -Values $vals @dir | Out-Null } else { throw } }
+}
+
+# ---------------------------------------------------------------------------
+# Папки проектов: в каждом дочернем списке папка P<ID проекта>; права выдаются папке, записи их наследуют
+# ---------------------------------------------------------------------------
+function Get-FolderName($projectId) { return "P$([int]$projectId)" }
+# Роль человека на папке: отчёты, комментарии, журнал и погодження — только чтение всем (история не переписывается);
+# риски и команда — как уровень доступа к проекту (PM правит). Архив: Get-Access уже дал всем «read». Векторы tests/cases/folders.json.
+function Get-FolderRole([string]$list, [string]$level) {
+    $readOnly = @("Lists/StatusReports", "Lists/ProjectComments", "Lists/KeyChanges", "Lists/ReportApprovals")
+    if ($readOnly -contains $list -or $level -ne "edit") { return "read" }
+    return "edit"
+}
+# Отметка прав в pmoAcl проекта и его папок: хэш круга людей; у архивного — с префиксом «arch:» (не из алфавита хэша 0-9A-F)
+function Get-AclMark([string]$aclHash, [bool]$archived) { if ($archived) { return "arch:$aclHash" } return $aclHash }
+# Архивный проект не пересчитывается обычным запуском, если права архива уже выданы проекту и всем его папкам.
+# Еженедельный -RebuildPermissions пересчитывает и архив (смена руководителей в Entra ID).
+function Test-ArchiveFrozen([string]$status, [string]$pmoAcl, [bool]$foldersReady, [bool]$rebuild) {
+    return ($status -eq "Архівний") -and $pmoAcl.StartsWith("arch:") -and $foldersReady -and -not $rebuild
+}
+# Что сделать с записью дочернего списка: «move» — не в папке своего проекта; «reset» — в своей папке, но с личными правами
+# (непустой pmoAcl — его писала прежняя выдача прав записи); пусто — ничего.
+function Get-RowAction([string]$dir, [string]$expected, [string]$pmoAcl) {
+    if ($dir.TrimEnd("/") -ne $expected.TrimEnd("/")) { return "move" }
+    if ($pmoAcl) { return "reset" }
+    return ""
 }
 
 # ---------------------------------------------------------------------------
 # Загрузка
 # ---------------------------------------------------------------------------
 Log "Загрузка списков…"
+$CTX = Get-PnPContext
+$WEBREL = (Get-PnPWeb -Includes ServerRelativeUrl).ServerRelativeUrl.TrimEnd("/")
+# записи дочернего списка без папок (Get-PnPListItem возвращает и записи из папок, и сами папки)
+function Get-ListRows([string]$list) {
+    $rows = [System.Collections.Generic.List[object]]::new()
+    foreach ($it in @(Get-PnPListItem -List $list -PageSize 500)) { if ($it -and [string]$it.FileSystemObjectType -ne "Folder") { $rows.Add($it) } }
+    return , $rows
+}
+# папки проектов списка: имя -> @{ id; mark } (через RootFolder — без запроса по списку, порог 5000 не касается)
+$FOLDERS = @{}
+function Read-Folders([string]$list) {
+    $l = Get-PnPList -Identity $list
+    $fs = $l.RootFolder.Folders; $CTX.Load($fs); Invoke-PnPQuery -RetryCount 10
+    foreach ($f in $fs) { $CTX.Load($f.ListItemAllFields) }; Invoke-PnPQuery -RetryCount 10
+    $FOLDERS[$list] = @{}
+    foreach ($f in $fs) { if ($f.Name -match '^P\d+$') { $FOLDERS[$list][$f.Name] = @{ id = $f.ListItemAllFields.Id; mark = [string]$f.ListItemAllFields["pmoAcl"] } } }
+}
 $projects = Get-PnPListItem -List $L_PROJ -PageSize 500
-$reports  = Get-PnPListItem -List $L_REP  -PageSize 500
-$risks    = Get-PnPListItem -List $L_RISK -PageSize 500
-$comments = Get-PnPListItem -List $L_CMT  -PageSize 500
+$reports  = Get-ListRows $L_REP
+$risks    = Get-ListRows $L_RISK
+$comments = Get-ListRows $L_CMT
 # команда проекта: люди из строк команды — стейкхолдеры (просмотр и комментарии)
 # новые списки раунда 2 появляются с Deploy-PMO.ps1; до развёртывания синхронизация работает по-прежнему
 $HAS_TEAM = [bool](Get-PnPList -Identity $L_TEAM -ErrorAction SilentlyContinue)
 $HAS_AP   = [bool](Get-PnPList -Identity $L_AP -ErrorAction SilentlyContinue)
-function Get-ItemsIfExists([string]$list, [bool]$has) { if ($has) { return @(Get-PnPListItem -List $list -PageSize 500) } return @() }
+function Get-ItemsIfExists([string]$list, [bool]$has) { if ($has) { return , (Get-ListRows $list) } return @() }
+# дочерние списки: поле ссылки на проект
+$CHILD = [ordered]@{ $L_REP = "srProject"; $L_RISK = "riProject"; $L_CMT = "cmProject"; $L_CHG = "kcProject" }
+if ($HAS_TEAM) { $CHILD[$L_TEAM] = "tmProject" }
+if ($HAS_AP)   { $CHILD[$L_AP] = "apProject" }
+foreach ($l in $CHILD.Keys) { Read-Folders $l }
 $teamItems = Get-ItemsIfExists $L_TEAM $HAS_TEAM
 $TEAM = @{}
 foreach ($it in @($teamItems)) { if (-not $it) { continue }
@@ -482,34 +533,34 @@ function Get-Hash($acl) {
     return ([Convert]::ToHexString($bytes)).Substring(0, 24)
 }
 # Права записи — одним пакетным запросом CSOM: сброс, группа PMO, владельцы, люди и отметка pmoAcl.
-# Люди, группы, роли и списки ищутся один раз за запуск (кэш), а не для каждой записи.
-$CTX = Get-PnPContext
+# Люди, группы, роли и списки ищутся один раз за запуск (кэш), а не для каждой записи. При ответе 429 — повтор с паузой.
 $RD = @{}; $PRINCIPAL = @{}; $LISTOBJ = @{}
 function Get-Rd([string]$name) { if (-not $RD.ContainsKey($name)) { $RD[$name] = $CTX.Web.RoleDefinitions.GetByName($name) }; return $RD[$name] }
+function Get-ListObj([string]$list) { if (-not $LISTOBJ.ContainsKey($list)) { $LISTOBJ[$list] = Get-PnPList -Identity $list }; return $LISTOBJ[$list] }
 function Get-Principal([string]$key, [bool]$group) {
     if (-not $PRINCIPAL.ContainsKey($key)) {
         try {
             $pr = if ($group) { $CTX.Web.SiteGroups.GetByName($key) } else { $CTX.Web.EnsureUser($key) }
-            $CTX.Load($pr); $CTX.ExecuteQuery(); $PRINCIPAL[$key] = $pr
+            $CTX.Load($pr); Invoke-PnPQuery -RetryCount 10; $PRINCIPAL[$key] = $pr
         } catch { Warn "Не найден на сайте: $key ($($_.Exception.Message))"; $PRINCIPAL[$key] = $null }
     }
     return $PRINCIPAL[$key]
 }
-function Set-ItemAcl([string]$list, [int]$id, $acl, [bool]$readOnly, [string]$aclHash) {
+# Права записи проекта или папки проекта: $list — для роли (Get-FolderRole), $acl — e-mail -> уровень, $aclMark — отметка в pmoAcl
+function Set-ItemAcl([string]$list, [int]$id, $acl, [string]$aclMark, [string]$what) {
     $stats.acl++
-    if ($DryRun) { Log ("    права: {0} #{1} -> {2}" -f $list, $id, (($acl.Keys | ForEach-Object { "$_($(if ($readOnly) { 'read' } else { $acl[$_] }))" }) -join ", ")); return }
-    if (-not $LISTOBJ.ContainsKey($list)) { $LISTOBJ[$list] = Get-PnPList -Identity $list }
+    if ($DryRun) { Log ("    права: {0} -> {1}" -f $what, (($acl.Keys | ForEach-Object { "$_($(Get-FolderRole $list $acl[$_]))" }) -join ", ")); return }
     # PMO видит все проекты, но правит, как все, только свои (как PM); владельцы сайта — полный доступ
     $grants = @(@{ p = (Get-Principal $PMO_GROUP $true); r = $ROLE.read }, @{ p = (Get-Principal $OWNERS $true); r = $ROLE.full })
     $ok = $true
     foreach ($e in $acl.Keys) {
         $pr = Get-Principal $e $false
         if (-not $pr) { $ok = $false; continue }
-        $grants += @{ p = $pr; r = $(if ($readOnly -or $acl[$e] -eq "read") { $ROLE.read } else { $ROLE.edit }) }
+        $grants += @{ p = $pr; r = $(if ((Get-FolderRole $list $acl[$e]) -eq "edit") { $ROLE.edit } else { $ROLE.read }) }
     }
-    if (-not $grants[0].p -or -not $grants[1].p) { Warn "Нет группы PMO или владельцев — права $list #$id не изменены"; return }
+    if (-not $grants[0].p -or -not $grants[1].p) { Warn "Нет группы PMO или владельцев — права $what не изменены"; return }
     try {
-        $item = $LISTOBJ[$list].GetItemById($id)
+        $item = (Get-ListObj $list).GetItemById($id)
         $item.ResetRoleInheritance()
         $item.BreakRoleInheritance($false, $false)
         foreach ($g in $grants) {
@@ -518,13 +569,15 @@ function Set-ItemAcl([string]$list, [int]$id, $acl, [bool]$readOnly, [string]$ac
             $item.RoleAssignments.Add($g.p, $b) | Out-Null
         }
         # отметка «права выданы» — только если выдано всё: иначе следующий запуск повторит
-        if ($ok) { $item["pmoAcl"] = $aclHash; $item.SystemUpdate() }
-        $CTX.ExecuteQuery()
-    } catch { Warn "Не удалось выдать права $list #$id : $($_.Exception.Message) — повторим в следующий запуск" }
+        if ($ok) { $item["pmoAcl"] = $aclMark; $item.SystemUpdate() }
+        Invoke-PnPQuery -RetryCount 10
+        return $ok
+    } catch { Warn "Не удалось выдать права $what : $($_.Exception.Message) — повторим в следующий запуск" }
 }
 
 Log "Права доступа…"
-$HASH = @{}; $ACLS = @{}
+$ACLS = @{}
+$frozen = 0
 $chainOf = { param($e) Get-Chain $e }
 foreach ($p in $PROJ.Values) {
     $st = Get-Stakeholders $p.Item
@@ -537,9 +590,14 @@ foreach ($p in $PROJ.Values) {
             catch { Warn "Стейкхолдери «$($p.Item["Title"])»: $($_.Exception.Message)" }
         }
     }
-    $access = Get-Access (Email $p.Item["pmManager"]) (Email $p.Item["pmOwner"]) $st $chainOf ($p.Values.pmStatus -eq "Архівний")
+    $archived = $p.Values.pmStatus -eq "Архівний"
+    $name = Get-FolderName $p.Item.Id
+    $ready = -not @($CHILD.Keys | Where-Object { -not $FOLDERS[$_].ContainsKey($name) -or $FOLDERS[$_][$name].mark -ne $p.Values.pmoAcl }).Count
+    # архив, права которого уже выданы проекту и папкам: без Entra ID, без «Доступ до картки», без прав (пересчёт — воскресный rebuild)
+    if (Test-ArchiveFrozen $p.Values.pmStatus $p.Values.pmoAcl $ready ([bool]$RebuildPermissions)) { $frozen++; continue }
+    $access = Get-Access (Email $p.Item["pmManager"]) (Email $p.Item["pmOwner"]) $st $chainOf $archived
     $acl = Get-Acl $access
-    $h = Get-Hash $acl
+    $h = Get-AclMark (Get-Hash $acl) $archived
     # «Доступ до картки» в приложении: имя и должность из Entra ID, пишется только при изменении
     $rows = @($access | Select-Object -First 200 | ForEach-Object { $who = Get-Person $_.e; [ordered]@{ e = $_.e; n = $who.n; j = $who.j; l = $_.l; r = $_.r } })
     $json = ConvertTo-Json -InputObject ([ordered]@{ v = 1; more = [math]::Max(0, $access.Count - 200); people = $rows }) -Depth 5 -Compress
@@ -548,13 +606,30 @@ foreach ($p in $PROJ.Values) {
         if ($DryRun) { Log "  доступ «$($p.Item["Title"])»: $($access.Count) людей" }
         else { Set-PnPListItem -List $L_PROJ -Identity $p.Item.Id -Values @{ pmAccess = $json } -UpdateType SystemUpdate | Out-Null }
     }
-    $HASH[$p.Item.Id] = $h; $ACLS[$p.Item.Id] = $acl
+    $ACLS[$p.Item.Id] = $acl
     if ($RebuildPermissions -or $p.Values.pmoAcl -ne $h) {
         Log "  проєкт «$($p.Item["Title"])»: $($acl.Count) користувачів"
-        Set-ItemAcl $L_PROJ $p.Item.Id $acl $false $h
+        Set-ItemAcl $L_PROJ $p.Item.Id $acl $h "проєкт #$($p.Item.Id)" | Out-Null
+    }
+    # папки проекта в дочерних списках: создать недостающую, выдать права при смене круга людей
+    foreach ($l in $CHILD.Keys) {
+        $f = $FOLDERS[$l][$name]
+        if (-not $f) {
+            $stats.folders++
+            if ($DryRun) { Log "    папка: + $l/$name"; continue }
+            try {
+                $null = Add-PnPFolder -Name $name -Folder $l
+                $fi = Get-PnPFolder -Url "$l/$name" -Includes ListItemAllFields
+                $f = @{ id = $fi.ListItemAllFields.Id; mark = "" }; $FOLDERS[$l][$name] = $f
+            } catch { Warn "Папка $l/$name не создана: $($_.Exception.Message)"; continue }
+        }
+        if ($RebuildPermissions -or $f.mark -ne $h) {
+            if (Set-ItemAcl $l $f.id $acl $h "$l/$name") { $f.mark = $h }
+        }
     }
 }
-# участники сайта: каждый, у кого есть права хотя бы на один проект (PM, власник, команда, их руководители), должен открыть портал —
+if ($frozen) { Log "  архів: пропущено $frozen (права вже видано)" }
+# участники сайта: каждый, у кого есть права хотя бы на один проект (PM, власник, команда, руководители), должен открыть портал —
 # страница портала доступна только участникам сайта. Только добавляем: людей из группы синхронизация не убирает.
 $MEMBERS = Get-PnPGroup -AssociatedMemberGroup
 $inMembers = @{}
@@ -568,23 +643,30 @@ foreach ($e in $needed) {
     catch { Warn "Не удалось добавить $e в участники сайта: $($_.Exception.Message)" }
 }
 
-# дочерние элементы (перечитываем журнал и комментарии — в этом запуске могли появиться новые строки)
-$children = @(
-    @($L_REP,  (Get-PnPListItem -List $L_REP  -PageSize 500), "srProject", $false),
-    @($L_RISK, (Get-PnPListItem -List $L_RISK -PageSize 500), "riProject", $false),
-    @($L_CMT,  (Get-PnPListItem -List $L_CMT  -PageSize 500), "cmProject", $true),
-    @($L_CHG,  (Get-PnPListItem -List $L_CHG  -PageSize 500), "kcProject", $true),
-    @($L_TEAM, (Get-ItemsIfExists $L_TEAM $HAS_TEAM), "tmProject", $false),
-    @($L_AP,   (Get-ItemsIfExists $L_AP $HAS_AP), "apProject", $true)
-)
-foreach ($c in $children) {
-    foreach ($it in $c[1]) {
-        $lk = $it[$c[2]]; if (-not $lk -or -not $HASH.ContainsKey($lk.LookupId)) { continue }
-        # применённый статус-отчёт — только для чтения всем (история не переписывается); отметка «R» в хэше
-        # статус-отчёт — только чтение после первой синхронизации (PMO погоджує, PM больше не правит отправленный)
-        $ro = $c[3] -or $c[0] -eq $L_REP
-        $h = $HASH[$lk.LookupId] + $(if ($c[0] -eq $L_REP -and $ro) { "R" } else { "" })
-        if ($RebuildPermissions -or (Norm $it["pmoAcl"]) -ne $h) { Set-ItemAcl $c[0] $it.Id $ACLS[$lk.LookupId] $ro $h }
+# Записи дочерних списков -> в папку своего проекта (перечитываем: в этом запуске могли появиться новые строки журнала).
+# Перенос сохраняет ID, автора, даты, связи и версии; личные права записи сбрасываются — она наследует права папки.
+# Порядок для одной записи: перенос, сброс прав, очистка pmoAcl — при сбое посередине следующий запуск повторит.
+foreach ($l in $CHILD.Keys) {
+    foreach ($it in (Get-ListRows $l)) {
+        $lk = $it[$CHILD[$l]]; if (-not $lk -or -not $PROJ.ContainsKey($lk.LookupId)) { continue }
+        $name = Get-FolderName $lk.LookupId
+        $dir = "$WEBREL/$l/$name"
+        $act = Get-RowAction ([string]$it["FileDirRef"]) $dir ([string]$it["pmoAcl"])
+        if (-not $act) { continue }
+        if (-not $FOLDERS[$l].ContainsKey($name) -and -not $DryRun) { continue }
+        if ($act -eq "move") { $stats.moved++ } else { $stats.reset++ }
+        if ($DryRun) { Log ("    {0}: {1} #{2} -> {3}" -f $(if ($act -eq "move") { "перенос" } else { "сброс прав" }), $l, $it.Id, $name); continue }
+        try {
+            if ($act -eq "move") {
+                $file = $CTX.Web.GetFileByServerRelativePath([Microsoft.SharePoint.Client.ResourcePath]::FromDecodedUrl([string]$it["FileRef"]))
+                $file.MoveToUsingPath([Microsoft.SharePoint.Client.ResourcePath]::FromDecodedUrl("$dir/$($it["FileLeafRef"])"), [Microsoft.SharePoint.Client.MoveOperations]::None)
+            }
+            if ($it["pmoAcl"]) {
+                $x = (Get-ListObj $l).GetItemById($it.Id)
+                $x.ResetRoleInheritance(); $x["pmoAcl"] = ""; $x.SystemUpdate()
+            }
+            Invoke-PnPQuery -RetryCount 10
+        } catch { Warn "Запись $l #$($it.Id) не перенесена в $name : $($_.Exception.Message) — повторим в следующий запуск" }
     }
 }
 
@@ -629,6 +711,7 @@ Log ("Списков доступа обновлено: {0}" -f $stats.access)
 Log ("Отзывов в общий список: {0}" -f $stats.feedback)
 Log ("Решений PMO по отчётам: {0}" -f $stats.approvals)
 Log ("Добавлено участников сайта: {0}" -f $stats.members)
+Log ("Папок создано: {0}, записей перенесено в папки: {1}, сброшено личных прав: {2}" -f $stats.folders, $stats.moved, $stats.reset)
 Log ("Готово. Звітів: {0}, записів у журнал: {1}, нових проєктів: {2}, коментарів: {3}, типів: {4}, прав: {5}, нагадувань: {6}, попереджень: {7}" -f `
     $stats.reports, $stats.changes, $stats.created, $stats.comments, $stats.types, $stats.acl, $stats.reminders, $stats.warnings) "Green"
 if ($ManagerCache -and -not $DryRun) {

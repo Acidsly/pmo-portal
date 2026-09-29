@@ -2,7 +2,7 @@ import * as React from 'react';
 import { tv } from '../i18n/values';
 import { AppCtx } from '../components/ctx';
 import { PortalData, SpRepo } from '../data/SpRepo';
-import { Project, Person } from '../data/types';
+import { Project, Person, ChangeEntry } from '../data/types';
 import { calcRag } from '../logic/rag';
 import { isArch, isPlanLate, forecastDelta, budgetUse, budgetLevel, freshness, riskScore } from '../logic/status';
 import { ofProject } from '../logic/views';
@@ -63,7 +63,14 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
   const cms = ofProject(data.comments, p.id).slice().sort((a, b) => (a.created < b.created ? 1 : -1));
   // журнал синхронизации + ещё не перенесённые отчёты и правки карточки — видны сразу, как в прототипе
   const people = [p.manager, p.owner, ...p.stakeholders].filter(Boolean) as Person[];
-  const events = [...(p.pendingEvents || []), ...editLogEvents(p.editLog || '', people), ...toEvents(ofProject(data.changes, p.id))]
+  // весь журнал проекта — при каждом открытии карточки и после перезагрузки данных (синхронизация могла перенести правки карточки в журнал)
+  const [journal, setJournal] = React.useState<ChangeEntry[] | undefined>(undefined);
+  React.useEffect(() => {
+    let live = true; setJournal(undefined);
+    repo.loadChanges(p.id).then(x => { if (live) setJournal(x); }, () => { if (live) setJournal(ofProject(data.changes, p.id)); });
+    return () => { live = false; };
+  }, [p.id, data]);
+  const events = [...(p.pendingEvents || []), ...editLogEvents(p.editLog || '', people), ...toEvents(journal || [])]
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
   const edit = p.canEdit && !isArch(p.status);
   // погодження PMO: самый ранний отчёт на погодженні; последний отчёт повернуто — комментарий PMO и «новий звіт на основі повернутого»
@@ -137,7 +144,8 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
           {c.reason ? <div className="chg-r">{c.reason}</div> : null}
         </div>)}
         {events.length > 3 ? <button className="more" onClick={() => setShowCh(!showCh)}>{showCh ? t('hideHistory') : `${t('showHistory')} (${events.length})`}</button> : null}
-      </div> : <p className="empty">{t('noChanges')}</p>}</div>
+      </div> : journal ? <p className="empty">{t('noChanges')}</p> : null}
+      {journal ? null : <p className="muted">{t('loading')}</p>}</div>
 
     <div className="sec"><h3>{fl('comments')}</h3>
       {cms.length ? <div className="cmts">{(showCm ? cms : cms.slice(0, 1)).map(c =>

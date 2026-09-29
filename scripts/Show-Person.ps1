@@ -54,7 +54,7 @@ Write-Host "Сайт: группы — $(if ($inGroups.Count) { $inGroups -join 
 
 # проекты: роли человека и его подчинённых, «Доступ до картки»
 $projects = @(Get-PnPListItem -List "Lists/Projects" -PageSize 500)
-$team = @(Get-PnPListItem -List "Lists/ProjectTeam" -PageSize 500)
+$team = @(Get-PnPListItem -List "Lists/ProjectTeam" -PageSize 500 | Where-Object { [string]$_.FileSystemObjectType -ne "Folder" })
 function RolesOf([string]$e) {
     $out = @()
     foreach ($p in $projects) {

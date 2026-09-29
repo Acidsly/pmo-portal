@@ -38,3 +38,9 @@ test('launches: від сьогодні до +30 днів', () => {
 test('byDept: активні, розбивка за станом', () => {
   expect(byDept(projects)).toEqual([{ dept: 'ІТ', g: 0, y: 0, r: 1, na: 1, total: 2 }, { dept: 'Фінанси', g: 0, y: 1, r: 0, na: 0, total: 1 }]);
 });
+
+test('slips: відфільтрований при завантаженні журнал (лише pmPlanEnd) дає той самий результат, що й повний', () => {
+  const full = [{ projectId: 1, field: 'pmPlanEnd', kind: 'Статус-звіт' }, { projectId: 1, field: 'pmProgress', kind: 'Статус-звіт' },
+    { projectId: 1, field: 'pmPlanEnd', kind: 'Статус-звіт' }, { projectId: 2, field: 'pmStatus', kind: 'Статус-звіт' }] as ChangeEntry[];
+  expect(slips(projects, full.filter(c => c.field === 'pmPlanEnd'))).toEqual(slips(projects, full));
+});

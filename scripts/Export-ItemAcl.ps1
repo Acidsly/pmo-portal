@@ -43,7 +43,9 @@ foreach ($url in @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues",
                 $who = [string]$_.Member.LoginName; $who = ($who -replace '^.*\|', '').ToLowerInvariant()
                 "{0}={1}" -f $who, (@($_.RoleDefinitionBindings | Where-Object { -not $_.Hidden } | ForEach-Object { $_.Name } | Sort-Object) -join "+")
             } | Where-Object { $_ -notmatch '=$' } | Sort-Object)
-            $rows[[string]$it.Id] = [ordered]@{ unique = [bool](Get-PnPProperty -ClientObject $it -Property HasUniqueRoleAssignments); acl = $acl; hash = [string]$it["pmoAcl"] }
+            # папки проектов P<ID> — с отметкой folder; dir — папка записи (после переноса записи наследуют права папки)
+            $rows[[string]$it.Id] = [ordered]@{ unique = [bool](Get-PnPProperty -ClientObject $it -Property HasUniqueRoleAssignments); acl = $acl; hash = [string]$it["pmoAcl"]
+                folder = ([string]$it.FileSystemObjectType -eq "Folder"); dir = [string]$it["FileDirRef"]; name = [string]$it["FileLeafRef"] }
         }
         $q.ListItemCollectionPosition = $items.ListItemCollectionPosition
     } while ($q.ListItemCollectionPosition)

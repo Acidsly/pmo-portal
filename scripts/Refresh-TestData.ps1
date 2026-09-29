@@ -41,7 +41,7 @@ $items = @(Get-PnPListItem -List "Lists/Projects" -PageSize 500 | Where-Object {
     Sort-Object { [string]$_["pmCode"] })
 # самый свежий отчёт проекта — по списку отчётов (в том числе ещё не перенесённых синхронизацией), а не по карточке
 $lastRep = @{}
-foreach ($x in (Get-PnPListItem -List "Lists/StatusReports" -PageSize 500 -Fields "srProject","srDate")) {
+foreach ($x in (Get-PnPListItem -List "Lists/StatusReports" -PageSize 500 -Fields "srProject","srDate" | Where-Object { [string]$_.FileSystemObjectType -ne "Folder" })) {
     $lk = $x["srProject"]; $d = DateOnly $x["srDate"]; if (-not $lk -or -not $d) { continue }
     if (-not $lastRep[$lk.LookupId] -or $d -gt $lastRep[$lk.LookupId]) { $lastRep[$lk.LookupId] = $d }
 }
@@ -71,7 +71,7 @@ foreach ($it in $items) {
 # просроченные открытые риски демо-проектов — новый срок через 1–4 недели
 $ids = @{}; foreach ($it in $items) { $ids[$it.Id] = [string]$it["pmCode"] }
 $moved = 0; $k = 0
-foreach ($ri in (Get-PnPListItem -List "Lists/RisksIssues" -PageSize 500)) {
+foreach ($ri in (Get-PnPListItem -List "Lists/RisksIssues" -PageSize 500 | Where-Object { [string]$_.FileSystemObjectType -ne "Folder" })) {
     $lk = $ri["riProject"]; if (-not $lk -or -not $ids.ContainsKey($lk.LookupId)) { continue }
     $due = DateOnly $ri["riDue"]
     if ($ri["riStatus"] -eq "Закрито" -or -not $due -or $due -ge $today) { continue }
@@ -91,7 +91,7 @@ $LINKSET = @(
     @("Технічне завдання", "https://example.com/pmo-demo/{0}/tz"),
     @("План-графік", "https://example.com/pmo-demo/{0}/plan"),
     @("Протокол установчої зустрічі", "https://example.com/pmo-demo/{0}/kickoff"))
-$teamRows = @(Get-PnPListItem -List "Lists/ProjectTeam" -PageSize 500)
+$teamRows = @(Get-PnPListItem -List "Lists/ProjectTeam" -PageSize 500 | Where-Object { [string]$_.FileSystemObjectType -ne "Folder" })
 $tAdded = 0; $lAdded = 0
 foreach ($it in (Get-PnPListItem -List "Lists/Projects" -PageSize 500 | Where-Object { $Demo -contains [string]$_["pmCode"] })) {
     $code = [string]$it["pmCode"]

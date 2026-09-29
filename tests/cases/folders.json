@@ -1,0 +1,32 @@
+{
+  "role": [
+    { "list": "Lists/Projects",        "level": "edit", "out": "edit", "name": "проєкт: PM править" },
+    { "list": "Lists/Projects",        "level": "read", "out": "read", "name": "проєкт: інші дивляться" },
+    { "list": "Lists/RisksIssues",     "level": "edit", "out": "edit", "name": "ризики: PM править" },
+    { "list": "Lists/RisksIssues",     "level": "read", "out": "read", "name": "ризики: інші дивляться" },
+    { "list": "Lists/ProjectTeam",     "level": "edit", "out": "edit", "name": "команда: PM править" },
+    { "list": "Lists/StatusReports",   "level": "edit", "out": "read", "name": "звіти: лише читання навіть PM" },
+    { "list": "Lists/ProjectComments", "level": "edit", "out": "read", "name": "коментарі: лише читання" },
+    { "list": "Lists/KeyChanges",      "level": "edit", "out": "read", "name": "журнал: лише читання" },
+    { "list": "Lists/ReportApprovals", "level": "edit", "out": "read", "name": "погодження: лише читання" }
+  ],
+  "frozen": [
+    { "status": "Реалізація", "mark": "A1B2C3", "ready": true, "rebuild": false, "out": false, "name": "активний, хеш починається з «A» — не архів" },
+    { "status": "Архівний", "mark": "A1B2C3", "ready": true, "rebuild": false, "out": false, "name": "архів без відмітки arch: — перерахувати" },
+    { "status": "Архівний", "mark": "arch:A1B2C3", "ready": true, "rebuild": false, "out": true, "name": "архів із відміткою й готовими папками — пропустити" },
+    { "status": "Архівний", "mark": "arch:A1B2C3", "ready": false, "rebuild": false, "out": false, "name": "архів із відміткою, але без папки — перерахувати" },
+    { "status": "Архівний", "mark": "arch:A1B2C3", "ready": true, "rebuild": true, "out": false, "name": "архів + повний перерахунок (неділя)" },
+    { "status": "Архівний", "mark": "", "ready": false, "rebuild": false, "out": false, "name": "щойно заархівований — перерахувати" }
+  ],
+  "row": [
+    { "dir": "/sites/x/Lists/StatusReports", "expected": "/sites/x/Lists/StatusReports/P12", "acl": "", "out": "move", "name": "у корені — перенести" },
+    { "dir": "/sites/x/Lists/StatusReports/P7", "expected": "/sites/x/Lists/StatusReports/P12", "acl": "", "out": "move", "name": "у чужій папці — перенести" },
+    { "dir": "/sites/x/Lists/StatusReports", "expected": "/sites/x/Lists/StatusReports/P12", "acl": "ABC", "out": "move", "name": "у корені з особистими правами — перенести (права скинуться)" },
+    { "dir": "/sites/x/Lists/StatusReports/P12", "expected": "/sites/x/Lists/StatusReports/P12", "acl": "ABC", "out": "reset", "name": "у своїй папці з особистими правами — скинути" },
+    { "dir": "/sites/x/Lists/StatusReports/P12", "expected": "/sites/x/Lists/StatusReports/P12", "acl": "", "out": "", "name": "у своїй папці, успадковує — нічого" }
+  ],
+  "mark": [
+    { "hash": "ABC", "archived": false, "out": "ABC" },
+    { "hash": "ABC", "archived": true, "out": "arch:ABC" }
+  ]
+}

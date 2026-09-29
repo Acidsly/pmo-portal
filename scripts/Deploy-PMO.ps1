@@ -329,14 +329,14 @@ $script:Loc += , @($R, "Title", "Резюме одним рядком", "One-lin
 
 if (-not $hadApplied) {
     # Отчёты, созданные до появления синхронизации, считаем уже применёнными — чтобы не задвоить историю
-    $existing = Get-PnPListItem -List $R -PageSize 500 -Fields "ID"
+    $existing = @(Get-PnPListItem -List $R -PageSize 500 -Fields "ID" | Where-Object { [string]$_.FileSystemObjectType -ne "Folder" })
     foreach ($it in $existing) { Set-PnPListItem -List $R -Identity $it.Id -Values @{ srApplied = $true } -UpdateType SystemUpdate | Out-Null }
     if ($existing.Count) { Write-Host "  существующие отчёты ($($existing.Count)) отмечены как применённые" }
 }
 if (-not $hadApproval) {
     # Миграция: отчёты, уже перенесённые в карточку до появления погодження, — «Погоджено»; остальные ждут PMO
     $n = 0
-    foreach ($it in (Get-PnPListItem -List $R -PageSize 500 -Fields "ID","srApplied")) {
+    foreach ($it in (Get-PnPListItem -List $R -PageSize 500 -Fields "ID","srApplied" | Where-Object { [string]$_.FileSystemObjectType -ne "Folder" })) {
         $v = if ($it["srApplied"] -eq $true) { "Погоджено" } else { "На погодженні" }
         Set-PnPListItem -List $R -Identity $it.Id -Values @{ srApproval = $v } -UpdateType SystemUpdate | Out-Null; $n++
     }
@@ -382,6 +382,8 @@ F $C kcKind        Choice   "Тип зміни"          "Change type"         "
 $cur = Get-PnPField -List $C -Identity kcKind
 if (@($kinds | Where-Object { $cur.Choices -notcontains $_ }).Count) { Set-PnPField -List $C -Identity kcKind -Values @{ Choices = [string[]]$kinds } | Out-Null; Write-Host "    типы изменений: $($kinds -join ', ')" }
 F $C kcField       Text     "Поле (внутр.)"      "Field (internal)"    "Поле (внутр.)"        "MaxLength='64'"
+# приложение читает из журнала только переносы плановой даты (фильтр по kcField) — без индекса фильтр по большому списку упрётся в порог 5000
+if (-not (Get-PnPField -List $C -Identity kcField).Indexed) { Set-PnPField -List $C -Identity kcField -Values @{ Indexed = $true } | Out-Null; Write-Host "    индекс kcField" }
 F $C kcFrom        Note     "Було"               "Old value"           "Было"                 "NumLines='2' RichText='FALSE'"
 F $C kcTo          Note     "Стало"              "New value"           "Стало"                "NumLines='2' RichText='FALSE'"
 F $C kcReason      Note     "Причина зміни"      "Reason"              "Причина изменения"    "NumLines='3' RichText='FALSE'"
@@ -428,7 +430,7 @@ Set-PnPField -List $TM -Identity "Title" -Values @{ Required = $false } | Out-Nu
 
 # Миграция (один раз на проект, по отметке pmMigrated): стейкхолдеры → строки команды с ролью «Стейкхолдер»; pmLoop → pmLinks
 $teamOf = @{}
-foreach ($x in (Get-PnPListItem -List "Lists/ProjectTeam" -PageSize 500 -Fields "tmProject")) { if ($x["tmProject"]) { $teamOf[$x["tmProject"].LookupId] = $true } }
+foreach ($x in (Get-PnPListItem -List "Lists/ProjectTeam" -PageSize 500 -Fields "tmProject" | Where-Object { [string]$_.FileSystemObjectType -ne "Folder" })) { if ($x["tmProject"]) { $teamOf[$x["tmProject"].LookupId] = $true } }
 foreach ($it in (Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "Title","pmStakeholders","pmLoop","pmLinks","pmMigrated")) {
     $marks = @(([string]$it["pmMigrated"]).Split(",") | Where-Object { $_ })
     $vals = @{}
@@ -626,6 +628,17 @@ if ($Feedback) { $null = Set-BaseView $FB "Усі відгуки" @("Created","A
 # По умолчанию: «Проєкти» — «Усі проєкти» (без архива), «Ризики» — «Відкриті»
 Set-PnPView -List $P -Identity $vAll.Id -Values @{ DefaultView = $true } | Out-Null
 Set-PnPView -List $K -Identity $vRisks.Id -Values @{ DefaultView = $true } | Out-Null
+
+# Дочерние списки разложены по папкам проектов P<ID> (права папки — синхронизация): все представления показывают записи
+# всех папок плоским списком, без самих папок
+foreach ($lst in @($R, $K, $C, $M, $AP, $TM)) {
+    foreach ($v in (Get-PnPView -List $lst)) {
+        if ($v.Scope -ne [Microsoft.SharePoint.Client.ViewScope]::Recursive) {
+            Set-PnPView -List $lst -Identity $v.Id -Values @{ Scope = [Microsoft.SharePoint.Client.ViewScope]::Recursive } | Out-Null
+            Write-Host "    представление «$($v.Title)» ($($lst.Title)): все папки"
+        }
+    }
+}
 
 # Меню сайта — как в прототипе: Головна, Проєкти, Статус-звіти, Ризики та проблеми, Архів.
 # Журнал и комментарии открываются из карточки проекта; «Вміст сайту» остаётся в меню «Параметры».

@@ -2,14 +2,17 @@
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { Project, StatusReport, Risk, Comment, ChangeEntry, Person, FeedbackRow, Approval } from './types';
 import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, REPORT_SELECT, REPORT_EXPAND, RISK_SELECT, RISK_EXPAND,
-  COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, TEAM_SELECT, TEAM_EXPAND, mapTeam, APPROVAL_SELECT, APPROVAL_EXPAND, mapApproval, canAdd, canManage } from './map';
+  COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, TEAM_SELECT, TEAM_EXPAND, mapTeam, APPROVAL_SELECT, APPROVAL_EXPAND, mapApproval, canAdd, canManage,
+  withoutFolders, CHANGES_ON_LOAD, changesOf } from './map';
 import { withApproval } from '../logic/approval';
 import { teamPeople } from '../logic/team';
 import { applyPending } from '../logic/overlay';
 
 export type WritableList = 'Projects' | 'StatusReports' | 'RisksIssues' | 'ProjectComments' | 'Feedback' | 'ProjectTeam' | 'ReportApprovals';
 
-export interface PortalData { projects: Project[]; reports: StatusReport[]; risks: Risk[]; comments: Comment[]; changes: ChangeEntry[];
+export interface PortalData { projects: Project[]; reports: StatusReport[]; risks: Risk[]; comments: Comment[];
+  /** Журнал — только переносы плановой даты (главная, «Зсуви термінів»); весь журнал проекта — SpRepo.loadChanges. */
+  changes: ChangeEntry[];
   /** Может ли пользователь заводить проекты (право добавления в «Проєкти» есть у PMO). */
   canCreate: boolean;
   /** Может погоджувати статус-отчёты (группа PMO: добавление в «Погодження звітів»). */
@@ -26,16 +29,17 @@ export interface PortalData { projects: Project[]; reports: StatusReport[]; risk
 export class SpRepo {
   constructor(private http: SPHttpClient, private webUrl: string, private webRelUrl: string, private me: string = '') {}
 
-  private async items(list: string, select: string, expand: string): Promise<any[]> {
+  private async items(list: string, select: string, expand: string, filter = ''): Promise<any[]> {
     const listUrl = `${this.webRelUrl.replace(/\/$/, '')}/Lists/${list}`;
-    // адрес списка — параметром @u: так SharePoint принимает закодированные символы пути
-    let url = `${this.webUrl}/_api/web/GetList(@u)/items?@u='${encodeURIComponent(listUrl)}'&$select=${select}${expand ? '&$expand=' + expand : ''}&$top=2000`;
+    // адрес списка — параметром @u: так SharePoint принимает закодированные символы пути; фильтр — только по индексированным полям (порог 5000)
+    let url = `${this.webUrl}/_api/web/GetList(@u)/items?@u='${encodeURIComponent(listUrl)}'&$select=${select},FileSystemObjectType${expand ? '&$expand=' + expand : ''}` +
+      `${filter ? '&$filter=' + encodeURIComponent(filter) : ''}&$top=2000`;
     const out: any[] = [];
     while (url) {
       const res = await this.http.get(url, SPHttpClient.configurations.v1, { headers: { Accept: 'application/json;odata=nometadata' } });
       if (!res.ok) throw new Error(`${list}: ${res.status} ${await res.text()}`);
       const j = await res.json();
-      out.push(...j.value);
+      out.push(...withoutFolders(j.value));
       url = j['odata.nextLink'] || '';
     }
     return out;
@@ -54,7 +58,7 @@ export class SpRepo {
       this.items('StatusReports', REPORT_SELECT, REPORT_EXPAND),
       this.items('RisksIssues', RISK_SELECT, RISK_EXPAND),
       this.items('ProjectComments', COMMENT_SELECT, COMMENT_EXPAND),
-      this.items('KeyChanges', CHANGE_SELECT, CHANGE_EXPAND),
+      this.items('KeyChanges', CHANGE_SELECT, CHANGE_EXPAND, CHANGES_ON_LOAD),
       this.items('ProjectTeam', TEAM_SELECT, TEAM_EXPAND).catch(() => [] as any[]),
       this.items('ReportApprovals', APPROVAL_SELECT, APPROVAL_EXPAND).catch(() => [] as any[]),
       this.listPerms('Projects').catch(() => undefined),
@@ -69,6 +73,11 @@ export class SpRepo {
     const withTeam = (x: Project): Project => { const own = team.filter(m => m.projectId === x.id); return { ...x, team: own, stakeholders: teamPeople(own) }; };
     return { projects: p.map(mapProject).map(withTeam).map(x => applyPending(x, reports)), reports, risks: k.map(mapRisk),
       comments: c.map(mapComment), changes: h.map(mapChange), canCreate: canAdd(perm), canApprove: canAdd(apPerm), approvals, feedback: canAdd(fbPerm), feedbackAdmin: canManage(fbPerm), feedbackRows };
+  }
+
+  /** Весь журнал «Зміни показників» одного проекта — для карточки (при загрузке приложения — только переносы плановой даты). */
+  async loadChanges(projectId: number): Promise<ChangeEntry[]> {
+    return (await this.items('KeyChanges', CHANGE_SELECT, CHANGE_EXPAND, changesOf(projectId))).map(mapChange);
   }
 
   /** Отзывы: общий список (все видят все) + «Відгуки» (свои или все — у администратора) со скриншотами; свежие, ещё не скопированные синхронизацией, — тоже. */

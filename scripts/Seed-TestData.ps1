@@ -308,7 +308,7 @@ if ($Roles) {
         if ($inGroup -notcontains $e) { Add-PnPGroupMember -Group $members -LoginName "i:0#.f|membership|$e" | Out-Null; Write-Host "  + $e — учасник сайту" }
     }
     $items = @(Get-PnPListItem -List "Lists/Projects" -PageSize 500 | Where-Object { $DEMO -contains [string]$_["pmCode"] } | Sort-Object { [string]$_["pmCode"] })
-    $team = @(Get-PnPListItem -List "Lists/ProjectTeam" -PageSize 500)
+    $team = @(Get-PnPListItem -List "Lists/ProjectTeam" -PageSize 500 | Where-Object { [string]$_.FileSystemObjectType -ne "Folder" })
     $plan = Get-RolePlan $who @($items | ForEach-Object { [string]$_["pmCode"] })
     foreach ($it in $items) {
         $want = $plan[[string]$it["pmCode"]]
