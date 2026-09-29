@@ -15,8 +15,10 @@
 #>
 param(
     [Parameter(Mandatory)][ValidateSet("test", "prod")][string]$Env,
-    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "refresh", "renumber", "renumber-dryrun", "feedback-answers", "app", "feedback")][string]$Action,
+    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "refresh", "renumber", "renumber-dryrun", "feedback-answers", "whois", "app", "feedback")][string]$Action,
     [switch]$ConfirmProduction,
+    # для -Action whois: e-mail человека, чей доступ проверить
+    [string]$Email,
     # корень репозитория (config/, certs/), если скрипты запущены из копии — так делает расписание Set-MacSchedule.ps1
     [string]$RepoRoot
 )
@@ -83,6 +85,13 @@ if ($Action -eq "feedback") {
     $a = Get-Auth $cfg.Deploy
     $a.SiteUrl = $siteUrl; $a.File = Join-Path $root "feedback-export/answers.json"
     & (Join-Path $PSScriptRoot "Set-FeedbackAnswers.ps1") @a
+} elseif ($Action -eq "whois") {
+    # диагностика доступа человека (только чтение): Entra ID, руководитель, подчинённые, группы сайта, роли в проектах
+    if (-not $Email) { throw "Для -Action whois укажите -Email." }
+    # приложение синхронизации: у него есть чтение оргструктуры Entra ID (User.Read.All)
+    $a = Get-Auth $cfg.Sync
+    $a.SiteUrl = $siteUrl; $a.Email = $Email
+    & (Join-Path $PSScriptRoot "Show-Person.ps1") @a
 } elseif ($Action -eq "app") {
     # приложение SPFx: сборка, каталог приложений сайта, страница на весь экран; этап 1 — только test
     if ($Env -ne "test") { throw "Действие «app» на этапе 1 — только для окружения test." }

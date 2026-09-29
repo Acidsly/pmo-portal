@@ -68,6 +68,15 @@ function Warn([string]$m) { $stats.warnings++; Write-Warning $m }
 # Подключение
 # ---------------------------------------------------------------------------
 if (-not ($ManagedIdentity -or $Thumbprint -or $CertificatePath)) { throw "Укажите -Thumbprint, -CertificatePath или -ManagedIdentity (синхронизация работает от имени приложения)." }
+# один запуск за раз: параллельные запуски конфликтуют при выдаче прав («Конфлікт версій»); пробный запуск ничего не пишет
+if (-not $DryRun) {
+    $LOCK = Join-Path ([IO.Path]::GetTempPath()) ("pmo-sync-{0}.lock" -f ([uri]$SiteUrl).AbsolutePath.Trim('/').Replace('/', '-'))
+    if (Test-Path $LOCK) {
+        $other = [int](Get-Content -Raw $LOCK -ErrorAction SilentlyContinue)
+        if ($other -and $other -ne $PID -and (Get-Process -Id $other -ErrorAction SilentlyContinue)) { Log "Синхронизация уже выполняется (процесс $other) — этот запуск пропущен" "Yellow"; return }
+    }
+    Set-Content -Path $LOCK -Value $PID -NoNewline
+}
 # вход с одной повторной попыткой: сразу после пробуждения компьютера часы могут быть ещё не сверены (AADSTS700024)
 for ($try = 1; $try -le 2; $try++) {
     try {
@@ -454,14 +463,18 @@ function Set-ItemAcl([string]$list, [int]$id, $acl, [bool]$readOnly, [string]$ac
     $stats.acl++
     if ($DryRun) { Log ("    права: {0} #{1} -> {2}" -f $list, $id, (($acl.Keys | ForEach-Object { "$_($(if ($readOnly) { 'read' } else { $acl[$_] }))" }) -join ", ")); return }
     # PMO видит все проекты, но правит, как все, только свои (как PM); владельцы сайта — полный доступ
-    Set-PnPListItemPermission -List $list -Identity $id -Group $PMO_GROUP -AddRole $ROLE.read -ClearExisting -SystemUpdate | Out-Null
-    Set-PnPListItemPermission -List $list -Identity $id -Group $OWNERS -AddRole $ROLE.full -SystemUpdate | Out-Null
+    try {
+        Set-PnPListItemPermission -List $list -Identity $id -Group $PMO_GROUP -AddRole $ROLE.read -ClearExisting -SystemUpdate | Out-Null
+        Set-PnPListItemPermission -List $list -Identity $id -Group $OWNERS -AddRole $ROLE.full -SystemUpdate | Out-Null
+    } catch { Warn "Не удалось сбросить права $list #$id : $($_.Exception.Message) — повторим в следующий запуск"; return }
+    $ok = $true
     foreach ($e in $acl.Keys) {
         $roleName = if ($readOnly -or $acl[$e] -eq "read") { $ROLE.read } else { $ROLE.edit }
         try { Set-PnPListItemPermission -List $list -Identity $id -User $e -AddRole $roleName -SystemUpdate | Out-Null }
-        catch { Warn "Не удалось выдать права $e на $list #$id : $($_.Exception.Message)" }
+        catch { $ok = $false; Warn "Не удалось выдать права $e на $list #$id : $($_.Exception.Message)" }
     }
-    Set-PnPListItem -List $list -Identity $id -Values @{ pmoAcl = $aclHash } -UpdateType SystemUpdate | Out-Null
+    # отметка «права выданы» — только если выдано всё: иначе следующий запуск повторит
+    if ($ok) { Set-PnPListItem -List $list -Identity $id -Values @{ pmoAcl = $aclHash } -UpdateType SystemUpdate | Out-Null }
 }
 
 Log "Права доступа…"
@@ -557,3 +570,4 @@ Log ("Отзывов в общий список: {0}" -f $stats.feedback)
 Log ("Решений PMO по отчётам: {0}" -f $stats.approvals)
 Log ("Готово. Звітів: {0}, записів у журнал: {1}, нових проєктів: {2}, коментарів: {3}, типів: {4}, прав: {5}, нагадувань: {6}, попереджень: {7}" -f `
     $stats.reports, $stats.changes, $stats.created, $stats.comments, $stats.types, $stats.acl, $stats.reminders, $stats.warnings) "Green"
+if ($LOCK) { Remove-Item $LOCK -ErrorAction SilentlyContinue }

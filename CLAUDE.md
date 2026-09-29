@@ -14,6 +14,7 @@
 | `scripts/Seed-TestData.ps1` | Демонстрационные данные для тестового сайта (`-Env test -Action seed`): демо-проекты PRJ-001…PRJ-010. На прод не запускается |
 | `scripts/Refresh-TestData.ps1` | Освежить демо-данные (`-Action refresh`): свежие погоджені отчёты, сроки рисков |
 | `scripts/Renumber-Projects.ps1` | Единая нумерация PRJ-001… по порядку создания (`-Action renumber` / `renumber-dryrun`); номер нового проекта — только автоматический |
+| `scripts/Show-Person.ps1` | Диагностика доступа человека (`-Action whois -Email …`, только чтение): Entra ID, руководитель, подчинённые, группы сайта, роли и права |
 | `scripts/Set-FeedbackAnswers.ps1` | Разбор отзывов: статусы, ответы, отзывы из писем (`-Action feedback-answers`, файл `feedback-export/answers.json` вне git) |
 | `spfx/` | Приложение SPFx (React) по прототипу: `logic/` — правила с тестами, `data/` — чтение SharePoint, `components/`, `pages/`. Спецификация и планы — `docs/superpowers/` |
 | `scripts/spfx.sh` | Команды в `spfx/` под Node 22: `scripts/spfx.sh npm run test:unit`, `scripts/spfx.sh npm run build` |
