@@ -12,7 +12,7 @@ import { Wp } from '../components/Wp';
 import { SimpleTable, Col } from '../components/SimpleTable';
 import { Donut } from '../components/Donut';
 import { Dynamics } from '../components/Dynamics';
-import { RagDot, FreshDate, PersonCell, Score, fmtDate } from '../components/Bits';
+import { RagDot, FreshDate, PersonCell, Score, StatusPill, fmtDate } from '../components/Bits';
 import { Strat, Prio, Compass, Flag, Plus } from '../components/Icons';
 
 const byDateDesc = (a: StatusReport, b: StatusReport): number => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
@@ -57,7 +57,7 @@ export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
     { head: t('cRepDate'), cell: p => fmtDate(p.lastUpdate) }];
   const staleCols: Col<Project>[] = [S, PR, { head: fl('title'), cell: link }, { head: fl('pm'), cell: p => <PersonCell p={p.manager} /> },
     { head: fl('last'), cell: p => <FreshDate iso={p.lastUpdate} fresh={freshness(p.lastUpdate, today)} none={t('noReports')} /> },
-    { head: t('cStatusOnly'), cell: p => tv(p.status) }];
+    { head: t('cStatusOnly'), cell: p => <StatusPill v={p.status} /> }];
   const decCols: Col<StatusReport>[] = [...byProject<StatusReport>(), { head: fl('rProj'), cell: r => link(P(r.projectId)) },
     { head: fl('rDate'), cell: r => fmtDate(r.date) }, { head: fl('rDecText'), cell: r => r.decisionText, cls: 'wide' },
     { head: fl('rAuthor'), cell: r => <PersonCell p={r.author} /> }];

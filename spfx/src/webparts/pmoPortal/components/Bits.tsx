@@ -55,4 +55,10 @@ const AC: Record<string, string> = { 'На погодженні': 'var(--y)', '�
 export const ApBadge: React.FC<{ v: string }> = ({ v }) =>
   <span className="pill ap" style={{ ['--c' as string]: AC[v || 'На погодженні'] } as React.CSSProperties}><span className="dot sm" />{tv(v || 'На погодженні')}</span>;
 
+/** Статус проекта или риска — цветная пилюля без точки (точка — у стану RAG). */
+const SC: Record<string, string> = { 'Ініціація': '#5856d6', 'Планування': 'var(--theme)', 'Реалізація': 'var(--g)', 'Призупинено': 'var(--y)',
+  'Скасовано': 'var(--r)', 'Архівний': 'var(--na)', 'Завершено': 'var(--na)', 'Відкрито': 'var(--y)', 'В роботі': 'var(--theme)', 'Закрито': 'var(--g)' };
+export const StatusPill: React.FC<{ v: string }> = ({ v }) => (v
+  ? <span className="pill st" style={{ ['--c' as string]: SC[v] || 'var(--na)' } as React.CSSProperties}>{tv(v)}</span> : <span className="muted">—</span>);
+
 export const Muted: React.FC = () => <span className="muted">—</span>;

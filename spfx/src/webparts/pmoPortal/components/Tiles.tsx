@@ -3,7 +3,7 @@ import { tv } from '../i18n/values';
 import { AppCtx } from './ctx';
 import { Project } from '../data/types';
 import { freshness } from '../logic/status';
-import { RagPill, Avatar, fmtDate, freshColor } from './Bits';
+import { RagPill, Avatar, fmtDate, freshColor, StatusPill } from './Bits';
 import { Strat } from './Icons';
 
 /** Плитка проекта (tile прототипа, строки 901–913). */
@@ -15,7 +15,7 @@ const Tile: React.FC<{ p: Project }> = ({ p }) => {
       {p.type === 'Стратегічний' ? <span className="ico" title={tv(p.type)} aria-label={tv(p.type)}><Strat on={true} /></span> : null}
       <RagPill v={p.rag} notRated={t('notRated')} /></div>
     <div className="tile-t">{p.title}</div>
-    <div className="tile-prog"><div className="pl"><span>{tv(p.status)}</span><b>{p.progress}%</b></div>
+    <div className="tile-prog"><div className="pl"><StatusPill v={p.status} /><b>{p.progress}%</b></div>
       <div className="track"><i style={{ width: `${Math.min(p.progress, 100)}%`, background: p.progress >= 100 ? 'var(--g)' : 'var(--theme)' }} /></div></div>
     <div className="tile-upd">{p.archivedAt ? <div className="ul">{t('archivedAt')}: {fmtDate(p.archivedAt)}</div>
       : <div className="ul"><span className="dot sm" style={{ background: freshColor(freshness(p.lastUpdate, today)) }} />

@@ -8,7 +8,7 @@ import { isArch, isPlanLate, forecastDelta, budgetUse, budgetLevel, freshness, r
 import { ofProject } from '../logic/views';
 import { toEvents, editLogEvents } from '../logic/changes';
 import { parseAccess, AccessRow } from '../logic/access';
-import { Avatar, RagPill, RagDot, Progress, Score, fmtDate, money, freshColor, ApBadge, fmtDT } from '../components/Bits';
+import { Avatar, RagPill, RagDot, Progress, Score, fmtDate, money, freshColor, ApBadge, StatusPill, fmtDT } from '../components/Bits';
 import { Plus } from '../components/Icons';
 import { commentBody } from '../data/write';
 import { Err } from '../components/fields';
@@ -93,7 +93,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
       <button className="x" aria-label={t('close')} onClick={onClose}>×</button></div>
     <div className="badges">
       {p.type === 'Стратегічний' ? <span className="strat">{tv(p.type)}</span> : <span className="badge">{tv(p.type)}</span>}
-      <RagPill v={p.rag} notRated={t('notRated')} /><span className="badge">{tv(p.status)}</span><span className="badge">{tv(p.priority)}</span>
+      <RagPill v={p.rag} notRated={t('notRated')} /><StatusPill v={p.status} /><span className="badge">{tv(p.priority)}</span>
     </div>
     {p.links.length ? <div className="lnk-sec"><div className="k">{fl('links')}</div><span className="lnks">{p.links.map((l, i) =>
       <a key={i} className="loop" href={l.u} target="_blank" rel="noopener noreferrer">{l.t || l.u} ↗</a>)}</span></div> : null}

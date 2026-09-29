@@ -115,6 +115,7 @@ tr.grp.collapsed .chev{transform:rotate(-90deg)}
 .dot.sm{width:8px;height:8px}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:999px;font-size:12px;font-weight:600;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--text);white-space:nowrap}
 .pill .dot{background:var(--c)}
+.pill.st{padding:3px 10px;background:color-mix(in srgb,var(--c) 18%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 35%,transparent)}
 .prog{display:inline-flex;align-items:center;gap:10px;min-width:130px}
 .prog .track{flex:1;height:6px;border-radius:3px;background:var(--track);overflow:hidden;min-width:70px}
 .prog .track i{display:block;height:100%;border-radius:3px}
@@ -1009,6 +1010,9 @@ const byOrder = (a, b) => (a.type === b.type ? 0 : a.type === 'Стратегі�
 /* ================= Renderers ================= */
 const ragHtml = v => v ? `<span class="pill" style="--c:${RC[v]}"><span class="dot sm"></span>${tv(v)}</span>`
   : `<span class="pill" style="--c:var(--na)"><span class="dot sm"></span>${t('notRated')}</span>`;
+const STC = {'Ініціація':'#5856d6','Планування':'var(--theme)','Реалізація':'var(--g)','Призупинено':'var(--y)','Скасовано':'var(--r)','Архівний':'var(--na)','Завершено':'var(--na)','Відкрито':'var(--y)','В роботі':'var(--theme)','Закрито':'var(--g)'};
+// статус проєкту чи ризику — кольорова пілюля без крапки (крапка — у стану RAG)
+const statusPill = v => v ? `<span class="pill st" style="--c:${STC[v] || 'var(--na)'}">${esc(tv(v))}</span>` : '<span class="muted">—</span>';
 const apBadge = v => { v = v || AP_OK; return `<span class="pill ap" style="--c:${v === AP_OK ? 'var(--g)' : v === AP_RET ? 'var(--r)' : 'var(--y)'}"><span class="dot sm"></span>${esc(tv(v))}</span>`; };
 const dotOnly = v => `<span class="dot sm" title="${v || '—'}" style="background:${v ? RC[v] : 'var(--na)'}"></span>`;
 const barHtml = v => `<span class="prog" role="img" aria-label="${v}%"><span class="track"><i style="width:${Math.min(v,100)}%;background:${v >= 100 ? 'var(--g)' : 'var(--theme)'}"></i></span><b>${v}%</b></span>`;
@@ -1100,7 +1104,7 @@ function tile(p){
   return `<div class="tile" role="button" tabindex="0" data-act="openp" data-id="${p.id}">
     <div class="tile-top"><span class="code">${esc(p.code)}</span>${p.type === 'Стратегічний' ? `<span class="ico" title="${tv(p.type)}" aria-label="${tv(p.type)}">${icoStar(true)}</span>` : ''}${ragHtml(p.rag)}</div>
     <div class="tile-t">${esc(p.title)}</div>
-    <div class="tile-prog"><div class="pl"><span>${esc(tv(p.status))}</span><b>${p.progress}%</b></div><div class="track"><i style="width:${Math.min(p.progress,100)}%;background:${pc}"></i></div></div>
+    <div class="tile-prog"><div class="pl">${statusPill(p.status)}<b>${p.progress}%</b></div><div class="track"><i style="width:${Math.min(p.progress,100)}%;background:${pc}"></i></div></div>
     ${isArch(p) ? `<div class="tile-upd"><div class="ul">${t('archivedAt')}: ${p.archivedAt ? fmt(D(p.archivedAt)) : '—'}</div></div>`
       : `<div class="tile-upd"><div class="ul"><span class="dot sm" style="background:${freshColor(d)}"></span>${t('latestUpd')} · ${d ? fmt(d) : t('noReports')}</div>
       <div class="tx">${esc(p.lastReport) || '<span class="muted">—</span>'}</div></div>`}
@@ -1214,7 +1218,7 @@ const PDEF = {
   pm:{l:() => fl('pm'), main:p => person(p.pm), sort:p => p.pm, filter:p => p.pm},
   owner:{l:() => t('cOwner'), main:p => p.owner ? person(p.owner) : '<span class="muted">—</span>', sort:p => p.owner, filter:p => p.owner || ''},
   product:{l:() => fl('stakeholders'), main:p => peopleCell(p.stakeholders), sort:p => (p.stakeholders || [])[0] || '', filter:p => p.stakeholders || []},
-  status:{l:() => t('cStatusOnly'), main:p => esc(tv(p.status)), sort:p => STATUSES.indexOf(p.status), filter:p => p.status, cls:'w-min'},
+  status:{l:() => t('cStatusOnly'), main:p => statusPill(p.status), sort:p => STATUSES.indexOf(p.status), filter:p => p.status, cls:'w-min'},
   prio:{l:() => t('cPrio'), h:prioHead, main:p => prioIcon(p.prio), sort:p => p.prio, filter:p => p.prio, flabel:prioLabel, cls:'w-ico'},
   rag:{l:() => t('cHealth'), main:p => ragDot(p.rag), sort:p => ragOrder(p.rag), filter:p => p.rag || '', flabel:ragLabel, cls:'w-ico w-min'},
   repDate:{l:() => t('cRepDate'), main:p => { const d = lastUpd(p); return `<span class="rag"><span class="dot sm" style="background:${freshColor(d)}"></span>${d ? fmt(d) : t('noReports')}</span>`; }, sort:p => p.lastUpdate || '', filter:p => freshBucket(lastUpd(p)), flabel:freshLabel},
@@ -1270,7 +1274,7 @@ const KDEF = {
   prob:{l:() => t('cProb'), main:k => String(k.p), sort:k => k.p, filter:k => String(k.p), cls:'num'},
   imp:{l:() => t('cImp'), main:k => String(k.i), sort:k => k.i, filter:k => String(k.i), cls:'num'},
   owner:{l:() => fl('kOwner'), main:k => person(k.owner), sort:k => k.owner, filter:k => k.owner},
-  status:{l:() => fl('kStatus'), main:k => esc(tv(k.status)), sort:k => k.status, filter:k => k.status},
+  status:{l:() => fl('kStatus'), main:k => statusPill(k.status), sort:k => k.status, filter:k => k.status},
   due:{l:() => fl('kDue'), main:k => { const d = D(k.due); return d < TODAY && k.status !== 'Закрито' ? `<span class="late">${fmt(d)}</span>` : fmt(d); }, sort:k => k.due}
 };
 TDEFS.projects = PDEF; TDEFAULTS.projects = ['strat','prio','title','pm','status','rag','repDate','progress','plan','update'];
@@ -1438,7 +1442,7 @@ function pageHome(){
   const S = {l:stratHead, r:p => stratCell(p.type), cls:'c-ico'}, PR = {l:prioHead, r:p => prioIcon(p.prio), cls:'c-ico'};
   const SR = {l:stratHead, r:x => stratCell(pById(x.pid).type), cls:'c-ico'}, PRR = {l:prioHead, r:x => prioIcon(PP(x.pid)), cls:'c-ico'};
   const probCols = [S, PR, C(fl('title'), pLink), C(t('cHealth'), p => ragDot(p.rag), 'c-ico'), C(fl('pm'), p => person(p.pm)), C(fl('lastReport'), p => `<span title="${esc(p.lastReport)}">${esc(p.lastReport)}</span>`, 'wide'), C(t('cRepDate'), p => fmt(lastUpd(p)))];
-  const staleCols = [S, PR, C(fl('title'), pLink), C(fl('pm'), p => person(p.pm)), C(fl('last'), freshHtml), C(t('cStatusOnly'), p => esc(p.status))];
+  const staleCols = [S, PR, C(fl('title'), pLink), C(fl('pm'), p => person(p.pm)), C(fl('last'), freshHtml), C(t('cStatusOnly'), p => statusPill(p.status))];
   const decCols = [SR, PRR, C(fl('rProj'), r => pLink(pById(r.pid))), C(fl('rDate'), r => fmt(r.d)), C(fl('rDecText'), r => esc(r.decisionText), 'wide'), C(fl('rAuthor'), r => person(r.author))];
   const riskCols = [SR, PRR, C(fl('rProj'), k => pLink(pById(k.pid))), C(fl('kTitle'), k => esc(k.title), 'wide'), C(fl('kType'), k => esc(k.type)), C(fl('kScore'), k => scoreHtml(k.p * k.i)), C(fl('kOwner'), k => person(k.owner)), KC.due];
   return `${hero(t('dash'), t('visible') + vis.length, true)}
@@ -1585,7 +1589,7 @@ function projectPanel(id, showCm, keep, showCh){
        <button class="link" data-act="repopen" data-id="${p.id}" data-rid="${esc(lastR.id)}">${t('openReport')} →</button>
        ${edit ? `<div><button class="btn" data-act="newfromret" data-id="${p.id}" data-rid="${esc(lastR.id)}">${iconPlus}${t('newFromReturned')}</button></div>` : ''}</div>` : '');
   openPanel(`<div class="ph"><div><div class="k">${esc(p.code)} · ${t('listLabel')} «${t('navProjects')}»</div><h2>${esc(p.title)}</h2></div>${closeBtn()}</div>
-    <div class="badges">${typeHtml(p.type)}${ragHtml(p.rag)}<span class="badge">${esc(tv(p.status))}</span><span class="badge">${esc(tv(p.prio))}</span></div>
+    <div class="badges">${typeHtml(p.type)}${ragHtml(p.rag)}${statusPill(p.status)}<span class="badge">${esc(tv(p.prio))}</span></div>
     ${(p.links || []).length ? `<div class="lnk-sec"><div class="k">${fl('links')}</div>${linksHtml(p)}</div>` : ''}
     ${actions}
     ${apNotes ? `<div style="margin-top:14px">${apNotes}</div>` : ''}

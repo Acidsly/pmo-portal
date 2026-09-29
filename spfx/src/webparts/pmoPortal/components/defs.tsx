@@ -6,7 +6,7 @@ import { Rag } from '../logic/rag';
 import { freshness, isPlanLate, forecastDelta, budgetUse, budgetLevel, riskScore } from '../logic/status';
 import { daysBetween } from '../logic/dates';
 import { freshBucket, scoreBucket } from '../logic/views';
-import { RagDot, PersonCell, People, Score, Progress, Muted, ApBadge, fmtDate, money, freshColor } from './Bits';
+import { RagDot, PersonCell, People, Score, Progress, Muted, ApBadge, StatusPill, fmtDate, money, freshColor } from './Bits';
 import { Strat, Prio, Compass, Flag } from './Icons';
 
 /** Колонка = данные для движка таблицы + отрисовка (PDEF / RDEF / KDEF прототипа, строки 997–1072). */
@@ -50,7 +50,7 @@ export function projectDefs(x: DefsCtx, archive: boolean): TableDefs<Project> {
     pm: { label: fl('pm'), cell: p => <PersonCell p={p.manager} />, sort: p => (p.manager ? p.manager.name : ''), filter: p => (p.manager ? p.manager.name : '') },
     owner: { label: t('cOwner'), cell: p => <PersonCell p={p.owner} />, sort: p => (p.owner ? p.owner.name : ''), filter: p => (p.owner ? p.owner.name : '') },
     product: { label: fl('stakeholders'), cell: p => <People list={p.stakeholders} />, sort: p => (p.stakeholders[0] ? p.stakeholders[0].name : ''), filter: p => p.stakeholders.map(s => s.name) },
-    status: { label: t('cStatusOnly'), cell: p => tv(p.status), sort: p => STATUSES.indexOf(p.status), filter: p => p.status, cls: 'w-min' },
+    status: { label: t('cStatusOnly'), cell: p => <StatusPill v={p.status} />, sort: p => STATUSES.indexOf(p.status), filter: p => p.status, cls: 'w-min' },
     prio: { label: t('cPrio'), head: S.prioHead, cell: p => S.prioCell(p.priority), sort: p => p.priority, filter: p => p.priority, flabel: S.prioLabel, cls: 'w-ico' },
     rag: { label: t('cHealth'), cell: p => <RagDot v={p.rag} notRated={t('notRated')} />, sort: p => ragOrder(p.rag), filter: p => p.rag, flabel: S.ragLabel, cls: 'w-ico w-min' },
     repDate: { label: t('cRepDate'), cell: p => <span className="rag"><span className="dot sm" style={{ background: freshColor(freshness(p.lastUpdate, today)) }} />{p.lastUpdate ? fmtDate(p.lastUpdate) : t('noReports')}</span>,
@@ -133,7 +133,7 @@ export function riskDefs(x: DefsCtx): TableDefs<Risk> {
     prob: { label: t('cProb'), cell: k => String(k.probability), sort: k => k.probability, filter: k => String(k.probability), cls: 'num' },
     imp: { label: t('cImp'), cell: k => String(k.impact), sort: k => k.impact, filter: k => String(k.impact), cls: 'num' },
     owner: { label: fl('kOwner'), cell: k => <PersonCell p={k.owner} />, sort: k => (k.owner ? k.owner.name : ''), filter: k => (k.owner ? k.owner.name : '') },
-    status: { label: fl('kStatus'), cell: k => tv(k.status), sort: k => k.status, filter: k => k.status },
+    status: { label: fl('kStatus'), cell: k => <StatusPill v={k.status} />, sort: k => k.status, filter: k => k.status },
     due: { label: fl('kDue'), cell: k => (k.due && k.due < today && k.status !== 'Закрито' ? <span className="late">{fmtDate(k.due)}</span> : fmtDate(k.due)), sort: k => k.due }
   };
   return { lock: 'proj', cols, defaults: ['strat', 'prio', 'proj', 'title', 'type', 'score', 'strategy', 'owner', 'status', 'due'] };
