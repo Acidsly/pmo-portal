@@ -329,7 +329,7 @@ form .fsec:first-child{margin-top:0}
 .rm-y{writing-mode:vertical-rl;transform:rotate(180deg);text-align:center;font-size:12px;color:var(--text-2)}
 .rm-grid{display:grid;grid-template-columns:18px repeat(5,minmax(0,1fr));gap:4px}
 .rm-ax{display:grid;place-items:center;font-size:11px;color:var(--text-3)}
-.rm-cell{aspect-ratio:1.4;min-height:30px;border:0;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;color:var(--text);background:color-mix(in srgb,var(--c) 45%,transparent)}
+.rm-cell{aspect-ratio:1.97;min-height:30px;border:0;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;color:var(--text);background:color-mix(in srgb,var(--c) 45%,transparent)}
 .rm-cell:disabled{cursor:default;opacity:.35;background:color-mix(in srgb,var(--c) 18%,transparent);font-weight:400}
 .rm-cell.on{outline:3px solid var(--text);outline-offset:-3px}
 .rm-cell:not(:disabled):hover{background:color-mix(in srgb,var(--c) 65%,transparent)}
@@ -339,7 +339,6 @@ form .fsec:first-child{margin-top:0}
 .dept-row{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,2fr) 28px;gap:12px;align-items:center;font-size:14px}
 .dept-row .dn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dept-row b{text-align:right}
-.dlegend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:16px;font-size:13px;color:var(--text-2)}.dlegend span{display:inline-flex;align-items:center;gap:6px}
 .dbar{display:flex;height:20px;border-radius:10px;overflow:hidden;background:var(--track)}
 .dbar i{display:flex;align-items:center;justify-content:center;height:100%;font-style:normal;font-size:11px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums;overflow:hidden;white-space:nowrap}
 .dbar i.na{color:var(--text)}

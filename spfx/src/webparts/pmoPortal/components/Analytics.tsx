@@ -38,7 +38,6 @@ export const RiskMap: React.FC<{ m: Risk[][][]; byId: Record<number, Project>; t
       <div className="rmap"><span className="rm-y">{t('cProb')}</span><div className="rm-grid">{cells}</div></div>
       {sel.length ? <div className="rm-list rlist">{sel.map(k => <button key={k.id} className="rrow" onClick={() => openRisk(k.id, k.projectId)}>
         <Score s={riskScore(k.probability, k.impact)} /><span className="rt">{k.title}</span><span className="muted">{byId[k.projectId] ? byId[k.projectId].title : ''}</span></button>)}</div> : null}
-      <p className="hint" style={{ margin: '12px 0 0' }}>{t('rmHint')}</p>
     </>;
   };
 
@@ -51,7 +50,5 @@ export const DeptBars: React.FC<{ rows: DeptRow[]; t(k: string): string; empty: 
     <span className="dn" title={tv(r.dept)}>{tv(r.dept)}</span>
     <span className="dbar" style={{ width: `${Math.max(4, r.total / max * 100)}%` }}>{segs.map(([k, c, l]) => { const n = r[k] as number;
       return n ? <i key={k} className={k === 'na' ? 'na' : undefined} style={{ width: `${n / r.total * 100}%`, background: c }} title={`${l}: ${n}`}>{n}</i> : null; })}</span>
-    <b>{r.total}</b></div>)}
-    <div className="dlegend">{[['var(--g)', tv('Зелений')], ['var(--y)', tv('Жовтий')], ['var(--r)', tv('Червоний')], ['var(--na)', t('notRated')]].map(([c, l]) =>
-      <span key={l}><i className="dot sm" style={{ background: c }} />{l}</span>)}</div></div>;
+    <b>{r.total}</b></div>)}</div>;
 };

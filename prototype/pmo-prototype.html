@@ -334,7 +334,7 @@ main{padding-bottom:40px}
 .rm-y{writing-mode:vertical-rl;transform:rotate(180deg);text-align:center;font-size:12px;color:var(--text-2)}
 .rm-grid{display:grid;grid-template-columns:18px repeat(5,minmax(0,1fr));gap:4px}
 .rm-ax{display:grid;place-items:center;font-size:11px;color:var(--text-3)}
-.rm-cell{aspect-ratio:1.4;min-height:30px;border:0;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;color:var(--text);background:color-mix(in srgb,var(--c) 45%,transparent)}
+.rm-cell{aspect-ratio:1.97;min-height:30px;border:0;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;color:var(--text);background:color-mix(in srgb,var(--c) 45%,transparent)}
 .rm-cell:disabled{cursor:default;opacity:.35;background:color-mix(in srgb,var(--c) 18%,transparent);font-weight:400}
 .rm-cell.on{outline:3px solid var(--text);outline-offset:-3px}
 .rm-cell:not(:disabled):hover{background:color-mix(in srgb,var(--c) 65%,transparent)}
@@ -344,7 +344,6 @@ main{padding-bottom:40px}
 .dept-row{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,2fr) 28px;gap:12px;align-items:center;font-size:14px}
 .dept-row .dn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dept-row b{text-align:right}
-.dlegend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:16px;font-size:13px;color:var(--text-2)}.dlegend span{display:inline-flex;align-items:center;gap:6px}
 .dbar{display:flex;height:20px;border-radius:10px;overflow:hidden;background:var(--track)}
 .dbar i{display:flex;align-items:center;justify-content:center;height:100%;font-style:normal;font-size:11px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums;overflow:hidden;white-space:nowrap}
 .dbar i.na{color:var(--text)}
@@ -642,7 +641,7 @@ const T = {
  apBy:['Погодив','Approved by','Согласовал'],
  kpiActive:['Активні проєкти','Active projects','Активные проекты'], kpiFresh:['Зі свіжим звітом','With a recent report','Со свежим отчётом'],
  kpiFreshSub:['{n} з {m}','{n} of {m}','{n} из {m}'], kpiHigh:['Високі ризики','High risks','Высокие риски'], kpiLate:['Прострочені','Overdue','Просроченные'],
- wpRiskMap:['Карта ризиків','Risk map','Карта рисков'], rmHint:['Натисніть клітинку, щоб побачити її ризики','Click a cell to see its risks','Нажмите на ячейку, чтобы увидеть её риски'],
+ wpRiskMap:['Карта ризиків','Risk map','Карта рисков'],
  wpDept:['Портфель за напрямами','Portfolio by department','Портфель по направлениям'],
  wpSlips:['Найбільші зсуви термінів','Biggest schedule slips','Наибольшие сдвиги сроков'], cSlip:['Зсув','Slip','Сдвиг'], cMoves:['Перенесень','Moves','Переносов'],
  emptySlips:['Зсувів термінів немає','No schedule slips','Сдвигов сроков нет'],
@@ -1399,7 +1398,7 @@ function riskMap(){
   if (state.rmCell){ const [pp, ii] = state.rmCell.split('-').map(Number), ks = cnt(pp, ii);
     if (ks.length) list = `<div class="rm-list rlist">${ks.map(k => `<button class="rrow" data-act="riskopen" data-src="list" data-id="${k.pid}" data-rid="${esc(k.id)}">${scoreHtml(k.p * k.i)}<span class="rt">${esc(k.title)}</span><span class="muted">${esc(pById(k.pid).title)}</span></button>`).join('')}</div>`;
     else state.rmCell = null; }
-  return `<div class="rmap"><span class="rm-y">${t('cProb')}</span><div class="rm-grid">${cells}</div></div>${list}<p class="hint" style="margin:12px 0 0">${t('rmHint')}</p>`;
+  return `<div class="rmap"><span class="rm-y">${t('cProb')}</span><div class="rm-grid">${cells}</div></div>${list}`;
 }
 function deptBars(){
   const act = visP().filter(isActive), g = {};
@@ -1410,8 +1409,7 @@ function deptBars(){
   const segs = [['Червоний','var(--r)'],['Жовтий','var(--y)'],['Зелений','var(--g)'],['','var(--na)']];
   return `<div class="depts">${rows.map(([d, ps]) => `<div class="dept-row"><span class="dn" title="${esc(tv(d))}">${esc(tv(d))}</span>
     <span class="dbar" style="width:${Math.max(4, ps.length / max * 100)}%">${segs.map(([v, c]) => { const n = ps.filter(p => (p.rag || '') === v).length;
-      return n ? `<i${v ? '' : ' class="na"'} style="width:${n / ps.length * 100}%;background:${c}" title="${v ? esc(tv(v)) : t('notRated')}: ${n}">${n}</i>` : ''; }).join('')}</span><b>${ps.length}</b></div>`).join('')}</div>
-  <div class="dlegend">${[['var(--g)', tv('Зелений')], ['var(--y)', tv('Жовтий')], ['var(--r)', tv('Червоний')], ['var(--na)', t('notRated')]].map(([c, l]) => `<span><i class="dot sm" style="background:${c}"></i>${esc(l)}</span>`).join('')}</div>`;
+      return n ? `<i${v ? '' : ' class="na"'} style="width:${n / ps.length * 100}%;background:${c}" title="${v ? esc(tv(v)) : t('notRated')}: ${n}">${n}</i>` : ''; }).join('')}</span><b>${ps.length}</b></div>`).join('')}</div>`;
 }
 // перенесення планової дати завершення в журналі (події звітів / ключових показників)
 const planMoves = p => (p.changes || []).filter(c => c.kind === 'report' || c.kind === 'key').reduce((n, c) => n + (c.diffs || []).filter(d => d.f === 'plan').length, 0);

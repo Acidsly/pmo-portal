@@ -491,11 +491,6 @@ export const T: Record<string, L3> = {
   "Risk map",
   "Карта рисков"
  ],
- "rmHint": [
-  "Натисніть клітинку, щоб побачити її ризики",
-  "Click a cell to see its risks",
-  "Нажмите на ячейку, чтобы увидеть её риски"
- ],
  "wpDept": [
   "Портфель за напрямами",
   "Portfolio by department",
