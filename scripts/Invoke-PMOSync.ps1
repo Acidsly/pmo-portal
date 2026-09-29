@@ -459,22 +459,46 @@ function Get-Hash($acl) {
     $bytes = [System.Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($s))
     return ([Convert]::ToHexString($bytes)).Substring(0, 24)
 }
+# Права записи — одним пакетным запросом CSOM: сброс, группа PMO, владельцы, люди и отметка pmoAcl.
+# Люди, группы, роли и списки ищутся один раз за запуск (кэш), а не для каждой записи.
+$CTX = Get-PnPContext
+$RD = @{}; $PRINCIPAL = @{}; $LISTOBJ = @{}
+function Get-Rd([string]$name) { if (-not $RD.ContainsKey($name)) { $RD[$name] = $CTX.Web.RoleDefinitions.GetByName($name) }; return $RD[$name] }
+function Get-Principal([string]$key, [bool]$group) {
+    if (-not $PRINCIPAL.ContainsKey($key)) {
+        try {
+            $pr = if ($group) { $CTX.Web.SiteGroups.GetByName($key) } else { $CTX.Web.EnsureUser($key) }
+            $CTX.Load($pr); $CTX.ExecuteQuery(); $PRINCIPAL[$key] = $pr
+        } catch { Warn "Не найден на сайте: $key ($($_.Exception.Message))"; $PRINCIPAL[$key] = $null }
+    }
+    return $PRINCIPAL[$key]
+}
 function Set-ItemAcl([string]$list, [int]$id, $acl, [bool]$readOnly, [string]$aclHash) {
     $stats.acl++
     if ($DryRun) { Log ("    права: {0} #{1} -> {2}" -f $list, $id, (($acl.Keys | ForEach-Object { "$_($(if ($readOnly) { 'read' } else { $acl[$_] }))" }) -join ", ")); return }
+    if (-not $LISTOBJ.ContainsKey($list)) { $LISTOBJ[$list] = Get-PnPList -Identity $list }
     # PMO видит все проекты, но правит, как все, только свои (как PM); владельцы сайта — полный доступ
-    try {
-        Set-PnPListItemPermission -List $list -Identity $id -Group $PMO_GROUP -AddRole $ROLE.read -ClearExisting -SystemUpdate | Out-Null
-        Set-PnPListItemPermission -List $list -Identity $id -Group $OWNERS -AddRole $ROLE.full -SystemUpdate | Out-Null
-    } catch { Warn "Не удалось сбросить права $list #$id : $($_.Exception.Message) — повторим в следующий запуск"; return }
+    $grants = @(@{ p = (Get-Principal $PMO_GROUP $true); r = $ROLE.read }, @{ p = (Get-Principal $OWNERS $true); r = $ROLE.full })
     $ok = $true
     foreach ($e in $acl.Keys) {
-        $roleName = if ($readOnly -or $acl[$e] -eq "read") { $ROLE.read } else { $ROLE.edit }
-        try { Set-PnPListItemPermission -List $list -Identity $id -User $e -AddRole $roleName -SystemUpdate | Out-Null }
-        catch { $ok = $false; Warn "Не удалось выдать права $e на $list #$id : $($_.Exception.Message)" }
+        $pr = Get-Principal $e $false
+        if (-not $pr) { $ok = $false; continue }
+        $grants += @{ p = $pr; r = $(if ($readOnly -or $acl[$e] -eq "read") { $ROLE.read } else { $ROLE.edit }) }
     }
-    # отметка «права выданы» — только если выдано всё: иначе следующий запуск повторит
-    if ($ok) { Set-PnPListItem -List $list -Identity $id -Values @{ pmoAcl = $aclHash } -UpdateType SystemUpdate | Out-Null }
+    if (-not $grants[0].p -or -not $grants[1].p) { Warn "Нет группы PMO или владельцев — права $list #$id не изменены"; return }
+    try {
+        $item = $LISTOBJ[$list].GetItemById($id)
+        $item.ResetRoleInheritance()
+        $item.BreakRoleInheritance($false, $false)
+        foreach ($g in $grants) {
+            $b = [Microsoft.SharePoint.Client.RoleDefinitionBindingCollection]::new($CTX)
+            $b.Add((Get-Rd $g.r))
+            $item.RoleAssignments.Add($g.p, $b) | Out-Null
+        }
+        # отметка «права выданы» — только если выдано всё: иначе следующий запуск повторит
+        if ($ok) { $item["pmoAcl"] = $aclHash; $item.SystemUpdate() }
+        $CTX.ExecuteQuery()
+    } catch { Warn "Не удалось выдать права $list #$id : $($_.Exception.Message) — повторим в следующий запуск" }
 }
 
 Log "Права доступа…"

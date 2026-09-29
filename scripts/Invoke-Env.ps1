@@ -15,10 +15,12 @@
 #>
 param(
     [Parameter(Mandatory)][ValidateSet("test", "prod")][string]$Env,
-    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "refresh", "renumber", "renumber-dryrun", "feedback-answers", "whois", "app", "feedback")][string]$Action,
+    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "refresh", "renumber", "renumber-dryrun", "feedback-answers", "whois", "acl-export", "app", "feedback")][string]$Action,
     [switch]$ConfirmProduction,
     # для -Action whois: e-mail человека, чей доступ проверить
     [string]$Email,
+    # для -Action acl-export: куда сохранить выгрузку прав (JSON)
+    [string]$File,
     # корень репозитория (config/, certs/), если скрипты запущены из копии — так делает расписание Set-MacSchedule.ps1
     [string]$RepoRoot
 )
@@ -92,6 +94,12 @@ if ($Action -eq "feedback") {
     $a = Get-Auth $cfg.Sync
     $a.SiteUrl = $siteUrl; $a.Email = $Email
     & (Join-Path $PSScriptRoot "Show-Person.ps1") @a
+} elseif ($Action -eq "acl-export") {
+    # фактические права записей портала (только чтение) — для сверки до / после изменений синхронизации
+    if (-not $File) { throw "Для -Action acl-export укажите -File." }
+    $a = Get-Auth $cfg.Sync
+    $a.SiteUrl = $siteUrl; $a.File = $File
+    & (Join-Path $PSScriptRoot "Export-ItemAcl.ps1") @a
 } elseif ($Action -eq "app") {
     # приложение SPFx: сборка, каталог приложений сайта, страница на весь экран; этап 1 — только test
     if ($Env -ne "test") { throw "Действие «app» на этапе 1 — только для окружения test." }
