@@ -428,10 +428,11 @@ F $TM pmoAcl        Text     "Службове: права"    "System: access" 
 $script:Loc += , @($TM, "Title", "Коротко", "Summary", "Кратко")
 Set-PnPField -List $TM -Identity "Title" -Values @{ Required = $false } | Out-Null
 
-# Миграция (один раз на проект, по отметке pmMigrated): стейкхолдеры → строки команды с ролью «Стейкхолдер»; pmLoop → pmLinks
+# Миграция (один раз на проект, по отметке pmMigrated): стейкхолдеры → строки команды с ролью «Стейкхолдер»; pmLoop → pmLinks;
+# отменённый проект → архив (как завершённый): «Архівний», дата архивации = дата последнего отчёта, строка журнала
 $teamOf = @{}
 foreach ($x in (Get-PnPListItem -List "Lists/ProjectTeam" -PageSize 500 -Fields "tmProject" | Where-Object { [string]$_.FileSystemObjectType -ne "Folder" })) { if ($x["tmProject"]) { $teamOf[$x["tmProject"].LookupId] = $true } }
-foreach ($it in (Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "Title","pmStakeholders","pmLoop","pmLinks","pmMigrated")) {
+foreach ($it in (Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "Title","pmStakeholders","pmLoop","pmLinks","pmMigrated","pmStatus","pmLastUpdate","pmArchivedAt")) {
     $marks = @(([string]$it["pmMigrated"]).Split(",") | Where-Object { $_ })
     $vals = @{}
     if ($marks -notcontains "team") {
@@ -446,8 +447,17 @@ foreach ($it in (Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "T
         if ($loop -and $loop.Url -and -not [string]$it["pmLinks"]) { $vals.pmLinks = (ConvertTo-Json -InputObject @([ordered]@{ t = "Loop"; u = $loop.Url }) -Compress) }
         $marks += "links"
     }
+    if ($it["pmStatus"] -eq "Скасовано") {
+        $last = $it["pmLastUpdate"]
+        $day = if ($last) { [TimeZoneInfo]::ConvertTimeBySystemTimeZoneId(([datetime]$last).ToUniversalTime(), "Europe/Kyiv").ToString("yyyy-MM-dd") } else { (Get-Date).ToString("yyyy-MM-dd") }
+        $vals.pmStatus = "Архівний"
+        if (-not $it["pmArchivedAt"]) { $vals.pmArchivedAt = "$($day)T12:00:00Z" }
+        Add-PnPListItem -List "Lists/KeyChanges" -Values @{ Title = "Статус"; kcProject = $it.Id; kcDate = (Get-Date).ToUniversalTime().ToString("o")
+            kcKind = "Редагування картки"; kcField = "pmStatus"; kcFrom = "Скасовано"; kcTo = "Архівний"; kcReason = "Скасований проєкт переведено в архів" } | Out-Null
+        Write-Host "    миграция «$($it["Title"])»: Скасовано -> Архівний"
+    }
     $newMarks = ($marks | Select-Object -Unique) -join ","
-    if ($newMarks -ne [string]$it["pmMigrated"]) {
+    if ($newMarks -ne [string]$it["pmMigrated"] -or $vals.pmStatus) {
         $vals.pmMigrated = $newMarks
         Set-PnPListItem -List "Lists/Projects" -Identity $it.Id -Values $vals -UpdateType SystemUpdate | Out-Null
         Write-Host "    миграция «$($it["Title"])»: $newMarks"

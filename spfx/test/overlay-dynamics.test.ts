@@ -31,6 +31,10 @@ describe('applyPending — как шаг 1 Invoke-PMOSync.ps1', () => {
     const p = applyPending(P({}), [R({ status: 'Завершено', date: '2026-09-22' })]);
     expect(p.status).toBe('Архівний'); expect(p.archivedAt).toBe('2026-09-22');
   });
+  test('«Скасовано» -> «Архівний» и дата архивации, как завершённый', () => {
+    const p = applyPending(P({}), [R({ status: 'Скасовано', date: '2026-09-23' })]);
+    expect(p.status).toBe('Архівний'); expect(p.archivedAt).toBe('2026-09-23');
+  });
   test('отчёт старше «Останнього апдейту» не меняет стан и дату', () => {
     const p = applyPending(P({ lastUpdate: '2026-09-21', rag: 'Зелений', lastReport: 'Новый' }), [R({ date: '2026-09-15', budget: 'Червоний', progress: 10 })]);
     expect(p.rag).toBe('Зелений'); expect(p.lastUpdate).toBe('2026-09-21'); expect(p.lastReport).toBe('Новый'); expect(p.progress).toBe(10);
@@ -81,6 +85,14 @@ describe('кольцо и динамика — как в прототипе', ()
     const last = snapshots(ps, rs, today)[6]; const d = donutCounts(ps);
     expect({ g: last.g, y: last.y, r: last.r, na: last.na }).toEqual({ g: d.g, y: d.y, r: d.r, na: d.none });
     expect(last.g + last.y + last.r + last.na).toBe(d.total);
+  });
+  test('проект, ушедший в архив сегодня (завершён или отменён), в сегодняшний срез не входит', () => {
+    const today = '2026-09-24';
+    const ps = [P({ id: 1, rag: 'Жовтий' }), P({ id: 2, status: 'Архівний', rag: 'Жовтий', archivedAt: today })];
+    const rs = [R({ projectId: 1, date: '2026-09-01', budget: 'Жовтий' }), R({ id: 2, projectId: 2, date: '2026-09-10', budget: 'Жовтий' })];
+    const s = snapshots(ps, rs, today);
+    expect(s[6]).toEqual({ date: today, g: 0, y: 1, r: 0, na: 0 });
+    expect(s[5]).toEqual({ date: '2026-09-10', g: 0, y: 2, r: 0, na: 0 });
   });
 });
 

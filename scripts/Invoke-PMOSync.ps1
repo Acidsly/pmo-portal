@@ -369,7 +369,7 @@ foreach ($r in $pending) {
         $v = Norm $r[$src]
         if ($v -ne "") { $target[$MAP[$src]] = $v }
     }
-    if ($target.pmStatus -eq "Завершено") { $target.pmStatus = "Архівний"; $target.pmArchivedAt = $repDate }
+    if ($target.pmStatus -in @("Завершено", "Скасовано")) { $target.pmStatus = "Архівний"; $target.pmArchivedAt = $repDate }
     if ($newer) {
         if ($rag) { $target.pmRAG = $rag }
         $target.pmLastUpdate = $repDate

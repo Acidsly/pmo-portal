@@ -680,7 +680,7 @@ const T = {
  fGeneral:['Основне','General','Основное'], fPeople:['Учасники','Stakeholders','Участники'], fDates:['Терміни','Timeline','Сроки'],
  codeAuto:['Буде присвоєно автоматично','Assigned automatically','Будет присвоен автоматически'],
  navArchive:['Архів','Archive','Архив'],
- archiveSub:['Завершені проєкти. Лише перегляд.','Completed projects. View only.','Завершённые проекты. Только просмотр.'],
+ archiveSub:['Завершені та скасовані проєкти. Лише перегляд.','Completed and cancelled projects. View only.','Завершённые и отменённые проекты. Только просмотр.'],
  archivedNote:['Проєкт в архіві: доступні перегляд і коментарі.','This project is archived: view and comment only.','Проект в архиве: доступны просмотр и комментарии.'],
  archivedAt:['Дата архівації','Archived on','Дата архивации'],
  cols:['Поля та порядок','Columns and order','Поля и порядок'], colsReset:['Як за замовчуванням','Reset to default','Как по умолчанию'],
@@ -694,6 +694,7 @@ const T = {
  keyReason:['Причина зміни показників','Reason for changing indicators','Причина изменения показателей'],
  errKeyReason:['Ви змінили статус, тип або дати — вкажіть причину.','You changed status, type or dates — enter a reason.','Вы изменили статус, тип или даты — укажите причину.'],
  completeArch:['Завершено — перенести в архів','Completed — move to archive','Завершено — перенести в архив'],
+ cancelArch:['Скасовано — перенести в архів','Cancelled — move to archive','Отменено — перенести в архив'],
  completeHint:['Після погодження звіту PMO проєкт отримає статус «Архівний» і перейде у вкладку «Архів».','After PMO approves the report, the project gets the “Архівний” status and moves to the Archive tab.','После согласования отчёта PMO проект получит статус «Архівний» и перейдёт во вкладку «Архів».'],
  savedArch:['Статус-звіт збережено, проєкт перенесено в архів.','Status report saved, project moved to archive.','Статус-отчёт сохранён, проект перенесён в архив.'],
  cStake:['Власник / Product','Owner / Product','Собственник / Product'], cStart:['Старт / запуск','Start / go-live','Старт / запуск'],
@@ -823,7 +824,7 @@ const calcRag = r => { const v = [r.sched, r.budget, r.res]; if (v.some(x => !x)
 const AP_PEND = 'На погодженні', AP_OK = 'Погоджено', AP_RET = 'Повернуто';
 const isApproved = r => (r.approval || AP_OK) === AP_OK;
 const STATUSES = ['Ініціація','Планування','Реалізація','Призупинено','Скасовано','Архівний'];
-const REPORT_STATUSES = ['Ініціація','Планування','Реалізація','Призупинено','Скасовано'];
+const REPORT_STATUSES = ['Ініціація','Планування','Реалізація','Призупинено'];
 const TYPES = ['Стратегічний','Звичайний'];
 const PRIOS = ['1 — Високий','2 — Середній','3 — Низький'];
 const DEPTS = ['ІТ','HR та кадрове адміністрування','Розрахунок зарплати','Продажі','Фінанси','Операції','Юридичний'];
@@ -987,7 +988,7 @@ async function initData(){
   db.collection('projects').onSnapshot(snap => {
     if (snap.empty){ if (snap.metadata.fromCache) return; MODE = 'empty'; PROJ = []; }
     else { MODE = 'db'; PROJ = snap.docs.map(d => parse(Object.assign({}, d.data(), {id:d.id})));
-      PROJ.filter(p => p.status === 'Завершено').forEach(p => { p.status = 'Архівний'; p.archivedAt = p.archivedAt || p.lastUpdate || iso(TODAY); persist(p); }); }
+      PROJ.filter(p => ['Завершено','Скасовано'].includes(p.status)).forEach(p => { p.status = 'Архівний'; p.archivedAt = p.archivedAt || p.lastUpdate || iso(TODAY); persist(p); }); }
     render();
   }, err => { console.error(err); if (MODE === 'loading'){ db = null; MODE = 'local'; PROJ = buildSeed().map(parse); render(); } });
 }
@@ -1138,19 +1139,23 @@ function dynamics(){
     // кожен проєкт, що вже існував на дату зрізу (і ще не в архіві): стан останнього погодженого звіту; немає звіту — сірий
     visAll().forEach(p => { if (p.status === 'Скасовано') return;
       const cr = (p.changes || []).find(x => x.kind === 'create'); if (cr && new Date(cr.date) > tt) return;
-      if (isArch(p) && tt > lastUpd(p)) return;
+      if (isArch(p) && tt >= lastUpd(p)) return;   // в день архивации проект уже в архиве — как в кольце
       const rs = repsOf(p).filter(r => r.d <= tt && isApproved(r)); c[rs.length ? rs[rs.length - 1].rag : '']++; });
     pts.push({tt, c});
   }
   const W = 500, H = 230, L = 30, B = 30, TP = 12;
   const max = Math.max(1, ...pts.map(p => p.c['Зелений'] + p.c['Жовтий'] + p.c['Червоний'] + p.c['']));
-  const slot = (W - L - 8) / pts.length, bw = slot * 0.5, y = v => H - B - v / max * (H - B - TP);
+  // у каждого сегмента видно число: сегмент не ниже MIN, масштаб подбирается так, чтобы самый высокий столбец поместился
+  const KS = RAGS.concat(['']), PH = H - B - TP, MIN = 18, seg = (v, u) => v ? Math.max(v * u, MIN) : 0;
+  let u = PH / max;
+  for (let n = 0; n < 5; n++) { const top = Math.max(...pts.map(p => KS.reduce((a, k) => a + seg(p.c[k], u), 0))); if (top <= PH) break; u *= PH / top; }
+  const slot = (W - L - 8) / pts.length, bw = slot * 0.5, y = v => H - B - v * u;
   let g = '';
   [0, Math.ceil(max / 2), max].forEach(v => { g += `<line x1="${L}" x2="${W - 4}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--text-2)">${v}</text>`; });
-  pts.forEach((p, i) => { const x = L + i * slot + (slot - bw) / 2; let base = 0;
-    RAGS.concat(['']).forEach(k => { const v = p.c[k]; if (!v) return; const y1 = y(base + v), h = y(base) - y1;
+  pts.forEach((p, i) => { const x = L + i * slot + (slot - bw) / 2; let base = H - B;
+    KS.forEach(k => { const v = p.c[k]; if (!v) return; const h = seg(v, u), y1 = base - h; base = y1;
       g += `<rect x="${x}" y="${y1}" width="${bw}" height="${Math.max(h - 2, 1)}" rx="5" fill="${k ? RC[k] : 'var(--na)'}"><title>${fmt(p.tt)}: ${k ? tv(k) : t('notRated')} — ${v}</title></rect>`;
-      if (h > 16) g += `<text x="${x + bw / 2}" y="${y1 + h / 2 + 3}" text-anchor="middle" font-size="11" font-weight="600" fill="${k ? '#fff' : 'var(--text)'}">${v}</text>`; base += v; });
+      g += `<text x="${x + bw / 2}" y="${y1 + h / 2 + 3}" text-anchor="middle" font-size="11" font-weight="600" fill="${k ? '#fff' : 'var(--text)'}">${v}</text>`; });
     g += `<text x="${x + bw / 2}" y="${H - 10}" text-anchor="middle" font-size="11" fill="var(--text-2)">${i === pts.length - 1 ? t('today') : fmtShort(p.tt)}</text>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('wpDyn')}">${g}</svg><p class="hint">${t('dynHint')}</p>`;
 }
@@ -1800,7 +1805,7 @@ function reportForm(pid, base){
     <div class="keysec">
       <h3 class="fsec">${t('keySec')}</h3><p class="note" style="margin:-6px 0 14px">${t('keySecHint')}</p>
       <div class="fgrid2 frow">
-        <div><label class="t" for="f-st">${fl('status')}</label><select id="f-st">${REPORT_STATUSES.map(v => opt(v, sel.status)).join('')}<option value="Завершено"${sel.status === 'Завершено' ? ' selected' : ''}>${t('completeArch')}</option></select></div>
+        <div><label class="t" for="f-st">${fl('status')}</label><select id="f-st">${REPORT_STATUSES.map(v => opt(v, sel.status)).join('')}<option value="Завершено"${sel.status === 'Завершено' ? ' selected' : ''}>${t('completeArch')}</option><option value="Скасовано"${sel.status === 'Скасовано' ? ' selected' : ''}>${t('cancelArch')}</option></select></div>
         <div><label class="t" for="f-pr">${fl('progress')}</label><input type="number" id="f-pr" min="0" max="100" value="${sel.progress}"></div>
       </div>
       <p class="note" id="f-arch" hidden style="margin:-4px 0 14px">${t('completeHint')}</p>
@@ -1828,7 +1833,7 @@ function reportForm(pid, base){
   const curP = () => pById(+g('f-p').value);
   const keyChanged = () => { const p = curP(); return KEYF.some(([id, k]) => String(g(id).value || '') !== String(p[k] || '')) || (radioVal(form, 'f-type') || p.type) !== p.type; };
   const dimsNow = () => ({sched:radioVal(form, 'sched'), budget:radioVal(form, 'budget'), res:radioVal(form, 'res')});
-  const syncKey = () => { g('f-kr-wrap').hidden = !keyChanged(); g('f-arch').hidden = g('f-st').value !== 'Завершено'; g('f-ragv').innerHTML = ragLabel(calcRag(dimsNow())); };
+  const syncKey = () => { g('f-kr-wrap').hidden = !keyChanged(); g('f-arch').hidden = !['Завершено','Скасовано'].includes(g('f-st').value); g('f-ragv').innerHTML = ragLabel(calcRag(dimsNow())); };
   form.addEventListener('input', syncKey); form.addEventListener('change', syncKey);
   g('f-p').addEventListener('change', e => { const p = pById(+e.target.value);
     g('f-pr').value = p.progress; g('f-c').value = p.actual || 0; g('f-st').value = p.status;
@@ -1862,7 +1867,7 @@ function reportForm(pid, base){
 // показники картки, які змінює звіт (поля, яких у звіті немає, не змінюються)
 function reportVals(p, r){
   const vals = {};
-  if (r.status) vals.status = r.status === 'Завершено' ? 'Архівний' : r.status;
+  if (r.status) vals.status = ['Завершено','Скасовано'].includes(r.status) ? 'Архівний' : r.status;
   ['type','start','golive','plan','fc'].forEach(k => { if (r[k] != null) vals[k] = r[k]; });
   if (r.progress != null) vals.progress = r.progress;
   if (!p.lastUpdate || D(r.date) >= D(p.lastUpdate)) vals.rag = calcRag(r);
@@ -1870,7 +1875,7 @@ function reportVals(p, r){
 }
 // застосувати погоджений звіт до картки — так само, як раніше при збереженні звіту
 function applyReport(p, r, when){
-  const complete = r.status === 'Завершено', vals = reportVals(p, r), newer = 'rag' in vals;
+  const complete = ['Завершено','Скасовано'].includes(r.status), vals = reportVals(p, r), newer = 'rag' in vals;
   const diffs = Object.keys(vals).filter(k => String(p[k] ?? '') !== String(vals[k] ?? '')).map(k => ({f:k, from:p[k] ?? '', to:vals[k]}));
   Object.assign(p, vals);
   if (r.cost != null) p.actual = r.cost;
@@ -1906,7 +1911,7 @@ function reportView(pid, rid, keep){
     : ['start','golive','plan','fc'].includes(k) ? fmt(D(v)) : esc(tv(v === 'Завершено' ? 'Архівний' : v));
   const cardK = k => k === 'cost' ? 'actual' : k;
   const ind = IND.filter(([k]) => r[k] != null).map(([k, l]) => {
-    const cur = p[cardK(k)], nv = k === 'status' && r[k] === 'Завершено' ? 'Архівний' : r[k];
+    const cur = p[cardK(k)], nv = k === 'status' && ['Завершено','Скасовано'].includes(r[k]) ? 'Архівний' : r[k];
     const ch = !applied && String(cur ?? '') !== String(nv ?? '');
     return `<div class="kv"><span class="k">${fl(l)}</span><span class="v">${ch ? `<span class="dv"><s>${show(k, cur)}</s><span class="arr">→</span>${show(k, r[k])}</span>` : show(k, r[k])}</span></div>`;
   }).join('');

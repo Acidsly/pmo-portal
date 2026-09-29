@@ -9,7 +9,7 @@ import { reportBody } from '../data/write';
 import { Frow, RagPick, SegPick, DateIn, Err, Opts } from '../components/fields';
 import { RagDot } from '../components/Bits';
 
-const REPORT_STATUSES = ['Ініціація', 'Планування', 'Реалізація', 'Призупинено', 'Скасовано'];
+const REPORT_STATUSES = ['Ініціація', 'Планування', 'Реалізація', 'Призупинено'];
 const TYPES = ['Стратегічний', 'Звичайний'];
 const PERIODS = ['Тиждень', '2 тижні', 'Місяць', 'Квартал'];
 
@@ -70,11 +70,11 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
         <div className="fgrid2 frow">
           <div><label className="t" htmlFor="f-st">{fl('status')}</label>
             <select id="f-st" value={d.status} onChange={e => set({ status: e.target.value })}>
-              <Opts values={REPORT_STATUSES} /><option value="Завершено">{t('completeArch')}</option></select></div>
+              <Opts values={REPORT_STATUSES} /><option value="Завершено">{t('completeArch')}</option><option value="Скасовано">{t('cancelArch')}</option></select></div>
           <div><label className="t" htmlFor="f-pr">{fl('progress')}</label>
             <input type="number" id="f-pr" min={0} max={100} value={d.progress} onChange={e => set({ progress: Number(e.target.value) || 0 })} /></div>
         </div>
-        {d.status === 'Завершено' ? <p className="note" style={{ margin: '-4px 0 14px' }}>{t('completeHint')}</p> : null}
+        {d.status === 'Завершено' || d.status === 'Скасовано' ? <p className="note" style={{ margin: '-4px 0 14px' }}>{t('completeHint')}</p> : null}
         <fieldset className="ragpick"><legend>{fl('type')}</legend><SegPick name="f-type" options={TYPES} value={d.type} onChange={v => set({ type: v })} /></fieldset>
         <div className="fgrid2 frow">
           <div><label className="t" htmlFor="f-start">{fl('start')}</label><DateIn id="f-start" value={d.start} onChange={v => set({ start: v })} /></div>

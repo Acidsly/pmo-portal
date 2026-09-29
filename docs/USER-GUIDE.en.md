@@ -74,7 +74,7 @@ You can share a link to the card: the browser address points exactly to it.
 6. **Save.** The report goes **to the PMO for approval**; the card updates after approval. A submitted report cannot be changed.
 7. If the PMO **returned** the report, the PMO's comment is shown in the card and in the report itself. Click **New report based on the returned one**: the form is filled with the returned report's data — fix it and save.
 
-The **"Completed — move to archive"** status option sends the project to the archive once the report is approved — after that the project is view-only.
+The **"Completed — move to archive"** and **"Cancelled — move to archive"** status options send the project to the archive once the report is approved — after that the project is view-only.
 
 ## Approving status reports (for the PMO)
 
@@ -97,7 +97,7 @@ The status (Initiation, Planning, Execution, On hold, Cancelled, Completed) chan
 3. Fills in **Reason for changing indicators** — why the status changes; the reason goes to the history.
 4. Rates schedule, budget, resources, writes the summary → **Save**. The report goes for approval.
 5. **The PMO** approves the report — the status in the card changes, and "Report approval" and "Updated by status report" rows appear in the history ("old → new", the reason). If the PMO returns the report, the status does not change and the PM submits a new report.
-6. **"Completed — move to archive"** — after approval the project gets the "Archived" status and an archive date and moves to the "Archive" tab; after that it is view-only.
+6. **"Completed — move to archive"** or **"Cancelled — move to archive"** — after approval the project gets the "Archived" status and an archive date and moves to the "Archive" tab; after that it is view-only. That the project was cancelled is shown in its last status report and in the "Change history".
 
 ## Risks and issues
 

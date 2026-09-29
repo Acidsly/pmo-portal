@@ -49,7 +49,7 @@ export const ReportView: React.FC<{ data: PortalData; report: StatusReport | und
   const show = (k: Ind, v: string | number | null): React.ReactNode => (v === '' || v === null || v === undefined ? <span className="muted">—</span>
     : k === 'progress' ? v + '%' : k === 'actualCost' ? money(Number(v)) : DATES.indexOf(k) >= 0 ? fmtDate(String(v)) : tv(v === 'Завершено' ? 'Архівний' : String(v)));
   const ind = IND.filter(([k]) => { const v = r[k]; return v !== '' && v !== null; }).map(([k, l]) => {
-    const cur = p[k] as string | number; const nv = k === 'status' && r.status === 'Завершено' ? 'Архівний' : r[k];
+    const cur = p[k] as string | number; const nv = k === 'status' && (r.status === 'Завершено' || r.status === 'Скасовано') ? 'Архівний' : r[k];
     const ch = state !== AP_OK && String(cur === undefined || cur === null ? '' : cur) !== String(nv === null ? '' : nv);
     return <div key={k} className="kv"><span className="k">{fl(l)}</span><span className="v">{ch ? <span className="dv"><s>{show(k, cur)}</s><span className="arr">→</span>{show(k, r[k])}</span> : show(k, r[k])}</span></div>;
   });

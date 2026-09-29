@@ -10,7 +10,7 @@ import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts } from '../components/fi
 const TYPES = ['Стратегічний', 'Звичайний'];
 const PRIOS = ['1 — Високий', '2 — Середній', '3 — Низький'];
 const DEPTS = ['ІТ', 'HR та кадрове адміністрування', 'Розрахунок зарплати', 'Продажі', 'Фінанси', 'Операції', 'Юридичний'];
-const STATUSES = ['Ініціація', 'Планування', 'Реалізація', 'Призупинено', 'Скасовано'];
+const STATUSES = ['Ініціація', 'Планування', 'Реалізація', 'Призупинено'];
 
 /** Новый проект или правка карточки (projectForm прототипа, строки 1353–1418). Тип, даты и статус правятся только статус-отчётом. */
 export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCancel(): void }> = ({ data, project, onCancel }) => {

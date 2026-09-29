@@ -25,7 +25,7 @@ export function applyPending(project: Project, reports: StatusReport[]): Project
     if (r.planEnd) p.planEnd = r.planEnd;
     if (r.forecastEnd) p.forecastEnd = r.forecastEnd;
     if (r.actualCost !== null) p.actualCost = r.actualCost;
-    if (p.status === 'Завершено') { p.status = 'Архівний'; p.archivedAt = r.date; }
+    if (p.status === 'Завершено' || p.status === 'Скасовано') { p.status = 'Архівний'; p.archivedAt = r.date; }
     // самый свежий отчёт задаёт стан, дату отчёта и «Останній апдейт»
     if (!p.lastUpdate || r.date >= p.lastUpdate) {
       const rag = calcRag(r.schedule, r.budget, r.resources);
