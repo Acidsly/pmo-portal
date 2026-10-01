@@ -15,7 +15,7 @@
 #>
 param(
     [Parameter(Mandatory)][ValidateSet("test", "prod")][string]$Env,
-    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "refresh", "renumber", "renumber-dryrun", "feedback-answers", "whois", "acl-export", "app", "feedback", "probe-formvalues")][string]$Action,
+    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "refresh", "renumber", "renumber-dryrun", "feedback-answers", "whois", "acl-export", "app", "feedback", "probe-formvalues", "perm-check")][string]$Action,
     [switch]$ConfirmProduction,
     # для -Action whois: e-mail человека, чей доступ проверить
     [string]$Email,
@@ -101,6 +101,12 @@ if ($Action -eq "feedback") {
     $a = Get-Auth $cfg.Deploy
     $a.SiteUrl = $siteUrl; $a.UserEmail = $Email
     & (Join-Path $PSScriptRoot "Test-FormValues.ps1") @a
+} elseif ($Action -eq "perm-check") {
+    # фактические права человека на дочерние списки и папки проектов (только чтение) — проверка модели прав v2
+    if (-not $Email) { throw "Для -Action perm-check укажите -Email." }
+    $a = Get-Auth $cfg.Sync
+    $a.SiteUrl = $siteUrl; $a.Email = $Email
+    & (Join-Path $PSScriptRoot "Test-EffectivePerms.ps1") @a
 } elseif ($Action -eq "acl-export") {
     # фактические права записей портала (только чтение) — для сверки до / после изменений синхронизации
     if (-not $File) { throw "Для -Action acl-export укажите -File." }
