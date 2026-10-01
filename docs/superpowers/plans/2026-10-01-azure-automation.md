@@ -71,17 +71,18 @@
 
 ### Этап 3: Права управляемой учётной записи (выполняет администратор тенанта)
 
-- [ ] Graph **User.Read.All** (application) — назначение роли приложения сервисному субъекту управляемой учётной записи (`New-MgServicePrincipalAppRoleAssignment` или PnP `Add-PnPEntraIDServicePrincipalAppRole`).
-- [ ] SharePoint **Sites.Selected** (application) — то же (назначение роли сервисному субъекту управляемой УЗ — только PowerShell/Graph, не портал); затем **FullControl на `/sites/pmo-test`**: `Grant-PnPEntraIDAppSitePermission -AppId <appId сервисного субъекта, не objectId> -DisplayName aa-pmo-sync -Site <url> -Permissions FullControl` — выполняет пользователь входом в приложение PMO Deploy (делегированное AllSites.FullControl, роль администратора SharePoint или владельца сайта).
-- [ ] Проверочный runbook `PMO-WhoAmI` — **реальные операции синхронизации (ревью)**: вход `-ManagedIdentity`; чтение проектов; `Get-PnPGroupMember` (PMO-адміністратори, владельцы); `Get-PnPRoleDefinition`; `siteusers` с фильтром приложений (видна ли сама управляемая УЗ); Graph `users/<owner>/manager` через `Invoke-PnPGraphMethod` (запасной вариант — токен `Get-AzAccessToken`); на служебном списке «Перевірка форматів»: `Add-PnPFolder`, разрыв наследования и назначение роли записи, перенос записи в папку, `SystemUpdate`; блокировка: захват и снятие служебной строки; запись и чтение переменной кэша.
+- [x] Graph **User.Read.All** (application) — назначение роли приложения сервисному субъекту управляемой учётной записи (`New-MgServicePrincipalAppRoleAssignment` или PnP `Add-PnPEntraIDServicePrincipalAppRole`).
+- [x] SharePoint **Sites.Selected** (application) — то же (назначение роли сервисному субъекту управляемой УЗ — только PowerShell/Graph, не портал); затем **FullControl на `/sites/pmo-test`**: `Grant-PnPEntraIDAppSitePermission -AppId <appId сервисного субъекта, не objectId> -DisplayName aa-pmo-sync -Site <url> -Permissions FullControl` — выполняет пользователь входом в приложение PMO Deploy (делегированное AllSites.FullControl, роль администратора SharePoint или владельца сайта).
+- [x] Проверочный runbook `PMO-WhoAmI` — **реальные операции синхронизации (ревью)**: вход `-ManagedIdentity`; чтение проектов; `Get-PnPGroupMember` (PMO-адміністратори, владельцы); `Get-PnPRoleDefinition`; `siteusers` с фильтром приложений (видна ли сама управляемая УЗ); Graph `users/<owner>/manager` через `Invoke-PnPGraphMethod` (запасной вариант — токен `Get-AzAccessToken`); на служебном списке «Перевірка форматів»: `Add-PnPFolder`, разрыв наследования и назначение роли записи, перенос записи в папку, `SystemUpdate`; блокировка: захват и снятие служебной строки; запись и чтение переменной кэша.
 - Критерий: всё успешно; на другой сайт тенанта доступа нет (проверка отказом).
 
 ### Этап 4: Runbook и пробные запуски
 
-- [ ] Импорт `runbooks/Invoke-PMOSync.ps1` как runbook `PMO-Sync` (PowerShell 7.4, среда из этапа 2), публикация.
-- [ ] Ручной запуск `-DryRun -ManagedIdentity -SiteUrl <test> -Env test`; сравнить вывод с Mac `sync-dryrun` (те же предупреждения и счётчики). Время запуска — в таблицу метрик.
-- [ ] Ручной запуск `-RebuildPermissions -DryRun` — время.
-- [ ] Журнал: вывод `Write-Host` (поток Information) виден в выводе задания; если нет — включить запись подробных сообщений в настройках runbook.
+- [x] Импорт `runbooks/Invoke-PMOSync.ps1` как runbook `PMO-Sync` (PowerShell 7.4, среда из этапа 2), публикация.
+- [x] Ручной запуск `-DryRun -ManagedIdentity -SiteUrl <test> -Env test`; сравнить вывод с Mac `sync-dryrun` (те же предупреждения и счётчики). Время запуска — в таблицу метрик.
+- [x] Ручной запуск `-RebuildPermissions -DryRun` — время.
+- [x] Журнал: вывод `Write-Host` (поток Information) виден в выводе задания; если нет — включить запись подробных сообщений в настройках runbook.
+- Итог 01.10: права выдал пользователь (`Grant-PMOAutomation.ps1`; доступ к сайту — приложением PMO Deploy `a6293d9d…`, у «PMO Automation» нет Graph); PMO-WhoAmI в Azure — все 16 проверок ok. Найдено в Azure: (1) `Write-Host` в среде 7.4 в журнал задания не попадает — журнал синхронизации в Azure пишется в Verbose, у runbook включён подробный журнал, служебный Verbose PnP выключен; (2) токен `Get-PnPAccessToken` под управляемой учётной записью SharePoint REST отклоняет (401) — для блокировки токен берётся у службы управляемой учётной записи (`IDENTITY_ENDPOINT`) для адреса тенанта; (3) первое задание после выдачи прав может получить 401 (старый вход на машине Azure) — повтор прошёл; (4) сразу после создания ресурсов чтения Azure иногда отвечают «не найдено» — повтор. Пробный запуск PMO-Sync: 25 с, счётчики совпадают с Mac (21 проект, 36 отчётов, 0 изменений, 0 предупреждений, 0 ошибок). Проверка «другой сайт — отказ» не выполнялась (Sites.Selected — доступ только к выданным сайтам).
 - Критерий: вывод совпадает с Mac по смыслу; время запуска ≤ 60 с (холодный старт Automation добавляет 20–40 с — норма).
 
 ### Этап 5: Расписания

@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:2c867b996186 — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:31b02a0d3626 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -217,12 +217,19 @@ $L_PROJ = "Lists/Projects"; $L_REP = "Lists/StatusReports"; $L_RISK = "Lists/Ris
 $L_CHG  = "Lists/KeyChanges"; $L_CMT = "Lists/ProjectComments"; $L_TEAM = "Lists/ProjectTeam"; $L_AP = "Lists/ReportApprovals"
 $stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; folders = 0; moved = 0; reset = 0; access = 0; feedback = 0; approvals = 0; members = 0; reminders = 0; stateNew = 0; stateFixed = 0; returned = 0; warnings = 0; errors = 0 }
 
-function Log([string]$m, [string]$c = "Gray") { Write-Host ("{0:HH:mm:ss} {1}" -f (Get-Date), $m) -ForegroundColor $c }
+# внутри Azure Automation есть команды ресурсов учётной записи (переменные)
+$IN_AUTOMATION = [bool](Get-Command Get-AutomationVariable -ErrorAction SilentlyContinue)
+# подробный журнал runbook включает Verbose для всех команд — служебные сообщения PnP в журнал не нужны
+if ($IN_AUTOMATION) { $VerbosePreference = "SilentlyContinue" }
+# журнал: в Azure Automation (PowerShell 7.4) Write-Host не сохраняется — поток Verbose (у runbook включён подробный журнал);
+# Write-Output нельзя: он попал бы в возвращаемые значения функций
+function Log([string]$m, [string]$c = "Gray") {
+    $line = "{0:HH:mm:ss} {1}" -f $(if ($IN_AUTOMATION) { ConvertTo-Kyiv (Get-Date).ToUniversalTime() } else { Get-Date }), $m
+    if ($IN_AUTOMATION) { Write-Verbose $line -Verbose } else { Write-Host $line -ForegroundColor $c }
+}
 function Warn([string]$m) { $stats.warnings++; Write-Warning $m }
 # сбой записи (не правило): запуск доработает, но завершится ошибкой — чтобы сработало оповещение
 function Fail([string]$m) { $stats.errors++; Write-Warning "ПОМИЛКА: $m" }
-# внутри Azure Automation есть команды ресурсов учётной записи (переменные)
-$IN_AUTOMATION = [bool](Get-Command Get-AutomationVariable -ErrorAction SilentlyContinue)
 
 # ---------------------------------------------------------------------------
 # Подключение
@@ -253,8 +260,21 @@ $LOCK_RUN = [guid]::NewGuid().ToString("N")
 $LOCK_HELD = $false
 $WEB_URL = (Get-PnPWeb).Url.TrimEnd("/")
 $LOCK_LIST_URL = ([uri]$WEB_URL).AbsolutePath.TrimEnd("/") + "/" + $STATE_LIST
+# токен SharePoint для прямых запросов: под управляемой учётной записью Azure — у её службы (IDENTITY_ENDPOINT) для адреса
+# тенанта (токен Get-PnPAccessToken там SharePoint REST отклоняет — 401); иначе — токен подключения PnP
+function Get-SpToken {
+    if ($ManagedIdentity -and $env:IDENTITY_ENDPOINT -and $env:IDENTITY_HEADER) {
+        if (-not $script:SP_TOKEN -or $script:SP_TOKEN.until -lt (Get-Date).ToUniversalTime().AddMinutes(5)) {
+            $res = ([uri]$WEB_URL).GetLeftPart([UriPartial]::Authority)
+            $t = Invoke-RestMethod -Uri "$($env:IDENTITY_ENDPOINT)?resource=$([uri]::EscapeDataString($res))&api-version=2019-08-01" -Headers @{ "X-IDENTITY-HEADER" = $env:IDENTITY_HEADER }
+            $script:SP_TOKEN = @{ value = [string]$t.access_token; until = [DateTimeOffset]::FromUnixTimeSeconds([long]$t.expires_on).UtcDateTime }
+        }
+        return $script:SP_TOKEN.value
+    }
+    return Get-PnPAccessToken -ResourceTypeName SharePoint
+}
 function Invoke-LockRest([string]$method, [string]$path, $body, [string]$etag) {
-    $h = @{ Authorization = "Bearer $(Get-PnPAccessToken -ResourceTypeName SharePoint)"; Accept = "application/json;odata=nometadata" }
+    $h = @{ Authorization = "Bearer $(Get-SpToken)"; Accept = "application/json;odata=nometadata" }
     if ($etag) { $h["If-Match"] = $etag; $h["X-HTTP-Method"] = "MERGE" }
     $p = @{ Method = $method; Uri = "$WEB_URL/_api/web/GetList(@l)$path" + $(if ($path.Contains("?")) { "&" } else { "?" }) + "@l='$([uri]::EscapeDataString($LOCK_LIST_URL))'"; Headers = $h }
     if ($null -ne $body) { $p.Body = [Text.Encoding]::UTF8.GetBytes(($body | ConvertTo-Json -Compress)); $p.ContentType = "application/json;odata=nometadata" }

@@ -7,7 +7,8 @@
 .DESCRIPTION
     PMO-Sync — runbooks/Invoke-PMOSync.ps1 (собирается scripts/Build-Runbook.ps1; перед публикацией сверяется с исходниками);
     PMO-WhoAmI — runbooks/PMO-WhoAmI.ps1 (проверка прав управляемой учётной записи, этап 3).
-    Создаёт или обновляет runbook, загружает черновик, публикует и сверяет опубликованный текст с локальным файлом.
+    Подробный журнал (поток Verbose) включён: в среде PowerShell 7.4 Write-Host в журнал задания не попадает, журнал
+    синхронизации в Azure пишется в Verbose. Создаёт или обновляет runbook, загружает черновик, публикует и сверяет опубликованный текст с локальным файлом.
     Вход в Azure выполняет человек заранее (Connect-AzAccount ... -UseDeviceAuthentication).
 #>
 param(
@@ -36,7 +37,7 @@ function Rest([string]$method, [string]$path, [string]$payload) {
 }
 $loc = (Get-AzResource -ResourceGroupName $ResourceGroup -ResourceType Microsoft.Automation/automationAccounts -Name $Account).Location
 $desc = (@($text -split "`n")[0]).TrimStart("#", " ")
-Rest PUT "/runbooks/$Name" (@{ location = $loc; properties = @{ runbookType = "PowerShell"; runtimeEnvironment = $RuntimeName; logVerbose = $false; logProgress = $false; description = $desc } } | ConvertTo-Json -Depth 4 -Compress) | Out-Null
+Rest PUT "/runbooks/$Name" (@{ location = $loc; properties = @{ runbookType = "PowerShell"; runtimeEnvironment = $RuntimeName; logVerbose = $true; logProgress = $false; description = $desc } } | ConvertTo-Json -Depth 4 -Compress) | Out-Null
 Rest PUT "/runbooks/$Name/draft/content" $text | Out-Null
 $pub = Rest POST "/runbooks/$Name/publish" ""
 # публикация асинхронная — ждём и сверяем опубликованный текст
