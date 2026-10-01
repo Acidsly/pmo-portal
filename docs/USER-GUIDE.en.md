@@ -47,6 +47,8 @@ Everything is counted only over the projects you can see (excluding the archive)
 - **Tiles** or **List** — the switch at the top. Tiles are handier on a phone.
 - **Show:** All projects, Strategic, At risk, My projects (where I am PM, owner or on the team), No recent report, Overdue.
 - **In the list:** click a column header to sort; the funnel ▽ filters by value; the gear ⚙ chooses columns; **CSV** exports the table as shown (the file opens in Excel). New records are on top.
+- **Filters** (funnel and "Show") apply while you stay on the page: switching to another tab resets them to the defaults (column choice and sorting are remembered). Column widths do not change with filters.
+- **"Report" column** — the date of the last approved report; if a report is waiting for the PMO — "awaiting approval · date" or "new report awaiting approval".
 - **Status** is a coloured label: Initiation — purple, Planning — blue, Execution — green, On hold — orange, Archived — grey. The dot next to it is the project health (green, yellow, red, grey — not rated).
 - **Colours:** a red completion date means the deadline has passed and the project is still open. Report light: green — up to 8 days, yellow — 8–14, red — over 14.
 
@@ -56,7 +58,7 @@ Click a project and its card opens on the right (full screen on a phone):
 - at the top — type, health, status, priority and **Links** (Loop, documents, etc.); **Add status report** and **Edit** buttons (PM only);
 - approval notes: "Status report of … is awaiting PMO approval" or "Report of … returned for rework" with the PMO's comment;
 - **Stakeholders**: PM, owner and **Project team** — a table: member, role, what to contact them about;
-- **Timeline** (with the forecast deviation), **Budget and progress**;
+- **Timeline** (with the forecast deviation), **Budget and progress** (amounts in US dollars);
 - **Change history** — who changed what and when: "old → new", the reason (including PMO decisions — "Report approval");
 - **Comments** — the feed and "Add comment";
 - **Health history** — ratings from the latest reports;
@@ -67,13 +69,14 @@ You can share a link to the card: the browser address points exactly to it.
 
 ## Status report (for the PM)
 
-1. In the card — **Add status report** (or the "Status reports" tab → "New status report").
+1. In the card — **Add status report** (or the "Status reports" tab → "New status report"). A project can have **only one report awaiting approval**: until the PMO decides, the button is hidden and the card says "The report from … is awaiting PMO approval".
 2. Rate **schedule, budget and resources**: green, yellow, red. **Overall health** is calculated automatically — the worst of the three.
-3. **Key indicators** are prefilled with the current values. Change only what has changed: status, % complete, type, dates, actual costs.
+3. **Key indicators** are prefilled with the current values. Change only what has changed: status, % complete (0 to 100), type, dates, actual costs. Enter dates as dd.mm.yyyy (dots are added automatically) or pick them in the calendar — the button on the right of the field. The report date cannot be earlier than the last approved report.
 4. If you changed the status, type or a date, fill in **Reason for changing indicators** (required, goes to the history).
 5. A **One-line summary** (required), what was done, the plan, issues; tick **Management decision needed** if one is needed and describe it.
 6. **Save.** The report goes **to the PMO for approval**; the card updates after approval. A submitted report cannot be changed.
 7. If the PMO **returned** the report, the PMO's comment is shown in the card and in the report itself. Click **New report based on the returned one**: the form is filled with the returned report's data — fix it and save.
+8. A report is **returned automatically** if the project PM changed before the PMO decision (the new PM submits a current report) or the project moved to the archive — the comment explains why.
 
 The **"Completed — move to archive"** and **"Cancelled — move to archive"** status options send the project to the archive once the report is approved — after that the project is view-only.
 
@@ -87,7 +90,9 @@ The **"Completed — move to archive"** and **"Cancelled — move to archive"** 
    - **Return for rework** — the card does not change, the PM sees your comment (required).
 4. The PMO changes only the ratings; the report itself (texts, dates, status) stays unchanged. The decision is recorded in the project's change history ("Report approval": "old → new", your comment).
 
-A decided report cannot be approved again: if changes are needed, return it and the PM will submit a new one.
+A decided report cannot be approved again: if changes are needed, return it and the PM will submit a new one. A report approved by mistake can only be corrected by the PM's next report.
+
+Before a decision the portal checks the report's current state: if another PMO has already decided it, your decision is not saved (you see why). A report whose author is no longer the project PM can only be returned.
 
 ## How to change the project status
 
@@ -107,24 +112,26 @@ The status (Initiation, Planning, Execution, On hold, Cancelled, Completed) chan
 - **Response strategy:** Avoid, Reduce (mitigate), Transfer, Accept (clicking the selected one again clears the choice).
 - **Risk reduction actions** — what we do now; **Contingency plan** — what we do if the risk occurs.
 - Set the risk owner, status (Open — orange label, In progress — blue, Closed — green) and the **Mitigation due date**. An overdue open risk is shown in red.
-- "Show: High risks" — open risks with a score of 15 and above.
+- "Show: High risks" — open risks with a score of 15 and above; "Risks of archived projects" — risks of archived projects (view-only).
 
 ## Comments
 
-Anyone who sees the project can comment: in the card — "Comments" → "Add comment".
+Anyone who sees the project can comment: in the card — "Comments" → "Add comment". An archived project is view-only: no new comments.
 
 ## New project and editing
 
-- A **New project** is created by the PMO: the name and the PM are required (the PM is not prefilled — choose one); the project number is assigned by the system in order (PRJ-001, PRJ-002…) — it is unique and cannot be changed by hand.
+- A **New project** is created by the PMO: the name (unique — no two projects share a name) and the PM are required (the PM is not prefilled — choose one); the project number is assigned by the system in order (PRJ-001, PRJ-002…) — it is unique and cannot be changed by hand.
+- For ~15 minutes after creation the project is **being prepared** (the card says "The project is being prepared"): after that the PM can add reports, risks and team members.
 - Only the PM can **Edit** the card: name, department, priority, owner, budget, description, and also:
   - **Project team** — "+ Add member": a person, their **role** (required) and what to contact them about; × removes the member;
   - **Links** — "+ Add link": a name and an address (starting with `https://`); × removes it.
 - Status, health, dates and costs change only through a status report (see "How to change the project status").
 - After the team changes, access rights are recalculated automatically: team members see the project and can comment.
+- After a **PM change** the former PM can no longer change the project right away; the new PM sees "You are assigned as PM of this project: edit access appears within 15 minutes" — the page refreshes by itself.
 
 ## Archive
 
-The "Archive" tab lists completed projects with their archive date, view-only. Navigation is the same as in "Projects": **List** or **Tiles**, "Show" (All projects, Strategic, My projects), CSV and column choice; tiles show the archive date.
+The "Archive" tab lists completed and cancelled projects with their archive date, view-only (no new comments). Their risks — "Risks and issues" → "Show: Risks of archived projects". Navigation is the same as in "Projects": **List** or **Tiles**, "Show" (All projects, Strategic, My projects), CSV and column choice; tiles show the archive date.
 
 ## Language and theme
 
@@ -133,6 +140,8 @@ Top right: **UA / EN / RU** and the light ☀ / dark ☾ theme. The choice is re
 ## When changes appear
 
 Anything you save in the forms appears on screen immediately; so do PMO decisions on reports. Access rights (including for new team members), the change history and "Card access" update automatically within ~15 minutes.
+
+Before every save the portal checks the current data: if meanwhile the PM changed, the project moved to the archive, the project already has a report awaiting approval or another user changed the record — nothing is saved, you see an explanation and the data refreshes. An open page refreshes its data when you return to the tab and every 5 minutes.
 
 ## Feedback
 
