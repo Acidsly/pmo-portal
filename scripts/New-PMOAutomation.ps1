@@ -17,7 +17,7 @@
 param(
     [string]$ResourceGroup = "rg-pmo-automation",
     [string]$Account = "aa-pmo-sync",
-    [string]$Location = "polandcentral",
+    [string]$Location = "germanywestcentral",
     [string]$RuntimeName = "PowerShell-7.4-PnP",
     [string]$PnPVersion = "3.4.1",
     [string[]]$CacheEnvs = @("test"),
@@ -62,7 +62,9 @@ if (-not $rt) {
     Rest PUT "/runtimeEnvironments/$RuntimeName" @{ location = $Location; properties = @{ runtime = @{ language = "PowerShell"; version = "7.4" }; description = "Синхронизация портала PMO" } } | Out-Null
     Write-Host "+ среда выполнения $RuntimeName (PowerShell 7.4)" -ForegroundColor Green
 }
-$pkg = try { Rest GET "/runtimeEnvironments/$RuntimeName/packages/PnP.PowerShell" $null } catch { $null }
+# пакет — из списка: запрос по имени с точкой (PnP.PowerShell) отвечает 404
+function Get-PnPPackage { return @((Rest GET "/runtimeEnvironments/$RuntimeName/packages" $null).value | Where-Object name -eq "PnP.PowerShell")[0] }
+$pkg = Get-PnPPackage
 $uri = "https://www.powershellgallery.com/api/v2/package/PnP.PowerShell/$PnPVersion"
 # нет пакета, другая версия или прошлый импорт не удался — импорт заново
 if (-not $pkg -or [string]$pkg.properties.version -ne $PnPVersion -or [string]$pkg.properties.provisioningState -eq "Failed") {
@@ -70,7 +72,7 @@ if (-not $pkg -or [string]$pkg.properties.version -ne $PnPVersion -or [string]$p
     Write-Host "+ импорт PnP.PowerShell $PnPVersion начат" -ForegroundColor Green
 }
 do {
-    $pkg = Rest GET "/runtimeEnvironments/$RuntimeName/packages/PnP.PowerShell" $null
+    $pkg = Get-PnPPackage
     $state = [string]$pkg.properties.provisioningState
     Write-Host ("  PnP.PowerShell: {0} {1}" -f $state, $pkg.properties.version)
     if ($state -eq "Failed") { throw "Импорт PnP.PowerShell не удался: $($pkg.properties.error | ConvertTo-Json -Compress) — план Б (другая версия 3.x)" }
