@@ -250,7 +250,7 @@ New-ApplicationAccessPolicy -AppId <PMO Sync> -PolicyScopeGroupId "PMO Sync send
 2. `Invoke-Env.ps1 -Env test -Action seed` — все добавляются в «Учасники сайта», роли в демо-проектах PRJ-001…PRJ-010 раздаются по кругу: каждый (если людей не больше 10) будет PM одного проекта, собственником другого, стейкхолдером третьего. Повторный запуск ничего не меняет.
 3. `Invoke-Env.ps1 -Env test -Action sync` — права и «Доступ до картки».
 4. После теста удалите `config/focus-group.json`.
-5. Отзывы: `Invoke-Env.ps1 -Env test -Action feedback` выгружает текст, экран, устройство и скриншоты в `feedback-export/` (вне git). Статусы, ответы и отзывы, пришедшие письмом, — файл `feedback-export/answers.json` и `Invoke-Env.ps1 -Env test -Action feedback-answers` (затем `-Action sync` — общий список «Відгуки — загальні»).
+5. Отзывы: `Invoke-Env.ps1 -Env test -Action feedback` выгружает текст, экран, устройство и скриншоты в `feedback-export/` (вне git). Статусы, ответы и отзывы, пришедшие письмом, — файл `config/feedback-answers.json` и `Invoke-Env.ps1 -Env test -Action feedback-answers` (затем `-Action sync` — общий список «Відгуки — загальні»).
 6. На время теста расписание на Mac — круглосуточно: `scripts/Set-MacSchedule.ps1 -Env test -AllDay`.
 7. Освежить демо-данные (свежие отчёты, сроки рисков демо-проектов PRJ-001…PRJ-010): `Invoke-Env.ps1 -Env test -Action refresh`, затем `-Action sync`.
 8. Единая нумерация проектов (PRJ-001… по порядку создания, журнал «було → стало»): `Invoke-Env.ps1 -Env test -Action renumber-dryrun`, затем `-Action renumber`. Номер нового проекта — только автоматический.

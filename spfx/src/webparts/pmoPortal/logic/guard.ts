@@ -25,7 +25,8 @@ export function guard(action: Action, me: string, f: Fresh, opts: { reportDate?:
     const r = f.report;
     if (!r) return { ok: false, key: 'gDecided', args: { state: '' } };
     if ((r.approval && r.approval !== 'На погодженні') || r.decisions > 0) return { ok: false, key: 'gDecided', args: { state: r.approval || 'На погодженні' } };
-    if (action === 'approve' && low(r.author) !== pm) return { ok: false, key: 'gNotPmAuthor' };
+    // отчёт не текущего PM — только вернуть; владелец сайта может погодити любой (синхронизация доверяет владельцам)
+    if (action === 'approve' && low(r.author) !== pm && !f.owner) return { ok: false, key: 'gNotPmAuthor' };
     return { ok: true };
   }
   // правки PM: карточка, отчёт, риск, команда

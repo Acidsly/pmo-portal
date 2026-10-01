@@ -38,6 +38,7 @@ describe('guard: устаревшая страница не может запи�
   test('S2: автор отчёта уже не PM — погодити нельзя, вернуть можно', () => {
     const f = F({ report: { id: 5, approval: '', author: 'old@x', decisions: 0 } });
     expect(guard('approve', 'pmo@x', f)).toEqual({ ok: false, key: 'gNotPmAuthor' }); expect(guard('return', 'pmo@x', f).ok).toBe(true);
+    expect(guard('approve', 'own@x', { ...f, owner: true }).ok).toBe(true);   // владелец сайта — может погодити
   });
   test('владелец сайта — правила PM не применяются', () => {
     expect(guard('editCard', 'own@x', F({ owner: true })).ok).toBe(true);

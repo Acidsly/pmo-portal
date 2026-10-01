@@ -5,7 +5,7 @@
     Разбор отзывов фокус-группы владельцем сайта: статусы и ответы, а также отзывы, пришедшие не через портал (письмом).
 
 .DESCRIPTION
-    Файл JSON (по умолчанию feedback-export/answers.json, вне git — в нём e-mail):
+    Файл JSON (по умолчанию config/feedback-answers.json, вне git — в нём e-mail):
       { "update": [ { "id": 3, "status": "Зроблено", "answer": "…" } ],
         "add":    [ { "key": "letter-1", "author": "e-mail", "created": "2026-09-28T10:00:00+03:00", "screen": "Лист PMO",
                       "device": "лист", "text": "…", "status": "Зроблено", "answer": "…" } ] }

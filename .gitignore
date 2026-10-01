@@ -8,6 +8,8 @@ certs/
 config/environments.json
 # фокус-группа: e-mail сотрудников
 config/focus-group.json
+# ответы на отзывы (e-mail авторов) — вне git и вне feedback-export/ (выгрузка отзывов её перезаписывает)
+config/feedback-answers.json
 # выгрузка отзывов: ФИО и скриншоты участников
 feedback-export/
 # локальные настройки Claude Code

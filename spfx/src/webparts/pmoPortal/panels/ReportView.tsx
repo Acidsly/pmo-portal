@@ -43,7 +43,8 @@ export const ReportView: React.FC<{ data: PortalData; report: StatusReport | und
       // свежая проверка: отчёт ещё на погодженні и без решения (другой PMO, другая вкладка), проект не в архиве, автор — PM
       const f = await c.repo.fresh(r.projectId, r.id);
       const g = guard(decision === AP_OK ? 'approve' : 'return', c.me, f);
-      if (!g.ok) { setErr(guardText(t, g.key, g.args)); setBusy(false); await c.reload(); return; }
+      // после обновления данных блок решения исчезает (отчёт уже не на погодженні) — причину показываем и уведомлением
+      if (!g.ok) { const m = guardText(t, g.key, g.args); setErr(m); c.toast(m); setBusy(false); await c.reload(); return; }
       await c.repo.createIn('ReportApprovals', r.projectId, { apReportId: r.id, apProjectId: r.projectId, apDecision: decision,
         apSchedule: ap.s || null, apBudget: ap.b || null, apResources: ap.r || null, apNote: note.trim() });
       await c.reload(); c.toast(t('savedApproval')); c.openForm('rep:' + r.id, p.id);

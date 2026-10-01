@@ -82,10 +82,10 @@ if ($Action -eq "feedback") {
     if ($Action -eq "renumber-dryrun") { $a.DryRun = $true }
     & (Join-Path $PSScriptRoot "Renumber-Projects.ps1") @a
 } elseif ($Action -eq "feedback-answers") {
-    # разбор отзывов: статусы, ответы, отзывы из писем — файл feedback-export/answers.json (вне git)
+    # разбор отзывов: статусы, ответы, отзывы из писем — файл config/feedback-answers.json (вне git)
     if ($Env -ne "test") { throw "Действие «feedback-answers» доступно только для окружения test." }
     $a = Get-Auth $cfg.Deploy
-    $a.SiteUrl = $siteUrl; $a.File = Join-Path $root "feedback-export/answers.json"
+    $a.SiteUrl = $siteUrl; $a.File = Join-Path $root "config/feedback-answers.json"
     & (Join-Path $PSScriptRoot "Set-FeedbackAnswers.ps1") @a
 } elseif ($Action -eq "whois") {
     # диагностика доступа человека (только чтение): Entra ID, руководитель, подчинённые, группы сайта, роли в проектах
