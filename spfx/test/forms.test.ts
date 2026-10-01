@@ -49,3 +49,15 @@ test('правка карточки: изменения без описания'
   const diff = cardDiff(before, draft({ title: 'Б', priority: '1 — Високий', description: 'новое' }));
   expect(diff).toEqual([{ f: 'title', from: 'А', to: 'Б' }, { f: 'prio', from: '2 — Середній', to: '1 — Високий' }]);
 });
+
+describe('#27: уникальное название проекта', () => {
+  const D = { title: 'CRM для продажів', code: '', department: 'ІТ', links: [], type: 'Звичайний', priority: '2 — Середній', manager: { id: 1, name: 'M', email: 'm@x' },
+    owner: null, team: [], start: '', goLive: '', planEnd: '', status: 'Ініціація', budget: 0, description: '' };
+  test('такое же название (регистр и пробелы не важны) — ошибка', () => {
+    expect(validateProject({ ...D, title: '  crm  для ПРОДАЖІВ ' }, [], ['CRM для продажів'])).toBe('errTitleTaken');
+  });
+  test('другое название — можно; правка без смены названия существующего дубля — можно', () => {
+    expect(validateProject({ ...D, title: 'CRM 2' }, [], ['CRM для продажів'])).toBe('');
+    expect(validateProject(D, [], ['CRM для продажів'], 'CRM для продажів')).toBe('');
+  });
+});

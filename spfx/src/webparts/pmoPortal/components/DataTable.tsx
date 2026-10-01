@@ -70,6 +70,23 @@ export function DataTable<R extends { id: number }>(p: { tkey: string; defs: Tab
 
   // CSV — ровно то, что на экране: видимые колонки, фильтры и сортировка; значок без текста — по его подсказке
   const tableRef = React.useRef<HTMLDivElement>(null);
+  // #33: на широком экране ширины колонок закрепляются после первой раскладки по содержимому — фильтры и смена вида их
+  // не меняют; пересчёт — при смене набора колонок и размера окна. На телефоне и планшете (< 900 px) — как раньше.
+  const colsKey = shownCols.join(',');
+  const [lockW, setLockW] = React.useState<{ key: string; w: number[] } | null>(null);
+  React.useLayoutEffect(() => {
+    if (window.innerWidth < 900) { if (lockW) setLockW(null); return; }
+    if (lockW && lockW.key === colsKey) return;
+    const el = tableRef.current; if (!el) return;
+    const w = Array.prototype.map.call(el.querySelectorAll('thead th'), (th: Element) => Math.round(th.getBoundingClientRect().width)) as number[];
+    if (w.length === shownCols.length) setLockW({ key: colsKey, w });
+  });
+  React.useEffect(() => {
+    const on = (): void => setLockW(null);
+    window.addEventListener('resize', on);
+    return () => window.removeEventListener('resize', on);
+  }, []);
+  const locked = lockW && lockW.key === colsKey ? lockW.w : null;
   const exportCsv = (): void => {
     const el = tableRef.current; if (!el) return;
     const text = (c: Element): string => ((c as HTMLElement).innerText || '').trim() || (c.querySelector('[title]') ? (c.querySelector('[title]') as HTMLElement).title : '');
@@ -85,7 +102,9 @@ export function DataTable<R extends { id: number }>(p: { tkey: string; defs: Tab
       <button className="iconbtn gear-lg" aria-label={t('cols')} title={t('cols')}
         onClick={e => { const a = e.currentTarget; setPop(pop && pop.kind === 'cols' ? undefined : { kind: 'cols', anchor: a }); }}><Gear /></button></div>
     <div className="dt-bar"><span className="muted">{t('shown')} {data.length} {t('of')} {p.rows.length}</span>{chips}</div>
-    {data.length ? <div className="tablewrap dt" ref={tableRef}><table><thead><tr>{head}</tr></thead>
+    {data.length ? <div className="tablewrap dt" ref={tableRef}><table className={locked ? 'locked' : undefined}
+      style={locked ? { tableLayout: 'fixed', width: locked.reduce((a, b) => a + b, 0) } : undefined}>
+      {locked ? <colgroup>{locked.map((w, i) => <col key={shownCols[i]} style={{ width: w }} />)}</colgroup> : null}<thead><tr>{head}</tr></thead>
       <tbody>{data.map(r => <tr key={r.id} className="row">{shownCols.map(id => <td key={id} className={defs[id].cls || ''}>{defs[id].cell(r)}</td>)}</tr>)}</tbody></table></div>
       : <p className="empty">{p.empty || t('empty')}</p>}
     {pop ? <Pop anchor={pop.anchor} align={pop.kind === 'filter' ? 'left' : 'right'} onClose={close}>{popBody}</Pop> : null}

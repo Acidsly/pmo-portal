@@ -53,7 +53,11 @@ export function projectDefs(x: DefsCtx, archive: boolean): TableDefs<Project> {
     status: { label: t('cStatusOnly'), cell: p => <StatusPill v={p.status} />, sort: p => STATUSES.indexOf(p.status), filter: p => p.status, cls: 'w-min' },
     prio: { label: t('cPrio'), head: S.prioHead, cell: p => S.prioCell(p.priority), sort: p => p.priority, filter: p => p.priority, flabel: S.prioLabel, cls: 'w-ico' },
     rag: { label: t('cHealth'), cell: p => <RagDot v={p.rag} notRated={t('notRated')} />, sort: p => ragOrder(p.rag), filter: p => p.rag, flabel: S.ragLabel, cls: 'w-ico w-min' },
-    repDate: { label: t('cRepDate'), cell: p => <span className="rag"><span className="dot sm" style={{ background: freshColor(freshness(p.lastUpdate, today)) }} />{p.lastUpdate ? fmtDate(p.lastUpdate) : t('noReports')}</span>,
+    // #29: отчёт на погодженні виден в колонке — и без погодженых отчётов («на погодженні · дата»), и рядом с последним погодженим
+    repDate: { label: t('cRepDate'), cell: p => !p.lastUpdate && p.pendingDate
+      ? <span className="rag"><span className="dot sm" style={{ background: 'var(--y)' }} />{t('repPending').replace('{date}', fmtDate(p.pendingDate))}</span>
+      : <><span className="rag"><span className="dot sm" style={{ background: freshColor(freshness(p.lastUpdate, today)) }} />{p.lastUpdate ? fmtDate(p.lastUpdate) : t('noReports')}</span>
+        {p.pendingDate ? <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{t('repPendingNew')}</div> : null}</>,
       sort: p => p.lastUpdate, filter: p => freshBucket(p.lastUpdate, today),
       flabel: v => <span className="ilabel"><span className="dot sm" style={{ background: ['var(--g)', 'var(--y)', 'var(--r)', 'var(--na)'][Number(v)] }} />{t('fr' + v)}</span> },
     repAge: { label: t('cRepAge'), cell: p => { const a = age(p); return a === null ? <Muted /> : String(a); }, sort: p => age(p), cls: 'num' },
@@ -74,7 +78,7 @@ export function projectDefs(x: DefsCtx, archive: boolean): TableDefs<Project> {
     cmtBy: { label: t('cCmtBy'), cell: p => { const c = lastCm(p); return c ? <PersonCell p={c.author} /> : <Muted />; },
       sort: p => { const c = lastCm(p); return c && c.author ? c.author.name : ''; }, filter: p => { const c = lastCm(p); return c && c.author ? c.author.name : ''; } },
     dept: { label: fl('dept'), cell: p => tv(p.department), sort: p => p.department, filter: p => p.department },
-    loop: { label: fl('links'), cell: p => (p.links.length ? <>{p.links.map((l, i) => <React.Fragment key={i}>{i ? ', ' : ''}<a className="loop" href={l.u} target="_blank" rel="noopener noreferrer">{l.t} ↗</a></React.Fragment>)}</> : null) },
+    loop: { label: fl('links'), cell: p => (p.links.length ? <>{p.links.map((l, i) => <React.Fragment key={i}>{i ? ', ' : ''}<a className="loop" href={l.u} target="_blank" data-interception="off" rel="noopener noreferrer">{l.t} ↗</a></React.Fragment>)}</> : null) },
     archived: { label: t('archivedAt'), cell: p => dateCell(p.archivedAt), sort: p => p.archivedAt }
   };
   return { lock: 'title', cols,

@@ -3,13 +3,13 @@ import { isActive, freshness, isPlanLate, riskScore } from './status';
 
 export type ProjectView = 'all' | 'strat' | 'problem' | 'mine' | 'stale' | 'late';
 export type ReportView = 'all' | 'decision' | 'awaiting';
-export type RiskView = 'open' | 'high' | 'all';
+export type RiskView = 'open' | 'high' | 'all' | 'archived';
 export type ArchiveView = 'all' | 'strat' | 'mine';
 // названия представлений — украинские во всех языках, как в прототипе (подсказка viewsNote)
 export const PV: Record<ProjectView, string> = { all: 'Усі проєкти', strat: 'Стратегічні', problem: 'Проблемні', mine: 'Мої проєкти', stale: 'Немає свіжого звіту', late: 'Прострочені' };
 export const RV: Record<ReportView, string> = { all: 'Усі звіти', decision: 'Потребують рішення', awaiting: 'Очікують погодження' };
 export const AV: Record<ArchiveView, string> = { all: 'Усі проєкти', strat: 'Стратегічні', mine: 'Мої проєкти' };
-export const KV: Record<RiskView, string> = { open: 'Відкриті', high: 'Високі ризики', all: 'Усі елементи' };
+export const KV: Record<RiskView, string> = { open: 'Відкриті', high: 'Високі ризики', all: 'Усі елементи', archived: 'Ризики архівних проєктів' };
 
 export const participants = (p: Project): string[] =>
   [p.manager, p.owner, ...p.stakeholders].filter(x => !!x && !!x.email).map(x => x!.email.toLowerCase());
@@ -31,6 +31,8 @@ export const reportView = (v: ReportView, r: StatusReport): boolean =>
   (v === 'decision' ? r.decision : v === 'awaiting' ? (r.approval || 'На погодженні') === 'На погодженні' : true);
 export const riskView = (v: RiskView, k: Risk): boolean =>
   (v === 'open' ? k.status !== 'Закрито' : v === 'high' ? k.status !== 'Закрито' && riskScore(k.probability, k.impact) >= 15 : true);
+/** Представление рисков; проект риска в архиве — только в «Ризики архівних проєктів» (#32), остальные представления — без архива. */
+export const riskInView = (v: RiskView, k: Risk, archivedProject: boolean): boolean => (v === 'archived' ? archivedProject : !archivedProject && riskView(v, k));
 export function freshBucket(lastUpdate: string, today: string): '0' | '1' | '2' | '3' {
   const f = freshness(lastUpdate, today); return f === 'g' ? '0' : f === 'y' ? '1' : f === 'r' ? '2' : '3';
 }

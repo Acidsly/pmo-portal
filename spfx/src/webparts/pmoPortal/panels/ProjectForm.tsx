@@ -37,9 +37,10 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
 
   const save = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    const others = data.projects.filter(x => !project || x.id !== project.id).map(x => x.code);
+    const othersP = data.projects.filter(x => !project || x.id !== project.id);
+    const others = othersP.map(x => x.code);
     const clean = { ...d, team: cleanTeam(d.team), links: cleanLinks(d.links) };
-    const v = validateProject(clean, others);
+    const v = validateProject(clean, others, othersP.map(x => x.title), project ? project.title : '');
     if (v) { setErr(t(v)); return; }
     setBusy(true); setErr('');
     try {
@@ -141,7 +142,7 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
       <div className="fgrid2 frow">
         <div><label className="t" htmlFor="f-prio">{fl('prio')}</label>
           <select id="f-prio" value={d.priority} onChange={e => set({ priority: e.target.value })}><Opts values={PRIOS} /></select></div>
-        <div><label className="t" htmlFor="f-bud">{fl('budget')}, ₴</label>
+        <div><label className="t" htmlFor="f-bud">{fl('budget')}, $</label>
           <input type="number" id="f-bud" min={0} step={10000} value={d.budget} onChange={e => set({ budget: Number(e.target.value) || 0 })} /></div>
       </div>
       <Frow label={fl('desc')} htmlFor="f-desc"><textarea id="f-desc" value={d.description} onChange={e => set({ description: e.target.value })} /></Frow>

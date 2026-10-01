@@ -56,7 +56,7 @@ export const FeedbackForm: React.FC<{ screen: string; onCancel(): void; allUrl?:
       <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     <form onSubmit={save} onPaste={paste} noValidate={true}>
       <p className="note">{t('fbHint')}</p>
-      {allUrl ? <p className="note"><a href={allUrl} target="_blank" rel="noopener noreferrer">{t('fbAll')} ↗</a></p> : null}
+      {allUrl ? <p className="note"><a href={allUrl} target="_blank" data-interception="off" rel="noopener noreferrer">{t('fbAll')} ↗</a></p> : null}
       <Frow label={t('fbText')} htmlFor="fb-t" req={true}><textarea id="fb-t" style={{ minHeight: 120 }} value={text} onChange={e => setText(e.target.value)} /></Frow>
       <div className="frow"><span className="lbl-t">{t('fbShots')} ({shots.length}/{MAX_SHOTS})</span>
         {shots.length ? <div className="fb-shots">{shots.map((s, i) => <figure key={s.url}><img src={s.url} alt="" />

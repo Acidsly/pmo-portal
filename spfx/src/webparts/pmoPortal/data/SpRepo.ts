@@ -81,7 +81,8 @@ export class SpRepo {
     // стейкхолдеры — люди «Команда проєкту» (синхронизация повторяет их в pmStakeholders)
     const withTeam = (x: Project): Project => { const own = team.filter(m => m.projectId === x.id); return { ...x, team: own, stakeholders: teamPeople(own) }; };
     return { projects: p.map(mapProject).map(x => ({ ...applyState(x, states[x.id]), lastApplied: lastApplied[x.id] || '' })).map(withTeam)
-      .map(x => applyPending(x, reports, approvals.length ? approvedIds : undefined)), reports, risks: k.map(mapRisk),
+      .map(x => applyPending(x, reports, approvals.length ? approvedIds : undefined))
+      .map(x => { const pr = reports.filter(rr => rr.projectId === x.id && !rr.applied && (!rr.approval || rr.approval === 'На погодженні'))[0]; return pr ? { ...x, pendingDate: pr.date } : x; }), reports, risks: k.map(mapRisk),
       comments: c.map(mapComment), changes: h.map(mapChange), canCreate: canAdd(perm), canApprove: canAdd(perm), approvals, feedback: canAdd(fbPerm), feedbackAdmin: canManage(fbPerm), feedbackRows };
   }
 

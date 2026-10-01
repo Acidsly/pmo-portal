@@ -32,7 +32,8 @@ export const PersonCell: React.FC<{ p: Person | null }> = ({ p }) => p
 export const Score: React.FC<{ s: number }> = ({ s }) =>
   <span className="chip" style={{ background: s >= 15 ? 'var(--r)' : s >= 8 ? 'var(--y)' : 'var(--g)' }}>{s}</span>;
 
-export const money = (n: number): string => Math.round(n || 0).toLocaleString('uk-UA') + ' ₴';
+// все суммы портала — в долларах США, без пересчёта (#30)
+export const money = (n: number): string => Math.round(n || 0).toLocaleString('uk-UA') + ' $';
 export const ragColor = (v: Rag): string => (v ? RC[v] : 'var(--na)');
 export const freshColor = (f: Fresh): string => FC[f];
 

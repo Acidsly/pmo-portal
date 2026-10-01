@@ -33,6 +33,7 @@ const DEFAULT_VIEWS: Views = { projects: 'all', reports: 'all', risks: 'open', a
 interface Route { page: Page; views: Views; projectId: number; form: string; }
 
 /** Адрес: #<вкладка>/<представление>/<id проекта>/<форма> — назад/вперёд браузера, ссылку на карточку можно отправить. */
+const pickDefault = (page: Page): Partial<Views> => (page in DEFAULT_VIEWS ? { [page]: DEFAULT_VIEWS[page as keyof Views] } : {});
 function parse(hash: string, prev: Views): Route {
   const [pg, view, id, form] = hash.replace(/^#/, '').split('/');
   const page = (PAGES.indexOf(pg as Page) >= 0 ? pg : 'home') as Page;
@@ -81,7 +82,8 @@ export const App: React.FC<AppProps> = p => {
   const tt = makeT(lang);
   setValueLang(lang);   // значения выбора — на языке интерфейса (i18n/values.ts)
   const ctx: Ctx = { ...tt, lang, today: todayIso(), me: p.userEmail, webUrl: p.webUrl, views: route.views, canCreate: !!data && data.canCreate,
-    go: (page, view) => { nav(parse('#' + page + '/' + (view || ''), route.views)); window.scrollTo(0, 0); },
+    // без вида (вкладка в шапке) — вид страницы по умолчанию, а не запомненный (#23, #24); показатели главной передают вид
+    go: (page, view) => { nav(parse('#' + page + '/' + (view || ''), view ? route.views : { ...route.views, ...pickDefault(page) })); window.scrollTo(0, 0); },
     setView: (page, view) => nav({ ...route, views: { ...route.views, [page]: view } }),
     openProject: id => nav({ ...route, projectId: id, form: '' }),
     openForm: (form, id) => nav({ ...route, projectId: id || 0, form }),

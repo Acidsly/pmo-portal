@@ -1,4 +1,4 @@
-import { applyTable, filterValues, nextSort, toggleCol, moveCol, ColDef, TableState } from '../src/webparts/pmoPortal/logic/table';
+import { applyTable, filterValues, nextSort, toggleCol, moveCol, loadState, saveState, ColDef, TableState } from '../src/webparts/pmoPortal/logic/table';
 
 interface Row { id: number; t: string; n: number | null; tags: string[]; }
 const rows: Row[] = [{ id: 1, t: 'Б', n: 2, tags: ['x'] }, { id: 2, t: 'А', n: null, tags: ['y', 'x'] }, { id: 3, t: 'В', n: 1, tags: [] }];
@@ -37,4 +37,16 @@ test('колонки: закреплённую не снять; первую н�
   expect(moveCol(st({ cols: ['s', 't', 'n', 'x'] }), 'n', 1, 't').cols).toEqual(['s', 't', 'x', 'n']);
   expect(moveCol(st({ cols: ['s', 't', 'n', 'x'] }), 'x', -1, 't').cols).toEqual(['s', 't', 'x', 'n']);
   expect(moveCol(st({ cols: ['s', 't', 'n'] }), 't', 1, 't').cols).toEqual(['s', 't', 'n']);   // закреплённая не вниз
+});
+
+describe('фильтры колонок не запоминаются (#23, #24): колонки и сортировка — да', () => {
+  test('сохранение без фильтров, загрузка — фильтры пустые', () => {
+    const mem: Record<string, string> = {};
+    (global as unknown as { localStorage: Storage }).localStorage = { getItem: (k: string) => mem[k] || null, setItem: (k: string, v: string) => { mem[k] = v; },
+      removeItem: () => undefined, clear: () => undefined, key: () => null, length: 0 } as Storage;
+    saveState('t1', { cols: ['a', 'b'], sort: { id: 'a', dir: 'desc' }, filters: { a: ['x'] } });
+    expect(JSON.parse(mem['pmo-table6-t1'])).toEqual({ cols: ['a', 'b'], sort: { id: 'a', dir: 'desc' } });
+    const st = loadState('t1', ['a'], ['a', 'b'], 'a');
+    expect(st.filters).toEqual({}); expect(st.sort).toEqual({ id: 'a', dir: 'desc' }); expect(st.cols).toEqual(['a', 'b']);
+  });
 });

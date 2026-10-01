@@ -522,3 +522,5 @@ form .fsec:first-child{margin-top:0}
 
 }
 }
+/* #33: закреплённые ширины колонок (DataTable) — длинный текст переносится внутри колонки */
+.dt table.locked td{overflow-wrap:anywhere}

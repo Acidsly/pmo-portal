@@ -1675,6 +1675,21 @@ export const EXTRA: Record<string, L3> = {
   "The project is archived: view only.",
   "Проект в архиве: только просмотр."
  ],
+ "repPending": [
+  "на погодженні · {date}",
+  "awaiting approval · {date}",
+  "на согласовании · {date}"
+ ],
+ "repPendingNew": [
+  "новий звіт на погодженні",
+  "new report awaiting approval",
+  "новый отчёт на согласовании"
+ ],
+ "errTitleTaken": [
+  "Проєкт з такою назвою вже є. Вкажіть іншу назву.",
+  "A project with this name already exists. Enter a different name.",
+  "Проект с таким названием уже есть. Укажите другое название."
+ ],
  "errCode": [
   "Такий код уже є в іншого проєкту. Вкажіть інший або залиште поле порожнім — код призначиться автоматично.",
   "This code is already used by another project. Enter another one or leave the field empty to assign it automatically.",

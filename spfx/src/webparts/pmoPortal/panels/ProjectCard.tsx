@@ -112,7 +112,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
       <RagPill v={p.rag} notRated={t('notRated')} /><StatusPill v={p.status} /><span className="badge">{tv(p.priority)}</span>
     </div>
     {p.links.length ? <div className="lnk-sec"><div className="k">{fl('links')}</div><span className="lnks">{p.links.map((l, i) =>
-      <a key={i} className="loop" href={l.u} target="_blank" rel="noopener noreferrer">{l.t || l.u} ↗</a>)}</span></div> : null}
+      <a key={i} className="loop" href={l.u} target="_blank" data-interception="off" rel="noopener noreferrer">{l.t || l.u} ↗</a>)}</span></div> : null}
     {edit ? <div className="actbar">
       {/* один отчёт на погодженні на проект: пока PMO не решил, новый не подаётся */}
       {awaitingAll.length ? null : <button className="btn primary" onClick={() => c.openForm('report', p.id)}><Plus />{t('addReport')}</button>}

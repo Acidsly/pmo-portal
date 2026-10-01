@@ -77,7 +77,7 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
             <select id="f-st" value={d.status} onChange={e => set({ status: e.target.value })}>
               <Opts values={REPORT_STATUSES} /><option value="Завершено">{t('completeArch')}</option><option value="Скасовано">{t('cancelArch')}</option></select></div>
           <div><label className="t" htmlFor="f-pr">{fl('progress')}</label>
-            <input type="number" id="f-pr" min={0} max={100} value={d.progress} onChange={e => set({ progress: Number(e.target.value) || 0 })} /></div>
+            <input type="number" id="f-pr" min={0} max={100} value={d.progress} onChange={e => set({ progress: Math.max(0, Math.min(100, Math.round(Number(e.target.value) || 0))) })} />   {/* #28: только 0–100 */}</div>
         </div>
         {d.status === 'Завершено' || d.status === 'Скасовано' ? <p className="note" style={{ margin: '-4px 0 14px' }}>{t('completeHint')}</p> : null}
         <fieldset className="ragpick"><legend>{fl('type')}</legend><SegPick name="f-type" options={TYPES} value={d.type} onChange={v => set({ type: v })} /></fieldset>
@@ -87,7 +87,7 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
           <div><label className="t" htmlFor="f-plan">{fl('plan')}</label><DateIn id="f-plan" value={d.planEnd} onChange={v => set({ planEnd: v })} /></div>
           <div><label className="t" htmlFor="f-fc">{fl('fc')}</label><DateIn id="f-fc" value={d.forecastEnd} onChange={v => set({ forecastEnd: v })} /></div>
         </div>
-        <Frow label={`${fl('rCost')}, ₴`} htmlFor="f-c">
+        <Frow label={`${fl('rCost')}, $`} htmlFor="f-c">
           <input type="number" id="f-c" min={0} step={1000} value={d.actualCost} onChange={e => set({ actualCost: Number(e.target.value) || 0 })} /></Frow>
         {keyCh ? <Frow label={t('keyReason')} htmlFor="f-kr" req={true}>
           <textarea id="f-kr" placeholder={t('reasonPh')} value={d.keyReason} onChange={e => set({ keyReason: e.target.value })} /></Frow> : null}

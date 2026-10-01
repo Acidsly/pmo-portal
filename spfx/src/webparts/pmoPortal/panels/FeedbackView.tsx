@@ -24,7 +24,7 @@ export const FeedbackView: React.FC<{ row: FeedbackRow | undefined; admin: boole
       <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     <div className="badges"><FbStatus v={row.status} />{row.screen ? <span className="badge" title={row.screen}>{screenLabel(row.screen, t, tv)}</span> : null}</div>
     <p className="fb-text">{row.text}</p>
-    {row.files.length ? <div className="fb-shots">{row.files.map(f => <a key={f.url} href={f.url} target="_blank" rel="noopener noreferrer"><figure><img src={f.url} alt={f.name} /></figure></a>)}</div>
+    {row.files.length ? <div className="fb-shots">{row.files.map(f => <a key={f.url} href={f.url} target="_blank" data-interception="off" rel="noopener noreferrer"><figure><img src={f.url} alt={f.name} /></figure></a>)}</div>
       : row.shots ? <p className="note">{t('fbShotsHidden')} ({row.shots})</p> : null}
     {admin ? <form onSubmit={save} noValidate={true}>
       <Frow label={t('fbStatusCol')} htmlFor="fb-st"><select id="fb-st" value={status} onChange={e => setStatus(e.target.value)}><Opts values={FB_STATUSES} /></select></Frow>

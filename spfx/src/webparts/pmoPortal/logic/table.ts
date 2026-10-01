@@ -44,9 +44,10 @@ export function moveCol(st: TableState, id: string, dir: -1 | 1, lock: string): 
 /** Состояние из localStorage; неизвестные колонки отбрасываются, закреплённая всегда есть (позиция 2). */
 export function loadState(key: string, defaults: string[], known: string[], lock: string): TableState {
   let st: TableState = { cols: defaults.slice(), sort: null, filters: {} };
-  try { const raw = localStorage.getItem('pmo-table6-' + key); if (raw) st = { ...st, ...JSON.parse(raw) }; } catch { /* нет хранилища */ }
+  // фильтры колонок не запоминаются: при уходе со страницы сбрасываются (#23, #24); колонки и сортировка — запоминаются
+  try { const raw = localStorage.getItem('pmo-table6-' + key); if (raw) { const j = JSON.parse(raw); st = { ...st, cols: Array.isArray(j.cols) ? j.cols : st.cols, sort: j.sort || null }; } } catch { /* нет хранилища */ }
   st.cols = st.cols.filter(c => known.indexOf(c) >= 0);
   if (st.cols.indexOf(lock) < 0) st.cols.splice(Math.min(2, st.cols.length), 0, lock);
   return st;
 }
-export function saveState(key: string, st: TableState): void { try { localStorage.setItem('pmo-table6-' + key, JSON.stringify(st)); } catch { /* нет хранилища */ } }
+export function saveState(key: string, st: TableState): void { try { localStorage.setItem('pmo-table6-' + key, JSON.stringify({ cols: st.cols, sort: st.sort })); } catch { /* нет хранилища */ } }
