@@ -83,14 +83,16 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
   const edit = p.canEdit && !isArch(p.status);
   // назначили PM, права ещё не выданы синхронизацией — плашка и проверка раз в минуту (права появятся без перезагрузки страницы)
   const soonPm = !p.canEdit && !isArch(p.status) && !!p.manager && p.manager.email.toLowerCase() === (c.me || '').toLowerCase();
-  const waiting = soonPm || !p.access;
+  // проверка — только у назначенного PM и не дольше 10 минут (права выдаёт ближайшая синхронизация)
   React.useEffect(() => {
-    if (!waiting) return undefined;
+    if (!soonPm) return undefined;
+    let n = 0;
     const tm = window.setInterval(() => {
-      repo.fresh(p.id).then(f => { if (f.project.canEdit !== p.canEdit || (!!f.project.access && !p.access)) c.reload().catch(() => undefined); }, () => undefined);
+      if (++n > 10) { window.clearInterval(tm); return; }
+      repo.fresh(p.id).then(f => { if (f.project.canEdit) c.reload().catch(() => undefined); }, () => undefined);
     }, 60000);
     return () => window.clearInterval(tm);
-  }, [p.id, waiting, p.canEdit, p.access]);
+  }, [p.id, soonPm]);
   // погодження PMO: самый ранний отчёт на погодженні; последний отчёт повернуто — комментарий PMO и «новий звіт на основі повернутого»
   const awaitingAll = reps.slice().reverse().filter(r => (r.approval || 'На погодженні') === 'На погодженні');
   const returned = reps[0] && reps[0].approval === 'Повернуто' ? reps[0] : undefined;

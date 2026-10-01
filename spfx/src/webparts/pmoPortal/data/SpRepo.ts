@@ -63,12 +63,13 @@ export class SpRepo {
       this.items('ProjectComments', COMMENT_SELECT, COMMENT_EXPAND),
       this.items('KeyChanges', CHANGE_SELECT, CHANGE_EXPAND, CHANGES_ON_LOAD),
       this.items('ProjectTeam', TEAM_SELECT, TEAM_EXPAND).catch(() => [] as any[]),
-      this.items('ReportApprovals', APPROVAL_SELECT, APPROVAL_EXPAND).catch(() => [] as any[]),
+      // null — списка «Погодження звітів» нет (до развёртывания): тогда «Погоджено» в отчёте действует как раньше
+      this.items('ReportApprovals', APPROVAL_SELECT, APPROVAL_EXPAND).catch(() => null as any[] | null),
       // эталон ключевых полей (пишет только синхронизация); до развёртывания списка нет — пусто
       this.items('ProjectState', 'Id,psProject,psState,psLastApplied', '').catch(() => [] as any[]),
       this.listPerms('Projects').catch(() => undefined),
       this.listPerms('Feedback').catch(() => undefined)]);
-    const approvals = ap.map(mapApproval);
+    const approvals = (ap || []).map(mapApproval);
     // решение PMO, ещё не перенесённое синхронизацией, видно сразу (как применение отчёта в карточку)
     const reports = r.map(mapReport).map(x => withApproval(x, approvals));
     const feedbackRows = fbPerm ? await this.loadFeedback().catch(() => []) : [];
@@ -76,13 +77,17 @@ export class SpRepo {
     const states: Record<number, StateJson | undefined> = {}; const lastApplied: Record<number, string> = {};
     for (const x of ps) { states[Number(x.psProject)] = parseState(x.psState); lastApplied[Number(x.psProject)] = String(x.psLastApplied || ''); }
     // «Погоджено» действует только по решению PMO (как синхронизация): отчёты с решением «Погоджено» в «Погодження звітів»
+    const repProj: Record<number, number> = {}; for (const x of r) repProj[x.Id] = x.srProjectId;
     const approvedIds: Record<number, boolean> = {};
-    for (const a of approvals) if (a.decision === 'Погоджено') { const rep = r.filter((x: any) => x.Id === a.reportId)[0]; if (!rep || !rep.srProjectId || rep.srProjectId === a.projectId) approvedIds[a.reportId] = true; }
+    for (const a of approvals) if (a.decision === 'Погоджено' && repProj[a.reportId] === a.projectId) approvedIds[a.reportId] = true;
+    // отчёты по проектам один раз (без перебора всех отчётов для каждого проекта)
+    const byProj: Record<number, StatusReport[]> = {};
+    for (const x of reports) (byProj[x.projectId] = byProj[x.projectId] || []).push(x);
     // стейкхолдеры — люди «Команда проєкту» (синхронизация повторяет их в pmStakeholders)
     const withTeam = (x: Project): Project => { const own = team.filter(m => m.projectId === x.id); return { ...x, team: own, stakeholders: teamPeople(own) }; };
     return { projects: p.map(mapProject).map(x => ({ ...applyState(x, states[x.id]), lastApplied: lastApplied[x.id] || '' })).map(withTeam)
-      .map(x => applyPending(x, reports, approvals.length ? approvedIds : undefined))
-      .map(x => { const pr = reports.filter(rr => rr.projectId === x.id && !rr.applied && (!rr.approval || rr.approval === 'На погодженні'))[0]; return pr ? { ...x, pendingDate: pr.date } : x; }), reports, risks: k.map(mapRisk),
+      .map(x => applyPending(x, byProj[x.id] || [], ap ? approvedIds : undefined))
+      .map(x => { const pr = (byProj[x.id] || []).filter(rr => !rr.applied && (!rr.approval || rr.approval === 'На погодженні'))[0]; return pr ? { ...x, pendingDate: pr.date } : x; }), reports, risks: k.map(mapRisk),
       comments: c.map(mapComment), changes: h.map(mapChange), canCreate: canAdd(perm), canApprove: canAdd(perm), approvals, feedback: canAdd(fbPerm), feedbackAdmin: canManage(fbPerm), feedbackRows };
   }
 
@@ -201,13 +206,14 @@ export class SpRepo {
       this.getJson(this.itemUrl('Projects', projectId, PROJECT_SELECT, PROJECT_EXPAND), true),
       this.items('ProjectState', 'Id,psProject,psState,psLastApplied', '', `psProject eq ${projectId}`).catch(() => [] as any[]),
       this.items('StatusReports', REPORT_SELECT, REPORT_EXPAND, `srProjectId eq ${projectId}`),
-      this.items('ReportApprovals', APPROVAL_SELECT, APPROVAL_EXPAND, `apProjectId eq ${projectId}`).catch(() => [] as any[])]);
-    const approvals = aps.map(mapApproval);
+      this.items('ReportApprovals', APPROVAL_SELECT, APPROVAL_EXPAND, `apProjectId eq ${projectId}`).catch(() => null as any[] | null)]);
+    const approvals = (aps || []).map(mapApproval);
     const reports = reps.map(mapReport).map(x => withApproval(x, approvals));
     const approvedIds: Record<number, boolean> = {};
-    for (const a of approvals) if (a.decision === 'Погоджено') approvedIds[a.reportId] = true;
+    const ownReps: Record<number, boolean> = {}; for (const x of reps) ownReps[x.Id] = true;
+    for (const a of approvals) if (a.decision === 'Погоджено' && ownReps[a.reportId]) approvedIds[a.reportId] = true;
     const base = { ...applyState(mapProject(pj), st[0] ? parseState(st[0].psState) : undefined), lastApplied: st[0] ? String(st[0].psLastApplied || '') : '' };
-    const project = applyPending(base, reports, approvals.length ? approvedIds : undefined);
+    const project = applyPending(base, reports, aps ? approvedIds : undefined);
     const pending = reports.filter(r => !r.applied && (!r.approval || r.approval === 'На погодженні'))
       .map(r => ({ id: r.id, date: r.date, author: r.author ? r.author.email.toLowerCase() : '' })).sort((a, b) => (a.date < b.date ? -1 : 1));
     const lastApprovedDate = reports.filter(r => r.approval === 'Погоджено').reduce((m, r) => (r.date > m ? r.date : m), '');
@@ -226,7 +232,8 @@ export class SpRepo {
   /** Отметка изменений списков портала: самое позднее изменение записей (один лёгкий запрос). */
   async stamp(): Promise<string> {
     const j = await this.getJson(`${this.webUrl}/_api/web/lists?$select=Title,LastItemModifiedDate,RootFolder/ServerRelativeUrl&$expand=RootFolder&$filter=Hidden eq true`);
-    const portal = ['/Lists/Projects', '/Lists/StatusReports', '/Lists/RisksIssues', '/Lists/ProjectComments', '/Lists/ProjectTeam', '/Lists/ReportApprovals', '/Lists/ProjectState', '/Lists/KeyChanges'];
+    // журнал и эталон синхронизация пишет каждый запуск — по ним не перечитываем (иначе полная перезагрузка каждые 5 минут)
+    const portal = ['/Lists/Projects', '/Lists/StatusReports', '/Lists/RisksIssues', '/Lists/ProjectComments', '/Lists/ProjectTeam', '/Lists/ReportApprovals'];
     return (j.value || []).filter((l: any) => l.RootFolder && portal.some(u => String(l.RootFolder.ServerRelativeUrl).endsWith(u)))
       .reduce((m: string, l: any) => (String(l.LastItemModifiedDate) > m ? String(l.LastItemModifiedDate) : m), '');
   }

@@ -38,8 +38,8 @@ export const DateIn: React.FC<{ id: string; value: string; onChange(v: string): 
   };
   return <span className="date-in">
     <input type="text" id={p.id} inputMode="numeric" autoComplete="off" placeholder={t('datePh')} value={txt} disabled={p.disabled}
-      onChange={e => { const m = maskDmy(e.target.value); setTxt(m); const v = parseDmy(m); if (v !== null && v !== p.value) p.onChange(v); }}
-      onBlur={() => { if (parseDmy(txt) === null) setTxt(formatDmy(p.value)); }} />
+      onChange={e => { const m = maskDmy(e.target.value); setTxt(m); const v = parseDmy(m); const nv = v === null ? '' : v; if (nv !== p.value) p.onChange(nv); }}
+      onBlur={() => { if (parseDmy(txt) === null) setTxt(''); }} />   {/* неполная дата — значения нет (а не прежняя дата) */}
     <button type="button" className="date-btn" aria-label={t('pickDate')} title={t('pickDate')} disabled={p.disabled} onClick={pick}>
       <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
         d="M7 3v3M17 3v3M4 9h16M5.5 5h13A1.5 1.5 0 0 1 20 6.5v12a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-12A1.5 1.5 0 0 1 5.5 5z" /></svg></button>

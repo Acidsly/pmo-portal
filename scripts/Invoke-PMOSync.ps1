@@ -112,6 +112,16 @@ $PERM_V2 = [bool]$ROLE.add
 if (-not $PERM_V2) { Warn "Немає рівня дозволів «$ROLE_ADD_NAME» — спочатку Deploy-PMO.ps1; права видаються за попередньою моделлю" }
 $OWNERS = (Get-PnPGroup -AssociatedOwnerGroup).Title
 $OWNER_EMAILS = @(Get-PnPGroupMember -Group $OWNERS | ForEach-Object { ([string]$_.Email).ToLowerInvariant() } | Where-Object { $_ })
+# администраторы семейства сайтов — тоже владельцы (могут не входить в группу владельцев)
+try { $OWNER_EMAILS = @($OWNER_EMAILS + @(Get-PnPSiteCollectionAdmin | ForEach-Object { ([string]$_.Email).ToLowerInvariant() } | Where-Object { $_ })) | Select-Object -Unique } catch { }
+# Приложения (синхронизация, развёртывание, служебные скрипты) — по учётной записи на сайте, а не по пустому e-mail:
+# у человека (гость, учётная запись без почты) e-mail тоже бывает пустым — он не доверенный.
+$APP_IDS = @{}
+foreach ($u in @(Get-PnPUser | Where-Object { ([string]$_.LoginName) -like "i:0i.t|ms.sp.ext|*" })) { $APP_IDS[[int]$u.Id] = $true }
+# Кто автор / редактор для правил доверия: «app» — приложение, иначе e-mail (пустой — не доверенный)
+function Who($u) { if (-not $u) { return "" }; if ($APP_IDS.ContainsKey([int]$u.LookupId)) { return "app" }; return Email $u }
+# для журнала и полей «Користувач»: приложение — без автора
+function WhoMail([string]$w) { if ($w -eq "app") { return "" } return $w }
 
 # ---------------------------------------------------------------------------
 # Значения полей
@@ -137,7 +147,8 @@ function CalcRag($s, $b, $r) {
 # Решение PMO по статус-отчёту (общие векторы tests/cases/approval.json). $rep: s, b, r, approval; $ap: decision, s, b, r, note или $null.
 # Пустой цвет PMO — без изменений; смена цвета или возврат — только с комментарием; решённый отчёт повторно не решается.
 # Доверенный автор: приложение синхронизации или скриптов (пустой e-mail) и владельцы сайта
-function Test-Trusted([string]$email, [string[]]$ownerList) { return (-not $email) -or ($ownerList -contains $email) }
+# Доверенный автор: приложение (Who -> «app») или владелец сайта; пустой e-mail — НЕ доверенный (векторы tests/cases/reports.json)
+function Test-Trusted([string]$email, [string[]]$ownerList) { return ($email -eq "app") -or ([bool]$email -and $ownerList -contains $email) }
 # Отчёты проекта «на погодженні», которые нужно вернуть автоматически (векторы tests/cases/reports.json):
 # проект в архиве; автор — не текущий PM (сменился PM); второй и следующие отчёты на погодженні (на проект — один, остаётся первый).
 # $pending: @{ id; date; author; created }.
@@ -218,22 +229,25 @@ function EditLogRows([string]$json) {
 }
 # Журнал правок карточки без потерь и дублей (векторы tests/cases/editlog.json): у записи правки — ключ (id из приложения;
 # у старых записей без id — время и автор). Переносятся только записи, ключей которых нет в $done (эталон psEditDone).
-function Get-EditLogKey($e) { if ($e.id) { return "id:$($e.id)" } return "w:$([string]$e.when)|$([string]$e.who)" }
+function Get-EditLogKey($e) { if ($e["id"]) { return "id:$($e["id"])" } return "w:$([string]$e["when"])|$([string]$e["who"])" }
 function Get-EditLogPlan([string]$json, [string[]]$done) {
     $plan = [ordered]@{ rows = @(); keys = @() }
     if (-not $json) { return $plan }
-    try { $log = $json | ConvertFrom-Json -DateKind String -ErrorAction Stop } catch { return $plan }
-    $new = @(@($log.entries) | Where-Object { $_ -and $done -notcontains (Get-EditLogKey $_) })
+    try { $log = ConvertFrom-JsonText $json } catch { return $plan }
+    if ($log -isnot [System.Collections.IDictionary]) { return $plan }
+    $new = @(@($log["entries"]) | Where-Object { $_ -and $done -notcontains (Get-EditLogKey $_) })
     if (-not $new.Count) { return $plan }
     $plan.keys = @($new | ForEach-Object { Get-EditLogKey $_ })
     $plan.rows = @(EditLogRows (ConvertTo-Json -InputObject ([ordered]@{ entries = $new }) -Depth 6 -Compress))
     return $plan
 }
-# Убрать из журнала правок записи с ключами $keys (уже перенесённые); пусто — если ничего не осталось
+# Убрать из журнала правок записи с ключами $keys (уже перенесённые); пусто — если ничего не осталось.
+# Повреждённый журнал не трогаем (возвращаем как был): лучше повтор, чем потеря правок.
 function Remove-EditLogEntries([string]$json, [string[]]$keys) {
     if (-not $json) { return "" }
-    try { $log = $json | ConvertFrom-Json -DateKind String -ErrorAction Stop } catch { return "" }
-    $rest = @(@($log.entries) | Where-Object { $_ -and $keys -notcontains (Get-EditLogKey $_) })
+    try { $log = ConvertFrom-JsonText $json } catch { return $json }
+    if ($log -isnot [System.Collections.IDictionary]) { return $json }
+    $rest = @(@($log["entries"]) | Where-Object { $_ -and $keys -notcontains (Get-EditLogKey $_) })
     if (-not $rest.Count) { return "" }
     return (ConvertTo-Json -InputObject ([ordered]@{ entries = $rest }) -Depth 6 -Compress)
 }
@@ -401,16 +415,18 @@ if ($HAS_PS) {
     foreach ($p in $PROJ.Values) {
         $card = [ordered]@{}; foreach ($k in Get-StateKeys) { $card[$k] = [string]$p.Values[$k] }
         $st = $STATES[$p.Item.Id]
-        if (-not $st) {
+        if (-not $st -or -not $st.state) {
+            # нет эталона или он повреждён — заново из карточки (никогда не откат к пустым значениям)
+            if ($st) { Warn "Еталон «$($p.Item["Title"])» пошкоджено — створено заново з картки" }
             $stats.stateNew++
             if (-not $DryRun) { Save-ProjectState $p.Item.Id $card $STATES } else { Log "  еталон: + «$($p.Item["Title"])»" }
             continue
         }
         $diff = Compare-State $card $st.state
         if (-not $diff.Count) { continue }
-        $editor = Email $p.Item["Editor"]
+        $editorT = Who $p.Item["Editor"]; $editor = WhoMail $editorT
         $when = (Get-Date).ToUniversalTime().ToString("o")
-        if (-not $editor -or $OWNER_EMAILS -contains $editor) {
+        if (Test-Trusted $editorT $OWNER_EMAILS) {
             # правка владельца сайта или скрипта (приложение) — законна: эталон = карточка
             Log "  еталон «$($p.Item["Title"])»: оновлено за карткою ($(@($diff | ForEach-Object { $_.f }) -join ', '))"
             foreach ($d in $diff) { Add-Change $p.Item.Id $d.f (Human $d.f $d.state) (Human $d.f $d.card) "Редагування картки" $editor "Змінено власником сайту або службовим скриптом" $when }
@@ -438,7 +454,7 @@ if ($HAS_AP) {
         if ($r["srApplied"] -eq $true -or (Norm $r["srApproval"]) -notin @("", "На погодженні")) { continue }
         $lk = $r["srProject"]; if (-not $lk) { continue }
         if (-not $byProj.ContainsKey($lk.LookupId)) { $byProj[$lk.LookupId] = @() }
-        $byProj[$lk.LookupId] += [ordered]@{ id = $r.Id; date = (DateOnly $r["srDate"]); author = (Email $r["Author"]); created = $r["Created"].ToUniversalTime().ToString("o"); item = $r }
+        $byProj[$lk.LookupId] += [ordered]@{ id = $r.Id; date = (DateOnly $r["srDate"]); author = (Who $r["Author"]); created = $r["Created"].ToUniversalTime().ToString("o"); item = $r }
     }
     foreach ($projId in $byProj.Keys) {
         $p = $PROJ[$projId]; if (-not $p) { continue }
@@ -464,10 +480,10 @@ $RAGF = [ordered]@{ s = "srSchedule"; b = "srBudget"; r = "srResources" }
 $approvals = Select-Placed (Get-ItemsIfExists $L_AP $HAS_AP) $L_AP "apProject"
 foreach ($a in (@($approvals) | Where-Object { $_ } | Where-Object { $_["apApplied"] -ne $true } | Sort-Object Id)) {
     $lk = $a["apReport"]; $r = if ($lk) { $REPBYID[$lk.LookupId] } else { $null }
-    $who = Email $a["Author"]
+    $whoT = Who $a["Author"]; $who = WhoMail $whoT
     $done = $true
     if (-not $r) { Warn "Погодження #$($a.Id): звіт не знайдено" }
-    elseif ($who -and $PMO_EMAILS -notcontains $who -and $OWNER_EMAILS -notcontains $who) { Warn "Погодження #$($a.Id) від $who — не PMO: не застосовано" }
+    elseif ($whoT -ne "app" -and ($PMO_EMAILS -notcontains $who -or -not $who) -and -not (Test-Trusted $whoT $OWNER_EMAILS)) { Warn "Погодження #$($a.Id) від $who — не PMO: не застосовано" }
     elseif (-not $a["apProject"] -or -not $r["srProject"] -or $a["apProject"].LookupId -ne $r["srProject"].LookupId) { Warn "Погодження #$($a.Id): проєкт не збігається з проєктом звіту #$($r.Id) — не застосовано" }
     elseif ($PROJ[$r["srProject"].LookupId] -and $PROJ[$r["srProject"].LookupId].Values.pmStatus -eq "Архівний") { Warn "Погодження #$($a.Id): проєкт в архіві — не застосовано" }
     else {
@@ -510,9 +526,9 @@ foreach ($a in (@($approvals) | Where-Object { $_ } | Where-Object { $_["apAppli
 # проект совпадает). Иначе поле поставлено в обход портала: вернуть «На погодженні». Применённые раньше отчёты — как есть.
 $APPROVED = @{}
 foreach ($a in @($approvals) | Where-Object { $_ }) {
-    $who = Email $a["Author"]; $lk = $a["apReport"]
+    $whoT = Who $a["Author"]; $lk = $a["apReport"]
     if (-not $lk -or (Norm $a["apDecision"]) -ne "Погоджено") { continue }
-    if ($who -and $PMO_EMAILS -notcontains $who -and $OWNER_EMAILS -notcontains $who) { continue }
+    if ($whoT -ne "app" -and ($PMO_EMAILS -notcontains $whoT -or -not $whoT) -and -not (Test-Trusted $whoT $OWNER_EMAILS)) { continue }
     $r = $REPBYID[$lk.LookupId]
     if ($r -and $a["apProject"] -and $r["srProject"] -and $a["apProject"].LookupId -eq $r["srProject"].LookupId) { $APPROVED[$r.Id] = $true }
 }
@@ -534,11 +550,11 @@ foreach ($r in $pending) {
     $repDate = DateOnly $r["srDate"]
     $rag     = CalcRag $r["srSchedule"] $r["srBudget"] $r["srResources"]
     $newer   = (-not $p.Values.pmLastUpdate) -or ($repDate -ge $p.Values.pmLastUpdate)
-    $author  = Email $r["Author"]
+    $authorT = Who $r["Author"]; $author = WhoMail $authorT
     # правила применения (векторы tests/cases/reports.json): архив / автор не PM — не применять (отметка один раз, без вечных
     # предупреждений); есть более новый применённый отчёт — только отметить, показатели не откатываются
     $stObj  = if ($HAS_PS) { $STATES[$p.Item.Id] } else { $null }
-    $action = Get-ApplyAction ([ordered]@{ id = $r.Id; date = $repDate; author = $author }) (Email $p.Item["pmManager"]) $OWNER_EMAILS ($p.Values.pmStatus -eq "Архівний") $(if ($stObj) { $stObj.last } else { "" }) $p.Values.pmLastUpdate
+    $action = Get-ApplyAction ([ordered]@{ id = $r.Id; date = $repDate; author = $authorT }) (Email $p.Item["pmManager"]) $OWNER_EMAILS ($p.Values.pmStatus -eq "Архівний") $(if ($stObj) { $stObj.last } else { "" }) $p.Values.pmLastUpdate
     if ($action -ne "apply") {
         $stats.reports--
         $note = switch ($action) { "notApplied:arch" { "Погоджено, але не застосовано: проєкт в архіві" } "notApplied:pm" { "Погоджено, але не застосовано: автор звіту вже не PM проєкту" } default { "Погоджено, показники не змінено: є новіший застосований звіт" } }
@@ -574,11 +590,13 @@ foreach ($r in $pending) {
         $write = @{}
         foreach ($k in $changed.Keys) { $write[$k] = if ($k -in $DATE_FIELDS) { ToSpDate $changed[$k] } else { $changed[$k] } }
         # сначала эталон, потом карточка: сбой между ними следующий запуск доведёт (карточку — к новому эталону), а не откатит
-        if ($HAS_PS -and -not $DryRun) {
-            $next = [ordered]@{}; foreach ($k in Get-StateKeys) { $next[$k] = if ($changed.Contains($k)) { [string]$changed[$k] } else { [string]$p.Values[$k] } }
-            Save-ProjectState $p.Item.Id $next $STATES @{ psLastApplied = "$repDate#$($r.Id)" }
-        }
-        if (-not $DryRun) { Set-PnPListItem -List $L_PROJ -Identity $p.Item.Id -Values $write | Out-Null }
+        $next = [ordered]@{}; foreach ($k in Get-StateKeys) { $next[$k] = if ($changed.Contains($k)) { [string]$changed[$k] } else { [string]$p.Values[$k] } }
+        if ($HAS_PS -and -not $DryRun) { Save-ProjectState $p.Item.Id $next $STATES }
+        # системным обновлением: «Змінив» остаётся последним человеком — его правку в обход отчёта сверка с эталоном откатит
+        # (обычное обновление сделало бы автором приложение, и такая правка выглядела бы законной)
+        if (-not $DryRun) { Set-PnPListItem -List $L_PROJ -Identity $p.Item.Id -Values $write -UpdateType SystemUpdate | Out-Null }
+        # отметка последнего применённого — только после записи карточки: сбой между ними не теряет применение отчёта
+        if ($HAS_PS -and -not $DryRun) { Save-ProjectState $p.Item.Id $next $STATES @{ psLastApplied = "$repDate#$($r.Id)" } }
         foreach ($k in $changed.Keys) { $p.Values[$k] = $changed[$k] }
     } elseif ($HAS_PS -and -not $DryRun) {
         # показатели не изменились — эталону нужна только отметка последнего применённого отчёта

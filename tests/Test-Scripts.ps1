@@ -83,7 +83,7 @@ $raw = @([regex]::Matches((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMO
 if ($raw) { Bad "Get-PnPListItem без отбрасывания папок: $($raw -join ', ')" } else { Ok "дочерние списки — без папок" }
 
 Write-Host "3d. Еталон ключових полів (scripts/PMO.Common.ps1, tests/cases/state.json)"
-foreach ($n in @("ToSpDate", "Get-StateKeys", "Compare-State", "ConvertTo-StateJson", "ConvertFrom-StateJson", "Get-StateWriteValue")) {
+foreach ($n in @("ToSpDate", "ConvertFrom-JsonElement", "ConvertFrom-JsonText", "Get-StateKeys", "Compare-State", "ConvertTo-StateJson", "ConvertFrom-StateJson", "Get-StateWriteValue")) {
     $fn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $n }, $true) | Select-Object -First 1
     if ($fn) { Invoke-Expression $fn.Extent.Text } else { Bad "нет функции $n" }
 }
@@ -98,6 +98,8 @@ foreach ($c in $sc.write) { $r = Get-StateWriteValue $c.f $c.v; if ($r -eq $c.ou
 # JSON эталона: даты остаются «yyyy-MM-dd» после ConvertFrom-Json (который превращает ISO в DateTime)
 $rt = ConvertFrom-StateJson (ConvertTo-StateJson (& $toHash $sc.compare[0].card))
 if (-not (Compare-State $rt (& $toHash $sc.compare[0].card)).Count) { Ok "эталон: запись и чтение JSON без искажений (даты, числа, пустые)" } else { Bad "эталон: JSON искажает значения" }
+# повреждённый или пустой эталон — «эталона нет» ($null), а не пустые значения для отката
+foreach ($bad in @("", "{oops", "{}", "[1,2]", '{"pmCode":"PRJ-1"}')) { if ($null -eq (ConvertFrom-StateJson $bad)) { Ok "повреждённый эталон «$bad» — нет эталона" } else { Bad "повреждённый эталон «$bad» читается как значения" } }
 
 Write-Host "3e. Правила отчётов: авто-возврат и применение (tests/cases/reports.json)"
 foreach ($n in @("Test-Trusted", "Get-PendingReturns", "Get-ApplyAction")) {
@@ -115,7 +117,7 @@ foreach ($c in $rc.apply) {
 }
 
 Write-Host "3f. Журнал правок карточки без потерь и дублей (tests/cases/editlog.json)"
-foreach ($n in @("EditLogRows", "Get-EditLogKey", "Get-EditLogPlan", "Remove-EditLogEntries")) {
+foreach ($n in @("ConvertFrom-JsonElement", "ConvertFrom-JsonText", "EditLogRows", "Get-EditLogKey", "Get-EditLogPlan", "Remove-EditLogEntries")) {
     $fn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $n }, $true) | Select-Object -First 1
     if ($fn) { Invoke-Expression $fn.Extent.Text } else { Bad "нет функции $n" }
 }
@@ -127,7 +129,7 @@ foreach ($c in $ec.plan) {
 }
 foreach ($c in $ec.remove) {
     $rest = Remove-EditLogEntries $c.log @($c.keys)
-    $got = if ($rest) { @(($rest | ConvertFrom-Json).entries | ForEach-Object { $_.id }) -join "," } else { "" }
+    $got = if ($rest -eq $c.log -and @($c.left) -contains "__same__") { "__same__" } elseif ($rest) { @(($rest | ConvertFrom-Json).entries | ForEach-Object { $_.id }) -join "," } else { "" }
     if ($got -eq (@($c.left) -join ",")) { Ok $c.name } else { Bad "$($c.name): [$got], ожидалось [$(@($c.left) -join ',')]" }
 }
 

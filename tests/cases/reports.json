@@ -108,7 +108,21 @@
       "returned": []
     },
     {
-      "name": "автор — службовий скрипт (порожній e-mail): не повертається",
+      "name": "автор — застосунок (службовий скрипт): не повертається",
+      "pm": "pm@x",
+      "archived": false,
+      "pending": [
+        {
+          "id": 5,
+          "date": "2026-09-20",
+          "author": "app",
+          "created": "2026-09-20T09:00:00Z"
+        }
+      ],
+      "returned": []
+    },
+    {
+      "name": "автор без e-mail (гість) — не довірений: повертається",
       "pm": "pm@x",
       "archived": false,
       "pending": [
@@ -119,7 +133,9 @@
           "created": "2026-09-20T09:00:00Z"
         }
       ],
-      "returned": []
+      "returned": [
+        5
+      ]
     }
   ],
   "apply": [
@@ -238,6 +254,32 @@
       "owners": [
         "own@x"
       ],
+      "archived": false,
+      "last": "",
+      "lastUpdate": "",
+      "out": "apply"
+    },
+    {
+      "name": "автор без e-mail — не застосовувати",
+      "rep": {
+        "id": 10,
+        "date": "2026-09-20",
+        "author": ""
+      },
+      "pm": "pm@x",
+      "archived": false,
+      "last": "",
+      "lastUpdate": "",
+      "out": "notApplied:pm"
+    },
+    {
+      "name": "автор — застосунок — застосувати",
+      "rep": {
+        "id": 10,
+        "date": "2026-09-20",
+        "author": "app"
+      },
+      "pm": "pm@x",
       "archived": false,
       "last": "",
       "lastUpdate": "",

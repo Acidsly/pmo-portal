@@ -20,6 +20,24 @@ function Norm($v) {
     return [string]$v
 }
 
+# JSON без превращения строк в даты: ConvertFrom-Json в PowerShell 7.2–7.4 делает ISO-строки DateTime (а -DateKind есть
+# только с 7.5) — поэтому System.Text.Json. Объект — упорядоченный словарь, массив — массив, строки — как есть.
+function ConvertFrom-JsonElement($e) {
+    switch ([string]$e.ValueKind) {
+        "Object" { $h = [ordered]@{}; foreach ($pr in $e.EnumerateObject()) { $h[$pr.Name] = ConvertFrom-JsonElement $pr.Value }; return $h }
+        "Array"  { $a = [System.Collections.Generic.List[object]]::new(); foreach ($x in $e.EnumerateArray()) { $a.Add((ConvertFrom-JsonElement $x)) }; return , $a.ToArray() }
+        "String" { return $e.GetString() }
+        "Number" { return $e.GetDouble() }
+        "True"   { return $true }
+        "False"  { return $false }
+        default  { return $null }
+    }
+}
+function ConvertFrom-JsonText([string]$json) {
+    $doc = [System.Text.Json.JsonDocument]::Parse($json)
+    try { return ConvertFrom-JsonElement $doc.RootElement } finally { $doc.Dispose() }
+}
+
 # ---------------------------------------------------------------------------
 # Эталон: ключевые поля, которые меняет только погоджений статус-отчёт (и создание проекта PMO).
 # Производные поля (права, «Доступ до картки», стейкхолдеры, последний комментарий) синхронизация пересчитывает сама.
@@ -48,12 +66,13 @@ function ConvertTo-StateJson($state) {
     $o = [ordered]@{}; foreach ($k in Get-StateKeys) { $o[$k] = [string]$state[$k] }
     return ($o | ConvertTo-Json -Compress)
 }
+# Повреждённый или пустой эталон (нет ключа pmStatus) — $null: «эталона нет», заново из карточки, но никогда не откат к пустым значениям
 function ConvertFrom-StateJson([string]$json) {
+    if (-not $json) { return $null }
+    try { $o = ConvertFrom-JsonText $json } catch { return $null }
+    if ($o -isnot [System.Collections.IDictionary] -or -not $o.Contains("pmStatus")) { return $null }
     $st = [ordered]@{}
-    if (-not $json) { return $st }
-    # даты эталона — строки «yyyy-MM-dd»: без превращения в DateTime (иначе сдвиг по поясу)
-    try { $o = $json | ConvertFrom-Json -DateKind String -ErrorAction Stop } catch { return $st }
-    foreach ($k in Get-StateKeys) { $st[$k] = [string]$o.$k }
+    foreach ($k in Get-StateKeys) { $st[$k] = if ($o.Contains($k) -and $null -ne $o[$k]) { [string]$o[$k] } else { "" } }
     return $st
 }
 # значение для записи в карточку из эталона: даты — полдень UTC, пусто — null

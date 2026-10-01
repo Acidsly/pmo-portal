@@ -78,8 +78,9 @@ export function DataTable<R extends { id: number }>(p: { tkey: string; defs: Tab
     if (window.innerWidth < 900) { if (lockW) setLockW(null); return; }
     if (lockW && lockW.key === colsKey) return;
     const el = tableRef.current; if (!el) return;
+    if (!el.clientWidth) return;   // скрытая вкладка / панель — ширины ещё нет
     const w = Array.prototype.map.call(el.querySelectorAll('thead th'), (th: Element) => Math.round(th.getBoundingClientRect().width)) as number[];
-    if (w.length === shownCols.length) setLockW({ key: colsKey, w });
+    if (w.length === shownCols.length && w.every(x => x > 0)) setLockW({ key: colsKey, w });
   });
   React.useEffect(() => {
     const on = (): void => setLockW(null);

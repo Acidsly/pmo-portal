@@ -1,7 +1,8 @@
 /** Правила погодження и применения статус-отчётов — те же, что Invoke-PMOSync.ps1 (Get-PendingReturns, Get-ApplyAction). Векторы tests/cases/reports.json. */
 export interface PendingRep { id: number; date: string; author: string; created: string; }
 export interface ReturnRow { id: number; note: string; }
-const trusted = (email: string, owners: string[]): boolean => !email || owners.indexOf(email) >= 0;
+// доверенный автор: приложение («app») или владелец сайта; пустой e-mail — не доверенный (как Test-Trusted синхронизации)
+const trusted = (email: string, owners: string[]): boolean => email === 'app' || (!!email && owners.indexOf(email) >= 0);
 const dmy = (iso: string): string => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); return m ? `${m[3]}.${m[2]}.${m[1]}` : iso; };
 
 /** Отчёты «на погодженні», которые синхронизация вернёт: архив; автор — не текущий PM; второй и следующие по проекту. */
