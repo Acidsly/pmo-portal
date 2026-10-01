@@ -64,6 +64,11 @@ foreach ($it in $items) {
     # автор — PM проекта: синхронизация применяет только отчёты PM
     Set-PnPListItem -List "Lists/StatusReports" -Identity $r.Id -UpdateType UpdateOverwriteVersion `
         -Values @{ Author = $pm.Email; Editor = $pm.Email; Created = (SpDate $date); Modified = (SpDate $date) } | Out-Null
+    # решение — записью «Погодження звітів» (синхронизация применяет отчёт только по решению; автор — приложение скрипта)
+    if (Get-PnPList -Identity "Lists/ReportApprovals" -ErrorAction SilentlyContinue) {
+        Add-PnPListItem -List "Lists/ReportApprovals" -Values @{ Title = "Демо"; apReport = $r.Id; apProject = $it.Id; apDecision = "Погоджено"
+            apNote = "Демонстраційні дані"; apApplied = $true } | Out-Null
+    }
     $added++
     Write-Host ("  + {0}: звіт від {1:dd.MM.yyyy}, {2}, {3}%" -f $code, $date, $sched, $prog) -ForegroundColor Green
 }

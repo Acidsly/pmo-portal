@@ -35,7 +35,7 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "config/focus-group.example.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "config/focus-group.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
@@ -64,7 +64,7 @@ foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/acl.json") | Conv
 }
 
 Write-Host "3c. Папки проектов: роли, заморозка архива, перенос записей (tests/cases/folders.json)"
-foreach ($n in @("Get-FolderName", "Get-FolderRole", "Get-GroupFolderRole", "Get-AclMark", "Get-ArchPrefix", "Test-ArchiveFrozen", "Get-RowAction")) {
+foreach ($n in @("Get-FolderName", "Test-RowPlacement", "Get-FolderRole", "Get-GroupFolderRole", "Get-AclMark", "Get-ArchPrefix", "Test-ArchiveFrozen", "Get-RowAction")) {
     $fn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $n }, $true) | Select-Object -First 1
     if ($fn) { Invoke-Expression $fn.Extent.Text } else { Bad "нет функции $n" }
 }
@@ -73,6 +73,7 @@ if ((Get-FolderName 12) -eq "P12") { Ok "папка проекта 12 — P12" }
 foreach ($c in $fc.role) { $r = Get-FolderRole $c.list $c.level $c.archived $c.v2; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $r, ожидалось $($c.out)" } }
 foreach ($c in $fc.group) { $r = Get-GroupFolderRole $c.list $c.archived $c.v2; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $r, ожидалось $($c.out)" } }
 foreach ($c in $fc.frozen) { $r = Test-ArchiveFrozen $c.status $c.mark $c.ready $c.rebuild $c.prefix; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $r, ожидалось $($c.out)" } }
+foreach ($c in $fc.placement) { $r = Test-RowPlacement $c.dir $c.expected; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $r, ожидалось $($c.out)" } }
 foreach ($c in $fc.row) { $r = Get-RowAction $c.dir $c.expected $c.acl $c.ready; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): «$r», ожидалось «$($c.out)»" } }
 foreach ($c in $fc.mark) { $r = Get-AclMark $c.hash $c.archived $c.v2; if ($r -eq $c.out) { Ok "отметка $($c.hash)/$($c.archived)/v2=$($c.v2) -> $r" } else { Bad "отметка: $r, ожидалось $($c.out)" } }
 # все запросы CSOM синхронизации — с повтором при 429 (Invoke-PnPQuery -RetryCount), без голого ExecuteQuery()
@@ -97,6 +98,38 @@ foreach ($c in $sc.write) { $r = Get-StateWriteValue $c.f $c.v; if ($r -eq $c.ou
 # JSON эталона: даты остаются «yyyy-MM-dd» после ConvertFrom-Json (который превращает ISO в DateTime)
 $rt = ConvertFrom-StateJson (ConvertTo-StateJson (& $toHash $sc.compare[0].card))
 if (-not (Compare-State $rt (& $toHash $sc.compare[0].card)).Count) { Ok "эталон: запись и чтение JSON без искажений (даты, числа, пустые)" } else { Bad "эталон: JSON искажает значения" }
+
+Write-Host "3e. Правила отчётов: авто-возврат и применение (tests/cases/reports.json)"
+foreach ($n in @("Test-Trusted", "Get-PendingReturns", "Get-ApplyAction")) {
+    $fn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $n }, $true) | Select-Object -First 1
+    if ($fn) { Invoke-Expression $fn.Extent.Text } else { Bad "нет функции $n" }
+}
+$rc = Get-Content -Raw (Join-Path $root "tests/cases/reports.json") | ConvertFrom-Json -DateKind String
+foreach ($c in $rc.returns) {
+    $got = @((Get-PendingReturns @($c.pending) $c.pm @($c.owners) $c.archived) | ForEach-Object { $_.id }) -join ","
+    if ($got -eq (@($c.returned) -join ",")) { Ok $c.name } else { Bad "$($c.name): [$got], ожидалось [$(@($c.returned) -join ',')]" }
+}
+foreach ($c in $rc.apply) {
+    $got = Get-ApplyAction $c.rep $c.pm @($c.owners) $c.archived $c.last $c.lastUpdate
+    if ($got -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $got, ожидалось $($c.out)" }
+}
+
+Write-Host "3f. Журнал правок карточки без потерь и дублей (tests/cases/editlog.json)"
+foreach ($n in @("EditLogRows", "Get-EditLogKey", "Get-EditLogPlan", "Remove-EditLogEntries")) {
+    $fn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $n }, $true) | Select-Object -First 1
+    if ($fn) { Invoke-Expression $fn.Extent.Text } else { Bad "нет функции $n" }
+}
+$ec = Get-Content -Raw (Join-Path $root "tests/cases/editlog.json") | ConvertFrom-Json -DateKind String
+foreach ($c in $ec.plan) {
+    $pl = Get-EditLogPlan $c.log @($c.done)
+    $got = "$(@($pl.keys) -join ',')|$(@($pl.rows | ForEach-Object { $_.field }) -join ',')"; $exp = "$(@($c.keys) -join ',')|$(@($c.fields) -join ',')"
+    if ($got -eq $exp) { Ok $c.name } else { Bad "$($c.name): $got — ожидалось $exp" }
+}
+foreach ($c in $ec.remove) {
+    $rest = Remove-EditLogEntries $c.log @($c.keys)
+    $got = if ($rest) { @(($rest | ConvertFrom-Json).entries | ForEach-Object { $_.id }) -join "," } else { "" }
+    if ($got -eq (@($c.left) -join ",")) { Ok $c.name } else { Bad "$($c.name): [$got], ожидалось [$(@($c.left) -join ',')]" }
+}
 
 Write-Host "3b. Роли фокус-группы (Get-RolePlan, Seed-TestData.ps1)"
 $seedAst = [System.Management.Automation.Language.Parser]::ParseInput((Get-Content -Raw (Join-Path $root "scripts/Seed-TestData.ps1")), [ref]$null, [ref]$null)

@@ -64,7 +64,7 @@ export class SpRepo {
       this.items('ProjectTeam', TEAM_SELECT, TEAM_EXPAND).catch(() => [] as any[]),
       this.items('ReportApprovals', APPROVAL_SELECT, APPROVAL_EXPAND).catch(() => [] as any[]),
       // эталон ключевых полей (пишет только синхронизация); до развёртывания списка нет — пусто
-      this.items('ProjectState', 'Id,psProject,psState', '').catch(() => [] as any[]),
+      this.items('ProjectState', 'Id,psProject,psState,psLastApplied', '').catch(() => [] as any[]),
       this.listPerms('Projects').catch(() => undefined),
       this.listPerms('Feedback').catch(() => undefined)]);
     const approvals = ap.map(mapApproval);
@@ -72,11 +72,15 @@ export class SpRepo {
     const reports = r.map(mapReport).map(x => withApproval(x, approvals));
     const feedbackRows = fbPerm ? await this.loadFeedback().catch(() => []) : [];
     const team = tm.map(mapTeam);
-    const states: Record<number, StateJson | undefined> = {};
-    for (const x of ps) states[Number(x.psProject)] = parseState(x.psState);
+    const states: Record<number, StateJson | undefined> = {}; const lastApplied: Record<number, string> = {};
+    for (const x of ps) { states[Number(x.psProject)] = parseState(x.psState); lastApplied[Number(x.psProject)] = String(x.psLastApplied || ''); }
+    // «Погоджено» действует только по решению PMO (как синхронизация): отчёты с решением «Погоджено» в «Погодження звітів»
+    const approvedIds: Record<number, boolean> = {};
+    for (const a of approvals) if (a.decision === 'Погоджено') { const rep = r.filter((x: any) => x.Id === a.reportId)[0]; if (!rep || !rep.srProjectId || rep.srProjectId === a.projectId) approvedIds[a.reportId] = true; }
     // стейкхолдеры — люди «Команда проєкту» (синхронизация повторяет их в pmStakeholders)
     const withTeam = (x: Project): Project => { const own = team.filter(m => m.projectId === x.id); return { ...x, team: own, stakeholders: teamPeople(own) }; };
-    return { projects: p.map(mapProject).map(x => applyState(x, states[x.id])).map(withTeam).map(x => applyPending(x, reports)), reports, risks: k.map(mapRisk),
+    return { projects: p.map(mapProject).map(x => ({ ...applyState(x, states[x.id]), lastApplied: lastApplied[x.id] || '' })).map(withTeam)
+      .map(x => applyPending(x, reports, approvals.length ? approvedIds : undefined)), reports, risks: k.map(mapRisk),
       comments: c.map(mapComment), changes: h.map(mapChange), canCreate: canAdd(perm), canApprove: canAdd(perm), approvals, feedback: canAdd(fbPerm), feedbackAdmin: canManage(fbPerm), feedbackRows };
   }
 

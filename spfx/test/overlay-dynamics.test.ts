@@ -35,9 +35,18 @@ describe('applyPending — как шаг 1 Invoke-PMOSync.ps1', () => {
     const p = applyPending(P({}), [R({ status: 'Скасовано', date: '2026-09-23' })]);
     expect(p.status).toBe('Архівний'); expect(p.archivedAt).toBe('2026-09-23');
   });
-  test('отчёт старше «Останнього апдейту» не меняет стан и дату', () => {
+  test('отчёт старше последнего применённого показатели не меняет (правило R4, как синхронизация)', () => {
     const p = applyPending(P({ lastUpdate: '2026-09-21', rag: 'Зелений', lastReport: 'Новый' }), [R({ date: '2026-09-15', budget: 'Червоний', progress: 10 })]);
-    expect(p.rag).toBe('Зелений'); expect(p.lastUpdate).toBe('2026-09-21'); expect(p.lastReport).toBe('Новый'); expect(p.progress).toBe(10);
+    expect(p.rag).toBe('Зелений'); expect(p.lastUpdate).toBe('2026-09-21'); expect(p.lastReport).toBe('Новый'); expect(p.progress).toBe(0); expect(p.pending).toBeFalsy();
+  });
+  test('«Погоджено» без решения PMO не накладывается (правило R1)', () => {
+    const p0 = P({ progress: 5 });
+    expect(applyPending(p0, [R({ id: 9, progress: 80 })], {})).toEqual(p0);
+    expect(applyPending(p0, [R({ id: 9, progress: 80 })], { 9: true }).progress).toBe(80);
+  });
+  test('проект в архиве: следующий погоджений отчёт не накладывается (правило R5)', () => {
+    const p = applyPending(P({}), [R({ id: 1, date: '2026-09-20', status: 'Завершено' }), R({ id: 2, date: '2026-09-22', status: 'Реалізація', progress: 50 })]);
+    expect(p.status).toBe('Архівний'); expect(p.progress).toBe(0);
   });
   test('применённые и чужие отчёты игнорируются', () => {
     const p0 = P({ progress: 5 });

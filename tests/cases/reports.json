@@ -1,0 +1,247 @@
+{
+  "returns": [
+    {
+      "name": "один звіт PM на погодженні — залишається",
+      "pm": "pm@x",
+      "archived": false,
+      "pending": [
+        {
+          "id": 5,
+          "date": "2026-09-20",
+          "author": "pm@x",
+          "created": "2026-09-20T09:00:00Z"
+        }
+      ],
+      "returned": []
+    },
+    {
+      "name": "два звіти по проєкту — другий повертається",
+      "pm": "pm@x",
+      "archived": false,
+      "pending": [
+        {
+          "id": 7,
+          "date": "2026-09-25",
+          "author": "pm@x",
+          "created": "2026-09-25T09:00:00Z"
+        },
+        {
+          "id": 5,
+          "date": "2026-09-20",
+          "author": "pm@x",
+          "created": "2026-09-20T09:00:00Z"
+        }
+      ],
+      "returned": [
+        7
+      ]
+    },
+    {
+      "name": "змінився PM — звіт старого PM повертається",
+      "pm": "new@x",
+      "archived": false,
+      "pending": [
+        {
+          "id": 5,
+          "date": "2026-09-20",
+          "author": "old@x",
+          "created": "2026-09-20T09:00:00Z"
+        }
+      ],
+      "returned": [
+        5
+      ]
+    },
+    {
+      "name": "старий і новий PM — повертається лише звіт старого",
+      "pm": "new@x",
+      "archived": false,
+      "pending": [
+        {
+          "id": 5,
+          "date": "2026-09-20",
+          "author": "old@x",
+          "created": "2026-09-20T09:00:00Z"
+        },
+        {
+          "id": 6,
+          "date": "2026-09-22",
+          "author": "new@x",
+          "created": "2026-09-22T09:00:00Z"
+        }
+      ],
+      "returned": [
+        5
+      ]
+    },
+    {
+      "name": "проєкт в архіві — усі повертаються",
+      "pm": "pm@x",
+      "archived": true,
+      "pending": [
+        {
+          "id": 5,
+          "date": "2026-09-20",
+          "author": "pm@x",
+          "created": "2026-09-20T09:00:00Z"
+        }
+      ],
+      "returned": [
+        5
+      ]
+    },
+    {
+      "name": "автор — власник сайту: не повертається",
+      "pm": "pm@x",
+      "archived": false,
+      "owners": [
+        "own@x"
+      ],
+      "pending": [
+        {
+          "id": 5,
+          "date": "2026-09-20",
+          "author": "own@x",
+          "created": "2026-09-20T09:00:00Z"
+        }
+      ],
+      "returned": []
+    },
+    {
+      "name": "автор — службовий скрипт (порожній e-mail): не повертається",
+      "pm": "pm@x",
+      "archived": false,
+      "pending": [
+        {
+          "id": 5,
+          "date": "2026-09-20",
+          "author": "",
+          "created": "2026-09-20T09:00:00Z"
+        }
+      ],
+      "returned": []
+    }
+  ],
+  "apply": [
+    {
+      "name": "звіт PM — застосувати",
+      "rep": {
+        "id": 10,
+        "date": "2026-09-20",
+        "author": "pm@x"
+      },
+      "pm": "pm@x",
+      "archived": false,
+      "last": "",
+      "lastUpdate": "2026-09-01",
+      "out": "apply"
+    },
+    {
+      "name": "проєкт в архіві — не застосовувати",
+      "rep": {
+        "id": 10,
+        "date": "2026-09-20",
+        "author": "pm@x"
+      },
+      "pm": "pm@x",
+      "archived": true,
+      "last": "",
+      "lastUpdate": "",
+      "out": "notApplied:arch"
+    },
+    {
+      "name": "автор уже не PM (#46) — не застосовувати",
+      "rep": {
+        "id": 46,
+        "date": "2026-09-30",
+        "author": "old@x"
+      },
+      "pm": "new@x",
+      "archived": false,
+      "last": "",
+      "lastUpdate": "",
+      "out": "notApplied:pm"
+    },
+    {
+      "name": "є новіший застосований (інша дата) — лише відмітка",
+      "rep": {
+        "id": 10,
+        "date": "2026-09-20",
+        "author": "pm@x"
+      },
+      "pm": "pm@x",
+      "archived": false,
+      "last": "2026-09-25#12",
+      "lastUpdate": "2026-09-25",
+      "out": "journalOnly"
+    },
+    {
+      "name": "та сама дата, менший номер — лише відмітка",
+      "rep": {
+        "id": 10,
+        "date": "2026-09-25",
+        "author": "pm@x"
+      },
+      "pm": "pm@x",
+      "archived": false,
+      "last": "2026-09-25#12",
+      "lastUpdate": "2026-09-25",
+      "out": "journalOnly"
+    },
+    {
+      "name": "та сама дата, більший номер — застосувати",
+      "rep": {
+        "id": 13,
+        "date": "2026-09-25",
+        "author": "pm@x"
+      },
+      "pm": "pm@x",
+      "archived": false,
+      "last": "2026-09-25#12",
+      "lastUpdate": "2026-09-25",
+      "out": "apply"
+    },
+    {
+      "name": "старі дані без відмітки: звіт старший за «Останній апдейт» — лише відмітка",
+      "rep": {
+        "id": 10,
+        "date": "2026-09-10",
+        "author": "pm@x"
+      },
+      "pm": "pm@x",
+      "archived": false,
+      "last": "",
+      "lastUpdate": "2026-09-20",
+      "out": "journalOnly"
+    },
+    {
+      "name": "старі дані без відмітки: та сама дата — застосувати",
+      "rep": {
+        "id": 10,
+        "date": "2026-09-20",
+        "author": "pm@x"
+      },
+      "pm": "pm@x",
+      "archived": false,
+      "last": "",
+      "lastUpdate": "2026-09-20",
+      "out": "apply"
+    },
+    {
+      "name": "автор — власник сайту — застосувати",
+      "rep": {
+        "id": 10,
+        "date": "2026-09-20",
+        "author": "own@x"
+      },
+      "pm": "pm@x",
+      "owners": [
+        "own@x"
+      ],
+      "archived": false,
+      "last": "",
+      "lastUpdate": "",
+      "out": "apply"
+    }
+  ]
+}

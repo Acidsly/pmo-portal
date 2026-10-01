@@ -232,8 +232,8 @@
       "dir": "/sites/x/Lists/StatusReports/P7",
       "expected": "/sites/x/Lists/StatusReports/P12",
       "acl": "",
-      "out": "move",
-      "name": "у чужій папці — перенести",
+      "out": "mismatch",
+      "name": "у папці чужого проєкту — не переносити й не враховувати (поле проєкту підмінено)",
       "ready": true
     },
     {
@@ -275,6 +275,14 @@
       "ready": false,
       "out": "",
       "name": "у своїй папці, але папка без прав — не скидати"
+    },
+    {
+      "dir": "/sites/x/Lists/StatusReports/P7",
+      "expected": "/sites/x/Lists/StatusReports/P12",
+      "acl": "",
+      "ready": false,
+      "out": "mismatch",
+      "name": "чужа папка — mismatch навіть коли папка без прав"
     }
   ],
   "mark": [
@@ -352,6 +360,38 @@
       "v2": false,
       "out": "read",
       "name": "PMO у моделі v1: читання папки"
+    }
+  ],
+  "placement": [
+    {
+      "dir": "/sites/x/Lists/RisksIssues/P12",
+      "expected": "/sites/x/Lists/RisksIssues/P12",
+      "out": true,
+      "name": "своя папка — враховується"
+    },
+    {
+      "dir": "/sites/x/Lists/RisksIssues",
+      "expected": "/sites/x/Lists/RisksIssues/P12",
+      "out": true,
+      "name": "корінь (ще не перенесено) — враховується"
+    },
+    {
+      "dir": "/sites/x/Lists/RisksIssues/P5",
+      "expected": "/sites/x/Lists/RisksIssues/P12",
+      "out": false,
+      "name": "папка іншого проєкту — не враховується"
+    },
+    {
+      "dir": "/sites/x/Lists/RisksIssues/P12/sub",
+      "expected": "/sites/x/Lists/RisksIssues/P12",
+      "out": false,
+      "name": "підпапка — не враховується"
+    },
+    {
+      "dir": "/sites/x/Lists/RisksIssues/P12/",
+      "expected": "/sites/x/Lists/RisksIssues/P12",
+      "out": true,
+      "name": "слеш у кінці — та сама папка"
     }
   ]
 }
