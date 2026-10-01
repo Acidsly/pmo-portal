@@ -1690,6 +1690,16 @@ export const EXTRA: Record<string, L3> = {
   "A project with this name already exists. Enter a different name.",
   "Проект с таким названием уже есть. Укажите другое название."
  ],
+ "datePh": [
+  "дд.мм.рррр",
+  "dd.mm.yyyy",
+  "дд.мм.гггг"
+ ],
+ "pickDate": [
+  "Обрати дату в календарі",
+  "Pick a date in the calendar",
+  "Выбрать дату в календаре"
+ ],
  "errCode": [
   "Такий код уже є в іншого проєкту. Вкажіть інший або залиште поле порожнім — код призначиться автоматично.",
   "This code is already used by another project. Enter another one or leave the field empty to assign it automatically.",

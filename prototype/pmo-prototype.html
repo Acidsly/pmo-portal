@@ -527,6 +527,13 @@ main{padding-bottom:40px}
 
 /* #33: закреплённые ширины колонок — длинный текст переносится внутри колонки */
 .dt table.locked td{overflow-wrap:anywhere}
+/* #26: своё поле даты — текст с маской + кнопка календаря браузера */
+.date-in{position:relative;display:block}
+.date-in input[type=text]{padding-right:44px}
+.date-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:0;border-radius:8px;background:none;color:var(--text-2);cursor:pointer;display:grid;place-items:center}
+.date-btn:hover:not(:disabled){background:var(--bg-hover);color:var(--text)}
+.date-btn:disabled{opacity:.4;cursor:default}
+.date-native{position:absolute;right:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
 </style>
 </head>
 <body>
@@ -659,6 +666,7 @@ const T = {
  cmtSaved:['Коментар додано.','Comment added.','Комментарий добавлен.'],
  saveErr:['Не вдалося зберегти зміну. Оновіть сторінку та повторіть.','Couldn’t save the change. Reload the page and try again.','Не удалось сохранить изменение. Обновите страницу и повторите.'],
  errTitleTaken:['Проєкт з такою назвою вже є. Вкажіть іншу назву.','A project with this name already exists. Enter a different name.','Проект с таким названием уже есть. Укажите другое название.'],
+ datePh:['дд.мм.рррр','dd.mm.yyyy','дд.мм.гггг'], pickDate:['Обрати дату в календарі','Pick a date in the calendar','Выбрать дату в календаре'],
  repPending:['на погодженні · {date}','awaiting approval · {date}','на согласовании · {date}'], repPendingNew:['новий звіт на погодженні','new report awaiting approval','новый отчёт на согласовании'],
  listLabel:['список','list','список'], close:['Закрити','Close','Закрыть'], latestUpd:['Останній апдейт','Latest update','Последний апдейт'],
  viewAs:['Перегляд як','View as','Просмотр как'],
@@ -1561,6 +1569,32 @@ function openPanel(html, keep){
   panel.innerHTML = html;
   panel.classList.add('open'); scrim.classList.add('open'); panel.setAttribute('aria-hidden', 'false');
   if (keep) panel.scrollTop = top; else { panel.scrollTop = 0; const x = panel.querySelector('.x'); if (x) x.focus(); }
+  enhanceDates(panel);
+}
+// #26: поле даты — «дд.мм.рррр» с подсказкой на языке интерфейса (встроенное поле браузера берёт язык ОС) и кнопка календаря.
+// Исходное поле type=date с тем же id остаётся скрытым — код форм читает и задаёт его значение как раньше.
+const VAL_DESC = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+const dmyMask = r => { const d = String(r || '').replace(/\D/g, '').slice(0, 8); return d.length > 4 ? `${d.slice(0, 2)}.${d.slice(2, 4)}.${d.slice(4)}` : d.length > 2 ? `${d.slice(0, 2)}.${d.slice(2)}` : d; };
+const dmyParse = x => { if (!x) return ''; const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(x); if (!m) return null; const dt = new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+  return dt.getUTCDate() === +m[1] && dt.getUTCMonth() === +m[2] - 1 && +m[3] >= 1900 ? `${m[3]}-${m[2]}-${m[1]}` : null; };
+const dmyFmt = v => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v || ''); return m ? `${m[3]}.${m[2]}.${m[1]}` : ''; };
+function enhanceDates(root){
+  root.querySelectorAll('input[type=date]:not(.date-native)').forEach(orig => {
+    const wrap = document.createElement('span'); wrap.className = 'date-in';
+    const txt = document.createElement('input'); txt.type = 'text'; txt.inputMode = 'numeric'; txt.autocomplete = 'off';
+    txt.placeholder = t('datePh'); txt.id = orig.id + '-t'; txt.value = dmyFmt(VAL_DESC.get.call(orig)); txt.disabled = orig.disabled;
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'date-btn'; btn.title = btn.ariaLabel = t('pickDate'); btn.disabled = orig.disabled;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M7 3v3M17 3v3M4 9h16M5.5 5h13A1.5 1.5 0 0 1 20 6.5v12a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-12A1.5 1.5 0 0 1 5.5 5z"/></svg>';
+    orig.parentNode.insertBefore(wrap, orig); wrap.append(txt, btn, orig); orig.classList.add('date-native'); orig.tabIndex = -1;
+    const lbl = root.querySelector(`label[for="${orig.id}"]`); if (lbl) lbl.htmlFor = txt.id;
+    // код формы задаёт дату программно (orig.value = …) — показать её в текстовом поле
+    Object.defineProperty(orig, 'value', { get(){ return VAL_DESC.get.call(this); }, set(v){ VAL_DESC.set.call(this, v); txt.value = dmyFmt(v); } });
+    const push = v => { VAL_DESC.set.call(orig, v); orig.dispatchEvent(new Event('input', {bubbles:true})); orig.dispatchEvent(new Event('change', {bubbles:true})); };
+    txt.addEventListener('input', () => { txt.value = dmyMask(txt.value); const v = dmyParse(txt.value); if (v !== null && v !== VAL_DESC.get.call(orig)) push(v); });
+    txt.addEventListener('blur', () => { if (dmyParse(txt.value) === null) txt.value = dmyFmt(VAL_DESC.get.call(orig)); });
+    orig.addEventListener('change', () => { txt.value = dmyFmt(VAL_DESC.get.call(orig)); });
+    btn.addEventListener('click', () => { try { orig.showPicker ? orig.showPicker() : orig.click(); } catch (e) { orig.click(); } });
+  });
 }
 function closePanel(){
   panel.classList.remove('open'); scrim.classList.remove('open'); panel.setAttribute('aria-hidden', 'true');
