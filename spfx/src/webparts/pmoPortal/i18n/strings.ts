@@ -566,6 +566,31 @@ export const T: Record<string, L3> = {
   "Couldn’t save the change. Reload the page and try again.",
   "Не удалось сохранить изменение. Обновите страницу и повторите."
  ],
+ "errTitleTaken": [
+  "Проєкт з такою назвою вже є. Вкажіть іншу назву.",
+  "A project with this name already exists. Enter a different name.",
+  "Проект с таким названием уже есть. Укажите другое название."
+ ],
+ "datePh": [
+  "дд.мм.рррр",
+  "dd.mm.yyyy",
+  "дд.мм.гггг"
+ ],
+ "pickDate": [
+  "Обрати дату в календарі",
+  "Pick a date in the calendar",
+  "Выбрать дату в календаре"
+ ],
+ "repPending": [
+  "на погодженні · {date}",
+  "awaiting approval · {date}",
+  "на согласовании · {date}"
+ ],
+ "repPendingNew": [
+  "новий звіт на погодженні",
+  "new report awaiting approval",
+  "новый отчёт на согласовании"
+ ],
  "listLabel": [
   "список",
   "list",
@@ -764,6 +789,16 @@ export const T: Record<string, L3> = {
  "archivedNote": [
   "Проєкт в архіві: лише перегляд.",
   "This project is archived: view only.",
+  "Проект в архиве: только просмотр."
+ ],
+ "onePending": [
+  "Звіт від {date} на погодженні PMO — новий можна подати після рішення.",
+  "The report from {date} is awaiting PMO approval — a new one can be submitted after the decision.",
+  "Отчёт от {date} на согласовании PMO — новый можно подать после решения."
+ ],
+ "archNoComments": [
+  "Проєкт в архіві: лише перегляд.",
+  "The project is archived: view only.",
   "Проект в архиве: только просмотр."
  ],
  "archivedAt": [
@@ -1610,96 +1645,6 @@ export const EXTRA: Record<string, L3> = {
   "Answer saved.",
   "Ответ сохранён."
  ],
- "errNotReady": [
-  "Проєкт ще готується: права й папки з'являться протягом 15 хвилин після створення. Спробуйте трохи пізніше.",
-  "The project is still being prepared: access and folders appear within 15 minutes of creation. Please try again shortly.",
-  "Проект ещё готовится: права и папки появятся в течение 15 минут после создания. Попробуйте чуть позже."
- ],
- "errNoRights": [
-  "У вас немає права на цю дію — можливо, права щойно змінилися. Дані оновлено.",
-  "You don't have permission for this action — access may have just changed. Data refreshed.",
-  "У вас нет права на это действие — возможно, права только что изменились. Данные обновлены."
- ],
- "errConflict": [
-  "Запис змінив інший користувач. Дані оновлено — перевірте й повторіть.",
-  "Another user changed this record. Data refreshed — check and try again.",
-  "Запись изменил другой пользователь. Данные обновлены — проверьте и повторите."
- ],
- "notReadyNote": [
-  "Проєкт готується: звіти, ризики й команду можна буде додати протягом 15 хвилин після створення.",
-  "The project is being prepared: reports, risks and team can be added within 15 minutes of creation.",
-  "Проект готовится: отчёты, риски и команду можно будет добавить в течение 15 минут после создания."
- ],
- "gPmChanged": [
-  "PM проєкту змінився (тепер {pm}) — змінювати проєкт може лише він. Дані оновлено.",
-  "The project PM has changed (now {pm}) — only they can change the project. Data refreshed.",
-  "PM проекта сменился (теперь {pm}) — менять проект может только он. Данные обновлены."
- ],
- "gPmSoon": [
-  "Ви призначені PM цього проєкту: права редагування з'являться протягом 15 хвилин.",
-  "You are assigned as PM of this project: edit access appears within 15 minutes.",
-  "Вы назначены PM этого проекта: права редактирования появятся в течение 15 минут."
- ],
- "gArchived": [
-  "Проєкт в архіві — лише перегляд. Дані оновлено.",
-  "The project is archived — view only. Data refreshed.",
-  "Проект в архиве — только просмотр. Данные обновлены."
- ],
- "gPending": [
-  "По проєкту вже є звіт на погодженні від {date} — новий можна подати після рішення PMO.",
-  "This project already has a report awaiting approval from {date} — submit a new one after the PMO decision.",
-  "По проекту уже есть отчёт на согласовании от {date} — новый можно подать после решения PMO."
- ],
- "gOldDate": [
-  "Дата звіту раніша за останній погоджений звіт ({date}). Вкажіть пізнішу дату.",
-  "The report date is earlier than the last approved report ({date}). Enter a later date.",
-  "Дата отчёта раньше последнего согласованного отчёта ({date}). Укажите более позднюю дату."
- ],
- "gDecided": [
-  "Звіт уже вирішено ({state}) — можливо, іншим PMO. Дані оновлено.",
-  "The report has already been decided ({state}) — possibly by another PMO. Data refreshed.",
-  "Отчёт уже решён ({state}) — возможно, другим PMO. Данные обновлены."
- ],
- "gNotPmAuthor": [
-  "Автор звіту вже не PM проєкту — такий звіт можна лише повернути.",
-  "The report author is no longer the project PM — this report can only be returned.",
-  "Автор отчёта уже не PM проекта — такой отчёт можно только вернуть."
- ],
- "onePending": [
-  "Звіт від {date} на погодженні PMO — новий можна подати після рішення.",
-  "The report from {date} is awaiting PMO approval — a new one can be submitted after the decision.",
-  "Отчёт от {date} на согласовании PMO — новый можно подать после решения."
- ],
- "archNoComments": [
-  "Проєкт в архіві: лише перегляд.",
-  "The project is archived: view only.",
-  "Проект в архиве: только просмотр."
- ],
- "repPending": [
-  "на погодженні · {date}",
-  "awaiting approval · {date}",
-  "на согласовании · {date}"
- ],
- "repPendingNew": [
-  "новий звіт на погодженні",
-  "new report awaiting approval",
-  "новый отчёт на согласовании"
- ],
- "errTitleTaken": [
-  "Проєкт з такою назвою вже є. Вкажіть іншу назву.",
-  "A project with this name already exists. Enter a different name.",
-  "Проект с таким названием уже есть. Укажите другое название."
- ],
- "datePh": [
-  "дд.мм.рррр",
-  "dd.mm.yyyy",
-  "дд.мм.гггг"
- ],
- "pickDate": [
-  "Обрати дату в календарі",
-  "Pick a date in the calendar",
-  "Выбрать дату в календаре"
- ],
  "errCode": [
   "Такий код уже є в іншого проєкту. Вкажіть інший або залиште поле порожнім — код призначиться автоматично.",
   "This code is already used by another project. Enter another one or leave the field empty to assign it automatically.",
@@ -1794,5 +1739,60 @@ export const EXTRA: Record<string, L3> = {
   "Дякуємо! Відгук надіслано.",
   "Thank you! Feedback sent.",
   "Спасибо! Отзыв отправлен."
+ ],
+ "errNotReady": [
+  "Проєкт ще готується: права й папки з'являться протягом 15 хвилин після створення. Спробуйте трохи пізніше.",
+  "The project is still being prepared: access and folders appear within 15 minutes of creation. Please try again shortly.",
+  "Проект ещё готовится: права и папки появятся в течение 15 минут после создания. Попробуйте чуть позже."
+ ],
+ "errNoRights": [
+  "У вас немає права на цю дію — можливо, права щойно змінилися. Дані оновлено.",
+  "You don't have permission for this action — access may have just changed. Data refreshed.",
+  "У вас нет права на это действие — возможно, права только что изменились. Данные обновлены."
+ ],
+ "errConflict": [
+  "Запис змінив інший користувач. Дані оновлено — перевірте й повторіть.",
+  "Another user changed this record. Data refreshed — check and try again.",
+  "Запись изменил другой пользователь. Данные обновлены — проверьте и повторите."
+ ],
+ "notReadyNote": [
+  "Проєкт готується: звіти, ризики й команду можна буде додати протягом 15 хвилин після створення.",
+  "The project is being prepared: reports, risks and team can be added within 15 minutes of creation.",
+  "Проект готовится: отчёты, риски и команду можно будет добавить в течение 15 минут после создания."
+ ],
+ "gPmChanged": [
+  "PM проєкту змінився (тепер {pm}) — змінювати проєкт може лише він. Дані оновлено.",
+  "The project PM has changed (now {pm}) — only they can change the project. Data refreshed.",
+  "PM проекта сменился (теперь {pm}) — менять проект может только он. Данные обновлены."
+ ],
+ "gPmSoon": [
+  "Ви призначені PM цього проєкту: права редагування з'являться протягом 15 хвилин.",
+  "You are assigned as PM of this project: edit access appears within 15 minutes.",
+  "Вы назначены PM этого проекта: права редактирования появятся в течение 15 минут."
+ ],
+ "gArchived": [
+  "Проєкт в архіві — лише перегляд. Дані оновлено.",
+  "The project is archived — view only. Data refreshed.",
+  "Проект в архиве — только просмотр. Данные обновлены."
+ ],
+ "gPending": [
+  "По проєкту вже є звіт на погодженні від {date} — новий можна подати після рішення PMO.",
+  "This project already has a report awaiting approval from {date} — submit a new one after the PMO decision.",
+  "По проекту уже есть отчёт на согласовании от {date} — новый можно подать после решения PMO."
+ ],
+ "gOldDate": [
+  "Дата звіту раніша за останній погоджений звіт ({date}). Вкажіть пізнішу дату.",
+  "The report date is earlier than the last approved report ({date}). Enter a later date.",
+  "Дата отчёта раньше последнего согласованного отчёта ({date}). Укажите более позднюю дату."
+ ],
+ "gDecided": [
+  "Звіт уже вирішено ({state}) — можливо, іншим PMO. Дані оновлено.",
+  "The report has already been decided ({state}) — possibly by another PMO. Data refreshed.",
+  "Отчёт уже решён ({state}) — возможно, другим PMO. Данные обновлены."
+ ],
+ "gNotPmAuthor": [
+  "Автор звіту вже не PM проєкту — такий звіт можна лише повернути.",
+  "The report author is no longer the project PM — this report can only be returned.",
+  "Автор отчёта уже не PM проекта — такой отчёт можно только вернуть."
  ]
 };

@@ -51,7 +51,19 @@ const EXTRA = {
   fbErrText: ['Опишіть, що не так або що покращити.', 'Describe what is wrong or what could be better.', 'Опишите, что не так или что улучшить.'],
   fbSend: ['Надіслати', 'Send', 'Отправить'],
   fbSending: ['Надсилаємо…', 'Sending…', 'Отправляем…'],
-  fbSent: ['Дякуємо! Відгук надіслано.', 'Thank you! Feedback sent.', 'Спасибо! Отзыв отправлен.']
+  fbSent: ['Дякуємо! Відгук надіслано.', 'Thank you! Feedback sent.', 'Спасибо! Отзыв отправлен.'],
+  // защита от окон синхронизации (приложение 1.7): сообщения проверки перед записью — только в приложении
+  errNotReady: ["Проєкт ще готується: права й папки з'являться протягом 15 хвилин після створення. Спробуйте трохи пізніше.","The project is still being prepared: access and folders appear within 15 minutes of creation. Please try again shortly.","Проект ещё готовится: права и папки появятся в течение 15 минут после создания. Попробуйте чуть позже."],
+  errNoRights: ["У вас немає права на цю дію — можливо, права щойно змінилися. Дані оновлено.","You don't have permission for this action — access may have just changed. Data refreshed.","У вас нет права на это действие — возможно, права только что изменились. Данные обновлены."],
+  errConflict: ["Запис змінив інший користувач. Дані оновлено — перевірте й повторіть.","Another user changed this record. Data refreshed — check and try again.","Запись изменил другой пользователь. Данные обновлены — проверьте и повторите."],
+  notReadyNote: ["Проєкт готується: звіти, ризики й команду можна буде додати протягом 15 хвилин після створення.","The project is being prepared: reports, risks and team can be added within 15 minutes of creation.","Проект готовится: отчёты, риски и команду можно будет добавить в течение 15 минут после создания."],
+  gPmChanged: ["PM проєкту змінився (тепер {pm}) — змінювати проєкт може лише він. Дані оновлено.","The project PM has changed (now {pm}) — only they can change the project. Data refreshed.","PM проекта сменился (теперь {pm}) — менять проект может только он. Данные обновлены."],
+  gPmSoon: ["Ви призначені PM цього проєкту: права редагування з'являться протягом 15 хвилин.","You are assigned as PM of this project: edit access appears within 15 minutes.","Вы назначены PM этого проекта: права редактирования появятся в течение 15 минут."],
+  gArchived: ["Проєкт в архіві — лише перегляд. Дані оновлено.","The project is archived — view only. Data refreshed.","Проект в архиве — только просмотр. Данные обновлены."],
+  gPending: ["По проєкту вже є звіт на погодженні від {date} — новий можна подати після рішення PMO.","This project already has a report awaiting approval from {date} — submit a new one after the PMO decision.","По проекту уже есть отчёт на согласовании от {date} — новый можно подать после решения PMO."],
+  gOldDate: ["Дата звіту раніша за останній погоджений звіт ({date}). Вкажіть пізнішу дату.","The report date is earlier than the last approved report ({date}). Enter a later date.","Дата отчёта раньше последнего согласованного отчёта ({date}). Укажите более позднюю дату."],
+  gDecided: ["Звіт уже вирішено ({state}) — можливо, іншим PMO. Дані оновлено.","The report has already been decided ({state}) — possibly by another PMO. Data refreshed.","Отчёт уже решён ({state}) — возможно, другим PMO. Данные обновлены."],
+  gNotPmAuthor: ["Автор звіту вже не PM проєкту — такий звіт можна лише повернути.","The report author is no longer the project PM — this report can only be returned.","Автор отчёта уже не PM проекта — такой отчёт можно только вернуть."]
 };
 const ts = `// Сгенерировано tools/extract-prototype.mjs из prototype/pmo-prototype.html — не править вручную.\n` +
   `export type L3 = [string, string, string];\n` +

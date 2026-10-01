@@ -520,11 +520,8 @@ form .fsec:first-child{margin-top:0}
 .dash th.c-ico .ico{display:inline-grid}
 .dt td.w-upd{min-width:270px;width:auto}
 
-}
-}
-/* #33: закреплённые ширины колонок (DataTable) — длинный текст переносится внутри колонки */
+/* #33: закреплённые ширины колонок — длинный текст переносится внутри колонки */
 .dt table.locked td{overflow-wrap:anywhere}
-
 /* #26: своё поле даты — текст с маской + кнопка календаря браузера */
 .date-in{position:relative;display:block}
 .date-in input[type=text]{padding-right:44px}
@@ -532,3 +529,6 @@ form .fsec:first-child{margin-top:0}
 .date-btn:hover:not(:disabled){background:var(--bg-hover);color:var(--text)}
 .date-btn:disabled{opacity:.4;cursor:default}
 .date-native{position:absolute;right:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
+
+}
+}
