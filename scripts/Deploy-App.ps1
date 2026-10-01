@@ -65,4 +65,24 @@ if (-not (Get-PnPPage -Identity "Portal" -ErrorAction SilentlyContinue)) {
 Set-PnPHomePage -RootFolderRelativeUrl "SitePages/Portal.aspx"
 # компактная шапка сайта без названия: над приложением — только строка меню SharePoint
 Set-PnPWeb -HeaderLayout Minimal -HideTitleInHeader:$true
+
+# 5. «Детальний огляд системи» (из «Довідки» приложения): PDF и скриншоты обзора — в «Ресурси сайту»/pmo-overview.
+#    Библиотека наследует права сайта: участники читают. Загружаются только изменённые файлы (по размеру и дате).
+Write-Host "5. Огляд системи (SiteAssets/pmo-overview)" -ForegroundColor Cyan
+$ctx = Get-PnPContext; $assets = $ctx.Web.Lists.EnsureSiteAssetsLibrary(); $ctx.Load($assets.RootFolder); Invoke-PnPQuery
+$dir = $assets.RootFolder.ServerRelativeUrl.TrimEnd("/") + "/pmo-overview"
+$webRel = (Get-PnPWeb).ServerRelativeUrl.TrimEnd("/")
+$have = @{}
+foreach ($f in @(Get-PnPFolderItem -FolderSiteRelativeUrl ($dir.Substring($webRel.Length + 1) + "/img") -ItemType File -ErrorAction SilentlyContinue) + @(Get-PnPFolderItem -FolderSiteRelativeUrl $dir.Substring($webRel.Length + 1) -ItemType File -ErrorAction SilentlyContinue)) {
+    if ($f) { $have[[string]$f.ServerRelativeUrl] = [long]$f.Length }
+}
+$up = 0
+$files = @(@{ src = Join-Path $root "docs/overview/overview.uk.pdf"; to = $dir }) +
+    @(Get-ChildItem (Join-Path $root "docs/overview/img") -Filter *.png | ForEach-Object { @{ src = $_.FullName; to = "$dir/img" } })
+foreach ($x in $files) {
+    $dest = "$($x.to)/$(Split-Path -Leaf $x.src)"
+    if ($have.ContainsKey($dest) -and $have[$dest] -eq (Get-Item $x.src).Length) { continue }
+    Add-PnPFile -Path $x.src -Folder $x.to.Substring($webRel.Length + 1) | Out-Null; $up++
+}
+Write-Host "  файлов загружено: $up из $($files.Count)"
 Write-Host "`nГотово: $SiteUrl" -ForegroundColor Yellow

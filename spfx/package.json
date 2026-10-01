@@ -12,7 +12,8 @@
     "start": "heft start --clean",
     "test:unit": "jest",
     "extract": "node tools/extract-prototype.mjs",
-    "guide": "node tools/guide.mjs"
+    "guide": "node tools/guide.mjs",
+    "overview": "node tools/overview.mjs"
   },
   "dependencies": {
     "@fluentui/react": "^8.106.4",

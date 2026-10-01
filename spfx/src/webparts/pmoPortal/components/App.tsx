@@ -18,6 +18,7 @@ import { ProjectForm } from '../panels/ProjectForm';
 import { setValueLang } from '../i18n/values';
 import { FeedbackForm } from '../panels/FeedbackForm';
 import { Help } from '../panels/Help';
+import { Overview } from '../panels/Overview';
 import { Feedback } from '../pages/Feedback';
 import { FeedbackView } from '../panels/FeedbackView';
 import { RiskForm } from '../panels/RiskForm';
@@ -92,11 +93,12 @@ export const App: React.FC<AppProps> = p => {
   formRef.current = route.form;
   const close = (): void => nav({ ...route, projectId: 0, form: '' });
   const back = (): void => nav({ ...route, form: '' });
-  const panelOpen = route.form === 'help' || (!!data && (!!route.form || !!project));
+  const panelOpen = route.form === 'help' || route.form === 'overview' || (!!data && (!!route.form || !!project));
   let panelEl: React.ReactNode = null;
   const openFeedback = data && data.feedback ? () => ctx.openForm('feedback', route.projectId) : undefined;
   if (data && route.form.indexOf('fb:') === 0) { const id = Number(route.form.slice(3)); panelEl = <FeedbackView key={id} row={data.feedbackRows.filter(r => r.id === id)[0]} admin={!!p.admin} onCancel={back} />; }
-  else if (route.form === 'help') panelEl = <Help onCancel={back} onFeedback={openFeedback} />;
+  else if (route.form === 'help') panelEl = <Help onCancel={back} onFeedback={openFeedback} onOverview={() => ctx.openForm('overview', route.projectId)} />;
+  else if (route.form === 'overview') panelEl = <Overview onBack={() => ctx.openForm('help', route.projectId)} onCancel={back} />;
   else if (data && route.form === 'feedback') panelEl = <FeedbackForm screen={format({ ...route, form: '' })} onCancel={back} />;
   else if (data && route.form === 'report') panelEl = <ReportForm data={data} projectId={route.projectId} onCancel={project ? back : close} />;
   else if (data && route.form.indexOf('report-from:') === 0) panelEl = <ReportForm key={route.form} data={data} projectId={route.projectId} fromId={Number(route.form.slice(12)) || 0} onCancel={project ? back : close} />;

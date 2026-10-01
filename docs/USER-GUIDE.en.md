@@ -167,3 +167,7 @@ Do what applies to your role and after each task leave **feedback**: what was un
 8. **PM:** add a risk with a response strategy, risk reduction actions and a contingency plan.
 9. **Everyone:** add a comment to a project where you are the owner or on the team; look through the "Feedback" tab.
 10. Switch the language and theme; send feedback with a screenshot from your phone.
+
+## Detailed system overview
+
+At the end of Help there is a **Detailed system overview** button: why the portal exists, what it consists of, every screen with screenshots, approval rules and security. The overview opens in the portal (in Ukrainian); **Download PDF** there saves or prints it.

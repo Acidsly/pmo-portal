@@ -120,6 +120,19 @@
   .pmo-app .help th { color: var(--text-2); font-weight: 600; font-size: 13px; }
 }
 
+// «Детальний огляд системи»: обзорный документ на «листе» (цвета документа — светлые и в тёмной теме)
+:global {
+  .pmo-app .help-more { margin-top: 22px; padding: 14px 16px; border-radius: 16px; background: var(--bg-alt); }
+  .pmo-app .help-more p { margin: 0 0 10px; font-size: 14px; }
+  .pmo-app .actions.top { margin: 0 0 14px; flex-wrap: wrap; }
+  .pmo-app .actions.top a.btn { text-decoration: none; display: inline-flex; align-items: center; }
+  .pmo-app .ovw-paper { background: #fff; border-radius: 16px; padding: 18px 20px; box-shadow: 0 0 0 1px var(--line); }
+  @media (max-width: 600px) { .pmo-app .ovw-paper { padding: 12px; } .pmo-app .ovw .cards, .pmo-app .ovw .two, .pmo-app .ovw .arch { grid-template-columns: 1fr; } .pmo-app .ovw .phones { flex-wrap: wrap; } .pmo-app .ovw .phones figure { width: 100%; } }
+  .pmo-app .ovw section { margin-top: 26px; padding-top: 18px; border-top: 1px solid #d5dbe8; }
+  .pmo-app .ovw .tablewrap, .pmo-app .ovw table { max-width: 100%; }
+  .pmo-app .ovw img { max-width: 100%; height: auto; }
+}
+
 // Кнопка «CSV» в таблицах — рядом с выбором колонок
 :global {
   .pmo-app .cmdbar .csv-btn { width: auto; padding: 0 12px; font-size: 12px; font-weight: 700; letter-spacing: .04em; }
