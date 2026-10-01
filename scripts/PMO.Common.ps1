@@ -44,6 +44,31 @@ function ConvertFrom-JsonText([string]$json) {
 # Векторы tests/cases/state.json.
 # ---------------------------------------------------------------------------
 $STATE_LIST = "Lists/ProjectState"
+# служебная строка эталона: блокировка запусков синхронизации (psProject = 0, проектов с ID 0 не бывает)
+$LOCK_PROJECT = 0
+$LOCK_MINUTES = 45
+
+# Блокировка запусков (векторы tests/cases/lock.json): $text — psState служебной строки, $nowUtc — текущее время UTC.
+# free — пусто; busy — занято другим запуском и срок не вышел; expired — срок вышел или запись повреждена (запуск упал).
+function Test-LockPlan([string]$text, [datetime]$nowUtc) {
+    if (-not $text) { return "free" }
+    try { $j = ConvertFrom-JsonText $text } catch { return "expired" }
+    if (-not $j -or -not $j.until) { return "expired" }
+    try { $until = [datetimeoffset]::Parse([string]$j.until, [cultureinfo]::InvariantCulture).UtcDateTime } catch { return "expired" }
+    if ($until -le $nowUtc.ToUniversalTime()) { return "expired" }
+    return "busy"
+}
+
+# Время по Киеву: Azure Automation работает в UTC, Mac — в поясе пользователя; даты для людей — всегда по Киеву.
+function Get-KyivZone {
+    foreach ($id in @("Europe/Kyiv", "Europe/Kiev", "FLE Standard Time")) { try { return [TimeZoneInfo]::FindSystemTimeZoneById($id) } catch { } }
+    return [TimeZoneInfo]::Local
+}
+# $d с Kind = Local переводится из местного времени, иначе (Utc / Unspecified — значения SharePoint) считается UTC
+function ConvertTo-Kyiv([datetime]$d) {
+    $u = if ($d.Kind -eq [DateTimeKind]::Local) { $d.ToUniversalTime() } else { [datetime]::SpecifyKind($d, [DateTimeKind]::Utc) }
+    return [TimeZoneInfo]::ConvertTimeFromUtc($u, (Get-KyivZone))
+}
 $STATE_DATES = @("pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd", "pmArchivedAt", "pmLastUpdate")
 function Get-StateKeys { return @("pmStatus", "pmRAG", "pmType", "pmProgress", "pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd",
                                   "pmActualCost", "pmArchivedAt", "pmLastUpdate", "pmLastReport", "pmCode") }
@@ -88,7 +113,7 @@ function Read-ProjectStates {
     $script:HAS_STATE_LIST = [bool](Get-PnPList -Identity $STATE_LIST -ErrorAction SilentlyContinue)
     if (-not $script:HAS_STATE_LIST) { return $map }
     foreach ($it in @(Get-PnPListItem -List $STATE_LIST -PageSize 500)) {
-        if (-not $it -or $null -eq $it["psProject"]) { continue }
+        if (-not $it -or $null -eq $it["psProject"] -or [int]$it["psProject"] -eq $LOCK_PROJECT) { continue }
         $map[[int]$it["psProject"]] = @{ id = $it.Id; state = (ConvertFrom-StateJson ([string]$it["psState"])); done = [string]$it["psEditDone"]; last = [string]$it["psLastApplied"] }
     }
     return $map
