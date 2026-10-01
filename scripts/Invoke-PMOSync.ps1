@@ -63,7 +63,7 @@ $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "PMO.Common.ps1")
 $PMO_GROUP = "PMO-адміністратори"
 # уровень прав «только добавление» (создаёт Deploy-PMO.ps1): отчёты, комментарии, погодження — созданную запись не правит никто, кроме синхронизации
-$ROLE_ADD_NAME = "Портал: додавання"
+$ROLE_ADD_NAME = "Додавання (портал)"
 $L_PROJ = "Lists/Projects"; $L_REP = "Lists/StatusReports"; $L_RISK = "Lists/RisksIssues"
 $L_CHG  = "Lists/KeyChanges"; $L_CMT = "Lists/ProjectComments"; $L_TEAM = "Lists/ProjectTeam"; $L_AP = "Lists/ReportApprovals"
 $stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; folders = 0; moved = 0; reset = 0; access = 0; feedback = 0; approvals = 0; members = 0; reminders = 0; stateNew = 0; stateFixed = 0; returned = 0; warnings = 0 }
@@ -117,7 +117,11 @@ try { $OWNER_EMAILS = @($OWNER_EMAILS + @(Get-PnPSiteCollectionAdmin | ForEach-O
 # Приложения (синхронизация, развёртывание, служебные скрипты) — по учётной записи на сайте, а не по пустому e-mail:
 # у человека (гость, учётная запись без почты) e-mail тоже бывает пустым — он не доверенный.
 $APP_IDS = @{}
-foreach ($u in @(Get-PnPUser | Where-Object { ([string]$_.LoginName) -like "i:0i.t|ms.sp.ext|*" })) { $APP_IDS[[int]$u.Id] = $true }
+# один запрос с фильтром (а не все пользователи сайта)
+try {
+    $apps = Invoke-PnPSPRestMethod -Method Get -Url "/_api/web/siteusers?`$select=Id,LoginName&`$filter=substringof('ms.sp.ext',LoginName)"
+    foreach ($u in @($apps.value)) { if (([string]$u.LoginName) -like "i:0i.t|ms.sp.ext|*") { $APP_IDS[[int]$u.Id] = $true } }
+} catch { foreach ($u in @(Get-PnPUser | Where-Object { ([string]$_.LoginName) -like "i:0i.t|ms.sp.ext|*" })) { $APP_IDS[[int]$u.Id] = $true } }
 # Кто автор / редактор для правил доверия: «app» — приложение, иначе e-mail (пустой — не доверенный)
 function Who($u) { if (-not $u) { return "" }; if ($APP_IDS.ContainsKey([int]$u.LookupId)) { return "app" }; return Email $u }
 # для журнала и полей «Користувач»: приложение — без автора
@@ -396,7 +400,7 @@ Log ("Проєктів: {0}, звітів: {1}, ризиків: {2}, комен�
 # 1–2. Новые проекты -> «Створення» в журнале
 # ---------------------------------------------------------------------------
 $STATES = Read-ProjectStates
-$HAS_PS = [bool](Get-PnPList -Identity $STATE_LIST -ErrorAction SilentlyContinue)
+$HAS_PS = [bool]$script:HAS_STATE_LIST
 foreach ($p in $PROJ.Values) {
     # «Створення» — один раз: проект ещё без прав и без эталона (при сбое выдачи прав строка не повторяется)
     if (-not $p.Values.pmoAcl -and -not ($HAS_PS -and $STATES.ContainsKey($p.Item.Id))) {

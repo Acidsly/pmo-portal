@@ -85,7 +85,8 @@ function Get-StateWriteValue([string]$k, [string]$v) {
 # Эталоны всех проектов: psProject -> @{ id; state; done; last } (один запрос; списка ещё нет — пусто)
 function Read-ProjectStates {
     $map = @{}
-    if (-not (Get-PnPList -Identity $STATE_LIST -ErrorAction SilentlyContinue)) { return $map }
+    $script:HAS_STATE_LIST = [bool](Get-PnPList -Identity $STATE_LIST -ErrorAction SilentlyContinue)
+    if (-not $script:HAS_STATE_LIST) { return $map }
     foreach ($it in @(Get-PnPListItem -List $STATE_LIST -PageSize 500)) {
         if (-not $it -or $null -eq $it["psProject"]) { continue }
         $map[[int]$it["psProject"]] = @{ id = $it.Id; state = (ConvertFrom-StateJson ([string]$it["psState"])); done = [string]$it["psEditDone"]; last = [string]$it["psLastApplied"] }

@@ -186,7 +186,7 @@ $ROLE_EDIT = Get-RoleName "Contributor"
 $ROLE_READ = Get-RoleName "Reader"
 # «только добавление»: создать запись в папке проекта и читать, но не править и не удалять (отчёты, комментарии, погодження).
 # Созданную запись меняет только синхронизация. Имя — как $ROLE_ADD_NAME в Invoke-PMOSync.ps1.
-$ROLE_ADD = "Портал: додавання"
+$ROLE_ADD = "Додавання (портал)"
 if (-not (Get-PnPRoleDefinition | Where-Object Name -eq $ROLE_ADD)) {
     Add-PnPRoleDefinition -RoleName $ROLE_ADD -Description "Портфель проєктів: додавати й переглядати записи без зміни та видалення" `
         -Include ViewListItems, AddListItems, OpenItems, ViewVersions, ViewFormPages, ViewPages, Open, BrowseUserInfo, UseRemoteAPIs, UseClientIntegration | Out-Null
