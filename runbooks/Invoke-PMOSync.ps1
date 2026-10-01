@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:223713925255 — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:2c867b996186 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -131,8 +131,11 @@ function Test-LockPlan([string]$text, [datetime]$nowUtc) {
 
 # Время по Киеву: Azure Automation работает в UTC, Mac — в поясе пользователя; даты для людей — всегда по Киеву.
 function Get-KyivZone {
-    foreach ($id in @("Europe/Kyiv", "Europe/Kiev", "FLE Standard Time")) { try { return [TimeZoneInfo]::FindSystemTimeZoneById($id) } catch { } }
-    return [TimeZoneInfo]::Local
+    if ($script:KYIV_ZONE) { return $script:KYIV_ZONE }
+    foreach ($id in @("Europe/Kyiv", "Europe/Kiev", "FLE Standard Time")) { try { $script:KYIV_ZONE = [TimeZoneInfo]::FindSystemTimeZoneById($id); return $script:KYIV_ZONE } catch { } }
+    Write-Warning "Часовий пояс Києва не знайдено — дати за поясом машини ($([TimeZoneInfo]::Local.Id))"
+    $script:KYIV_ZONE = [TimeZoneInfo]::Local
+    return $script:KYIV_ZONE
 }
 # $d с Kind = Local переводится из местного времени, иначе (Utc / Unspecified — значения SharePoint) считается UTC
 function ConvertTo-Kyiv([datetime]$d) {
@@ -255,7 +258,15 @@ function Invoke-LockRest([string]$method, [string]$path, $body, [string]$etag) {
     if ($etag) { $h["If-Match"] = $etag; $h["X-HTTP-Method"] = "MERGE" }
     $p = @{ Method = $method; Uri = "$WEB_URL/_api/web/GetList(@l)$path" + $(if ($path.Contains("?")) { "&" } else { "?" }) + "@l='$([uri]::EscapeDataString($LOCK_LIST_URL))'"; Headers = $h }
     if ($null -ne $body) { $p.Body = [Text.Encoding]::UTF8.GetBytes(($body | ConvertTo-Json -Compress)); $p.ContentType = "application/json;odata=nometadata" }
-    return Invoke-WebRequest @p -UseBasicParsing
+    # повтор при троттлинге и сбоях SharePoint (429 / 5xx / сеть); 412 и прочие 4xx — сразу вызывающему
+    for ($try = 1; ; $try++) {
+        try { return Invoke-WebRequest @p -UseBasicParsing }
+        catch {
+            $code = if ($_.Exception.Response) { [int]$_.Exception.Response.StatusCode } else { 0 }
+            if ($try -ge 4 -or ($code -ne 0 -and $code -ne 429 -and $code -lt 500)) { throw }
+            Start-Sleep -Seconds (5 * $try)
+        }
+    }
 }
 # служебная строка: @{ id; text; etag } или $null
 function Get-LockRow {
@@ -274,9 +285,10 @@ function Enter-SyncLock {
     $row = Get-LockRow
     if (-not $row) {
         # строку создаёт первый запуск; psProject уникален — второй одновременно созданный получит ошибку и прочитает её
-        try { Add-PnPListItem -List $STATE_LIST -Values @{ Title = "Блокування синхронізації"; psProject = $LOCK_PROJECT } | Out-Null } catch { }
+        $why = ""
+        try { Add-PnPListItem -List $STATE_LIST -Values @{ Title = "Блокування синхронізації"; psProject = $LOCK_PROJECT } | Out-Null } catch { $why = $_.Exception.Message }
         $row = Get-LockRow
-        if (-not $row) { throw "Не вдалося створити службовий рядок блокування в $STATE_LIST" }
+        if (-not $row) { throw "Не вдалося створити службовий рядок блокування в $STATE_LIST$(if ($why) { ": $why" })" }
     }
     $now = (Get-Date).ToUniversalTime()
     $plan = Test-LockPlan $row.text $now
@@ -286,6 +298,16 @@ function Enter-SyncLock {
     $text = [ordered]@{ run = $LOCK_RUN; by = $by; at = $now.ToString("o"); until = $now.AddMinutes($LOCK_MINUTES).ToString("o") } | ConvertTo-Json -Compress
     if (-not (Set-LockText $row $text)) { Log "Блокировку только что взял другой запуск — этот запуск пропущен" "Yellow"; return $false }
     return $true
+}
+# продление перед долгими этапами (права, перенос): срок отсчитывается заново; блокировку перехватили — запуск прерывается
+function Update-SyncLock {
+    if (-not $LOCK_HELD) { return }
+    $row = Get-LockRow
+    $j = if ($row -and $row.text) { try { ConvertFrom-JsonText $row.text } catch { $null } } else { $null }
+    if (-not $j -or $j.run -ne $LOCK_RUN) { throw "Блокування синхронізації перехопив інший запуск ($(if ($row) { $row.text })) — запуск зупинено" }
+    $now = (Get-Date).ToUniversalTime()
+    $text = [ordered]@{ run = $LOCK_RUN; by = [string]$j.by; at = [string]$j.at; until = $now.AddMinutes($LOCK_MINUTES).ToString("o") } | ConvertTo-Json -Compress
+    if (-not (Set-LockText $row $text)) { throw "Блокування синхронізації перехопив інший запуск — запуск зупинено" }
 }
 function Exit-SyncLock {
     try {
@@ -323,11 +345,14 @@ try { $OWNER_EMAILS = @($OWNER_EMAILS + @(Get-PnPSiteCollectionAdmin | ForEach-O
 # Приложения (синхронизация, развёртывание, служебные скрипты) — по учётной записи на сайте, а не по пустому e-mail:
 # у человека (гость, учётная запись без почты) e-mail тоже бывает пустым — он не доверенный.
 $APP_IDS = @{}
-# один запрос с фильтром (а не все пользователи сайта)
+# Вход приложения записывается как «Програма SharePoint» (i:0i.t|00000003-…|app@sharepoint) или как само приложение
+# (i:0i.t|ms.sp.ext|<appId>@<tenant>) — один запрос с фильтром (а не все пользователи сайта).
+function Test-AppLogin([string]$login) { return ($login -like "i:0i.t|ms.sp.ext|*") -or ($login -like "i:0i.t|*|app@sharepoint") }
 try {
-    $apps = Invoke-PnPSPRestMethod -Method Get -Url "/_api/web/siteusers?`$select=Id,LoginName&`$filter=substringof('ms.sp.ext',LoginName)"
-    foreach ($u in @($apps.value)) { if (([string]$u.LoginName) -like "i:0i.t|ms.sp.ext|*") { $APP_IDS[[int]$u.Id] = $true } }
-} catch { foreach ($u in @(Get-PnPUser | Where-Object { ([string]$_.LoginName) -like "i:0i.t|ms.sp.ext|*" })) { $APP_IDS[[int]$u.Id] = $true } }
+    $apps = Invoke-PnPSPRestMethod -Method Get -Url "/_api/web/siteusers?`$select=Id,LoginName&`$filter=substringof('ms.sp.ext',LoginName) or substringof('app@sharepoint',LoginName)"
+    foreach ($u in @($apps.value)) { if (Test-AppLogin ([string]$u.LoginName)) { $APP_IDS[[int]$u.Id] = $true } }
+} catch { foreach ($u in @(Get-PnPUser | Where-Object { Test-AppLogin ([string]$_.LoginName) })) { $APP_IDS[[int]$u.Id] = $true } }
+if (-not $APP_IDS.Count) { Warn "На сайті не знайдено облікового запису програми (app@sharepoint / ms.sp.ext) — записи синхронізації й скриптів не вважатимуться довіреними" }
 # Кто автор / редактор для правил доверия: «app» — приложение, иначе e-mail (пустой — не доверенный)
 function Who($u) { if (-not $u) { return "" }; if ($APP_IDS.ContainsKey([int]$u.LookupId)) { return "app" }; return Email $u }
 # для журнала и полей «Користувач»: приложение — без автора
@@ -1023,6 +1048,7 @@ function Set-ItemAcl([string]$list, [int]$id, $acl, [string]$aclMark, [string]$w
     } catch { Fail "Не удалось выдать права $what : $($_.Exception.Message) — повторим в следующий запуск" }
 }
 
+Update-SyncLock
 Log "Права доступа…"
 $ACLS = @{}; $MARK = @{}
 $frozen = 0
@@ -1092,6 +1118,7 @@ foreach ($e in $needed) {
 }
 
 # Записи дочерних списков -> в папку своего проекта (перечитываем: в этом запуске могли появиться новые строки журнала).
+Update-SyncLock
 # Перенос сохраняет ID, автора, даты, связи и версии; личные права записи сбрасываются — она наследует права папки.
 # Порядок для одной записи: перенос, сброс прав, очистка pmoAcl — при сбое посередине следующий запуск повторит.
 foreach ($l in $CHILD.Keys) {

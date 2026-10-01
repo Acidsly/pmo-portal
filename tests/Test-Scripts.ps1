@@ -99,6 +99,16 @@ $syncRaw = Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")
 if ($syncRaw -match '(?s)\ntry \{.*\} finally \{\s*if \(\$LOCK_HELD\) \{ Exit-SyncLock \}') { Ok "блокировка снимается в finally" } else { Bad "Invoke-PMOSync.ps1: нет try/finally вокруг тела с Exit-SyncLock" }
 if ($syncRaw -match 'if \(\$stats\.errors\) \{ throw') { Ok "ошибки записи -> исключение в конце" } else { Bad "Invoke-PMOSync.ps1: нет исключения при stats.errors" }
 
+$fn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Test-AppLogin" }, $true) | Select-Object -First 1
+if ($fn) { Invoke-Expression $fn.Extent.Text } else { Bad "нет функции Test-AppLogin" }
+foreach ($c in @(
+    @{ l = "i:0i.t|00000003-0000-0ff1-ce00-000000000000|app@sharepoint"; out = $true; n = "«Програма SharePoint» (вход приложения) — приложение" }
+    @{ l = "i:0i.t|ms.sp.ext|1b2c@faa553e4"; out = $true; n = "ms.sp.ext — приложение" }
+    @{ l = "i:0#.f|membership|app@sharepoint.ua"; out = $false; n = "человек с похожим e-mail — не приложение" }
+    @{ l = "SHAREPOINT\system"; out = $false; n = "системная учётная запись — не приложение" })) {
+    if ((Test-AppLogin $c.l) -eq $c.out) { Ok $c.n } else { Bad "Test-AppLogin $($c.l)" }
+}
+
 Write-Host "3c2. Runbook Azure Automation (scripts/Build-Runbook.ps1 -> runbooks/Invoke-PMOSync.ps1)"
 $rbPath = Join-Path $root "runbooks/Invoke-PMOSync.ps1"
 if (-not (Test-Path $rbPath)) { Bad "нет runbooks/Invoke-PMOSync.ps1 — запустите scripts/Build-Runbook.ps1" }

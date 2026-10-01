@@ -61,8 +61,11 @@ function Test-LockPlan([string]$text, [datetime]$nowUtc) {
 
 # Время по Киеву: Azure Automation работает в UTC, Mac — в поясе пользователя; даты для людей — всегда по Киеву.
 function Get-KyivZone {
-    foreach ($id in @("Europe/Kyiv", "Europe/Kiev", "FLE Standard Time")) { try { return [TimeZoneInfo]::FindSystemTimeZoneById($id) } catch { } }
-    return [TimeZoneInfo]::Local
+    if ($script:KYIV_ZONE) { return $script:KYIV_ZONE }
+    foreach ($id in @("Europe/Kyiv", "Europe/Kiev", "FLE Standard Time")) { try { $script:KYIV_ZONE = [TimeZoneInfo]::FindSystemTimeZoneById($id); return $script:KYIV_ZONE } catch { } }
+    Write-Warning "Часовий пояс Києва не знайдено — дати за поясом машини ($([TimeZoneInfo]::Local.Id))"
+    $script:KYIV_ZONE = [TimeZoneInfo]::Local
+    return $script:KYIV_ZONE
 }
 # $d с Kind = Local переводится из местного времени, иначе (Utc / Unspecified — значения SharePoint) считается UTC
 function ConvertTo-Kyiv([datetime]$d) {

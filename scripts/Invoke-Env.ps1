@@ -15,7 +15,7 @@
 #>
 param(
     [Parameter(Mandatory)][ValidateSet("test", "prod")][string]$Env,
-    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "refresh", "renumber", "renumber-dryrun", "feedback-answers", "whois", "acl-export", "app", "feedback", "probe-formvalues", "perm-check")][string]$Action,
+    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "refresh", "renumber", "renumber-dryrun", "feedback-answers", "whois", "acl-export", "app", "feedback", "probe-formvalues", "perm-check", "aa-whoami")][string]$Action,
     [switch]$ConfirmProduction,
     # для -Action whois: e-mail человека, чей доступ проверить
     [string]$Email,
@@ -107,6 +107,12 @@ if ($Action -eq "feedback") {
     $a = Get-Auth $cfg.Sync
     $a.SiteUrl = $siteUrl; $a.Email = $Email
     & (Join-Path $PSScriptRoot "Test-EffectivePerms.ps1") @a
+} elseif ($Action -eq "aa-whoami") {
+    # проверочный runbook Azure Automation (runbooks/PMO-WhoAmI.ps1) локально, сертификатом PMO Sync: те же операции, что в Azure
+    $a = Get-Auth $cfg.Sync
+    if ($a.Thumbprint) { Connect-PnPOnline -Url $siteUrl -ClientId $a.ClientId -Tenant $a.Tenant -Thumbprint $a.Thumbprint }
+    else { Connect-PnPOnline -Url $siteUrl -ClientId $a.ClientId -Tenant $a.Tenant -CertificatePath $a.CertificatePath -CertificatePassword $a.CertificatePassword }
+    & (Join-Path $root "runbooks/PMO-WhoAmI.ps1") -SiteUrl $siteUrl -PersonEmail $(if ($Email) { $Email } else { $cfg.Owner }) -UseCurrentConnection
 } elseif ($Action -eq "acl-export") {
     # фактические права записей портала (только чтение) — для сверки до / после изменений синхронизации
     if (-not $File) { throw "Для -Action acl-export укажите -File." }
