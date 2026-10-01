@@ -1,0 +1,258 @@
+{
+  "compare": [
+    {
+      "name": "збігається — розбіжностей немає",
+      "card": {
+        "pmStatus": "Реалізація",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "40",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2026-12-01",
+        "pmForecastEnd": "2027-01-15",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-005"
+      },
+      "state": {
+        "pmStatus": "Реалізація",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "40",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2026-12-01",
+        "pmForecastEnd": "2027-01-15",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-005"
+      },
+      "diff": []
+    },
+    {
+      "name": "статус змінено в обхід звіту",
+      "card": {
+        "pmStatus": "Архівний",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "40",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2026-12-01",
+        "pmForecastEnd": "2027-01-15",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-005"
+      },
+      "state": {
+        "pmStatus": "Реалізація",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "40",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2026-12-01",
+        "pmForecastEnd": "2027-01-15",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-005"
+      },
+      "diff": [
+        "pmStatus"
+      ]
+    },
+    {
+      "name": "кілька полів: % і дата плану",
+      "card": {
+        "pmStatus": "Реалізація",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "90",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2027-03-01",
+        "pmForecastEnd": "2027-01-15",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-005"
+      },
+      "state": {
+        "pmStatus": "Реалізація",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "40",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2026-12-01",
+        "pmForecastEnd": "2027-01-15",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-005"
+      },
+      "diff": [
+        "pmProgress",
+        "pmPlanEnd"
+      ]
+    },
+    {
+      "name": "порожнє = порожнє",
+      "card": {
+        "pmStatus": "Реалізація",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "40",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2026-12-01",
+        "pmForecastEnd": "2027-01-15",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-005"
+      },
+      "state": {
+        "pmStatus": "Реалізація",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "40",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2026-12-01",
+        "pmForecastEnd": "2027-01-15",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-005"
+      },
+      "diff": []
+    },
+    {
+      "name": "код проєкту змінено",
+      "card": {
+        "pmStatus": "Реалізація",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "40",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2026-12-01",
+        "pmForecastEnd": "2027-01-15",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-999"
+      },
+      "state": {
+        "pmStatus": "Реалізація",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "40",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2026-12-01",
+        "pmForecastEnd": "2027-01-15",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-005"
+      },
+      "diff": [
+        "pmCode"
+      ]
+    }
+  ],
+  "write": [
+    {
+      "name": "дата — полудень UTC",
+      "f": "pmPlanEnd",
+      "v": "2026-12-01",
+      "out": "2026-12-01T12:00:00Z"
+    },
+    {
+      "name": "порожня дата — null",
+      "f": "pmGoLive",
+      "v": "",
+      "out": null
+    },
+    {
+      "name": "статус — як є",
+      "f": "pmStatus",
+      "v": "Реалізація",
+      "out": "Реалізація"
+    },
+    {
+      "name": "порожній текст — null",
+      "f": "pmLastReport",
+      "v": "",
+      "out": null
+    }
+  ],
+  "apply": [
+    {
+      "name": "застосунок показує еталон, а не підроблену картку",
+      "project": {
+        "status": "Архівний",
+        "progress": 90,
+        "planEnd": "2027-03-01",
+        "code": "PRJ-005"
+      },
+      "state": {
+        "pmStatus": "Реалізація",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "40",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2026-12-01",
+        "pmForecastEnd": "2027-01-15",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-005"
+      },
+      "expect": {
+        "status": "Реалізація",
+        "progress": 40,
+        "planEnd": "2026-12-01",
+        "rag": "Жовтий",
+        "actualCost": 100,
+        "lastUpdate": "2026-09-20",
+        "code": "PRJ-005"
+      }
+    },
+    {
+      "name": "без еталону — картка як є",
+      "project": {
+        "status": "Ініціація",
+        "progress": 0,
+        "planEnd": "",
+        "code": "PRJ-020"
+      },
+      "state": null,
+      "expect": {
+        "status": "Ініціація",
+        "progress": 0,
+        "planEnd": "",
+        "code": "PRJ-020"
+      }
+    }
+  ]
+}

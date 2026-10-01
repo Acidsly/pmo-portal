@@ -30,6 +30,7 @@ param(
     [string]$Roles
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "PMO.Common.ps1")
 if ($SiteUrl -notmatch '-test/?$') { throw "Seed-TestData.ps1 работает только с тестовым сайтом (…/sites/*-test), получено: $SiteUrl" }
 
 if ($Thumbprint)          { Connect-PnPOnline -Url $SiteUrl -ClientId $ClientId -Tenant $Tenant -Thumbprint $Thumbprint }
@@ -245,6 +246,7 @@ foreach ($p in $projects) {
         if ($state.pmForecastEnd) { $cv.pmForecastEnd = SpDate $state.pmForecastEnd }
         if ($last.Status -eq "Завершено") { $cv.pmArchivedAt = SpDate (D $last.Days) }
         Set-PnPListItem -List "Lists/Projects" -Identity $id -Values $cv -UpdateType SystemUpdate | Out-Null
+        Sync-ProjectStateFromCard $id   # ключевые поля демо-проекта — в эталон
     }
 }
 

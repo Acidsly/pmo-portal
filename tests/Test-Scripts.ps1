@@ -35,7 +35,7 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "config/focus-group.example.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "config/focus-group.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
@@ -50,7 +50,8 @@ foreach ($w in @("CustomFormatter", "Build-Dashboard", "PortfolioStats", "Update
 }
 
 Write-Host "3a. Права и «Доступ до картки» (Get-Access, tests/cases/acl.json)"
-$syncAst = [System.Management.Automation.Language.Parser]::ParseInput((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")), [ref]$null, [ref]$null)
+# функции синхронизации и общие (scripts/PMO.Common.ps1: даты, Norm, эталон)
+$syncAst = [System.Management.Automation.Language.Parser]::ParseInput((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")) + "`n" + (Get-Content -Raw (Join-Path $root "scripts/PMO.Common.ps1")), [ref]$null, [ref]$null)
 $ga = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Get-Access" }, $true) | Select-Object -First 1
 Invoke-Expression $ga.Extent.Text
 foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/acl.json") | ConvertFrom-Json)) {
@@ -80,6 +81,23 @@ if ((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")) -match 'Ex
 $raw = @([regex]::Matches((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")), 'Get-PnPListItem -List (\S+)') | ForEach-Object { $_.Groups[1].Value } | Where-Object { $_ -notin @('$list', '$L_PROJ', '"Lists/FeedbackPublic"', '"Lists/Feedback"') })
 if ($raw) { Bad "Get-PnPListItem без отбрасывания папок: $($raw -join ', ')" } else { Ok "дочерние списки — без папок" }
 
+Write-Host "3d. Еталон ключових полів (scripts/PMO.Common.ps1, tests/cases/state.json)"
+foreach ($n in @("ToSpDate", "Get-StateKeys", "Compare-State", "ConvertTo-StateJson", "ConvertFrom-StateJson", "Get-StateWriteValue")) {
+    $fn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $n }, $true) | Select-Object -First 1
+    if ($fn) { Invoke-Expression $fn.Extent.Text } else { Bad "нет функции $n" }
+}
+$STATE_DATES = @("pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd", "pmArchivedAt", "pmLastUpdate")
+$sc = Get-Content -Raw (Join-Path $root "tests/cases/state.json") | ConvertFrom-Json -DateKind String
+$toHash = { param($o) $h = [ordered]@{}; foreach ($k in Get-StateKeys) { $h[$k] = [string]$o.$k }; $h }
+foreach ($c in $sc.compare) {
+    $got = @((Compare-State (& $toHash $c.card) (& $toHash $c.state)) | ForEach-Object { $_.f }) -join ","
+    if ($got -eq (@($c.diff) -join ",")) { Ok $c.name } else { Bad "$($c.name): $got, ожидалось $(@($c.diff) -join ',')" }
+}
+foreach ($c in $sc.write) { $r = Get-StateWriteValue $c.f $c.v; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $r, ожидалось $($c.out)" } }
+# JSON эталона: даты остаются «yyyy-MM-dd» после ConvertFrom-Json (который превращает ISO в DateTime)
+$rt = ConvertFrom-StateJson (ConvertTo-StateJson (& $toHash $sc.compare[0].card))
+if (-not (Compare-State $rt (& $toHash $sc.compare[0].card)).Count) { Ok "эталон: запись и чтение JSON без искажений (даты, числа, пустые)" } else { Bad "эталон: JSON искажает значения" }
+
 Write-Host "3b. Роли фокус-группы (Get-RolePlan, Seed-TestData.ps1)"
 $seedAst = [System.Management.Automation.Language.Parser]::ParseInput((Get-Content -Raw (Join-Path $root "scripts/Seed-TestData.ps1")), [ref]$null, [ref]$null)
 Invoke-Expression ($seedAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Get-RolePlan" }, $true) | Select-Object -First 1).Extent.Text
@@ -98,7 +116,7 @@ foreach ($k in @(3, 5, 10, 13)) {
 }
 
 Write-Host "4. Формула общего состояния (Invoke-PMOSync.ps1)"
-$sync = Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")
+$sync = (Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")) + "`n" + (Get-Content -Raw (Join-Path $root "scripts/PMO.Common.ps1"))
 $ast = [System.Management.Automation.Language.Parser]::ParseInput($sync, [ref]$null, [ref]$null)
 $fn = $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "CalcRag" }, $true) | Select-Object -First 1
 Invoke-Expression $fn.Extent.Text

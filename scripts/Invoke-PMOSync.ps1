@@ -60,12 +60,13 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "PMO.Common.ps1")
 $PMO_GROUP = "PMO-адміністратори"
 # уровень прав «только добавление» (создаёт Deploy-PMO.ps1): отчёты, комментарии, погодження — созданную запись не правит никто, кроме синхронизации
 $ROLE_ADD_NAME = "Портал: додавання"
 $L_PROJ = "Lists/Projects"; $L_REP = "Lists/StatusReports"; $L_RISK = "Lists/RisksIssues"
 $L_CHG  = "Lists/KeyChanges"; $L_CMT = "Lists/ProjectComments"; $L_TEAM = "Lists/ProjectTeam"; $L_AP = "Lists/ReportApprovals"
-$stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; folders = 0; moved = 0; reset = 0; access = 0; feedback = 0; approvals = 0; members = 0; reminders = 0; warnings = 0 }
+$stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; folders = 0; moved = 0; reset = 0; access = 0; feedback = 0; approvals = 0; members = 0; reminders = 0; stateNew = 0; stateFixed = 0; warnings = 0 }
 
 function Log([string]$m, [string]$c = "Gray") { Write-Host ("{0:HH:mm:ss} {1}" -f (Get-Date), $m) -ForegroundColor $c }
 function Warn([string]$m) { $stats.warnings++; Write-Warning $m }
@@ -115,28 +116,12 @@ $OWNER_EMAILS = @(Get-PnPGroupMember -Group $OWNERS | ForEach-Object { ([string]
 # ---------------------------------------------------------------------------
 # Значения полей
 # ---------------------------------------------------------------------------
-# Поля «только дата» хранятся как полночь по часовому поясу сайта в UTC.
-# +12 часов даёт правильную календарную дату для поясов от UTC-12 до UTC+12.
-function DateOnly($v) {
-    if ($v -isnot [datetime]) { return "" }
-    $u = $v.ToUniversalTime()
-    # 12:00 UTC — значение, записанное синхронизацией (ToSpDate): календарная дата — дата UTC.
-    # Иначе — дата из формы, хранится как полночь по поясу сайта: +12 часов дают верную дату для UTC-11…UTC+11.
-    if ($u.TimeOfDay -eq [timespan]::FromHours(12)) { return $u.ToString("yyyy-MM-dd") }
-    return $u.AddHours(12).ToString("yyyy-MM-dd")
-}
-function ToSpDate([string]$d) { if ($d) { return "$($d)T12:00:00Z" } return $null }
+# DateOnly, ToSpDate, Norm и эталон ключевых полей — scripts/PMO.Common.ps1
 function Human([string]$field, [string]$v) {
     if (-not $v) { return "—" }
     if ($v -match '^\d{4}-\d{2}-\d{2}$') { return ([datetime]$v).ToString("dd.MM.yyyy") }
     if ($field -in @("pmProgress")) { return "$v%" }
     return $v
-}
-function Norm($v) {
-    if ($null -eq $v) { return "" }
-    if ($v -is [datetime]) { return DateOnly $v }
-    if ($v -is [double] -or $v -is [int] -or $v -is [decimal]) { return [string][math]::Round([double]$v) }
-    return [string]$v
 }
 function Email($u) { if ($u) { return ([string]$u.Email).ToLowerInvariant() } return "" }
 function Emails($arr) { if (-not $arr) { return @() } return @($arr | ForEach-Object { Email $_ } | Where-Object { $_ }) }
@@ -185,7 +170,8 @@ $DATE_FIELDS = @("pmStart","pmGoLive","pmPlanEnd","pmForecastEnd","pmLastUpdate"
 $EDIT_DISPLAY = @{ Title = "Назва проєкту"; pmCode = "Код проєкту"; pmDepartment = "Напрям"; pmLoop = "Посилання на картку в Loop"; pmPriority = "Пріоритет"
                    pmManager = "PM"; pmOwner = "Власник"; pmStakeholders = "Стейкхолдери"; pmBudget = "Бюджет (план)"
                    pmTeam = "Команда проєкту"; pmLinks = "Посилання"
-                   srSchedule = "Терміни"; srBudget = "Бюджет"; srResources = "Ресурси"; srApproval = "Погодження звіту" }
+                   srSchedule = "Терміни"; srBudget = "Бюджет"; srResources = "Ресурси"; srApproval = "Погодження звіту"
+                   pmActualCost = "Витрати на дату"; pmArchivedAt = "Дата архівації"; pmLastUpdate = "Останній апдейт"; pmLastReport = "Останній звіт" }
 function EditLogRows([string]$json) {
     # {"entries":[{"when","who","reason","diffs":[{"f","from","to"}]}]} -> строки журнала; повреждённое содержимое — пусто
     $key = @{ title = "Title"; code = "pmCode"; dept = "pmDepartment"; loop = "pmLoop"; prio = "pmPriority"; pm = "pmManager"
@@ -312,7 +298,7 @@ function Get-Stakeholders($item) {
 $PROJ = @{}
 foreach ($it in $projects) {
     $PROJ[$it.Id] = [pscustomobject]@{ Item = $it; Values = @{} }
-    foreach ($f in @($DISPLAY.Keys) + @("pmActualCost","pmLastUpdate","pmLastReport","pmLastComment","pmArchivedAt","pmoAcl")) {
+    foreach ($f in @($DISPLAY.Keys) + @("pmActualCost","pmLastUpdate","pmLastReport","pmLastComment","pmArchivedAt","pmoAcl","pmCode")) {
         $PROJ[$it.Id].Values[$f] = Norm $it[$f]
     }
 }
@@ -325,6 +311,46 @@ foreach ($p in $PROJ.Values) {
     if (-not $p.Values.pmoAcl) {
         $stats.created++
         Add-Change $p.Item.Id "Title" "" ([string]$p.Item["Title"]) "Створення" (Email $p.Item["Author"]) "" ($p.Item["Created"].ToUniversalTime().ToString("o"))
+    }
+}
+
+# ---------------------------------------------------------------------------
+# 0a. Эталон ключевых полей: карточка должна совпадать с последним законным состоянием.
+#     Нет эталона (новый проект, создал PMO) — эталон из карточки (до выдачи прав в этом же запуске).
+#     Расхождение после правки владельца сайта или приложения синхронизации (скрипты) — законно: эталон обновляется.
+#     Иначе (правка в обход статус-отчёта) — карточке возвращаются значения эталона, строка журнала, предупреждение.
+# ---------------------------------------------------------------------------
+$STATES = Read-ProjectStates
+$HAS_PS = [bool](Get-PnPList -Identity $STATE_LIST -ErrorAction SilentlyContinue)
+if ($HAS_PS) {
+    foreach ($p in $PROJ.Values) {
+        $card = [ordered]@{}; foreach ($k in Get-StateKeys) { $card[$k] = [string]$p.Values[$k] }
+        $st = $STATES[$p.Item.Id]
+        if (-not $st) {
+            $stats.stateNew++
+            if (-not $DryRun) { Save-ProjectState $p.Item.Id $card $STATES } else { Log "  еталон: + «$($p.Item["Title"])»" }
+            continue
+        }
+        $diff = Compare-State $card $st.state
+        if (-not $diff.Count) { continue }
+        $editor = Email $p.Item["Editor"]
+        $when = (Get-Date).ToUniversalTime().ToString("o")
+        if (-not $editor -or $OWNER_EMAILS -contains $editor) {
+            # правка владельца сайта или скрипта (приложение) — законна: эталон = карточка
+            Log "  еталон «$($p.Item["Title"])»: оновлено за карткою ($(@($diff | ForEach-Object { $_.f }) -join ', '))"
+            foreach ($d in $diff) { Add-Change $p.Item.Id $d.f (Human $d.f $d.state) (Human $d.f $d.card) "Редагування картки" $editor "Змінено власником сайту або службовим скриптом" $when }
+            if (-not $DryRun) { Save-ProjectState $p.Item.Id $card $STATES }
+            continue
+        }
+        $stats.stateFixed++
+        Warn "Картку «$($p.Item["Title"])» змінено в обхід статус-звіту ($editor): $(@($diff | ForEach-Object { $_.f }) -join ', ') — повернуто значення еталону"
+        $write = @{}
+        foreach ($d in $diff) {
+            $write[$d.f] = Get-StateWriteValue $d.f $d.state
+            Add-Change $p.Item.Id $d.f (Human $d.f $d.card) (Human $d.f $d.state) "Редагування картки" $editor "Змінено в обхід порталу — повернуто значення з еталону" $when
+            $p.Values[$d.f] = $d.state
+        }
+        if (-not $DryRun) { Set-PnPListItem -List $L_PROJ -Identity $p.Item.Id -Values $write -UpdateType SystemUpdate | Out-Null }
     }
 }
 
@@ -411,6 +437,11 @@ foreach ($r in $pending) {
     if ($changed.Count) {
         $write = @{}
         foreach ($k in $changed.Keys) { $write[$k] = if ($k -in $DATE_FIELDS) { ToSpDate $changed[$k] } else { $changed[$k] } }
+        # сначала эталон, потом карточка: сбой между ними следующий запуск доведёт (карточку — к новому эталону), а не откатит
+        if ($HAS_PS -and -not $DryRun) {
+            $next = [ordered]@{}; foreach ($k in Get-StateKeys) { $next[$k] = if ($changed.Contains($k)) { [string]$changed[$k] } else { [string]$p.Values[$k] } }
+            Save-ProjectState $p.Item.Id $next $STATES
+        }
         if (-not $DryRun) { Set-PnPListItem -List $L_PROJ -Identity $p.Item.Id -Values $write | Out-Null }
         foreach ($k in $changed.Keys) { $p.Values[$k] = $changed[$k] }
     }
@@ -741,6 +772,7 @@ Log ("Отзывов в общий список: {0}" -f $stats.feedback)
 Log ("Решений PMO по отчётам: {0}" -f $stats.approvals)
 Log ("Добавлено участников сайта: {0}" -f $stats.members)
 Log ("Папок создано: {0}, записей перенесено в папки: {1}, сброшено личных прав: {2}" -f $stats.folders, $stats.moved, $stats.reset)
+if ($stats.stateNew -or $stats.stateFixed) { Log "Еталон показників: створено $($stats.stateNew), повернуто змін в обхід порталу: $($stats.stateFixed)" }
 Log ("Готово. Звітів: {0}, записів у журнал: {1}, нових проєктів: {2}, коментарів: {3}, типів: {4}, прав: {5}, нагадувань: {6}, попереджень: {7}" -f `
     $stats.reports, $stats.changes, $stats.created, $stats.comments, $stats.types, $stats.acl, $stats.reminders, $stats.warnings) "Green"
 if ($ManagerCache -and -not $DryRun) {

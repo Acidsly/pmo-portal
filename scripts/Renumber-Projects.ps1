@@ -20,6 +20,7 @@ param(
     [switch]$DryRun
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "PMO.Common.ps1")
 if ($Thumbprint)          { Connect-PnPOnline -Url $SiteUrl -ClientId $ClientId -Tenant $Tenant -Thumbprint $Thumbprint }
 elseif ($CertificatePath) { Connect-PnPOnline -Url $SiteUrl -ClientId $ClientId -Tenant $Tenant -CertificatePath $CertificatePath -CertificatePassword $CertificatePassword }
 else                      { Connect-PnPOnline -Url $SiteUrl -ClientId $ClientId -Interactive }
@@ -44,5 +45,7 @@ foreach ($x in $plan) {
     Set-PnPListItem -List "Lists/Projects" -Identity $x.Id -Values @{ pmCode = $x.To } -UpdateType SystemUpdate | Out-Null
     Add-PnPListItem -List "Lists/KeyChanges" -Values @{ Title = "Код проєкту"; kcProject = $x.Id; kcDate = $when; kcKind = "Редагування картки"
         kcField = "pmCode"; kcFrom = $x.From; kcTo = $x.To; kcReason = "Єдина автоматична нумерація проєктів" } | Out-Null
+    # код — ключевое поле: эталон = новый код (иначе синхронизация вернёт прежний)
+    Sync-ProjectStateFromCard $x.Id
 }
 Write-Host "Готово: перенумеровано $($plan.Count) проектов." -ForegroundColor Green

@@ -43,6 +43,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "PMO.Common.ps1")
 $adminUrl = "https://$TenantName-admin.sharepoint.com"
 $siteUrl  = "https://$TenantName.sharepoint.com/sites/$SiteAlias"
 $PMO_GROUP = "PMO-адміністратори"
@@ -468,6 +469,7 @@ foreach ($it in (Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "T
     if ($newMarks -ne [string]$it["pmMigrated"] -or $vals.pmStatus) {
         $vals.pmMigrated = $newMarks
         Set-PnPListItem -List "Lists/Projects" -Identity $it.Id -Values $vals -UpdateType SystemUpdate | Out-Null
+        if ($vals.pmStatus) { Sync-ProjectStateFromCard $it.Id }   # статус — ключевое поле: эталон = результат миграции
         Write-Host "    миграция «$($it["Title"])»: $newMarks"
     }
 }
