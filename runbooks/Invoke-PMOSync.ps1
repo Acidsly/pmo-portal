@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:31b02a0d3626 — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:89bf3db54b83 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -25,7 +25,7 @@
          запуск его не пересчитывает (пересчёт — -RebuildPermissions).
       6. (-SendReminders) письмо каждому PM со списком его активных проектов без свежего отчёта.
 
-.PARAMETER SiteUrl          https://contoso.sharepoint.com/sites/pmo
+.PARAMETER SiteUrl          https://contoso.sharepoint.com/sites/ppm
 .PARAMETER ClientId         Client ID приложения синхронизации (Register-PMOApps.ps1)
 .PARAMETER Tenant           contoso.onmicrosoft.com
 .PARAMETER Thumbprint       отпечаток сертификата в хранилище (Windows / Azure Automation)
@@ -42,7 +42,7 @@
     Сбой записи (права, перенос, участники, напоминания) — в конце исключение: задание Azure Automation «Failed» -> оповещение.
 
 .EXAMPLE
-    ./Invoke-PMOSync.ps1 -SiteUrl https://contoso.sharepoint.com/sites/pmo -ClientId <guid> -Tenant contoso.onmicrosoft.com -Thumbprint <thumb>
+    ./Invoke-PMOSync.ps1 -SiteUrl https://contoso.sharepoint.com/sites/ppm -ClientId <guid> -Tenant contoso.onmicrosoft.com -Thumbprint <thumb>
 .EXAMPLE
     ./Invoke-PMOSync.ps1 ... -SendReminders -ReminderFrom pmo@contoso.com
 #>

@@ -19,8 +19,8 @@
   "preconfiguredEntries": [{
     "groupId": "5c03119e-3074-46fd-976b-c60198311f70", // Advanced
     "group": { "default": "PMO" },
-    "title": { "default": "Портфель проєктів" },
-    "description": { "default": "Портфель проєктів" },
+    "title": { "default": "PPM — Портфель проєктів" },
+    "description": { "default": "PPM — Портфель проєктів (Project Portfolio Management)" },
     "officeFabricIconFontName": "Page",
     "properties": {
       "description": "Портфель проєктів"

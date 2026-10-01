@@ -2,9 +2,9 @@
 export type L3 = [string, string, string];
 export const T: Record<string, L3> = {
  "siteTitle": [
-  "Портфель проєктів",
-  "Project portfolio",
-  "Портфель проектов"
+  "PPM — Портфель проєктів",
+  "PPM — Project Portfolio",
+  "PPM — Портфель проектов"
  ],
  "navHome": [
   "Головна",

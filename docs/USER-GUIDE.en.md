@@ -1,4 +1,4 @@
-# Project portfolio — user guide
+# PPM — Project Portfolio: user guide
 
 ## What it is
 

@@ -23,7 +23,7 @@
 .EXAMPLE
     ./Register-PMOApps.ps1 -Stage Deploy -Tenant contoso.onmicrosoft.com
 .EXAMPLE
-    ./Register-PMOApps.ps1 -Stage Sync -Tenant contoso.onmicrosoft.com -SiteUrl https://contoso.sharepoint.com/sites/pmo -DeployClientId <guid>
+    ./Register-PMOApps.ps1 -Stage Sync -Tenant contoso.onmicrosoft.com -SiteUrl https://contoso.sharepoint.com/sites/ppm -DeployClientId <guid>
 #>
 param(
     [Parameter(Mandatory)][ValidateSet("Deploy", "Automation", "Sync")][string]$Stage,

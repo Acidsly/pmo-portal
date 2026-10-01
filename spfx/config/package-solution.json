@@ -16,10 +16,10 @@
     },
     "metadata": {
       "shortDescription": {
-        "default": "Портфель проєктів — портал управління портфелем проєктів"
+        "default": "PPM — Портфель проєктів: управління портфелем проєктів (Project Portfolio Management)"
       },
       "longDescription": {
-        "default": "Портфель проєктів — портал управління портфелем проєктів"
+        "default": "PPM — Портфель проєктів: управління портфелем проєктів (Project Portfolio Management)"
       },
       "screenshotPaths": [],
       "videoUrl": "",
@@ -27,7 +27,7 @@
     },
     "features": [
       {
-        "title": "Портфель проєктів",
+        "title": "PPM — Портфель проєктів",
         "description": "Портфель проєктів",
         "id": "1103c1d7-c2ce-48c2-b787-a831e1083b88",
         "version": "1.7.0.3"
