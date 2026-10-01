@@ -6,7 +6,8 @@ import { isActive, byOrder } from '../logic/status';
 import { calcRag, Rag } from '../logic/rag';
 import { ReportDraft, reportFromProject, reportFromReturned, keyChanged, validateReport } from '../logic/forms';
 import { reportBody } from '../data/write';
-import { Frow, RagPick, SegPick, DateIn, Err, Opts, errText } from '../components/fields';
+import { Frow, RagPick, SegPick, DateIn, Err, Opts, errText, guardText } from '../components/fields';
+import { guard } from '../logic/guard';
 import { RagDot } from '../components/Bits';
 
 const REPORT_STATUSES = ['Ініціація', 'Планування', 'Реалізація', 'Призупинено'];
@@ -36,7 +37,11 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
     if (v) { setErr(t(v)); return; }
     setBusy(true); setErr('');
     try {
-      await c.repo.createIn('StatusReports', p.id, reportBody(d, p));
+      // свежая проверка: PM на месте, проект не в архиве, по проекту нет другого отчёта на погодженні, дата не раньше погодженого
+      const f = await c.repo.fresh(p.id);
+      const g = guard('report', c.me, f, { reportDate: d.date });
+      if (!g.ok) { setErr(guardText(t, g.key, g.args)); setBusy(false); await c.reload(); return; }
+      await c.repo.createIn('StatusReports', p.id, reportBody(d, f.project));
       await c.reload();
       c.toast(t('savedReportPending'));
       c.openProject(p.id);

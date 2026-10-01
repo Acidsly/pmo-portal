@@ -6,7 +6,8 @@ import { isActive, isArch, byOrder, riskScore } from '../logic/status';
 import { scoreBucket } from '../logic/views';
 import { RiskDraft, validateRisk } from '../logic/forms';
 import { riskBody } from '../data/write';
-import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts, errText } from '../components/fields';
+import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts, errText, guardText } from '../components/fields';
+import { guard, changedFields } from '../logic/guard';
 import { Score } from '../components/Bits';
 
 const TYPES = ['Ризик', 'Проблема'];
@@ -44,7 +45,17 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
     try {
       const owner: Person | null = d.owner && !d.owner.id ? { ...d.owner, id: await c.repo.ensureUser(d.owner.email) } : d.owner;
       const body = riskBody({ ...d, projectId: pid, owner });
-      if (k) await c.repo.update('RisksIssues', k.id, body); else await c.repo.createIn('RisksIssues', pid, body, { riOwnerId: owner ? owner.email : '' });
+      const f = await c.repo.fresh(pid);
+      const g = guard('risk', c.me, f);
+      if (!g.ok) { setErr(guardText(t, g.key, g.args)); setBusy(false); await c.reload(); return; }
+      if (k) {
+        // конфликт правок: риск изменили после загрузки — не перезаписываем
+        const fr = await c.repo.freshRisk(k.id);
+        const snap = (x: typeof k): Record<string, string> => ({ title: x.title, type: x.type, p: String(x.probability), i: String(x.impact), owner: x.owner ? x.owner.email : '',
+          status: x.status, due: x.due, mitigation: x.mitigation, strategy: x.strategy, contingency: x.contingency });
+        if (changedFields(snap(k), snap(fr.risk)).length) { setErr(t('errConflict')); setBusy(false); await c.reload(); return; }
+        await c.repo.update('RisksIssues', k.id, body, fr.etag);
+      } else await c.repo.createIn('RisksIssues', pid, body, { riOwnerId: owner ? owner.email : '' });
       await c.reload(); c.toast(t('savedRisk'));
       if (fixedId) c.openProject(pid); else onCancel();
     } catch (x) { setErr(errText(t, x)); setBusy(false); }

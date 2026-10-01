@@ -55,8 +55,22 @@ export const App: React.FC<AppProps> = p => {
   const [route, setRoute] = React.useState<Route>(() => parse(window.location.hash, DEFAULT_VIEWS));
   const [data, setData] = React.useState<PortalData | undefined>(undefined);
   const [err, setErr] = React.useState('');
-  const load = (): Promise<void> => p.repo.loadAll().then(setData, e => setErr(String((e && e.message) || e)));
+  // отметка изменений списков на момент загрузки: при возврате на вкладку и раз в 5 минут — один лёгкий запрос,
+  // данные перечитываются, только если что-то изменилось (и не во время открытой формы — там свежесть проверяет guard)
+  const stampRef = React.useRef('');
+  const formRef = React.useRef('');
+  const load = (): Promise<void> => Promise.all([p.repo.loadAll(), p.repo.stamp().catch(() => '')])
+    .then(([d, st]) => { stampRef.current = st; setData(d); }, e => setErr(String((e && e.message) || e)));
   React.useEffect(() => { load().catch(() => undefined); }, []);
+  React.useEffect(() => {
+    const check = (): void => {
+      if (document.visibilityState !== 'visible' || formRef.current) return;
+      p.repo.stamp().then(st => { if (st && st !== stampRef.current) load().catch(() => undefined); }, () => undefined);
+    };
+    const tm = window.setInterval(check, 5 * 60000);
+    document.addEventListener('visibilitychange', check);
+    return () => { window.clearInterval(tm); document.removeEventListener('visibilitychange', check); };
+  }, []);
   const [toastMsg, showToast] = useToast();
   React.useEffect(() => {
     const on = (): void => setRoute(r => parse(window.location.hash, r.views));
@@ -73,6 +87,7 @@ export const App: React.FC<AppProps> = p => {
     openForm: (form, id) => nav({ ...route, projectId: id || 0, form }),
     repo: p.repo, reload: load, toast: showToast };
   const project = data && route.projectId ? data.projects.filter(x => x.id === route.projectId)[0] : undefined;
+  formRef.current = route.form;
   const close = (): void => nav({ ...route, projectId: 0, form: '' });
   const back = (): void => nav({ ...route, form: '' });
   const panelOpen = route.form === 'help' || (!!data && (!!route.form || !!project));

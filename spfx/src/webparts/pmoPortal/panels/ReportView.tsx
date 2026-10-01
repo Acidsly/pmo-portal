@@ -6,7 +6,8 @@ import { tv } from '../i18n/values';
 import { calcRag, Rag } from '../logic/rag';
 import { isArch } from '../logic/status';
 import { AP_OK, AP_PENDING, AP_RETURNED, approvalResult } from '../logic/approval';
-import { RagPick, Err, Frow, errText } from '../components/fields';
+import { RagPick, Err, Frow, errText, guardText } from '../components/fields';
+import { guard } from '../logic/guard';
 import { RagPill, RagDot, ApBadge, fmtDate, fmtDT, money, PersonCell } from '../components/Bits';
 import { Plus } from '../components/Icons';
 
@@ -39,6 +40,10 @@ export const ReportView: React.FC<{ data: PortalData; report: StatusReport | und
     if (!out.valid) { setErr(t('errApNote')); return; }
     setBusy(true); setErr('');
     try {
+      // свежая проверка: отчёт ещё на погодженні и без решения (другой PMO, другая вкладка), проект не в архиве, автор — PM
+      const f = await c.repo.fresh(r.projectId, r.id);
+      const g = guard(decision === AP_OK ? 'approve' : 'return', c.me, f);
+      if (!g.ok) { setErr(guardText(t, g.key, g.args)); setBusy(false); await c.reload(); return; }
       await c.repo.createIn('ReportApprovals', r.projectId, { apReportId: r.id, apProjectId: r.projectId, apDecision: decision,
         apSchedule: ap.s || null, apBudget: ap.b || null, apResources: ap.r || null, apNote: note.trim() });
       await c.reload(); c.toast(t('savedApproval')); c.openForm('rep:' + r.id, p.id);

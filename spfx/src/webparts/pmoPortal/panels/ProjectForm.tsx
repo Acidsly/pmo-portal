@@ -5,7 +5,8 @@ import { Project, Person } from '../data/types';
 import { ProjectDraft, validateProject, nextCode, cardDiff } from '../logic/forms';
 import { projectBody, projectEditBody, teamBody, teamRows } from '../data/write';
 import { TeamRow, cleanTeam, cleanLinks, teamPlan } from '../logic/team';
-import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts, errText } from '../components/fields';
+import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts, errText, guardText } from '../components/fields';
+import { guard, cardFields, changedFields } from '../logic/guard';
 
 const TYPES = ['Стратегічний', 'Звичайний'];
 const PRIOS = ['1 — Високий', '2 — Середній', '3 — Низький'];
@@ -69,7 +70,13 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
         const plan = teamPlan(project!.team, x.team);
         const teamChanged = plan.create.length + plan.update.length + plan.remove.length > 0;
         if (!diff.length && !teamChanged && x.description === project!.description) { onCancel(); return; }
-        await c.repo.update('Projects', project!.id, projectEditBody(x, diff, c.me, '', project!.editLog || ''));
+        // свежая проверка: PM не сменился, проект не в архиве, никто не изменил карточку с момента загрузки
+        const f = await c.repo.fresh(project!.id);
+        const g = guard('editCard', c.me, f);
+        if (!g.ok) { setErr(guardText(t, g.key, g.args)); setBusy(false); await c.reload(); return; }
+        if (changedFields(cardFields(project!), cardFields(f.project)).length) { setErr(t('errConflict')); setBusy(false); await c.reload(); return; }
+        // журнал правок — к свежему (синхронизация могла уже перенести часть записей), версия записи — свежая
+        await c.repo.update('Projects', project!.id, projectEditBody(x, diff, c.me, '', f.project.editLog || ''), f.etag);
         await writeTeam(project!.id, project!.team, false);
         await c.reload(); c.toast(t('savedEdit')); c.openProject(project!.id);
       }
@@ -80,6 +87,10 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
     }
   };
 
+  // правка по прямой ссылке (#…/edit): форма сама проверяет права и архив, а не только скрытая кнопка
+  if (!isNew && project && (!project.canEdit || project.status === 'Архівний')) return <><div className="ph"><div><h2>{project.title}</h2></div>
+    <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
+    <p className="note lock">🔒 {project.status === 'Архівний' ? t('archivedNote') : t('noEdit')}</p></>;
   if (isNew && !data.canCreate) return <><div className="ph"><div><h2>{t('newProject')}</h2></div><button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     <p className="note lock">🔒 {t('noCreate')}</p></>;
   return <>

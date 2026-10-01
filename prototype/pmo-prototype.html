@@ -682,7 +682,8 @@ const T = {
  codeAuto:['Буде присвоєно автоматично','Assigned automatically','Будет присвоен автоматически'],
  navArchive:['Архів','Archive','Архив'],
  archiveSub:['Завершені та скасовані проєкти. Лише перегляд.','Completed and cancelled projects. View only.','Завершённые и отменённые проекты. Только просмотр.'],
- archivedNote:['Проєкт в архіві: доступні перегляд і коментарі.','This project is archived: view and comment only.','Проект в архиве: доступны просмотр и комментарии.'],
+ archivedNote:['Проєкт в архіві: лише перегляд.','This project is archived: view only.','Проект в архиве: только просмотр.'],
+ onePending:['Звіт від {date} на погодженні PMO — новий можна подати після рішення.','The report from {date} is awaiting PMO approval — a new one can be submitted after the decision.','Отчёт от {date} на согласовании PMO — новый можно подать после решения.'], archNoComments:['Проєкт в архіві: лише перегляд.','The project is archived: view only.','Проект в архиве: только просмотр.'],
  archivedAt:['Дата архівації','Archived on','Дата архивации'],
  cols:['Поля та порядок','Columns and order','Поля и порядок'], colsReset:['Як за замовчуванням','Reset to default','Как по умолчанию'],
  filter:['Фільтр','Filter','Фильтр'], clear:['Очистити','Clear','Очистить'], search:['Пошук','Search','Поиск'],
@@ -1580,10 +1581,13 @@ function projectPanel(id, showCm, keep, showCh){
       `<button class="more" data-act="togglecm">${showCm ? t('hideHistory') : t('showHistory') + ` (${cms.length})`}</button>` : '') + '</div>'
     : `<p class="empty">${t('noComments')}</p>`;
   const risks = (p.risks || []).slice().sort((a, b) => b.p * b.i - a.p * a.i);
+  // один отчёт на погодженні на проект: пока PMO не решил, кнопки нового отчёта нет
+  const pendRep = rs.filter(r => r.approval === AP_PEND)[0];
   const actions = edit
-    ? `<div class="actbar"><button class="btn primary" data-act="newrep" data-id="${p.id}">${iconPlus}${t('addReport')}</button>
+    ? `<div class="actbar">${pendRep ? '' : `<button class="btn primary" data-act="newrep" data-id="${p.id}">${iconPlus}${t('addReport')}</button>`}
        <button class="btn" data-act="editproj" data-id="${p.id}">${iconEdit}${t('editProject')}</button></div>`
     : `<p class="note lock">🔒 ${isArch(p) ? t('archivedNote') : t('noEdit')}</p>`;
+  const onePend = edit && pendRep ? `<p class="note">${esc(t('onePending').replace('{date}', fmt(pendRep.d)))}</p>` : '';
   const lastR = rs[rs.length - 1];
   const apNotes = rs.filter(r => r.approval === AP_PEND).reverse().map(r => `<div class="apnote">${esc(t('pendingApproval').replace('{date}', fmt(r.d)))}${isPMO() ? `<button class="link" data-act="repopen" data-id="${p.id}" data-rid="${esc(r.id)}">${t('apTitle')} →</button>` : ''}</div>`).join('')
     + (lastR && lastR.approval === AP_RET ? `<div class="apnote ret">${esc(t('returnedNote').replace('{date}', fmt(lastR.d)).replace('{comment}', lastR.apNote || '—'))}
@@ -1592,7 +1596,7 @@ function projectPanel(id, showCm, keep, showCh){
   openPanel(`<div class="ph"><div><div class="k">${esc(p.code)} · ${t('listLabel')} «${t('navProjects')}»</div><h2>${esc(p.title)}</h2></div>${closeBtn()}</div>
     <div class="badges">${typeHtml(p.type)}${ragHtml(p.rag)}${statusPill(p.status)}<span class="badge">${esc(tv(p.prio))}</span></div>
     ${(p.links || []).length ? `<div class="lnk-sec"><div class="k">${fl('links')}</div>${linksHtml(p)}</div>` : ''}
-    ${actions}
+    ${actions}${onePend}
     ${apNotes ? `<div style="margin-top:14px">${apNotes}</div>` : ''}
     ${p.desc ? `<p class="desc">${esc(p.desc)}</p>` : ''}
     <div class="sec"><h3>${t('secPeople')}</h3>
@@ -1607,15 +1611,16 @@ function projectPanel(id, showCm, keep, showCh){
       ${kv('progress', barHtml(p.progress))}${kv('last', freshHtml(p))}${kv('budget', money(p.budget))}${kv('actual', money(p.actual) + ' · ' + useHtml(p))}${kv('dept', esc(p.dept))}</div></div>
     <div class="sec"><h3>${t('secChanges')}</h3>${changesHtml(p, showCh)}</div>
     <div class="sec"><h3>${fl('comments')}</h3>${cmBlock}
-      <form id="cmform" class="frow" style="margin-top:12px" novalidate>
+      ${isArch(p) ? `<p class="note lock" style="margin-top:12px">🔒 ${t('archNoComments')}</p>` : `<form id="cmform" class="frow" style="margin-top:12px" novalidate>
         <label class="t" for="cm-t">${t('addComment')}</label><textarea id="cm-t" placeholder="${t('cmtPh')}"></textarea>
-        <p class="err" id="cm-err" hidden></p><div class="actions" style="margin-top:10px"><button type="submit" class="btn">${t('addComment')}</button></div></form></div>
+        <p class="err" id="cm-err" hidden></p><div class="actions" style="margin-top:10px"><button type="submit" class="btn">${t('addComment')}</button></div></form>`}</div>
     <div class="sec"><h3>${t('secHistory')}</h3>${matrix}</div>
     <div class="sec"><h3>${t('secReports')} (${rs.length})</h3>${repList || `<p class="empty">${t('noReportsYet')}</p>`}</div>
     <div class="sec"><div class="sec-h"><h3>${t('secRisks')} (${risks.length})</h3>${edit ? `<button class="more" data-act="newrisk" data-id="${p.id}">${iconPlus} ${t('addRisk')}</button>` : ''}</div>
       ${risks.length ? `<div class="rlist">${risks.map(k => `<button class="rrow" data-act="riskopen" data-id="${p.id}" data-rid="${k.id}">${scoreHtml(k.p * k.i)}<span class="rt">${esc(k.title)}</span><span class="muted">${esc(tv(k.type))} · ${esc(tv(k.status))}</span></button>`).join('')}</div>` : `<p class="empty">${t('emptyRisks')}</p>`}</div>
     <div class="sec"><h3>${t('accessTitle')}</h3><div class="access"><div class="muted" style="font-size:13px">${t('accessDesc')}</div><ol>${accessList(p)}</ol></div></div>`, keep);
-  document.getElementById('cmform').addEventListener('submit', e => {
+  const cmf = document.getElementById('cmform');   // в архиве формы комментария нет
+  if (cmf) cmf.addEventListener('submit', e => {
     e.preventDefault();
     const v = document.getElementById('cm-t').value.trim();
     if (!v){ const er = document.getElementById('cm-err'); er.textContent = t('errCmt'); er.hidden = false; return; }

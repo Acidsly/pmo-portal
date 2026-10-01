@@ -39,7 +39,8 @@ export function projectEditBody(d: ProjectDraft, diffs: { f: string; from: strin
   if (diffs.length) {
     let entries: unknown[] = [];
     try { const prev = prevLog ? JSON.parse(prevLog) : undefined; if (prev && Array.isArray(prev.entries)) entries = prev.entries; } catch { /* повреждённый журнал — начинаем заново */ }
-    entries.push({ when: new Date().toISOString(), who, reason, diffs });
+    // ключ записи: синхронизация переносит в журнал по ключам — без потерь и дублей (tests/cases/editlog.json)
+    entries.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), when: new Date().toISOString(), who, reason, diffs });
     b.pmEditLog = JSON.stringify({ entries });
   }
   return b;

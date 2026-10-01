@@ -9,6 +9,7 @@ import { teamPeople } from '../logic/team';
 import { applyPending } from '../logic/overlay';
 import { Regional, regionalFrom, toFormValues } from './formValues';
 import { applyState, parseState, StateJson } from '../logic/state';
+import { Fresh } from '../logic/guard';
 
 export type WritableList = 'Projects' | 'StatusReports' | 'RisksIssues' | 'ProjectComments' | 'Feedback' | 'ProjectTeam' | 'ReportApprovals';
 
@@ -171,11 +172,62 @@ export class SpRepo {
     return idv ? Number(idv.FieldValue) : 0;
   }
 
-  /** Правка элемента (MERGE): меняются только переданные поля. */
-  async update(list: WritableList, id: number, body: Record<string, unknown>): Promise<void> {
+  /** Правка элемента (MERGE): меняются только переданные поля. etag — версия записи, прочитанная перед записью (If-Match):
+   *  если запись успели изменить, SharePoint отвечает 412 — ошибка «conflict», правка не перезаписывает чужую. */
+  async update(list: WritableList, id: number, body: Record<string, unknown>, etag?: string): Promise<void> {
     const res = await this.http.post(`${this.listItems(list)}(${id})?${this.listQuery(list)}`, SPHttpClient.configurations.v1,
-      { headers: { ...SpRepo.JSON_HEADERS, 'X-HTTP-Method': 'MERGE', 'IF-MATCH': '*' }, body: JSON.stringify(body) });
+      { headers: { ...SpRepo.JSON_HEADERS, 'X-HTTP-Method': 'MERGE', 'IF-MATCH': etag || '*' }, body: JSON.stringify(body) });
+    if (res.status === 412) throw new Error('conflict');
+    if (res.status === 403) throw new Error('noRights');
     await this.check(res, `${list} #${id}`);
+  }
+
+  private async getJson(url: string, meta = false): Promise<any> {
+    const res = await this.http.get(url, SPHttpClient.configurations.v1, { headers: { Accept: meta ? 'application/json;odata=minimalmetadata' : 'application/json;odata=nometadata' } });
+    if (res.status === 403 || res.status === 404) throw new Error('noRights');
+    if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+    return res.json();
+  }
+  private itemUrl(list: string, id: number, select: string, expand: string): string {
+    const listUrl = `${this.webRelUrl.replace(/\/$/, '')}/Lists/${list}`;
+    return `${this.webUrl}/_api/web/GetList(@u)/items(${id})?@u='${encodeURIComponent(listUrl)}'&$select=${select}${expand ? '&$expand=' + expand : ''}`;
+  }
+
+  /** Свежее состояние проекта перед записью: карточка (с эталоном и наложением погодженых отчётов), версия, права,
+   *  отчёты на погодженні, дата последнего погодженого; для погодження — состояние отчёта и решения PMO по нему. */
+  async fresh(projectId: number, reportId = 0): Promise<Fresh> {
+    const [pj, st, reps, aps] = await Promise.all([
+      this.getJson(this.itemUrl('Projects', projectId, PROJECT_SELECT, PROJECT_EXPAND), true),
+      this.items('ProjectState', 'Id,psProject,psState,psLastApplied', '', `psProject eq ${projectId}`).catch(() => [] as any[]),
+      this.items('StatusReports', REPORT_SELECT, REPORT_EXPAND, `srProjectId eq ${projectId}`),
+      this.items('ReportApprovals', APPROVAL_SELECT, APPROVAL_EXPAND, `apProjectId eq ${projectId}`).catch(() => [] as any[])]);
+    const approvals = aps.map(mapApproval);
+    const reports = reps.map(mapReport).map(x => withApproval(x, approvals));
+    const approvedIds: Record<number, boolean> = {};
+    for (const a of approvals) if (a.decision === 'Погоджено') approvedIds[a.reportId] = true;
+    const base = { ...applyState(mapProject(pj), st[0] ? parseState(st[0].psState) : undefined), lastApplied: st[0] ? String(st[0].psLastApplied || '') : '' };
+    const project = applyPending(base, reports, approvals.length ? approvedIds : undefined);
+    const pending = reports.filter(r => !r.applied && (!r.approval || r.approval === 'На погодженні'))
+      .map(r => ({ id: r.id, date: r.date, author: r.author ? r.author.email.toLowerCase() : '' })).sort((a, b) => (a.date < b.date ? -1 : 1));
+    const lastApprovedDate = reports.filter(r => r.approval === 'Погоджено').reduce((m, r) => (r.date > m ? r.date : m), '');
+    const rep = reportId ? reports.filter(r => r.id === reportId)[0] : undefined;
+    return { project, etag: String(pj['odata.etag'] || ''), owner: canManage(pj.EffectiveBasePermissions), pending, lastApprovedDate,
+      report: rep ? { id: rep.id, approval: rep.approval || 'На погодженні', author: rep.author ? rep.author.email.toLowerCase() : '',
+        decisions: approvals.filter(a => a.reportId === rep.id && !a.applied).length } : undefined };
+  }
+
+  /** Свежая запись риска: версия и значения (конфликт правок). */
+  async freshRisk(id: number): Promise<{ etag: string; risk: Risk }> {
+    const j = await this.getJson(this.itemUrl('RisksIssues', id, RISK_SELECT, RISK_EXPAND), true);
+    return { etag: String(j['odata.etag'] || ''), risk: mapRisk(j) };
+  }
+
+  /** Отметка изменений списков портала: самое позднее изменение записей (один лёгкий запрос). */
+  async stamp(): Promise<string> {
+    const j = await this.getJson(`${this.webUrl}/_api/web/lists?$select=Title,LastItemModifiedDate,RootFolder/ServerRelativeUrl&$expand=RootFolder&$filter=Hidden eq true`);
+    const portal = ['/Lists/Projects', '/Lists/StatusReports', '/Lists/RisksIssues', '/Lists/ProjectComments', '/Lists/ProjectTeam', '/Lists/ReportApprovals', '/Lists/ProjectState', '/Lists/KeyChanges'];
+    return (j.value || []).filter((l: any) => l.RootFolder && portal.some(u => String(l.RootFolder.ServerRelativeUrl).endsWith(u)))
+      .reduce((m: string, l: any) => (String(l.LastItemModifiedDate) > m ? String(l.LastItemModifiedDate) : m), '');
   }
 
   /** В корзину сайта (восстанавливается): строка команды, которую PM убрал из карточки. */

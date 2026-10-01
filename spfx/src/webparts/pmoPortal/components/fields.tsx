@@ -30,6 +30,9 @@ export const Err: React.FC<{ msg: string }> = ({ msg }) => (msg ? <p className="
 
 /** Текст ошибки записи для человека: известные ошибки — переводом (папки нет, нет прав, конфликт правок), остальные — как есть. */
 const KNOWN_ERR: Record<string, string> = { notReady: 'errNotReady', noRights: 'errNoRights', conflict: 'errConflict' };
+/** Отказ проверки перед записью (logic/guard.ts) — текст с подстановками {date} {pm} {state}. */
+export const guardText = (t: (k: string) => string, key: string, args: Record<string, string> = {}): string =>
+  Object.keys(args).reduce((m, k) => m.split('{' + k + '}').join(k === 'state' ? tv(args[k]) : args[k]), t(key));
 export const errText = (t: (k: string) => string, x: unknown): string => {
   const m = String((x as Error) && (x as Error).message !== undefined ? (x as Error).message : x);
   return KNOWN_ERR[m] ? t(KNOWN_ERR[m]) : m;
