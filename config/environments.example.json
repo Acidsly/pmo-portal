@@ -19,7 +19,7 @@
   "prod": {
     "TenantName": "contoso",
     "Tenant": "contoso.onmicrosoft.com",
-    "SiteAlias": "pmo",
+    "SiteAlias": "ppm",
     "Owner": "yurii@contoso.com",
     "ReminderFrom": "pmo@contoso.com",
     "Deploy": {

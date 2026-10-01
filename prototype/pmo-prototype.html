@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Портфель проектов</title>
+<title>PPM — Портфель проєктів</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap&amp;subset=cyrillic" rel="stylesheet">
@@ -60,7 +60,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--glass);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--glass-line)}
 .top-in{max-width:1280px;margin:0 auto;padding:14px 32px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:12px;margin-right:auto}
-.logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(145deg,#0a84ff,#5e5ce6);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px;flex:none}
+.logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(145deg,#0a84ff,#5e5ce6);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px;letter-spacing:-.02em;flex:none}
 .brand-name{font-weight:600;font-size:17px;letter-spacing:-.01em;line-height:1.2}
 .brand-sub{font-size:12px;color:var(--text-2)}
 .nav{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:12px;overflow-x:auto;max-width:100%}
@@ -539,7 +539,7 @@ main{padding-bottom:40px}
 <body>
 <header class="top">
   <div class="top-in">
-    <div class="brand"><div class="logo" aria-hidden="true">ПП</div><div><div class="brand-name" id="siteName"></div><div class="brand-sub" id="siteSub"></div></div></div>
+    <div class="brand"><div class="logo" aria-hidden="true">PPM</div><div><div class="brand-name" id="siteName"></div><div class="brand-sub" id="siteSub"></div></div></div>
     <nav class="nav" aria-label="Navigation">
       <button data-act="nav" data-page="home"></button><button data-act="nav" data-page="projects"></button>
       <button data-act="nav" data-page="reports"></button><button data-act="nav" data-page="risks"></button><button data-act="nav" data-page="archive"></button>
@@ -579,7 +579,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const LANGS = ['uk','en','ru'];
 let LI = 2;
 const T = {
- siteTitle:['Портфель проєктів','Project portfolio','Портфель проектов'],
+ siteTitle:['PPM — Портфель проєктів','PPM — Project Portfolio','PPM — Портфель проектов'],
  navHome:['Головна','Home','Главная'], navProjects:['Проєкти','Projects','Проекты'],
  navReports:['Статус-звіти','Status reports','Статус-отчёты'], navRisks:['Ризики та проблеми','Risks and issues','Риски и проблемы'],
  dash:['Панель проєктів','Project dashboard','Панель проектов'],
@@ -1480,8 +1480,11 @@ function pageHome(){
   const C = (l, r, cls) => ({l:() => l, r, cls});
   const S = {l:stratHead, r:p => stratCell(p.type), cls:'c-ico'}, PR = {l:prioHead, r:p => prioIcon(p.prio), cls:'c-ico'};
   const SR = {l:stratHead, r:x => stratCell(pById(x.pid).type), cls:'c-ico'}, PRR = {l:prioHead, r:x => prioIcon(PP(x.pid)), cls:'c-ico'};
-  const probCols = [S, PR, C(fl('title'), pLink), C(t('cHealth'), p => ragDot(p.rag), 'c-ico'), C(fl('pm'), p => person(p.pm)), C(fl('lastReport'), p => `<span title="${esc(p.lastReport)}">${esc(p.lastReport)}</span>`, 'wide'), C(t('cRepDate'), p => fmt(lastUpd(p)))];
-  const staleCols = [S, PR, C(fl('title'), pLink), C(fl('pm'), p => person(p.pm)), C(fl('last'), freshHtml), C(t('cStatusOnly'), p => statusPill(p.status))];
+  // отчёт на погодженні — как в колонке «Звіт» списка проектов (#29)
+  const pendNew = p => pendDate(p) ? `<div class="muted" style="font-size:12px;margin-top:2px">${t('repPendingNew')}</div>` : '';
+  const pendOnly = p => `<span class="rag"><span class="dot sm" style="background:var(--y)"></span>${esc(t('repPending').replace('{date}', fmt(pendDate(p))))}</span>`;
+  const probCols = [S, PR, C(fl('title'), pLink), C(t('cHealth'), p => ragDot(p.rag), 'c-ico'), C(fl('pm'), p => person(p.pm)), C(fl('lastReport'), p => `<span title="${esc(p.lastReport)}">${esc(p.lastReport)}</span>`, 'wide'), C(t('cRepDate'), p => !lastUpd(p) && pendDate(p) ? pendOnly(p) : fmt(lastUpd(p)) + pendNew(p))];
+  const staleCols = [S, PR, C(fl('title'), pLink), C(fl('pm'), p => person(p.pm)), C(fl('last'), p => !lastUpd(p) && pendDate(p) ? pendOnly(p) : freshHtml(p) + pendNew(p)), C(t('cStatusOnly'), p => statusPill(p.status))];
   const decCols = [SR, PRR, C(fl('rProj'), r => pLink(pById(r.pid))), C(fl('rDate'), r => fmt(r.d)), C(fl('rDecText'), r => esc(r.decisionText), 'wide'), C(fl('rAuthor'), r => person(r.author))];
   const riskCols = [SR, PRR, C(fl('rProj'), k => pLink(pById(k.pid))), C(fl('kTitle'), k => esc(k.title), 'wide'), C(fl('kType'), k => esc(k.type)), C(fl('kScore'), k => scoreHtml(k.p * k.i)), C(fl('kOwner'), k => person(k.owner)), KC.due];
   return `${hero(t('dash'), t('visible') + vis.length, true)}

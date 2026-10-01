@@ -2,9 +2,9 @@
 export type L3 = [string, string, string];
 export const T: Record<string, L3> = {
  "siteTitle": [
-  "Портфель проєктів",
-  "Project portfolio",
-  "Портфель проектов"
+  "PPM — Портфель проєктів",
+  "PPM — Project Portfolio",
+  "PPM — Портфель проектов"
  ],
  "navHome": [
   "Головна",
@@ -1574,6 +1574,26 @@ export const EXTRA: Record<string, L3> = {
   "Довідка",
   "Help",
   "Справка"
+ ],
+ "overview": [
+  "Детальний огляд системи",
+  "Detailed system overview",
+  "Подробный обзор системы"
+ ],
+ "overviewLead": [
+  "Хочете більше? Детальний огляд: навіщо система, з чого складається, усі екрани зі скриншотами, правила й безпека.",
+  "Want more? The detailed overview (in Ukrainian): why the system exists, its parts, every screen with screenshots, rules and security.",
+  "Хотите больше? Подробный обзор (на украинском): зачем система, из чего состоит, все экраны со скриншотами, правила и безопасность."
+ ],
+ "overviewBack": [
+  "← До довідки",
+  "← Back to help",
+  "← К справке"
+ ],
+ "overviewPdf": [
+  "Завантажити PDF",
+  "Download PDF",
+  "Скачать PDF"
  ],
  "navFeedback": [
   "Відгуки",

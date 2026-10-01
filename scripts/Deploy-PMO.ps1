@@ -31,8 +31,8 @@
 param(
     [Parameter(Mandatory)][string]$TenantName,
     [Parameter(Mandatory)][string]$ClientId,
-    [string]$SiteAlias = "pmo",
-    [string]$SiteTitle = "Портфель проєктів",
+    [string]$SiteAlias = "ppm",
+    [string]$SiteTitle = "PPM — Портфель проєктів",
     [string]$Owner,
     [string]$Tenant,
     [string]$Thumbprint,
@@ -176,7 +176,7 @@ $web = $ctx.Web
 $web.IsMultilingual = $true
 $web.AddSupportedUILanguage(1033)
 $web.AddSupportedUILanguage(1049)
-Set-Loc $web "Портфель проєктів" "Project portfolio" "Портфель проектов"
+Set-Loc $web "PPM — Портфель проєктів" "PPM — Project Portfolio" "PPM — Портфель проектов"
 $web.Update()
 Invoke-PnPQuery
 Write-Host "  языки: uk-UA (по умолчанию), en-US, ru-RU"

@@ -17,7 +17,7 @@
 
 ## Что создаётся
 
-**Сайт** — сайт-коммуникация `/sites/pmo`. Язык по умолчанию — украинский, дополнительные — английский и русский. Создаётся группа `PMO-адміністратори`: просмотр всех проектов и создание новых (у ранее развёрнутых сайтов полный доступ группы снимается).
+**Сайт** — сайт-коммуникация `/sites/ppm`. Язык по умолчанию — украинский, дополнительные — английский и русский. Создаётся группа `PMO-адміністратори`: просмотр всех проектов и создание новых (у ранее развёрнутых сайтов полный доступ группы снимается).
 
 **Списки:**
 
@@ -72,7 +72,7 @@ Install-Module PnP.PowerShell -Scope CurrentUser
 
 3. **Приложение синхронизации** (по умолчанию доступ только к сайту портала — Sites.Selected):
    ```powershell
-   ./Register-PMOApps.ps1 -Stage Sync -Tenant contoso.onmicrosoft.com -SiteUrl https://contoso.sharepoint.com/sites/pmo -DeployClientId <PMO Deploy>
+   ./Register-PMOApps.ps1 -Stage Sync -Tenant contoso.onmicrosoft.com -SiteUrl https://contoso.sharepoint.com/sites/ppm -DeployClientId <PMO Deploy>
    ```
    Скрипт выведет ClientId приложения PMO Sync, отпечаток сертификата и путь к файлам `.pfx` / `.cer`. Если напоминания по почте не нужны, добавьте `-NoMail`.
 
@@ -87,7 +87,7 @@ Install-Module PnP.PowerShell -Scope CurrentUser
 6. **Первый запуск синхронизации — пробный:**
    ```powershell
    $pw = Read-Host -AsSecureString
-   ./Invoke-PMOSync.ps1 -SiteUrl https://contoso.sharepoint.com/sites/pmo -ClientId <PMO Sync> -Tenant contoso.onmicrosoft.com `
+   ./Invoke-PMOSync.ps1 -SiteUrl https://contoso.sharepoint.com/sites/ppm -ClientId <PMO Sync> -Tenant contoso.onmicrosoft.com `
        -CertificatePath "./certs/PMO Sync.pfx" -CertificatePassword $pw -DryRun
    ```
    Затем тот же запуск без `-DryRun`.

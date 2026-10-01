@@ -15,7 +15,7 @@ export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: 
   const { t } = React.useContext(AppCtx);
   const dark = p.theme === 'dark' || (p.theme === '' && !!window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
   return <header className="top"><div className="top-in">
-    <div className="brand"><div className="logo" aria-hidden="true">ПП</div>
+    <div className="brand"><div className="logo" aria-hidden="true">PPM</div>
       <div><div className="brand-name">{t('siteTitle')}</div><div className="brand-sub">SharePoint · Microsoft 365</div></div></div>
     <nav className="nav" aria-label="Navigation">{NAV.filter(([pg]) => pg !== 'feedback' || !!p.onFeedback).map(([pg, k]) =>
       <button key={pg} aria-current={p.page === pg ? 'page' : undefined} onClick={() => p.onPage(pg)}>{t(k)}</button>)}</nav>
