@@ -3,56 +3,146 @@
     {
       "list": "Lists/Projects",
       "level": "edit",
+      "archived": false,
+      "v2": true,
       "out": "edit",
       "name": "проєкт: PM править"
     },
     {
       "list": "Lists/Projects",
       "level": "read",
+      "archived": false,
+      "v2": true,
       "out": "read",
       "name": "проєкт: інші дивляться"
     },
     {
+      "list": "Lists/Projects",
+      "level": "edit",
+      "archived": true,
+      "v2": true,
+      "out": "read",
+      "name": "проєкт в архіві: лише перегляд"
+    },
+    {
       "list": "Lists/RisksIssues",
       "level": "edit",
+      "archived": false,
+      "v2": true,
       "out": "edit",
       "name": "ризики: PM править"
     },
     {
       "list": "Lists/RisksIssues",
       "level": "read",
+      "archived": false,
+      "v2": true,
       "out": "read",
       "name": "ризики: інші дивляться"
     },
     {
+      "list": "Lists/RisksIssues",
+      "level": "edit",
+      "archived": true,
+      "v2": true,
+      "out": "read",
+      "name": "ризики архіву: лише перегляд"
+    },
+    {
       "list": "Lists/ProjectTeam",
       "level": "edit",
+      "archived": false,
+      "v2": true,
       "out": "edit",
       "name": "команда: PM править"
     },
     {
+      "list": "Lists/ProjectTeam",
+      "level": "read",
+      "archived": false,
+      "v2": true,
+      "out": "read",
+      "name": "команда: інші дивляться"
+    },
+    {
       "list": "Lists/StatusReports",
       "level": "edit",
+      "archived": false,
+      "v2": true,
+      "out": "add",
+      "name": "звіти: PM лише додає"
+    },
+    {
+      "list": "Lists/StatusReports",
+      "level": "read",
+      "archived": false,
+      "v2": true,
       "out": "read",
-      "name": "звіти: лише читання навіть PM"
+      "name": "звіти: інші дивляться"
+    },
+    {
+      "list": "Lists/StatusReports",
+      "level": "edit",
+      "archived": true,
+      "v2": true,
+      "out": "read",
+      "name": "звіти архіву: лише перегляд"
     },
     {
       "list": "Lists/ProjectComments",
       "level": "edit",
+      "archived": false,
+      "v2": true,
+      "out": "add",
+      "name": "коментарі: PM додає"
+    },
+    {
+      "list": "Lists/ProjectComments",
+      "level": "read",
+      "archived": false,
+      "v2": true,
+      "out": "add",
+      "name": "коментарі: усі, хто бачить проєкт, додають"
+    },
+    {
+      "list": "Lists/ProjectComments",
+      "level": "read",
+      "archived": true,
+      "v2": true,
       "out": "read",
-      "name": "коментарі: лише читання"
+      "name": "коментарі архіву: лише перегляд"
     },
     {
       "list": "Lists/KeyChanges",
       "level": "edit",
+      "archived": false,
+      "v2": true,
       "out": "read",
       "name": "журнал: лише читання"
     },
     {
       "list": "Lists/ReportApprovals",
       "level": "edit",
+      "archived": false,
+      "v2": true,
       "out": "read",
-      "name": "погодження: лише читання"
+      "name": "погодження: люди лише читають"
+    },
+    {
+      "list": "Lists/StatusReports",
+      "level": "edit",
+      "archived": false,
+      "v2": false,
+      "out": "read",
+      "name": "модель v1 (до розгортання): звіти — читання"
+    },
+    {
+      "list": "Lists/ProjectComments",
+      "level": "read",
+      "archived": false,
+      "v2": false,
+      "out": "read",
+      "name": "модель v1: коментарі — читання"
     }
   ],
   "frozen": [
@@ -62,7 +152,8 @@
       "ready": true,
       "rebuild": false,
       "out": false,
-      "name": "активний, хеш починається з «A» — не архів"
+      "name": "активний, хеш починається з «A» — не архів",
+      "prefix": "arch:"
     },
     {
       "status": "Архівний",
@@ -70,7 +161,8 @@
       "ready": true,
       "rebuild": false,
       "out": false,
-      "name": "архів без відмітки arch: — перерахувати"
+      "name": "архів без відмітки arch: — перерахувати",
+      "prefix": "arch:"
     },
     {
       "status": "Архівний",
@@ -78,7 +170,8 @@
       "ready": true,
       "rebuild": false,
       "out": true,
-      "name": "архів із відміткою й готовими папками — пропустити"
+      "name": "архів із відміткою й готовими папками — пропустити",
+      "prefix": "arch:"
     },
     {
       "status": "Архівний",
@@ -86,7 +179,8 @@
       "ready": false,
       "rebuild": false,
       "out": false,
-      "name": "архів із відміткою, але без папки — перерахувати"
+      "name": "архів із відміткою, але без папки — перерахувати",
+      "prefix": "arch:"
     },
     {
       "status": "Архівний",
@@ -94,7 +188,8 @@
       "ready": true,
       "rebuild": true,
       "out": false,
-      "name": "архів + повний перерахунок (неділя)"
+      "name": "архів + повний перерахунок (неділя)",
+      "prefix": "arch:"
     },
     {
       "status": "Архівний",
@@ -102,7 +197,26 @@
       "ready": false,
       "rebuild": false,
       "out": false,
-      "name": "щойно заархівований — перерахувати"
+      "name": "щойно заархівований — перерахувати",
+      "prefix": "arch:"
+    },
+    {
+      "status": "Архівний",
+      "mark": "arch2:A1B2C3",
+      "ready": true,
+      "rebuild": false,
+      "prefix": "arch2:",
+      "out": true,
+      "name": "v2: архів із відміткою arch2: — пропустити"
+    },
+    {
+      "status": "Архівний",
+      "mark": "arch:A1B2C3",
+      "ready": true,
+      "rebuild": false,
+      "prefix": "arch2:",
+      "out": false,
+      "name": "v2: стара відмітка arch: — перерахувати (нові ролі)"
     }
   ],
   "row": [
@@ -167,12 +281,77 @@
     {
       "hash": "ABC",
       "archived": false,
+      "v2": false,
       "out": "ABC"
     },
     {
       "hash": "ABC",
       "archived": true,
+      "v2": false,
       "out": "arch:ABC"
+    },
+    {
+      "hash": "ABC",
+      "archived": false,
+      "v2": true,
+      "out": "v2:ABC"
+    },
+    {
+      "hash": "ABC",
+      "archived": true,
+      "v2": true,
+      "out": "arch2:ABC"
+    }
+  ],
+  "group": [
+    {
+      "list": "Lists/ReportApprovals",
+      "archived": false,
+      "v2": true,
+      "out": "add",
+      "name": "PMO: погодження — додає"
+    },
+    {
+      "list": "Lists/ProjectComments",
+      "archived": false,
+      "v2": true,
+      "out": "add",
+      "name": "PMO: коментарі — додає"
+    },
+    {
+      "list": "Lists/ProjectComments",
+      "archived": true,
+      "v2": true,
+      "out": "read",
+      "name": "PMO: коментарі архіву — читання"
+    },
+    {
+      "list": "Lists/ReportApprovals",
+      "archived": true,
+      "v2": true,
+      "out": "read",
+      "name": "PMO: погодження архіву — читання"
+    },
+    {
+      "list": "Lists/StatusReports",
+      "archived": false,
+      "v2": true,
+      "out": "read",
+      "name": "PMO: звіти — читання"
+    },
+    {
+      "list": "Lists/Projects",
+      "archived": false,
+      "v2": true,
+      "out": "read",
+      "name": "PMO: проєкт — читання"
+    },
+    {
+      "list": "Lists/ReportApprovals",
+      "archived": false,
+      "v2": false,
+      "out": "read",
+      "name": "PMO у моделі v1: читання папки"
     }
   ]
 }

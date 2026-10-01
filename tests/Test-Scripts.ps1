@@ -63,16 +63,17 @@ foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/acl.json") | Conv
 }
 
 Write-Host "3c. Папки проектов: роли, заморозка архива, перенос записей (tests/cases/folders.json)"
-foreach ($n in @("Get-FolderName", "Get-FolderRole", "Get-AclMark", "Test-ArchiveFrozen", "Get-RowAction")) {
+foreach ($n in @("Get-FolderName", "Get-FolderRole", "Get-GroupFolderRole", "Get-AclMark", "Get-ArchPrefix", "Test-ArchiveFrozen", "Get-RowAction")) {
     $fn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $n }, $true) | Select-Object -First 1
     if ($fn) { Invoke-Expression $fn.Extent.Text } else { Bad "нет функции $n" }
 }
 $fc = Get-Content -Raw (Join-Path $root "tests/cases/folders.json") | ConvertFrom-Json
 if ((Get-FolderName 12) -eq "P12") { Ok "папка проекта 12 — P12" } else { Bad "Get-FolderName 12 -> $(Get-FolderName 12)" }
-foreach ($c in $fc.role) { $r = Get-FolderRole $c.list $c.level; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $r, ожидалось $($c.out)" } }
-foreach ($c in $fc.frozen) { $r = Test-ArchiveFrozen $c.status $c.mark $c.ready $c.rebuild; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $r, ожидалось $($c.out)" } }
+foreach ($c in $fc.role) { $r = Get-FolderRole $c.list $c.level $c.archived $c.v2; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $r, ожидалось $($c.out)" } }
+foreach ($c in $fc.group) { $r = Get-GroupFolderRole $c.list $c.archived $c.v2; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $r, ожидалось $($c.out)" } }
+foreach ($c in $fc.frozen) { $r = Test-ArchiveFrozen $c.status $c.mark $c.ready $c.rebuild $c.prefix; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $r, ожидалось $($c.out)" } }
 foreach ($c in $fc.row) { $r = Get-RowAction $c.dir $c.expected $c.acl $c.ready; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): «$r», ожидалось «$($c.out)»" } }
-foreach ($c in $fc.mark) { $r = Get-AclMark $c.hash $c.archived; if ($r -eq $c.out) { Ok "отметка $($c.hash)/$($c.archived) -> $r" } else { Bad "отметка: $r, ожидалось $($c.out)" } }
+foreach ($c in $fc.mark) { $r = Get-AclMark $c.hash $c.archived $c.v2; if ($r -eq $c.out) { Ok "отметка $($c.hash)/$($c.archived)/v2=$($c.v2) -> $r" } else { Bad "отметка: $r, ожидалось $($c.out)" } }
 # все запросы CSOM синхронизации — с повтором при 429 (Invoke-PnPQuery -RetryCount), без голого ExecuteQuery()
 if ((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")) -match 'ExecuteQuery\(\)') { Bad "Invoke-PMOSync.ps1: ExecuteQuery() без повтора" } else { Ok "запросы CSOM — с повтором при 429" }
 # дочерние списки читаются без папок (Get-ListRows), кроме «Проєкти» и отзывов

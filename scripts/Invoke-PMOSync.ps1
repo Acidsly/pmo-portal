@@ -61,6 +61,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 $PMO_GROUP = "PMO-адміністратори"
+# уровень прав «только добавление» (создаёт Deploy-PMO.ps1): отчёты, комментарии, погодження — созданную запись не правит никто, кроме синхронизации
+$ROLE_ADD_NAME = "Портал: додавання"
 $L_PROJ = "Lists/Projects"; $L_REP = "Lists/StatusReports"; $L_RISK = "Lists/RisksIssues"
 $L_CHG  = "Lists/KeyChanges"; $L_CMT = "Lists/ProjectComments"; $L_TEAM = "Lists/ProjectTeam"; $L_AP = "Lists/ReportApprovals"
 $stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; folders = 0; moved = 0; reset = 0; access = 0; feedback = 0; approvals = 0; members = 0; reminders = 0; warnings = 0 }
@@ -101,7 +103,12 @@ $ROLE = @{
     full = ($roles | Where-Object RoleTypeKind -eq "Administrator" | Select-Object -First 1).Name
     edit = ($roles | Where-Object RoleTypeKind -eq "Contributor"   | Select-Object -First 1).Name
     read = ($roles | Where-Object RoleTypeKind -eq "Reader"        | Select-Object -First 1).Name
+    # «только добавление» (отчёты, комментарии, погодження): создаёт Deploy-PMO.ps1; до развёртывания — прежняя модель прав
+    add  = ($roles | Where-Object Name -eq $ROLE_ADD_NAME | Select-Object -First 1).Name
 }
+# модель прав v2 (роль «додавання», запись сразу в папку проекта) — только когда роль уже есть на сайте
+$PERM_V2 = [bool]$ROLE.add
+if (-not $PERM_V2) { Warn "Немає рівня дозволів «$ROLE_ADD_NAME» — спочатку Deploy-PMO.ps1; права видаються за попередньою моделлю" }
 $OWNERS = (Get-PnPGroup -AssociatedOwnerGroup).Title
 $OWNER_EMAILS = @(Get-PnPGroupMember -Group $OWNERS | ForEach-Object { ([string]$_.Email).ToLowerInvariant() } | Where-Object { $_ })
 
@@ -212,19 +219,37 @@ function Add-Change($projectId, [string]$field, [string]$from, [string]$to, [str
 # Папки проектов: в каждом дочернем списке папка P<ID проекта>; права выдаются папке, записи их наследуют
 # ---------------------------------------------------------------------------
 function Get-FolderName($projectId) { return "P$([int]$projectId)" }
-# Роль человека на папке: отчёты, комментарии, журнал и погодження — только чтение всем (история не переписывается);
-# риски и команда — как уровень доступа к проекту (PM правит). Архив: Get-Access уже дал всем «read». Векторы tests/cases/folders.json.
-function Get-FolderRole([string]$list, [string]$level) {
-    $readOnly = @("Lists/StatusReports", "Lists/ProjectComments", "Lists/KeyChanges", "Lists/ReportApprovals")
-    if ($readOnly -contains $list -or $level -ne "edit") { return "read" }
-    return "edit"
+# Роль человека на папке проекта (модель v2). Отчёты — PM «только добавление» (созданный отчёт не правится);
+# комментарии — всем, кто видит активный проект, «только добавление»; журнал и погодження — чтение;
+# риски, команда и сам проект — PM правит. Архив — только чтение всем, комментариев нет. Векторы tests/cases/folders.json.
+# Без роли «додавання» на сайте ($v2 = false) — прежняя модель: отчёты и комментарии — чтение.
+function Get-FolderRole([string]$list, [string]$level, [bool]$archived, [bool]$v2 = $true) {
+    if ($archived) { return "read" }
+    switch ($list) {
+        "Lists/ProjectComments" { if ($v2) { return "add" } return "read" }
+        "Lists/StatusReports"   { if ($v2 -and $level -eq "edit") { return "add" } return "read" }
+        "Lists/KeyChanges"      { return "read" }
+        "Lists/ReportApprovals" { return "read" }
+    }
+    if ($level -eq "edit") { return "edit" }
+    return "read"
 }
-# Отметка прав в pmoAcl проекта и его папок: хэш круга людей; у архивного — с префиксом «arch:» (не из алфавита хэша 0-9A-F)
-function Get-AclMark([string]$aclHash, [bool]$archived) { if ($archived) { return "arch:$aclHash" } return $aclHash }
+# Группа PMO на папке: погодження и комментарии активного проекта — «только добавление» (PMO решает и комментирует), остальное — чтение
+function Get-GroupFolderRole([string]$list, [bool]$archived, [bool]$v2 = $true) {
+    if ($v2 -and -not $archived -and $list -in @("Lists/ReportApprovals", "Lists/ProjectComments")) { return "add" }
+    return "read"
+}
+# Отметка прав в pmoAcl проекта и его папок: хэш круга людей; у архивного — префикс «arch:» (не из алфавита хэша 0-9A-F).
+# Модель v2 — префиксы «v2:» / «arch2:»: смена модели меняет отметку, и папки получают новые роли (переход — rebuild-permissions).
+function Get-AclMark([string]$aclHash, [bool]$archived, [bool]$v2 = $true) {
+    if ($v2) { if ($archived) { return "arch2:$aclHash" } return "v2:$aclHash" }
+    if ($archived) { return "arch:$aclHash" } return $aclHash
+}
+function Get-ArchPrefix([bool]$v2 = $true) { if ($v2) { return "arch2:" } return "arch:" }
 # Архивный проект не пересчитывается обычным запуском, если права архива уже выданы проекту и всем его папкам.
 # Еженедельный -RebuildPermissions пересчитывает и архив (смена руководителей в Entra ID).
-function Test-ArchiveFrozen([string]$status, [string]$pmoAcl, [bool]$foldersReady, [bool]$rebuild) {
-    return ($status -eq "Архівний") -and $pmoAcl.StartsWith("arch:") -and $foldersReady -and -not $rebuild
+function Test-ArchiveFrozen([string]$status, [string]$pmoAcl, [bool]$foldersReady, [bool]$rebuild, [string]$prefix = "arch2:") {
+    return ($status -eq "Архівний") -and $pmoAcl.StartsWith($prefix) -and $foldersReady -and -not $rebuild
 }
 # Что сделать с записью дочернего списка: «move» — не в папке своего проекта (перенос + сброс личных прав); «reset» — в своей папке,
 # но с личными правами (непустой pmoAcl — его писала прежняя выдача прав записи); пусто — ничего.
@@ -549,16 +574,16 @@ function Get-Principal([string]$key, [bool]$group) {
     return $PRINCIPAL[$key]
 }
 # Права записи проекта или папки проекта: $list — для роли (Get-FolderRole), $acl — e-mail -> уровень, $aclMark — отметка в pmoAcl
-function Set-ItemAcl([string]$list, [int]$id, $acl, [string]$aclMark, [string]$what) {
+function Set-ItemAcl([string]$list, [int]$id, $acl, [string]$aclMark, [string]$what, [bool]$archived) {
     $stats.acl++
-    if ($DryRun) { Log ("    права: {0} -> {1}" -f $what, (($acl.Keys | ForEach-Object { "$_($(Get-FolderRole $list $acl[$_]))" }) -join ", ")); return }
-    # PMO видит все проекты, но правит, как все, только свои (как PM); владельцы сайта — полный доступ
-    $grants = @(@{ p = (Get-Principal $PMO_GROUP $true); r = $ROLE.read }, @{ p = (Get-Principal $OWNERS $true); r = $ROLE.full })
+    if ($DryRun) { Log ("    права: {0} -> {1}" -f $what, (($acl.Keys | ForEach-Object { "$_($(Get-FolderRole $list $acl[$_] $archived $PERM_V2))" }) -join ", ")); return }
+    # PMO видит все проекты, правит, как все, только свои (как PM), в папках — погодження и комментарии; владельцы сайта — полный доступ
+    $grants = @(@{ p = (Get-Principal $PMO_GROUP $true); r = $ROLE[(Get-GroupFolderRole $list $archived $PERM_V2)] }, @{ p = (Get-Principal $OWNERS $true); r = $ROLE.full })
     $ok = $true
     foreach ($e in $acl.Keys) {
         $pr = Get-Principal $e $false
         if (-not $pr) { $ok = $false; continue }
-        $grants += @{ p = $pr; r = $(if ((Get-FolderRole $list $acl[$e]) -eq "edit") { $ROLE.edit } else { $ROLE.read }) }
+        $grants += @{ p = $pr; r = $ROLE[(Get-FolderRole $list $acl[$e] $archived $PERM_V2)] }
     }
     if (-not $grants[0].p -or -not $grants[1].p) { Warn "Нет группы PMO или владельцев — права $what не изменены"; return }
     try {
@@ -596,10 +621,10 @@ foreach ($p in $PROJ.Values) {
     $name = Get-FolderName $p.Item.Id
     $ready = -not @($CHILD.Keys | Where-Object { -not $FOLDERS[$_].ContainsKey($name) -or $FOLDERS[$_][$name].mark -ne $p.Values.pmoAcl }).Count
     # архив, права которого уже выданы проекту и папкам: без Entra ID, без «Доступ до картки», без прав (пересчёт — воскресный rebuild)
-    if (Test-ArchiveFrozen $p.Values.pmStatus $p.Values.pmoAcl $ready ([bool]$RebuildPermissions)) { $frozen++; $MARK[$p.Item.Id] = $p.Values.pmoAcl; continue }
+    if (Test-ArchiveFrozen $p.Values.pmStatus $p.Values.pmoAcl $ready ([bool]$RebuildPermissions) (Get-ArchPrefix $PERM_V2)) { $frozen++; $MARK[$p.Item.Id] = $p.Values.pmoAcl; continue }
     $access = Get-Access (Email $p.Item["pmManager"]) (Email $p.Item["pmOwner"]) $st $chainOf $archived
     $acl = Get-Acl $access
-    $h = Get-AclMark (Get-Hash $acl) $archived
+    $h = Get-AclMark (Get-Hash $acl) $archived $PERM_V2
     # «Доступ до картки» в приложении: имя и должность из Entra ID, пишется только при изменении
     $rows = @($access | Select-Object -First 200 | ForEach-Object { $who = Get-Person $_.e; [ordered]@{ e = $_.e; n = $who.n; j = $who.j; l = $_.l; r = $_.r } })
     $json = ConvertTo-Json -InputObject ([ordered]@{ v = 1; more = [math]::Max(0, $access.Count - 200); people = $rows }) -Depth 5 -Compress
@@ -611,7 +636,7 @@ foreach ($p in $PROJ.Values) {
     $ACLS[$p.Item.Id] = $acl; $MARK[$p.Item.Id] = $h
     if ($RebuildPermissions -or $p.Values.pmoAcl -ne $h) {
         Log "  проєкт «$($p.Item["Title"])»: $($acl.Count) користувачів"
-        Set-ItemAcl $L_PROJ $p.Item.Id $acl $h "проєкт #$($p.Item.Id)" | Out-Null
+        Set-ItemAcl $L_PROJ $p.Item.Id $acl $h "проєкт #$($p.Item.Id)" $archived | Out-Null
     }
     # папки проекта в дочерних списках: создать недостающую, выдать права при смене круга людей
     foreach ($l in $CHILD.Keys) {
@@ -626,7 +651,7 @@ foreach ($p in $PROJ.Values) {
             } catch { Warn "Папка $l/$name не создана: $($_.Exception.Message)"; continue }
         }
         if ($RebuildPermissions -or $f.mark -ne $h) {
-            if (Set-ItemAcl $l $f.id $acl $h "$l/$name") { $f.mark = $h }
+            if (Set-ItemAcl $l $f.id $acl $h "$l/$name" $archived) { $f.mark = $h }
         }
     }
 }

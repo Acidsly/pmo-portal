@@ -183,6 +183,14 @@ Write-Host "  языки: uk-UA (по умолчанию), en-US, ru-RU"
 $ROLE_FULL = Get-RoleName "Administrator"
 $ROLE_EDIT = Get-RoleName "Contributor"
 $ROLE_READ = Get-RoleName "Reader"
+# «только добавление»: создать запись в папке проекта и читать, но не править и не удалять (отчёты, комментарии, погодження).
+# Созданную запись меняет только синхронизация. Имя — как $ROLE_ADD_NAME в Invoke-PMOSync.ps1.
+$ROLE_ADD = "Портал: додавання"
+if (-not (Get-PnPRoleDefinition | Where-Object Name -eq $ROLE_ADD)) {
+    Add-PnPRoleDefinition -RoleName $ROLE_ADD -Description "Портфель проєктів: додавати й переглядати записи без зміни та видалення" `
+        -Include ViewListItems, AddListItems, OpenItems, ViewVersions, ViewFormPages, ViewPages, Open, BrowseUserInfo, UseRemoteAPIs, UseClientIntegration | Out-Null
+    Write-Host "  + уровень прав «$ROLE_ADD»" -ForegroundColor Green
+}
 
 # PMO видит все проекты и заводит новые; править проект может только его PM (права элементов выдаёт синхронизация)
 try { $g = Get-PnPGroup -Identity $PMO_GROUP -ErrorAction Stop } catch { $g = $null }
@@ -464,6 +472,15 @@ foreach ($it in (Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "T
     }
 }
 
+# 6a2. Еталон показників — ключевые поля каждого проекта после последнего законного изменения (пишет только синхронизация).
+# Если поле карточки изменили в обход статус-отчёта, синхронизация вернёт значение эталона; приложение показывает эталон.
+Write-Host "6a2. Список «Еталон показників»" -ForegroundColor Cyan
+$PS = Ensure-List "Lists/ProjectState" "Еталон показників" "Indicator baseline" "Эталон показателей"
+F $PS psProject     Number   "Проєкт (ID)"        "Project (ID)"        "Проект (ID)"          "Indexed='TRUE' EnforceUniqueValues='TRUE' Decimals='0'"
+F $PS psState       Note     "Ключові показники"  "Key indicators"      "Ключевые показатели"  "NumLines='6' RichText='FALSE'"
+F $PS psEditDone    Note     "Перенесені правки"  "Journaled edits"     "Перенесённые правки"  "NumLines='3' RichText='FALSE'"
+F $PS psLastApplied Text     "Останній застосований звіт" "Last applied report" "Последний применённый отчёт" "MaxLength='40'"
+
 # 6b. Відгуки — замечания фокус-группы из приложения (текст, экран, устройство, скриншоты-вложения)
 if ($Feedback) {
     Write-Host "6b. Список «Відгуки»" -ForegroundColor Cyan
@@ -568,8 +585,8 @@ Set-FormVisibility $P @("pmRAG","pmForecastEnd","pmActualCost","pmArchivedAt","p
 Set-FormVisibility $R @("srProjectType","srProjectPriority","srApproval","srApprovedBy","srApprovedAt","srApprovalNote") $false $false
 Set-FormVisibility $K @("riProjectType","riProjectPriority") $false $false
 
-# Права списков. Участники сайта: «Проєкти» — только чтение (новый проект заводит PMO), журнал — только чтение
-# (пишет синхронизация); отчёты, риски, комментарии — добавление (кто может менять запись, решают права элемента).
+# Права списков. Участники сайта: «Проєкти» — только чтение (новый проект заводит PMO), журнал — только чтение (пишет синхронизация);
+# дочерние списки — чтение на уровне списка, права на запись выдаются папкам проектов (ниже, модель v2).
 $members = Get-PnPGroup -AssociatedMemberGroup
 function Set-ListRoles([string]$Url, [hashtable]$Want) {
     $l = Get-PnPList -Identity $Url -Includes HasUniqueRoleAssignments
@@ -584,8 +601,22 @@ function Set-ListRoles([string]$Url, [hashtable]$Want) {
 }
 Set-ListRoles "Lists/Projects"   @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_EDIT }
 Set-ListRoles "Lists/KeyChanges" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
-# погодження: добавляет только PMO (решение PMO — отдельная запись, сам отчёт PMO не правит); остальные — чтение
-Set-ListRoles "Lists/ReportApprovals" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_EDIT }
+# Дочерние списки (модель прав v2): на уровне списка — только чтение; записи создаются сразу в папке проекта P<ID>,
+# права папки выдаёт синхронизация: PM — отчёты «додавання», риски и команда — правка; комментарии — «додавання» всем,
+# кто видит активный проект; погодження — «додавання» PMO. В чужой проект запись не создать; в корне — тоже.
+Set-ListRoles "Lists/StatusReports"   @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
+Set-ListRoles "Lists/RisksIssues"     @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
+Set-ListRoles "Lists/ProjectComments" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
+# команду нового проекта при создании записывает PMO (папки ещё нет) — в корень; синхронизация перенесёт в папку
+Set-ListRoles "Lists/ProjectTeam"     @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_EDIT }
+Set-ListRoles "Lists/ReportApprovals" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
+Set-ListRoles "Lists/ProjectState"    @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
+# свежие проверки приложения перед записью — фильтры по индексированным полям
+foreach ($ix in @(@("Lists/Projects", "Title"), @("Lists/StatusReports", "srProject"), @("Lists/RisksIssues", "riProject"), @("Lists/ProjectComments", "cmProject"),
+                  @("Lists/ProjectTeam", "tmProject"), @("Lists/ReportApprovals", "apReport"), @("Lists/ReportApprovals", "apProject"))) {
+    $fx = Get-PnPField -List $ix[0] -Identity $ix[1]
+    if (-not $fx.Indexed) { Set-PnPField -List $ix[0] -Identity $ix[1] -Values @{ Indexed = $true } | Out-Null; Write-Host "    индекс $($ix[0]).$($ix[1])" }
+}
 # отзывы: участники и PMO — добавлять и читать свои; статусы и ответы ставят только владельцы сайта; общий список — только чтение
 if ($Feedback) {
     Set-ListRoles "Lists/Feedback"       @{ $members.Title = $ROLE_EDIT; $PMO_GROUP = $ROLE_EDIT }
@@ -690,7 +721,7 @@ foreach ($lib in @("SitePages", "SiteAssets", "Shared Documents")) {
     if (Get-PnPList -Identity $lib -ErrorAction SilentlyContinue) { Set-ListRoles $lib @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ } }
 }
 # списки портала не видны в «Вміст сайту» и поиске по сайту; приложение и владельцы открывают их по адресу
-$portalLists = @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/KeyChanges", "Lists/ProjectComments", "Lists/ProjectTeam", "Lists/ReportApprovals") + $(if ($Feedback) { @("Lists/Feedback", "Lists/FeedbackPublic") } else { @() })
+$portalLists = @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/KeyChanges", "Lists/ProjectComments", "Lists/ProjectTeam", "Lists/ReportApprovals", "Lists/ProjectState") + $(if ($Feedback) { @("Lists/Feedback", "Lists/FeedbackPublic") } else { @() })
 foreach ($u in $portalLists) {
     $l = Get-PnPList -Identity $u -Includes Hidden
     if (-not $l.Hidden) { Set-PnPList -Identity $u -Hidden $true | Out-Null; Write-Host "    скрыт список $u" }
