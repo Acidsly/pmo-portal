@@ -7,6 +7,7 @@ import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, 
 import { withApproval } from '../logic/approval';
 import { teamPeople } from '../logic/team';
 import { applyPending } from '../logic/overlay';
+import { Regional, regionalFrom, toFormValues } from './formValues';
 
 export type WritableList = 'Projects' | 'StatusReports' | 'RisksIssues' | 'ProjectComments' | 'Feedback' | 'ProjectTeam' | 'ReportApprovals';
 
@@ -15,7 +16,7 @@ export interface PortalData { projects: Project[]; reports: StatusReport[]; risk
   changes: ChangeEntry[];
   /** Может ли пользователь заводить проекты (право добавления в «Проєкти» есть у PMO). */
   canCreate: boolean;
-  /** Может погоджувати статус-отчёты (группа PMO: добавление в «Погодження звітів»). */
+  /** Может погоджувати статус-отчёты: PMO и владельцы сайта (у них же право заводить проекты; погодження добавляются в папке проекта). */
   canApprove: boolean;
   approvals: Approval[];
   /** На сайте есть список «Відгуки» (тест с фокус-группой) — показывается кнопка «Відгук». */
@@ -53,7 +54,7 @@ export class SpRepo {
   }
 
   async loadAll(): Promise<PortalData> {
-    const [p, r, k, c, h, tm, ap, perm, fbPerm, apPerm] = await Promise.all([
+    const [p, r, k, c, h, tm, ap, perm, fbPerm] = await Promise.all([
       this.items('Projects', PROJECT_SELECT, PROJECT_EXPAND),
       this.items('StatusReports', REPORT_SELECT, REPORT_EXPAND),
       this.items('RisksIssues', RISK_SELECT, RISK_EXPAND),
@@ -62,8 +63,7 @@ export class SpRepo {
       this.items('ProjectTeam', TEAM_SELECT, TEAM_EXPAND).catch(() => [] as any[]),
       this.items('ReportApprovals', APPROVAL_SELECT, APPROVAL_EXPAND).catch(() => [] as any[]),
       this.listPerms('Projects').catch(() => undefined),
-      this.listPerms('Feedback').catch(() => undefined),
-      this.listPerms('ReportApprovals').catch(() => undefined)]);
+      this.listPerms('Feedback').catch(() => undefined)]);
     const approvals = ap.map(mapApproval);
     // решение PMO, ещё не перенесённое синхронизацией, видно сразу (как применение отчёта в карточку)
     const reports = r.map(mapReport).map(x => withApproval(x, approvals));
@@ -72,7 +72,7 @@ export class SpRepo {
     // стейкхолдеры — люди «Команда проєкту» (синхронизация повторяет их в pmStakeholders)
     const withTeam = (x: Project): Project => { const own = team.filter(m => m.projectId === x.id); return { ...x, team: own, stakeholders: teamPeople(own) }; };
     return { projects: p.map(mapProject).map(withTeam).map(x => applyPending(x, reports)), reports, risks: k.map(mapRisk),
-      comments: c.map(mapComment), changes: h.map(mapChange), canCreate: canAdd(perm), canApprove: canAdd(apPerm), approvals, feedback: canAdd(fbPerm), feedbackAdmin: canManage(fbPerm), feedbackRows };
+      comments: c.map(mapComment), changes: h.map(mapChange), canCreate: canAdd(perm), canApprove: canAdd(perm), approvals, feedback: canAdd(fbPerm), feedbackAdmin: canManage(fbPerm), feedbackRows };
   }
 
   /** Весь журнал «Зміни показників» одного проекта — для карточки (при загрузке приложения — только переносы плановой даты). */
@@ -129,6 +129,37 @@ export class SpRepo {
     const res = await this.http.post(`${this.listItems(list)}?${this.listQuery(list)}`, SPHttpClient.configurations.v1,
       { headers: SpRepo.JSON_HEADERS, body: JSON.stringify(body) });
     return (await (await this.check(res, list)).json()).Id;
+  }
+
+  private regional?: Promise<Regional>;
+  /** Регіональні налаштування сайта (разделитель дроби, порядок даты) — один раз за сессию. */
+  private regionalSettings(): Promise<Regional> {
+    if (!this.regional) {
+      this.regional = this.http.get(`${this.webUrl}/_api/web/RegionalSettings?$select=DecimalSeparator,DateFormat,DateSeparator`, SPHttpClient.configurations.v1,
+        { headers: { Accept: 'application/json;odata=nometadata' } }).then(r => (r.ok ? r.json() : undefined)).then(regionalFrom).catch(() => regionalFrom(undefined));
+    }
+    return this.regional;
+  }
+
+  /** Новый элемент сразу в папке проекта P<ID> (права папки: в чужой проект и в корень записать нельзя). users — e-mail полей «Користувач».
+   *  Ошибки: notReady — папки ещё нет (новый проект, синхронизация не прошла); noRights — нет права добавлять. */
+  async createIn(list: WritableList, projectId: number, body: Record<string, unknown>, users: Record<string, string> = {}): Promise<number> {
+    const listRel = `${this.webRelUrl.replace(/\/$/, '')}/Lists/${list}`;
+    const payload = { listItemCreateInfo: { FolderPath: { DecodedUrl: `${listRel}/P${projectId}` }, UnderlyingObjectType: 0 },
+      formValues: toFormValues(list, body, await this.regionalSettings(), users), bNewDocumentUpdate: false };
+    const res = await this.http.post(`${this.webUrl}/_api/web/GetList(@u)/AddValidateUpdateItemUsingPath()?@u='${encodeURIComponent(listRel)}'`,
+      SPHttpClient.configurations.v1, { headers: SpRepo.JSON_HEADERS, body: JSON.stringify(payload) });
+    if (!res.ok) {
+      const txt = await res.text();
+      if (res.status === 403 || /UnauthorizedAccess|E_ACCESSDENIED/i.test(txt)) throw new Error('noRights');
+      if (res.status === 404 || /2147024893|не існує|does not exist|not found/i.test(txt)) throw new Error('notReady');
+      throw new Error(`${list}: ${res.status} ${txt}`);
+    }
+    const vals: { FieldName: string; FieldValue: string; HasException: boolean; ErrorMessage: string }[] = (await res.json()).value || [];
+    const bad = vals.filter(v => v.HasException);
+    if (bad.length) throw new Error(`${list}: ${bad.map(v => `${v.FieldName}: ${v.ErrorMessage}`).join('; ')}`);
+    const idv = vals.filter(v => v.FieldName === 'Id')[0];
+    return idv ? Number(idv.FieldValue) : 0;
   }
 
   /** Правка элемента (MERGE): меняются только переданные поля. */

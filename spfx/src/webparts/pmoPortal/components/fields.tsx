@@ -28,6 +28,13 @@ export const DateIn: React.FC<{ id: string; value: string; onChange(v: string): 
 /** Сообщение об ошибке формы (p.err прототипа). */
 export const Err: React.FC<{ msg: string }> = ({ msg }) => (msg ? <p className="err" role="alert">{msg}</p> : null);
 
+/** Текст ошибки записи для человека: известные ошибки — переводом (папки нет, нет прав, конфликт правок), остальные — как есть. */
+const KNOWN_ERR: Record<string, string> = { notReady: 'errNotReady', noRights: 'errNoRights', conflict: 'errConflict' };
+export const errText = (t: (k: string) => string, x: unknown): string => {
+  const m = String((x as Error) && (x as Error).message !== undefined ? (x as Error).message : x);
+  return KNOWN_ERR[m] ? t(KNOWN_ERR[m]) : m;
+};
+
 /** Выбор людей: выбранные — чипы с «×», поиск от 2 символов (стрелки, Enter, Esc). */
 export const PeoplePicker: React.FC<{ id: string; value: Person[]; multi: boolean; onChange(v: Person[]): void; search(q: string): Promise<Person[]>;
   placeholder?: string; disabled?: boolean }> = p => {

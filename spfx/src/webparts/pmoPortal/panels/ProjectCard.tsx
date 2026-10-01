@@ -11,7 +11,7 @@ import { parseAccess, AccessRow } from '../logic/access';
 import { Avatar, RagPill, RagDot, Progress, Score, fmtDate, money, freshColor, ApBadge, StatusPill, fmtDT } from '../components/Bits';
 import { Plus } from '../components/Icons';
 import { commentBody } from '../data/write';
-import { Err } from '../components/fields';
+import { Err, errText } from '../components/fields';
 
 const byDateDesc = <T extends { date: string; id: number }>(a: T, b: T): number => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.id - a.id);
 
@@ -49,8 +49,8 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
     e.preventDefault();
     if (!cm.trim()) { setCmErr(t('errCmt')); return; }
     setCmBusy(true); setCmErr('');
-    try { await c.repo.create('ProjectComments', commentBody(p.id, cm)); setCm(''); await c.reload(); c.toast(t('cmtSaved')); }
-    catch (x) { setCmErr(String((x as Error).message || x)); }
+    try { await c.repo.createIn('ProjectComments', p.id, commentBody(p.id, cm)); setCm(''); await c.reload(); c.toast(t('cmtSaved')); }
+    catch (x) { setCmErr(errText(t, x)); }
     setCmBusy(false);
   };
   const [showCh, setShowCh] = React.useState(false);
@@ -100,7 +100,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
     {edit ? <div className="actbar">
       <button className="btn primary" onClick={() => c.openForm('report', p.id)}><Plus />{t('addReport')}</button>
       <button className="btn" onClick={() => c.openForm('edit', p.id)}>{t('editProject')}</button></div>
-      : <p className="note lock">🔒 {isArch(p.status) ? t('archivedNote') : t('noEdit')}</p>}
+      : <p className="note lock">🔒 {isArch(p.status) ? t('archivedNote') : !p.access ? t('notReadyNote') : t('noEdit')}</p>}
     {p.pending ? <p className="note">{t('pendingNote')}</p> : null}
     {awaitingAll.length || returned ? <div style={{ marginTop: 14 }}>
       {awaitingAll.map(r => <div key={r.id} className="apnote">{t('pendingApproval').replace('{date}', fmtDate(r.date))}

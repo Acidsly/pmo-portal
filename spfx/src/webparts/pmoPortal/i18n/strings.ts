@@ -1610,6 +1610,26 @@ export const EXTRA: Record<string, L3> = {
   "Answer saved.",
   "Ответ сохранён."
  ],
+ "errNotReady": [
+  "Проєкт ще готується: права й папки з'являться протягом 15 хвилин після створення. Спробуйте трохи пізніше.",
+  "The project is still being prepared: access and folders appear within 15 minutes of creation. Please try again shortly.",
+  "Проект ещё готовится: права и папки появятся в течение 15 минут после создания. Попробуйте чуть позже."
+ ],
+ "errNoRights": [
+  "У вас немає права на цю дію — можливо, права щойно змінилися. Дані оновлено.",
+  "You don't have permission for this action — access may have just changed. Data refreshed.",
+  "У вас нет права на это действие — возможно, права только что изменились. Данные обновлены."
+ ],
+ "errConflict": [
+  "Запис змінив інший користувач. Дані оновлено — перевірте й повторіть.",
+  "Another user changed this record. Data refreshed — check and try again.",
+  "Запись изменил другой пользователь. Данные обновлены — проверьте и повторите."
+ ],
+ "notReadyNote": [
+  "Проєкт готується: звіти, ризики й команду можна буде додати протягом 15 хвилин після створення.",
+  "The project is being prepared: reports, risks and team can be added within 15 minutes of creation.",
+  "Проект готовится: отчёты, риски и команду можно будет добавить в течение 15 минут после создания."
+ ],
  "errCode": [
   "Такий код уже є в іншого проєкту. Вкажіть інший або залиште поле порожнім — код призначиться автоматично.",
   "This code is already used by another project. Enter another one or leave the field empty to assign it automatically.",

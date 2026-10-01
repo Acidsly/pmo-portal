@@ -5,7 +5,7 @@ import { Project, Person } from '../data/types';
 import { ProjectDraft, validateProject, nextCode, cardDiff } from '../logic/forms';
 import { projectBody, projectEditBody, teamBody, teamRows } from '../data/write';
 import { TeamRow, cleanTeam, cleanLinks, teamPlan } from '../logic/team';
-import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts } from '../components/fields';
+import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts, errText } from '../components/fields';
 
 const TYPES = ['Стратегічний', 'Звичайний'];
 const PRIOS = ['1 — Високий', '2 — Середній', '3 — Низький'];
@@ -43,9 +43,13 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
     setBusy(true); setErr('');
     try {
       const x = await withIds(clean);
-      const writeTeam = async (projectId: number, before: Project['team']): Promise<void> => {
+      // новый проект: папок ещё нет — команду записывает PMO в корень (синхронизация перенесёт); существующий — сразу в папку проекта
+      const writeTeam = async (projectId: number, before: Project['team'], root: boolean): Promise<void> => {
         const plan = teamPlan(before, x.team);
-        for (const r of plan.create) await c.repo.create('ProjectTeam', teamBody(projectId, r));
+        for (const r of plan.create) {
+          if (root) await c.repo.create('ProjectTeam', teamBody(projectId, r));
+          else await c.repo.createIn('ProjectTeam', projectId, teamBody(projectId, r), { tmUserId: r.user ? r.user.email : '' });
+        }
         for (const r of plan.update) await c.repo.update('ProjectTeam', r.id!, teamBody(projectId, r));
         for (const id of plan.remove) await c.repo.recycle('ProjectTeam', id);
       };
@@ -58,7 +62,7 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
           try { id = await c.repo.create('Projects', projectBody(x, code)); }
           catch (er) { if (i < 5 && /unique|унікальн|уникальн|duplicate|already exists/i.test(String((er as Error).message || er))) codes.push(code); else throw er; }
         }
-        await writeTeam(id, []);
+        await writeTeam(id, [], true);
         await c.reload(); c.toast(t('savedProject')); c.openProject(id);
       } else {
         const diff = cardDiff(project!, x);
@@ -66,13 +70,13 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
         const teamChanged = plan.create.length + plan.update.length + plan.remove.length > 0;
         if (!diff.length && !teamChanged && x.description === project!.description) { onCancel(); return; }
         await c.repo.update('Projects', project!.id, projectEditBody(x, diff, c.me, '', project!.editLog || ''));
-        await writeTeam(project!.id, project!.team);
+        await writeTeam(project!.id, project!.team, false);
         await c.reload(); c.toast(t('savedEdit')); c.openProject(project!.id);
       }
     } catch (x) {
       const m = String((x as Error).message || x);
       // запрет дублей кода на уровне списка SharePoint (проекты, которых пользователь не видит)
-      setErr(/unique|унікальн|уникальн|duplicate|already exists/i.test(m) ? t('errCode') : m); setBusy(false);
+      setErr(/unique|унікальн|уникальн|duplicate|already exists/i.test(m) ? t('errCode') : errText(t, x)); setBusy(false);
     }
   };
 

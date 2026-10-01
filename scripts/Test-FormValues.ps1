@@ -56,6 +56,7 @@ $cases = @(
     @{ t = "date-mdy";    v = @{ pbDate = "09/30/2026" } ;   check = { param($i) $i["pbDate"] -and ([datetime]$i["pbDate"]).ToLocalTime().ToString("yyyy-MM-dd") -eq "2026-09-30" } }
     @{ t = "lookup";      v = @{ pbLookup = "$projId" } ;    check = { param($i) $i["pbLookup"] -and $i["pbLookup"].LookupId -eq $projId } }
     @{ t = "user";        v = @{ pbUser = $userKey } ;       check = { param($i) $i["pbUser"] -and ([string]$i["pbUser"].Email).ToLower() -eq $UserEmail.ToLower() } }
+    @{ t = "user-json";   v = @{ pbUser = ('[{"Key":"i:0#.f|membership|' + $UserEmail + '"}]') } ; check = { param($i) $i["pbUser"] -and ([string]$i["pbUser"].Email).ToLower() -eq $UserEmail.ToLower() } }
     @{ t = "bool-1";      v = @{ pbBool = "1" } ;            check = { param($i) $i["pbBool"] -eq $true } }
     @{ t = "bool-0";      v = @{ pbBool = "0" } ;            check = { param($i) $i["pbBool"] -eq $false } }
     @{ t = "choice";      v = @{ pbChoice = "Жовтий" } ;     check = { param($i) $i["pbChoice"] -eq "Жовтий" } }

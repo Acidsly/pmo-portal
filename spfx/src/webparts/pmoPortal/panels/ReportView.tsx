@@ -6,7 +6,7 @@ import { tv } from '../i18n/values';
 import { calcRag, Rag } from '../logic/rag';
 import { isArch } from '../logic/status';
 import { AP_OK, AP_PENDING, AP_RETURNED, approvalResult } from '../logic/approval';
-import { RagPick, Err, Frow } from '../components/fields';
+import { RagPick, Err, Frow, errText } from '../components/fields';
 import { RagPill, RagDot, ApBadge, fmtDate, fmtDT, money, PersonCell } from '../components/Bits';
 import { Plus } from '../components/Icons';
 
@@ -39,10 +39,10 @@ export const ReportView: React.FC<{ data: PortalData; report: StatusReport | und
     if (!out.valid) { setErr(t('errApNote')); return; }
     setBusy(true); setErr('');
     try {
-      await c.repo.create('ReportApprovals', { apReportId: r.id, apProjectId: r.projectId, apDecision: decision,
+      await c.repo.createIn('ReportApprovals', r.projectId, { apReportId: r.id, apProjectId: r.projectId, apDecision: decision,
         apSchedule: ap.s || null, apBudget: ap.b || null, apResources: ap.r || null, apNote: note.trim() });
       await c.reload(); c.toast(t('savedApproval')); c.openForm('rep:' + r.id, p.id);
-    } catch (x) { setErr(String((x as Error).message || x)); setBusy(false); }
+    } catch (x) { setErr(errText(t, x)); setBusy(false); }
   };
 
   // ключевые показатели, которые отчёт меняет; до погодження — «було → стало» относительно карточки

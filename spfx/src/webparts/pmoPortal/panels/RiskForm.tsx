@@ -6,7 +6,7 @@ import { isActive, isArch, byOrder, riskScore } from '../logic/status';
 import { scoreBucket } from '../logic/views';
 import { RiskDraft, validateRisk } from '../logic/forms';
 import { riskBody } from '../data/write';
-import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts } from '../components/fields';
+import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts, errText } from '../components/fields';
 import { Score } from '../components/Bits';
 
 const TYPES = ['Ризик', 'Проблема'];
@@ -44,10 +44,10 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
     try {
       const owner: Person | null = d.owner && !d.owner.id ? { ...d.owner, id: await c.repo.ensureUser(d.owner.email) } : d.owner;
       const body = riskBody({ ...d, projectId: pid, owner });
-      if (k) await c.repo.update('RisksIssues', k.id, body); else await c.repo.create('RisksIssues', body);
+      if (k) await c.repo.update('RisksIssues', k.id, body); else await c.repo.createIn('RisksIssues', pid, body, { riOwnerId: owner ? owner.email : '' });
       await c.reload(); c.toast(t('savedRisk'));
       if (fixedId) c.openProject(pid); else onCancel();
-    } catch (x) { setErr(String((x as Error).message || x)); setBusy(false); }
+    } catch (x) { setErr(errText(t, x)); setBusy(false); }
   };
 
   if (!p) return <><div className="ph"><div><h2>{t('newRisk')}</h2></div><button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
