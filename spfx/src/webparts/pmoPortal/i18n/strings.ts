@@ -756,6 +756,21 @@ export const T: Record<string, L3> = {
   "Assignment",
   "Назначение"
  ],
+ "kSubmit": [
+  "Подання звіту",
+  "Report submitted",
+  "Подача отчёта"
+ ],
+ "kRiskEv": [
+  "Ризик / проблема",
+  "Risk / issue",
+  "Риск / проблема"
+ ],
+ "openRisk": [
+  "Відкрити ризик",
+  "Open risk",
+  "Открыть риск"
+ ],
  "assignBtn": [
   "Змінити PM / власника",
   "Change PM / owner",
@@ -1637,6 +1652,21 @@ export const FLD: Record<string, L3> = {
   "Опис",
   "Description",
   "Описание"
+ ],
+ "kProb": [
+  "Ймовірність",
+  "Probability",
+  "Вероятность"
+ ],
+ "kImp": [
+  "Вплив",
+  "Impact",
+  "Влияние"
+ ],
+ "kNew": [
+  "Додано",
+  "Added",
+  "Добавлено"
  ],
  "kType": [
   "Тип",

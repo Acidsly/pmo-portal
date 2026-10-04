@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:a9ac291255cc — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:2a59b8a5ffd1 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -227,7 +227,7 @@ function Read-ProjectStates {
     if (-not $script:HAS_STATE_LIST) { return $map }
     foreach ($it in @(Get-PnPListItem -List $STATE_LIST -PageSize 500)) {
         if (-not $it -or $null -eq $it["psProject"] -or [int]$it["psProject"] -eq $LOCK_PROJECT) { continue }
-        $map[[int]$it["psProject"]] = @{ id = $it.Id; state = (ConvertFrom-StateJson ([string]$it["psState"])); done = [string]$it["psEditDone"]; last = [string]$it["psLastApplied"] }
+        $map[[int]$it["psProject"]] = @{ id = $it.Id; state = (ConvertFrom-StateJson ([string]$it["psState"])); done = [string]$it["psEditDone"]; last = [string]$it["psLastApplied"]; hist = [string]$it["psHistory"] }
     }
     return $map
 }
@@ -237,7 +237,7 @@ function Save-ProjectState([int]$projectId, $state, $states, [hashtable]$extra =
     $vals = @{ psState = (ConvertTo-StateJson $state) } + $extra
     $cur = $states[$projectId]
     if ($cur) { Set-PnPListItem -List $STATE_LIST -Identity $cur.id -Values $vals -UpdateType SystemUpdate | Out-Null }
-    else { $it = Add-PnPListItem -List $STATE_LIST -Values ($vals + @{ Title = "P$projectId"; psProject = $projectId }); $cur = @{ id = $it.Id; done = ""; last = "" }; $states[$projectId] = $cur }
+    else { $it = Add-PnPListItem -List $STATE_LIST -Values ($vals + @{ Title = "P$projectId"; psProject = $projectId }); $cur = @{ id = $it.Id; done = ""; last = ""; hist = "" }; $states[$projectId] = $cur }
     $cur.state = $state
     if ($extra.ContainsKey("psEditDone")) { $cur.done = $extra.psEditDone }
     if ($extra.ContainsKey("psLastApplied")) { $cur.last = $extra.psLastApplied }
@@ -527,6 +527,57 @@ function Get-AssignmentPlan($a, [string]$curPm, [string]$curOwner, [bool]$archiv
     if (-not $ch.Count) { return & $bad "same" }
     return @{ valid = $true; reason = ""; changes = $ch }
 }
+# История отчётов и рисков (#46 / #48; векторы tests/cases/history.json) — как события статус-отчёта.
+# Снимок — psHistory эталона: { v = 1; r = [id учтённых отчётов]; k = { id риска: снимок полей } }. Нет снимка или повреждён —
+# снимок из текущих данных без событий (первый запуск не заливает журнал прошлым). Отчёт: «Подання звіту» один раз; «на основі
+# повернутого» — только если srBasedOn указывает на повернутый отчёт этого же проекта (иначе — как обычная подача).
+# Риск: «Додано», изменения полей «було → стало» (оценка — если менялись вероятность или влияние), «Закрито». Удалённый — из снимка.
+# $reps: id, date, title, author, created, basedOn, approval; $risks: id, t, ty, p, i, st, sg, o, on, d, author, editor, created, modified.
+$RISK_LOG = [ordered]@{ t = "riTitle"; ty = "riType"; p = "riProbability"; i = "riImpact"; st = "riStatus"; sg = "riStrategy"; o = "riOwner"; d = "riDue" }
+function Get-HistoryPlan([string]$json, $reps, $risks) {
+    $h = $null
+    if ($json) { try { $o = ConvertFrom-JsonText $json; if ($o -is [System.Collections.IDictionary] -and [string]$o["v"] -eq "1") { $h = $o } } catch { } }
+    $init = -not $h
+    $dmy = { param($v) if ($v -match '^(\d{4})-(\d{2})-(\d{2})$') { return "$($Matches[3]).$($Matches[2]).$($Matches[1])" } return [string]$v }
+    $logged = [System.Collections.Generic.List[int]]::new(); if ($h -and $h["r"]) { foreach ($x in @($h["r"])) { $logged.Add([int]$x) } }
+    $rows = [System.Collections.Generic.List[object]]::new()
+    $byId = @{}; foreach ($r in @($reps)) { if ($r) { $byId[[int]$r.id] = $r } }
+    foreach ($r in (@($reps) | Where-Object { $_ } | Sort-Object { [int]$_.id })) {
+        if ($logged.Contains([int]$r.id)) { continue }
+        $logged.Add([int]$r.id)
+        if ($init) { continue }
+        $b = if ([int]$r.basedOn) { $byId[[int]$r.basedOn] } else { $null }
+        $ok = $b -and [int]$b.id -ne [int]$r.id -and [string]$b.approval -eq "Повернуто"
+        $rows.Add([ordered]@{ kind = "Подання звіту"; field = "srApproval"; from = $(if ($ok) { "Повернуто" } else { "" }); to = "На погодженні"
+            who = [string]$r.author; when = [string]$r.created; item = [int]$r.id
+            reason = $(if ($ok) { "Новий звіт на основі повернутого від $(& $dmy ([string]$b.date)) · $($r.title)" } else { [string]$r.title }) })
+    }
+    $prev = if ($h -and $h["k"] -is [System.Collections.IDictionary]) { $h["k"] } else { @{} }
+    $next = [ordered]@{}
+    foreach ($k in (@($risks) | Where-Object { $_ } | Sort-Object { [int]$_.id })) {
+        $cur = [ordered]@{}; foreach ($f in @($RISK_LOG.Keys) + @("on")) { $cur[$f] = [string]$k.$f }
+        $key = [string][int]$k.id; $was = $prev[$key]; $next[$key] = $cur
+        if ($init) { continue }
+        if (-not $was) {
+            $rows.Add([ordered]@{ kind = "Ризик"; field = "riCreated"; from = ""; to = $cur.ty; who = [string]$k.author; when = [string]$k.created; item = [int]$k.id; reason = "Додано: $($cur.t)" })
+            continue
+        }
+        $closed = $cur.st -eq "Закрито" -and [string]$was["st"] -ne "Закрито"
+        $reason = if ($closed) { "Закрито: $($cur.t)" } else { $cur.t }
+        $add = { param($f, $a, $b) $rows.Add([ordered]@{ kind = "Ризик"; field = $f; from = $a; to = $b; who = [string]$k.editor; when = [string]$k.modified; item = [int]$k.id; reason = $reason }) }
+        foreach ($f in $RISK_LOG.Keys) {
+            $a = [string]$was[$f]; $b = $cur[$f]
+            if ($a -eq $b) { continue }
+            if ($f -eq "o") { & $add $RISK_LOG[$f] ([string]$was["on"]) $cur.on }
+            elseif ($f -eq "d") { & $add $RISK_LOG[$f] (& $dmy $a) (& $dmy $b) }
+            else { & $add $RISK_LOG[$f] $a $b }
+        }
+        $sa = [int]$was["p"] * [int]$was["i"]; $sb = [int]$cur.p * [int]$cur.i
+        if ($sa -ne $sb) { & $add "riScore" ([string]$sa) ([string]$sb) }
+    }
+    $out = [ordered]@{ v = 1; r = @($logged | Sort-Object); k = $next }
+    return @{ init = $init; rows = @($rows); json = ($out | ConvertTo-Json -Depth 5 -Compress) }
+}
 function Get-ApplyAction($rep, [string]$pm, [string[]]$ownerList, [bool]$archived, [string]$last, [string]$lastUpdate) {
     if ($archived) { return "notApplied:arch" }
     if ($rep.author -ne $pm -and -not (Test-Trusted $rep.author $ownerList)) { return "notApplied:pm" }
@@ -609,12 +660,14 @@ function Remove-EditLogEntries([string]$json, [string[]]$keys) {
     if (-not $rest.Count) { return "" }
     return (ConvertTo-Json -InputObject ([ordered]@{ entries = $rest }) -Depth 6 -Compress)
 }
-function Add-Change($projectId, [string]$field, [string]$from, [string]$to, [string]$kind, [string]$who, [string]$reason, [string]$when) {
+# $item — номер отчёта или риска (kcItem): история карточки открывает запись (#46 / #48)
+function Add-Change($projectId, [string]$field, [string]$from, [string]$to, [string]$kind, [string]$who, [string]$reason, [string]$when, [int]$item = 0) {
     $stats.changes++
     if ($DryRun) { Log "    журнал: [$kind] $($DISPLAY[$field] ?? $EDIT_DISPLAY[$field] ?? $field): $from -> $to"; return }
     $vals = @{ Title = ($DISPLAY[$field] ?? $EDIT_DISPLAY[$field] ?? "Проєкт"); kcProject = $projectId; kcDate = ($when ?? (Get-Date).ToUniversalTime().ToString("o"))
                kcKind = $kind; kcField = $field; kcFrom = $from; kcTo = $to; kcReason = $reason }
     if ($who) { $vals.kcChangedBy = $who }
+    if ($item -and $HAS_ITEM) { $vals.kcItem = $item }
     # сразу в папку проекта (права папки), если она уже есть; иначе — в корень, раздел 5 перенесёт в этом же запуске
     $dir = @{}; if ($FOLDERS[$L_CHG] -and $FOLDERS[$L_CHG].ContainsKey((Get-FolderName $projectId))) { $dir.Folder = Get-FolderName $projectId }
     try { Add-PnPListItem -List $L_CHG -Values $vals @dir | Out-Null }
@@ -714,6 +767,8 @@ $comments = Get-ListRows $L_CMT
 $HAS_TEAM = [bool](Get-PnPList -Identity $L_TEAM -ErrorAction SilentlyContinue)
 $HAS_AP   = [bool](Get-PnPList -Identity $L_AP -ErrorAction SilentlyContinue)
 $HAS_PA   = [bool](Get-PnPList -Identity $L_PA -ErrorAction SilentlyContinue)
+# поле kcItem журнала и psHistory эталона появляются с Deploy-PMO.ps1 (#46 / #48); до развёртывания — без ссылок и без истории
+$HAS_ITEM = [bool](Get-PnPField -List $L_CHG -Identity "kcItem" -ErrorAction SilentlyContinue)
 function Get-ItemsIfExists([string]$list, [bool]$has) { if ($has) { return , (Get-ListRows $list) } return @() }
 # дочерние списки: поле ссылки на проект
 $CHILD = [ordered]@{ $L_REP = "srProject"; $L_RISK = "riProject"; $L_CMT = "cmProject"; $L_CHG = "kcProject" }
@@ -1061,6 +1116,34 @@ foreach ($p in $PROJ.Values) {
     $fresh = [string](Get-PnPListItem -List $L_PROJ -Id $p.Item.Id -Fields "pmEditLog")["pmEditLog"]
     $rest = Remove-EditLogEntries $fresh $allDone
     if ($rest -ne $fresh) { Set-PnPListItem -List $L_PROJ -Identity $p.Item.Id -Values @{ pmEditLog = $rest } -UpdateType SystemUpdate | Out-Null }
+}
+
+# ---------------------------------------------------------------------------
+# 2c. История отчётов и рисков (#46 / #48): «Подання звіту», «Ризик» — строки журнала со ссылкой на запись (kcItem).
+#     Решение — Get-HistoryPlan (векторы tests/cases/history.json); снимок — psHistory эталона. Сначала журнал, потом снимок:
+#     сбой между ними повторит строки, но не потеряет их.
+# ---------------------------------------------------------------------------
+$HAS_HIST = $HAS_PS -and [bool](Get-PnPField -List $STATE_LIST -Identity "psHistory" -ErrorAction SilentlyContinue)
+if ($HAS_HIST) {
+    $repBy = @{}; foreach ($r in $reports) { $lk = $r["srProject"]; if ($lk) { if (-not $repBy[$lk.LookupId]) { $repBy[$lk.LookupId] = @() }; $repBy[$lk.LookupId] += $r } }
+    $riskBy = @{}; foreach ($k in $risks) { $lk = $k["riProject"]; if ($lk) { if (-not $riskBy[$lk.LookupId]) { $riskBy[$lk.LookupId] = @() }; $riskBy[$lk.LookupId] += $k } }
+    $iso = { param($d) if ($d) { return ([datetime]$d).ToUniversalTime().ToString("o") } return "" }
+    foreach ($p in $PROJ.Values) {
+        $st = $STATES[$p.Item.Id]; if (-not $st) { continue }   # эталона ещё нет (пробный запуск нового проекта) — в следующий запуск
+        $reps = @($repBy[$p.Item.Id] | Where-Object { $_ } | ForEach-Object { [ordered]@{ id = $_.Id; date = (DateOnly $_["srDate"]); title = [string]$_["Title"]
+            author = (WhoMail (Who $_["Author"])); created = (& $iso $_["Created"]); basedOn = [int]$_["srBasedOn"]; approval = (Norm $_["srApproval"]) } })
+        $rks = @($riskBy[$p.Item.Id] | Where-Object { $_ } | ForEach-Object { [ordered]@{ id = $_.Id; t = [string]$_["Title"]; ty = (Norm $_["riType"]); p = (Norm $_["riProbability"]); i = (Norm $_["riImpact"])
+            st = (Norm $_["riStatus"]); sg = (Norm $_["riStrategy"]); o = (Email $_["riOwner"]); on = $(if ($_["riOwner"]) { [string]$_["riOwner"].LookupValue } else { "" }); d = (Norm $_["riDue"])
+            author = (WhoMail (Who $_["Author"])); editor = (WhoMail (Who $_["Editor"])); created = (& $iso $_["Created"]); modified = (& $iso $_["Modified"]) } })
+        $plan = Get-HistoryPlan ([string]$st.hist) $reps $rks
+        foreach ($r in $plan.rows) { Add-Change $p.Item.Id $r.field $r.from $r.to $r.kind $r.who $r.reason $r.when $r.item }
+        if ($plan.rows.Count) { Log "  історія «$($p.Item["Title"])»: подій $($plan.rows.Count)" }
+        if ($plan.init) { Log "  історія «$($p.Item["Title"])»: знімок звітів і ризиків створено (без подій)" }
+        if ($plan.json -ne [string]$st.hist) {
+            if (-not $DryRun) { Set-PnPListItem -List $STATE_LIST -Identity $st.id -Values @{ psHistory = $plan.json } -UpdateType SystemUpdate | Out-Null }
+            $st.hist = $plan.json
+        }
+    }
 }
 
 # ---------------------------------------------------------------------------

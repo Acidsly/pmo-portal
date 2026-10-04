@@ -88,8 +88,8 @@ export const withoutFolders = (rows: any[]): any[] => rows.filter(r => r.FileSys
 /** Журнал при загрузке приложения — только переносы плановой даты («Зсуви термінів»); весь журнал проекта — при открытии карточки. */
 export const CHANGES_ON_LOAD = "kcField eq 'pmPlanEnd'";
 export const changesOf = (projectId: number): string => `kcProjectId eq ${Math.floor(projectId)}`;
-export const CHANGE_SELECT = ['Id', 'kcProjectId', 'kcDate', 'kcKind', 'kcField', 'kcFrom', 'kcTo', 'kcReason', ...people('kcChangedBy')].join(',');
+export const CHANGE_SELECT = ['Id', 'kcProjectId', 'kcDate', 'kcKind', 'kcField', 'kcFrom', 'kcTo', 'kcReason', 'kcItem', ...people('kcChangedBy')].join(',');
 export const CHANGE_EXPAND = 'kcChangedBy';
 export const mapComment = (r: any): Comment => ({ id: r.Id, projectId: r.cmProjectId, text: s(r.cmText), created: s(r.Created), author: mapPerson(r.Author) });
 export const mapChange = (r: any): ChangeEntry => ({ id: r.Id, projectId: r.kcProjectId, date: s(r.kcDate), who: mapPerson(r.kcChangedBy),
-  kind: s(r.kcKind), field: s(r.kcField), from: s(r.kcFrom), to: s(r.kcTo), reason: s(r.kcReason) });
+  kind: s(r.kcKind), field: s(r.kcField), from: s(r.kcFrom), to: s(r.kcTo), reason: s(r.kcReason) , item: typeof r.kcItem === 'number' && r.kcItem > 0 ? r.kcItem : undefined });

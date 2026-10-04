@@ -59,7 +59,7 @@ Click a project and its card opens on the right (full screen on a phone):
 - approval notes: "Status report of … is awaiting PMO approval" or "Report of … returned for rework" with the PMO's comment;
 - **Stakeholders**: PM, owner and **Project team** — a table: member, role, what to contact them about;
 - **Timeline** (with the forecast deviation), **Budget and progress** (amounts in US dollars);
-- **Change history** — who changed what and when: "old → new", the reason (including PMO decisions — "Report approval");
+- **Change history** — who changed what and when: "old → new", the reason (including PMO decisions — "Report approval"); also **report submissions** ("Report submitted", including "New report based on the returned one") and **risks and issues** ("Added", field changes, "Closed") — with an "Open report" / "Open risk" link. These events appear after synchronization (~15 minutes);
 - **Comments** — the feed and "Add comment";
 - **Health history** — ratings from the latest reports;
 - **Status reports** — with the approval mark; click the date or summary to open a report; **Risks and issues**;

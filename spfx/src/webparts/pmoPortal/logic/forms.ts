@@ -8,6 +8,8 @@ export interface ReportDraft {
   status: string; type: string; progress: number; start: string; goLive: string; planEnd: string; forecastEnd: string; actualCost: number;
   /** #54: дата завершення (факт) — только при «Завершено» / «Скасовано». */
   actualEnd: string;
+  /** #46: новый отчёт на основе повернутого — его номер (srBasedOn). */
+  basedOn?: number;
   title: string; done: string; next: string; issues: string; decision: boolean; decisionText: string; keyReason: string;
 }
 /** Черновик проекта (форма projectForm прототипа). */
@@ -41,7 +43,7 @@ export function reportFromReturned(r: StatusReport, p: Project, today: string): 
   return { ...base, period: r.period || base.period, schedule: r.schedule, budget: r.budget, resources: r.resources,
     status: r.status || base.status, type: r.type || base.type, progress: r.progress === null ? base.progress : r.progress,
     start: r.start || base.start, goLive: r.goLive || base.goLive, planEnd: r.planEnd || base.planEnd, forecastEnd: r.forecastEnd || base.forecastEnd,
-    actualCost: r.actualCost === null ? base.actualCost : r.actualCost, actualEnd: r.actualEnd || '', title: r.title, done: r.done, next: r.next, issues: r.issues,
+    actualCost: r.actualCost === null ? base.actualCost : r.actualCost, actualEnd: r.actualEnd || '', basedOn: r.id, title: r.title, done: r.done, next: r.next, issues: r.issues,
     decision: r.decision, decisionText: r.decisionText, keyReason: r.keyReason };
 }
 

@@ -35,7 +35,7 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/assignments.json", "config/focus-group.example.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/assignments.json", "tests/cases/history.json", "config/focus-group.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
@@ -197,7 +197,7 @@ foreach ($c in $rc.effective) {
     if ($got -eq $exp) { Ok "действующее решение: $($c.name)" } else { Bad "действующее решение: $($c.name): $got, ожидалось $exp" }
 }
 $syncSrc = Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")
-Write-Host "3f. «Призначення»: смена PM / власника только решением PMO (tests/cases/assignments.json)"
+Write-Host "3h. «Призначення»: смена PM / власника только решением PMO (tests/cases/assignments.json)"
 $fna = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Get-AssignmentPlan" }, $true) | Select-Object -First 1
 if ($fna) { Invoke-Expression $fna.Extent.Text } else { Bad "нет функции Get-AssignmentPlan" }
 $asc = Get-Content -Raw (Join-Path $root "tests/cases/assignments.json") | ConvertFrom-Json
@@ -216,6 +216,28 @@ if (-not $pmItem) { Ok "PM и власник читаются из памяти 
 # эталон: «Призначення» пишет эталон до карточки (иначе следующий запуск откатит)
 $sec = $syncSrc.Substring($i0c, $i0b - $i0c)
 if ($sec.IndexOf("Save-ProjectState") -ge 0 -and $sec.IndexOf("Save-ProjectState") -lt $sec.IndexOf('Set-PnPListItem -List $L_PROJ')) { Ok "«Призначення»: эталон пишется раньше карточки" } else { Bad "«Призначення»: эталон должен писаться раньше карточки" }
+Write-Host "3i. История отчётов и рисков (tests/cases/history.json)"
+$fnh = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Get-HistoryPlan" }, $true) | Select-Object -First 1
+if ($fnh) { Invoke-Expression $fnh.Extent.Text } else { Bad "нет функции Get-HistoryPlan" }
+$RISK_LOG = [ordered]@{ t = "riTitle"; ty = "riType"; p = "riProbability"; i = "riImpact"; st = "riStatus"; sg = "riStrategy"; o = "riOwner"; d = "riDue" }
+if ($syncSrc -match '(?m)^\$RISK_LOG = \[ordered\]@\{ t = "riTitle"; ty = "riType"; p = "riProbability"; i = "riImpact"; st = "riStatus"; sg = "riStrategy"; o = "riOwner"; d = "riDue" \}') { Ok "поля истории риска — те же, что в проверке" } else { Bad "Invoke-PMOSync.ps1: `$RISK_LOG отличается от проверки" }
+$hc = Get-Content -Raw (Join-Path $root "tests/cases/history.json") | ConvertFrom-Json -DateKind String
+foreach ($c in $hc.cases) {
+    $toH = { param($o) $h = [ordered]@{}; foreach ($pp in $o.PSObject.Properties) { $h[$pp.Name] = $pp.Value }; $h }
+    $pl = Get-HistoryPlan $c.json @($c.reps | ForEach-Object { & $toH $_ }) @($c.risks | ForEach-Object { & $toH $_ })
+    $got = "$($pl.init)|" + (@($pl.rows | ForEach-Object { "$($_.kind)|$($_.field)|$($_.from)|$($_.to)|$($_.who)|$($_.when)|$($_.item)|$($_.reason)" }) -join " ¶ ")
+    $exp = "$($c.init)|" + (@($c.rows) -join " ¶ ")
+    $o = ConvertFrom-JsonText $pl.json
+    $got2 = "$(@($o["r"]) -join ',')/$(@($o["k"].Keys) -join ',')"; $exp2 = "$(@($c.logged) -join ',')/$(@($c.risks_out) -join ',')"
+    if ($got -eq $exp -and $got2 -eq $exp2) { Ok "история: $($c.name)" } else { Bad "история: $($c.name): [$got] [$got2], ожидалось [$exp] [$exp2]" }
+}
+# повторный запуск на результате — без событий (идемпотентность)
+$c = $hc.cases | Where-Object { $_.name -like "новый риск*" } | Select-Object -First 1
+$toH = { param($o) $h = [ordered]@{}; foreach ($pp in $o.PSObject.Properties) { $h[$pp.Name] = $pp.Value }; $h }
+$p1 = Get-HistoryPlan $c.json @() @($c.risks | ForEach-Object { & $toH $_ }); $p2 = Get-HistoryPlan $p1.json @() @($c.risks | ForEach-Object { & $toH $_ })
+if (-not $p2.rows.Count -and $p2.json -eq $p1.json) { Ok "история: повторный запуск — без событий, снимок тот же" } else { Bad "история: повторный запуск дал события или другой снимок" }
+$i2c = $syncSrc.IndexOf("# 2c. История"); $iS = $syncSrc.IndexOf('psHistory = $plan.json'); $iA = $syncSrc.IndexOf('Add-Change $p.Item.Id $r.field $r.from $r.to $r.kind $r.who $r.reason $r.when $r.item')
+if ($i2c -ge 0 -and $iA -gt $i2c -and $iS -gt $iA) { Ok "история: сначала журнал, потом снимок" } else { Bad "Invoke-PMOSync.ps1: история должна писать журнал раньше снимка" }
 # «Створення» один раз (R8): нужна ли строка — и эталон пишется раньше строки журнала (ошибка сверки №3)
 $fnc = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Test-NeedCreation" }, $true) | Select-Object -First 1
 if ($fnc) { Invoke-Expression $fnc.Extent.Text } else { Bad "нет функции Test-NeedCreation" }

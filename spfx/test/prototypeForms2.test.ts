@@ -137,3 +137,49 @@ describe('#43 смена PM / власника — только PMO', () => {
     expect(q('[data-act="assign"]')).toBeNull();
   });
 });
+
+describe('#46 / #48 события отчётов и рисков в истории', () => {
+  const asUser = (n: string): void => { const b = w.document.createElement('button'); b.dataset.act = 'asuser'; b.dataset.n = n; w.document.body.appendChild(b); b.click(); b.remove(); };
+  const card = (id: number): void => { q('[data-act="nav"][data-page="projects"]').click(); q(`[data-act="openp"][data-id="${id}"]`).click(); };
+  const history = (): string => { const b = q('[data-act="togglech"]'); if (b && /\(/.test(b.textContent)) b.click(); return (q('#panel') || w.document.body).textContent; };
+  const fillReport = (f: W, title: string): void => {
+    ['sched', 'budget', 'res'].forEach(n => { const r = f.querySelector(`input[name="${n}"][value="Зелений"]`); r.checked = true; ev(r, 'change'); });
+    const t = f.querySelector('#f-t'); t.value = title; ev(t, 'input');
+    const kr = f.querySelector('#f-kr'); if (kr) { kr.value = 'Причина'; ev(kr, 'input'); }
+    f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+  };
+  test('#46 «Новий звіт на основі повернутого» — событие со ссылкой на отчёт', () => {
+    asUser('Ірина Бондаренко'); card(3);
+    q('[data-act="newfromret"][data-id="3"]').click();
+    fillReport(q('#repform'), 'Виправлений звіт');
+    expect(q('#repform')).toBeNull();
+    card(3);
+    const h = history();
+    expect(h).toContain('Подання звіту');
+    expect(h).toMatch(/Новий звіт на основі повернутого від \d\d\.\d\d\.\d{4} · Виправлений звіт/);
+    const link = Array.from(w.document.querySelectorAll('.chg-ref[data-act="repopen"]'))[0] as W;
+    expect(link).toBeDefined(); link.click();
+    expect(q('#panel .ph h2, .ph h2').textContent).toBe('Виправлений звіт');
+  });
+  test('#48 риск: «Додано», затем «Закрито» с изменением оценки; ссылка открывает риск', () => {
+    card(1);
+    q('[data-act="newrisk"][data-id="1"]').click();
+    let f = q('#kform');
+    f.querySelector('#k-title').value = 'Новий ризик історії'; ev(f.querySelector('#k-title'), 'input');
+    f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    card(1);
+    expect(history()).toContain('Додано: Новий ризик історії');
+    const open = Array.from(w.document.querySelectorAll('.chg-ref[data-act="riskopen"]'))[0] as W;
+    expect(open).toBeDefined(); open.click();
+    f = q('#kform');
+    expect(f.querySelector('#k-title').value).toBe('Новий ризик історії');
+    const st = f.querySelector('#k-status'); st.value = 'Закрито'; ev(st, 'change');
+    const pr = f.querySelector('input[name="k-pr"][value="5"]'); pr.checked = true; ev(pr, 'change');
+    f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    card(1);
+    const h = history();
+    expect(h).toContain('Закрито: Новий ризик історії');
+    expect(h).toMatch(/Ймовірність\s*3\s*→\s*5/);
+    expect(h).toMatch(/Оцінка\s*9\s*→\s*15/);
+  });
+});

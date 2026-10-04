@@ -12,6 +12,7 @@ import { RiskForm } from '../src/webparts/pmoPortal/panels/RiskForm';
 import { ReportForm } from '../src/webparts/pmoPortal/panels/ReportForm';
 import { AssignForm } from '../src/webparts/pmoPortal/panels/AssignForm';
 import { ProjectForm } from '../src/webparts/pmoPortal/panels/ProjectForm';
+import { RefLink } from '../src/webparts/pmoPortal/panels/ProjectCard';
 
 // Компоненты приложения в jsdom: поведение, а не только «вызывается» (блок 2 отзывов раунда 3 и правки кросс-ревью)
 const tt = makeT(0);
@@ -205,4 +206,14 @@ describe('#43 «Змінити PM / власника» — только PMO', ()
     expect(root.querySelector('#f-own input')).toBeNull();
     expect(root.textContent).toContain('PM і власника змінює лише PMO.');
   });
+});
+
+test('#46 / #48: ссылка из истории открывает отчёт или риск', () => {
+  const opened: string[] = [];
+  const c2 = { ...ctx, openForm: (f: string, id: number) => opened.push(`${f}@${id}`) };
+  act(() => { ReactDOM.render(<AppCtx.Provider value={c2}><RefLink r={{ type: 'report', id: 12 }} pid={5} /><RefLink r={{ type: 'risk', id: 7 }} pid={5} /></AppCtx.Provider>, root); });
+  const b = root.querySelectorAll('.chg-ref');
+  expect(Array.from(b).map(x => x.textContent)).toEqual(['Відкрити звіт →', 'Відкрити ризик →']);
+  act(() => { (b[0] as HTMLElement).click(); (b[1] as HTMLElement).click(); });
+  expect(opened).toEqual(['rep:12@5', 'risk:7@5']);
 });

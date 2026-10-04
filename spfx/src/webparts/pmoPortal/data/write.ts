@@ -23,6 +23,8 @@ export function reportBody(d: ReportDraft, p: Project): Body {
   dates.forEach(([k, f]) => { if ((d[k] || '') !== (p[k] || '')) b[f] = spDate(String(d[k] || '')); });
   // #54: фактическая дата — только при «Завершено» / «Скасовано»
   if (archiveStatus(d.status) && d.actualEnd) b.srActualEnd = spDate(d.actualEnd);
+  // #46: на основе повернутого — номер повернутого (история: «Новий звіт на основі повернутого»)
+  if (d.basedOn) b.srBasedOn = d.basedOn;
   return b;
 }
 

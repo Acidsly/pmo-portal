@@ -157,7 +157,7 @@ function Read-ProjectStates {
     if (-not $script:HAS_STATE_LIST) { return $map }
     foreach ($it in @(Get-PnPListItem -List $STATE_LIST -PageSize 500)) {
         if (-not $it -or $null -eq $it["psProject"] -or [int]$it["psProject"] -eq $LOCK_PROJECT) { continue }
-        $map[[int]$it["psProject"]] = @{ id = $it.Id; state = (ConvertFrom-StateJson ([string]$it["psState"])); done = [string]$it["psEditDone"]; last = [string]$it["psLastApplied"] }
+        $map[[int]$it["psProject"]] = @{ id = $it.Id; state = (ConvertFrom-StateJson ([string]$it["psState"])); done = [string]$it["psEditDone"]; last = [string]$it["psLastApplied"]; hist = [string]$it["psHistory"] }
     }
     return $map
 }
@@ -167,7 +167,7 @@ function Save-ProjectState([int]$projectId, $state, $states, [hashtable]$extra =
     $vals = @{ psState = (ConvertTo-StateJson $state) } + $extra
     $cur = $states[$projectId]
     if ($cur) { Set-PnPListItem -List $STATE_LIST -Identity $cur.id -Values $vals -UpdateType SystemUpdate | Out-Null }
-    else { $it = Add-PnPListItem -List $STATE_LIST -Values ($vals + @{ Title = "P$projectId"; psProject = $projectId }); $cur = @{ id = $it.Id; done = ""; last = "" }; $states[$projectId] = $cur }
+    else { $it = Add-PnPListItem -List $STATE_LIST -Values ($vals + @{ Title = "P$projectId"; psProject = $projectId }); $cur = @{ id = $it.Id; done = ""; last = ""; hist = "" }; $states[$projectId] = $cur }
     $cur.state = $state
     if ($extra.ContainsKey("psEditDone")) { $cur.done = $extra.psEditDone }
     if ($extra.ContainsKey("psLastApplied")) { $cur.last = $extra.psLastApplied }

@@ -320,6 +320,8 @@ F $R srStart       DateTime "Дата старту"        "Start date"         
 F $R srGoLive      DateTime "Дата запуску (продакшн)" "Go-live date (production)" "Дата запуска (продакшн)" "Format='DateOnly'"
 F $R srPlanEnd     DateTime "Дата завершення (план)"  "Planned completion"        "Дата завершения (план)"  "Format='DateOnly'"
 F $R srForecastEnd DateTime "Прогноз завершення" "Forecast completion" "Прогноз завершения"   "Format='DateOnly'"
+# #46: новый отчёт на основе повернутого — номер повернутого (пишет приложение при создании; синхронизация проверяет)
+F $R srBasedOn     Number   "На основі звіту"    "Based on report"     "На основе отчёта"     "Decimals='0'"
 F $R srActualEnd   DateTime "Дата завершення (факт)" "Actual completion date" "Дата завершения (факт)" "Format='DateOnly'"
 F $R srActualCost  Currency "Витрати на дату"    "Cost to date"        "Затраты на дату"      "LCID='1058' Decimals='0'"
 F $R srKeyReason   Note     "Причина зміни показників" "Reason for changing indicators" "Причина изменения показателей" "NumLines='3' RichText='FALSE'"
@@ -388,7 +390,7 @@ $C = Ensure-List "Lists/KeyChanges" "Зміни показників" "Indicator
 F $C kcProject     Lookup   "Проєкт"             "Project"             "Проект"               $lookup
 F $C kcDate        DateTime "Дата зміни"         "Changed on"          "Дата изменения"       "Format='DateTime' Required='TRUE'" "<Default>[today]</Default>"
 F $C kcChangedBy   User     "Хто змінив"         "Changed by"          "Кто изменил"          "UserSelectionMode='PeopleOnly'"
-$kinds = @("Створення","Статус-звіт","Редагування картки","Погодження звіту","Призначення")
+$kinds = @("Створення","Статус-звіт","Редагування картки","Погодження звіту","Призначення","Подання звіту","Ризик")
 F $C kcKind        Choice   "Тип зміни"          "Change type"         "Тип изменения"        "Format='Dropdown'" (Choices $kinds "Статус-звіт")
 $cur = Get-PnPField -List $C -Identity kcKind
 if (@($kinds | Where-Object { $cur.Choices -notcontains $_ }).Count) { Set-PnPField -List $C -Identity kcKind -Values @{ Choices = [string[]]$kinds } | Out-Null; Write-Host "    типы изменений: $($kinds -join ', ')" }
@@ -398,6 +400,8 @@ if (-not (Get-PnPField -List $C -Identity kcField).Indexed) { Set-PnPField -List
 F $C kcFrom        Note     "Було"               "Old value"           "Было"                 "NumLines='2' RichText='FALSE'"
 F $C kcTo          Note     "Стало"              "New value"           "Стало"                "NumLines='2' RichText='FALSE'"
 F $C kcReason      Note     "Причина зміни"      "Reason"              "Причина изменения"    "NumLines='3' RichText='FALSE'"
+# #46 / #48: номер отчёта или риска события — история карточки открывает запись
+F $C kcItem        Number   "Запис"              "Item"                "Запись"               "Decimals='0'"
 F $C pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='64'"
 $script:Loc += , @($C, "Title", "Показник", "Indicator", "Показатель")
 
@@ -496,6 +500,8 @@ F $PS psProject     Number   "Проєкт (ID)"        "Project (ID)"        "�
 F $PS psState       Note     "Ключові показники"  "Key indicators"      "Ключевые показатели"  "NumLines='6' RichText='FALSE'"
 F $PS psEditDone    Note     "Перенесені правки"  "Journaled edits"     "Перенесённые правки"  "NumLines='3' RichText='FALSE'"
 F $PS psLastApplied Text     "Останній застосований звіт" "Last applied report" "Последний применённый отчёт" "MaxLength='40'"
+# #46 / #48: снимок учтённых отчётов и рисков для истории (пишет только синхронизация)
+F $PS psHistory     Note     "Історія: знімок"    "History snapshot"    "История: снимок"      "NumLines='3' RichText='FALSE'"
 
 # 6b. Відгуки — замечания фокус-группы из приложения (текст, экран, устройство, скриншоты-вложения)
 if ($Feedback) {

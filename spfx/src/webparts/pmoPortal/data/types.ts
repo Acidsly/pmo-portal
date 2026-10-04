@@ -66,8 +66,12 @@ export interface Risk {
 }
 
 export interface Comment { id: number; projectId: number; text: string; author: Person | null; created: string; }  // created — ISO дата-время
-export interface ChangeEntry { id: number; projectId: number; date: string; who: Person | null; kind: string; field: string; from: string; to: string; reason: string; }
-export interface ChangeEvent { id: number; date: string; who: Person | null; kind: 'create' | 'key' | 'edit' | 'report' | 'approval' | 'assign'; reason: string; diffs: { f: string; from: string; to: string }[]; }
+export interface ChangeEntry { id: number; projectId: number; date: string; who: Person | null; kind: string; field: string; from: string; to: string; reason: string;
+  /** #46 / #48: номер отчёта или риска события (kcItem). */
+  item?: number; }
+export interface ChangeEvent { id: number; date: string; who: Person | null; kind: 'create' | 'key' | 'edit' | 'report' | 'approval' | 'assign' | 'submit' | 'risk'; reason: string; diffs: { f: string; from: string; to: string }[];
+  /** #46 / #48: событие отчёта или риска — открыть запись из истории. */
+  ref?: { type: 'report' | 'risk'; id: number }; }
 
 /** Отзыв фокус-группы: из «Відгуки — загальні» (видят все) + свои / все для администратора (со скриншотами) из «Відгуки». */
 export interface FeedbackRow {

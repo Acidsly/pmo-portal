@@ -297,6 +297,9 @@ fieldset[aria-invalid=true]{padding:4px 6px}
 .chg-create{background:color-mix(in srgb,var(--g) 18%,transparent);color:var(--text)}
 .chg-approval{background:color-mix(in srgb,var(--y) 22%,transparent);color:var(--text)}
 .chg-assign{background:color-mix(in srgb,var(--theme) 16%,transparent);color:var(--text)}
+.chg-submit{background:color-mix(in srgb,var(--theme) 10%,transparent);color:var(--text)}
+.chg-risk{background:color-mix(in srgb,var(--r) 14%,transparent);color:var(--text)}
+.chg-ref{margin-top:4px}
 .rep-open{cursor:pointer;transition:background-color .15s}
 .rep-open:hover{background:var(--track)}
 .rep-open:focus-visible{outline:3px solid var(--theme-soft)}
@@ -718,6 +721,7 @@ const T = {
  accessRecalc:['Після зміни учасників права доступу буде перераховано.','Access will be recalculated after participants change.','После смены участников права доступа будут пересчитаны.'],
  kCreate:['Проєкт створено','Project created','Проект создан'], kKey:['Зміна ключових показників','Key indicators changed','Изменение ключевых показателей'],
  kEdit:['Редагування картки','Card edited','Редактирование карточки'], kAssign:['Призначення','Assignment','Назначение'],
+ kSubmit:['Подання звіту','Report submitted','Подача отчёта'], kRiskEv:['Ризик / проблема','Risk / issue','Риск / проблема'], openRisk:['Відкрити ризик','Open risk','Открыть риск'],
  assignBtn:['Змінити PM / власника','Change PM / owner','Сменить PM / владельца'], assignTitle:['Зміна PM / власника','Change of PM / owner','Смена PM / владельца'],
  assignHint:['Після створення проєкту PM і власника змінює лише PMO. Порожнє поле — без змін.','After the project is created, only the PMO changes the PM and the owner. An empty field means no change.','После создания проекта PM и владельца меняет только PMO. Пустое поле — без изменений.'],
  assignNewPm:['Новий PM','New PM','Новый PM'], assignNewOwner:['Новий власник','New owner','Новый владелец'], assignNote:['Коментар (причина)','Comment (reason)','Комментарий (причина)'],
@@ -877,7 +881,7 @@ const FLD = {
  rDec:['Потрібне рішення керівництва','Management decision needed','Требуется решение руководства'], rDecText:['Яке рішення потрібне','Decision required','Какое решение нужно'],
  rAuthor:['Автор','Created by','Автор'],
  apStatus:['Погодження','Approval','Согласование'], apNote:['Коментар PMO','PMO comment','Комментарий PMO'],
- kTitle:['Ризик / проблема','Risk / issue','Риск / проблема'], kDesc:['Опис','Description','Описание'], kType:['Тип','Type','Тип'], kStrategy:['Стратегія реагування','Response strategy','Стратегия реагирования'], kContingency:['План дій у разі настання','Contingency plan','План действий при наступлении'], kScore:['Оцінка','Score','Оценка'], kPI:['Ймов. × вплив','Prob. × impact','Вер. × влияние'],
+ kTitle:['Ризик / проблема','Risk / issue','Риск / проблема'], kDesc:['Опис','Description','Описание'], kProb:['Ймовірність','Probability','Вероятность'], kImp:['Вплив','Impact','Влияние'], kNew:['Додано','Added','Добавлено'], kType:['Тип','Type','Тип'], kStrategy:['Стратегія реагування','Response strategy','Стратегия реагирования'], kContingency:['План дій у разі настання','Contingency plan','План действий при наступлении'], kScore:['Оцінка','Score','Оценка'], kPI:['Ймов. × вплив','Prob. × impact','Вер. × влияние'],
  kOwner:['Власник ризику','Risk owner','Владелец риска'], kStatus:['Статус','Status','Статус'], kDue:['Термін виконання заходів','Mitigation due date','Срок выполнения мер']
 };
 const t = k => (T[k] || [k,k,k])[LI];
@@ -1705,11 +1709,12 @@ function accessList(p){
 function changesHtml(p, showAll){
   const list = (p.changes || []).slice().sort((a, b) => D(b.date) - D(a.date));
   if (!list.length) return `<p class="empty">${t('noChanges')}</p>`;
-  const kindL = {create:'kCreate', key:'kKey', edit:'kEdit', report:'kReport', approval:'kApproval', assign:'kAssign'};
+  const kindL = {create:'kCreate', key:'kKey', edit:'kEdit', report:'kReport', approval:'kApproval', assign:'kAssign', submit:'kSubmit', risk:'kRiskEv'};
   const item = c => `<div class="chg">
     <div class="chg-h">${avatar(c.who, 'sm')}<b>${esc(c.who)}</b><span class="muted">${fmtDT(D(c.date))}</span><span class="chg-k chg-${c.kind}">${t(kindL[c.kind] || 'kEdit')}</span></div>
     ${c.diffs && c.diffs.length ? `<div class="diffs">${c.diffs.map(d => `<div class="diff"><span class="df">${fl(d.f)}</span><span class="dv"><s>${valFmt(d.f, d.from)}</s><span class="arr">→</span>${valFmt(d.f, d.to)}</span></div>`).join('')}</div>` : ''}
-    ${c.reason ? `<div class="chg-r">${esc(c.reason)}</div>` : ''}</div>`;
+    ${c.reason ? `<div class="chg-r">${esc(c.reason)}</div>` : ''}
+    ${c.ref ? `<button class="link chg-ref" data-act="${c.ref.type === 'report' ? 'repopen' : 'riskopen'}" data-id="${p.id}" data-rid="${esc(c.ref.id)}">${t(c.ref.type === 'report' ? 'openReport' : 'openRisk')} →</button>` : ''}</div>`;
   const shown = showAll ? list : list.slice(0, 3);
   return `<div class="cmts">${shown.map(item).join('')}${list.length > 3 ? `<button class="more" data-act="togglech">${showAll ? t('hideHistory') : t('showHistory') + ` (${list.length})`}</button>` : ''}</div>`;
 }
@@ -1981,7 +1986,15 @@ function riskForm(pid, rid, fromList){
     const vals = {title:g('k-title').value.trim(), type:radioVal(form, 'k-type') || 'Ризик', p:+radioVal(form, 'k-pr') || 1, i:+radioVal(form, 'k-im') || 1,
       owner:g('k-owner').value, status:g('k-status').value, due:g('k-due').value, mitigation:g('k-mit').value.trim(), strategy:radioVal(form, 'k-str') || '', contingency:g('k-cont').value.trim()};
     if (!vals.title){ g('k-title').focus(); return err(t('errRiskTitle')); }
-    if (k) Object.assign(k, vals); else p.risks = (p.risks || []).concat([Object.assign({id:uid()}, vals)]);
+    // #48: «Ризик» в истории — «Додано», изменения полей «було → стало», «Закрито»
+    const KF = [['title','kDesc'],['type','kType'],['p','kProb'],['i','kImp'],['status','kStatus'],['strategy','kStrategy'],['owner','kOwner'],['due','kDue']];
+    const nid = k ? k.id : uid();
+    const rdiffs = k ? KF.filter(([f]) => String(k[f] ?? '') !== String(vals[f] ?? '')).map(([f, l]) => ({f:l, from:f === 'due' && k[f] ? fmt(D(k[f])) : String(k[f] ?? ''), to:f === 'due' && vals[f] ? fmt(D(vals[f])) : String(vals[f] ?? '')}))
+      : [{f:'kNew', from:'', to:vals.type}];
+    if (k && k.p * k.i !== vals.p * vals.i) rdiffs.push({f:'kScore', from:String(k.p * k.i), to:String(vals.p * vals.i)});
+    if (rdiffs.length) p.changes = (p.changes || []).concat([{id:uid(), date:new Date().toISOString(), who:VIEWER, kind:'risk', ref:{type:'risk', id:nid},
+      reason:!k ? 'Додано: ' + vals.title : vals.status === 'Закрито' && k.status !== 'Закрито' ? 'Закрито: ' + vals.title : vals.title, diffs:rdiffs}]);
+    if (k) Object.assign(k, vals); else p.risks = (p.risks || []).concat([Object.assign({id:nid}, vals)]);
     rerenderMain();
     if (pid && !fromList) projectPanel(p.id, false); else closePanel();
     persist(p); toast(t('savedRisk'));
@@ -2093,7 +2106,11 @@ function reportForm(pid, base){
     const rag = calcRag(dims);
     const progress = g('f-pr').disabled ? 100 : +prv, cost = Math.max(0, Math.round(+g('f-c').value.replace(/\s/g, '') || 0)), dec = g('f-dec').checked;
     // звіт зберігається «На погодженні»; картку оновить applyReport після погодження PMO
-    p.reports = (p.reports || []).concat([{id:uid(), date:dstr, rag, sched:dims.sched, budget:dims.budget, res:dims.res,
+    const rid = uid();
+    // #46: «Подання звіту» в истории; на основе повернутого — ссылка на повернутый
+    p.changes = (p.changes || []).concat([{id:uid(), date:new Date().toISOString(), who:VIEWER, kind:'submit', ref:{type:'report', id:rid},
+      reason:base ? `Новий звіт на основі повернутого від ${fmt(D(base.date))} · ${title}` : title, diffs:[{f:'apStatus', from:base ? AP_RET : '', to:AP_PEND}]}]);
+    p.reports = (p.reports || []).concat([{id:rid, date:dstr, rag, sched:dims.sched, budget:dims.budget, res:dims.res,
       progress, status:g('f-st').value, type:radioVal(form, 'f-type') || p.type, start:g('f-start').value, golive:g('f-golive').value, plan:g('f-plan').value, fc:g('f-fc').value, ae:arch ? ae : '',
       cost, keyReason:keyChanged() ? kr : '', period:g('f-per').value, title, done:g('f-done').value.trim() || '—', next:g('f-next').value.trim() || '—', issues:g('f-iss').value.trim(),
       author:VIEWER, decision:dec, decisionText:dec ? g('f-dect').value.trim() : '', approval:AP_PEND, apBy:'', apAt:'', apNote:''}]);
