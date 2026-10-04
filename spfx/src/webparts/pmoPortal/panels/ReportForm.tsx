@@ -24,7 +24,9 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
   const first = fixed || act.filter(p => !p.pendingDate)[0] || act[0];
   // «Новий звіт на основі повернутого» — черновик из повернутого PMO отчёта этого проекта
   const from = fromId ? data.reports.filter(r => r.id === fromId && r.projectId === (first && first.id))[0] : undefined;
-  const [d, setD] = React.useState<ReportDraft | undefined>(first ? (from ? reportFromReturned(from, first, c.today) : reportFromProject(first, c.today)) : undefined);
+  const init = first ? (from ? reportFromReturned(from, first, c.today) : reportFromProject(first, c.today)) : undefined;
+  // «Завершено» в повернутом звіті — 100 % сразу (#52)
+  const [d, setD] = React.useState<ReportDraft | undefined>(init && progressLocked(init.status) ? { ...init, progress: 100 } : init);
   const [err, setErr] = React.useState('');
   const [errs, setErrs] = React.useState<FieldErr[]>([]);
   // «% виконання» — текст поля (#53: ошибка вне 0–100 вместо молчаливой замены); prevPr — значение до «Завершено» (#52)
@@ -60,7 +62,7 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
       const f = await c.repo.fresh(p.id);
       const g = guard('report', c.me, f, { reportDate: d.date });
       if (!g.ok) { setErr(guardText(t, g.key, g.args)); setBusy(false); await c.reload(); return; }
-      await c.repo.createIn('StatusReports', p.id, reportBody(d, f.project));
+      await c.repo.createIn('StatusReports', p.id, reportBody(progressLocked(d.status) ? { ...d, progress: 100 } : d, f.project));
       await c.reload();
       c.toast(t('savedReportPending'));
       c.openProject(p.id);

@@ -1933,6 +1933,8 @@ function reportForm(pid, base){
   const syncKey = () => { g('f-kr-wrap').hidden = !keyChanged(); g('f-arch').hidden = !['Завершено','Скасовано'].includes(g('f-st').value); g('f-ragv').innerHTML = ragLabel(calcRag(dimsNow())); };
   form.addEventListener('input', syncKey); form.addEventListener('change', syncKey);
   g('f-p').addEventListener('change', e => { const p = pById(+e.target.value);
+    g('f-pr').disabled = false; prevPr = null; g('f-pr-done').hidden = true;
+    form.querySelectorAll('[aria-invalid]').forEach(x => x.removeAttribute('aria-invalid')); form.querySelectorAll('.ferr').forEach(x => { x.hidden = true; });
     g('f-pr').value = p.progress; g('f-c').value = p.actual || 0; g('f-st').value = p.status;
     ['start','golive','plan','fc'].forEach(k => g('f-' + k).value = p[k] || '');
     const tr = form.querySelector(`input[name="f-type"][value="${p.type}"]`); if (tr) tr.checked = true;

@@ -40,7 +40,7 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
     const othersP = data.projects.filter(x => !project || x.id !== project.id);
     const others = othersP.map(x => x.code);
     const clean = { ...d, team: cleanTeam(d.team), links: cleanLinks(d.links) };
-    const v = validateProject(clean, others, othersP.map(x => x.title), project ? project.title : '');
+    const v = validateProject(clean, others, othersP.map(x => x.title), project ? project.title : '', !project);   // даты — только у нового проекта (#54)
     if (v) { setErr(t(v)); return; }
     setBusy(true); setErr('');
     try {

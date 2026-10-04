@@ -99,10 +99,10 @@ export const codeTaken = (code: string, otherCodes: string[]): boolean => {
 export const titleKey = (s: string): string => (s || '').trim().replace(/\s+/g, ' ').toLowerCase();
 /** otherTitles — названия других проектов, которые видит пользователь (PMO — все); prevTitle — прежнее название при правке:
  *  если название не меняли, уже существующий дубль сохранить можно. */
-export const validateProject = (d: ProjectDraft, otherCodes: string[] = [], otherTitles: string[] = [], prevTitle = ''): string =>
+export const validateProject = (d: ProjectDraft, otherCodes: string[] = [], otherTitles: string[] = [], prevTitle = '', isNew = true): string =>
   (!d.title.trim() ? 'errTitle' : !d.manager ? 'errPM'
     : titleKey(d.title) !== titleKey(prevTitle) && otherTitles.some(x => titleKey(x) === titleKey(d.title)) ? 'errTitleTaken'
-    : codeTaken(d.code, otherCodes) ? 'errCode' : datesBeforeStart(d).length ? 'errDatesOrder' : validateTeamLinks(d.team, d.links));
+    : codeTaken(d.code, otherCodes) ? 'errCode' : isNew && datesBeforeStart(d).length ? 'errDatesOrder' : validateTeamLinks(d.team, d.links));
 export const validateRisk = (d: RiskDraft): string => (!d.title.trim() ? 'errRiskTitle' : '');
 
 /** Изменения карточки для журнала («Редагування картки»); описание не журналируется, как в прототипе. */

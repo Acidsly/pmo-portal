@@ -85,3 +85,9 @@ test('#40: все незаполненные поля сразу и общее �
   expect(reportErrors({ ...ok, planEnd: '2026-12-01' }, p, '40')).toEqual([]);
   expect(reportErrors({ ...ok, planEnd: '2026-12-01', status: 'Завершено' }, p, '500')).toEqual([]);   // при «Завершено» поле закрыто (100)
 });
+test('#54: даты проверяются только у нового проекта — правка карточки со старыми датами сохраняется', () => {
+  const m = { id: 1, name: 'M', email: 'm@x.ua' };
+  const D = { title: 'П', code: '', department: 'ІТ', links: [], type: 'Звичайний', priority: '', manager: m, owner: null, team: [], start: '2026-03-02', goLive: '2026-01-01', planEnd: '', status: 'Ініціація', budget: 0, description: '' };
+  expect(validateProject(D)).toBe('errDatesOrder');
+  expect(validateProject(D, [], [], 'П', false)).toBe('');
+});
