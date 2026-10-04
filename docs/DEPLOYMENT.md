@@ -132,7 +132,9 @@ Install-Module PnP.PowerShell -Scope CurrentUser
 - `-SendReminders -ReminderFrom pmo@contoso.com` — раз в неделю, например в понедельник утром;
 - `-RebuildPermissions` — раз в неделю ночью, чтобы учесть смену руководителей в Entra ID.
 
-**Временно — на Mac** (пока нет подписки Azure): `pwsh -NoLogo -File scripts/Set-MacSchedule.ps1 -Env test` ставит задания launchd по тому же графику — пн–пт 8:00–20:00 каждые 15 минут, ежедневно 6:00 и 22:00, воскресенье 3:00 полный пересчёт прав. Работает, пока Mac включён и пользователь вошёл в систему; после сна пропущенный запуск выполняется сразу. Журнал — `~/Library/Logs/pmo-sync-test.log`. Снять — тот же скрипт с `-Remove`.
+**Рабочие запуски — в Azure Automation** с 04.10.2026 (тест): runbook `PMO-Sync`, расписания `scripts/Set-AzureSchedule.ps1 -Env test -Live` (каждые 15 минут, воскресенье 3:00 — пересчёт прав), письмо при сбое; после изменения скриптов синхронизации — `scripts/Build-Runbook.ps1`, коммит, `scripts/Publish-Runbook.ps1`. Откат на Mac: `Set-AzureSchedule.ps1 -Env test -Disable`, затем `Set-MacSchedule.ps1 -Env test -AllDay`.
+
+**Запасной вариант — Mac:** `pwsh -NoLogo -File scripts/Set-MacSchedule.ps1 -Env test` ставит задания launchd по тому же графику — пн–пт 8:00–20:00 каждые 15 минут, ежедневно 6:00 и 22:00, воскресенье 3:00 полный пересчёт прав. Работает, пока Mac включён и пользователь вошёл в систему; после сна пропущенный запуск выполняется сразу. Журнал — `~/Library/Logs/pmo-sync-test.log`. Снять — тот же скрипт с `-Remove`.
 
 Задания запускают `scripts/` **последнего коммита** (копия `git archive HEAD` в `~/Library/Application Support/PMO-sync/<env>`; `config/` и сертификат — из репозитория через `Invoke-Env.ps1 -RepoRoot`): незаконченные правки рабочей копии в синхронизацию по расписанию не попадают. После выкладки и коммита перезапустите `Set-MacSchedule.ps1` — копия обновится.
 

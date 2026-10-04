@@ -73,7 +73,7 @@ flowchart LR
 | Додаток SPFx `pmo-portal` | `spfx/`, пакет `pmo-portal.sppkg` 1.7.0.3 | інтерфейс за прототипом; читання й запис списків від імені користувача |
 | Списки порталу | сайт `/sites/pmo-test` (прод — `/sites/ppm`) | усі дані, права на рівні проєктів і папок |
 | Синхронізація | `scripts/Invoke-PMOSync.ps1` + `scripts/PMO.Common.ps1`; для Azure зібрано в `runbooks/Invoke-PMOSync.ps1` | погодження → звіт → картка, журнал, архів, еталон, права, учасники сайту, відгуки, нагадування |
-| Розклад | `scripts/Set-MacSchedule.ps1` (launchd, робочі запуски); `scripts/Set-AzureSchedule.ps1` (Azure Automation, поки `-DryRun`) | запуск синхронізації кожні 15 хвилин і щотижневий перерахунок прав |
+| Розклад | `scripts/Set-AzureSchedule.ps1` (Azure Automation, робочі запуски з 04.10.2026); `scripts/Set-MacSchedule.ps1` (launchd, запасний варіант) | запуск синхронізації кожні 15 хвилин і щотижневий перерахунок прав |
 | Розгортання | `scripts/Deploy-PMO.ps1`, `scripts/Deploy-App.ps1`, `scripts/Invoke-Env.ps1` | сайт, списки, поля, ролі, представлення, міграції, встановлення додатку, оглядовий документ у «Ресурси сайту» |
 | Microsoft Graph | `Invoke-PnPGraphMethod` | ланцюжок керівників (`users/{id}/manager`), ім'я та посада; `sendMail` для нагадувань |
 | Застосунки Entra ID | `scripts/Register-PMOApps.ps1` | PMO Deploy (вхід адміністратора), PMO Automation (розгортання без браузера), PMO Sync (синхронізація) |
@@ -460,7 +460,7 @@ flowchart LR
 | Публікація | `scripts/Publish-Runbook.ps1` | звіряє зібраний файл з вихідниками, створює чи оновлює runbook у runtime, вмикає докладний журнал, публікує і звіряє опублікований текст |
 | Розклад | `scripts/Set-AzureSchedule.ps1` | Azure запускає розклад не частіше разу на годину, тож «кожні 15 хвилин» — 4 щогодинні розклади зі зсувом :00 / :15 / :30 / :45; неділя 3:00 — `-RebuildPermissions`; без `-Live` — `-DryRun`; `-Disable` — вимкнути (відкат на Mac); `-AlertEmail` — група дій і правило за метрикою `TotalJob` зі `Status = Failed` |
 
-Поточний стан (01.10.2026): усі розклади Azure — у пробному режимі `-DryRun`; робочі запуски робить Mac. Перемикання — після доби паралельної роботи без помилок: `Set-MacSchedule.ps1 -Remove`, `Set-AzureSchedule.ps1 -Live` (план — `docs/superpowers/plans/2026-10-01-azure-automation.md`). Спільне блокування в SharePoint не дає Mac і Azure писати одночасно.
+Поточний стан (04.10.2026): робочі запуски тестового сайту — в Azure Automation (`Set-AzureSchedule.ps1 -Live`); розклад на Mac знято, лишається запасним варіантом (відкат: `-Disable` в Azure, `Set-MacSchedule.ps1 -AllDay`). Пробний паралельний період 01–04.10: 299 успішних запусків, медіана 29 с. Перемикання — після доби паралельної роботи без помилок: `Set-MacSchedule.ps1 -Remove`, `Set-AzureSchedule.ps1 -Live` (план — `docs/superpowers/plans/2026-10-01-azure-automation.md`). Спільне блокування в SharePoint не дає Mac і Azure писати одночасно.
 
 ### 7.2. Mac (launchd)
 
@@ -471,8 +471,9 @@ flowchart LR
 | Перевірка | Що перевіряє |
 |---|---|
 | `tests/Test-Scripts.ps1` (без доступу до SharePoint) | синтаксис PowerShell; імена змінних, що різняться лише регістром; «висячі» `else`; валідність JSON; відсутність колишнього оформлення SharePoint; права й «Доступ до картки» (`acl.json`); ролі папок, заморожування архіву, перенесення записів (`folders.json`); CSOM лише з `-RetryCount`; блокування й час за Києвом (`lock.json`); runbook: синтаксис, без `$PSScriptRoot`, збігається зі збіркою з поточних вихідників; еталон (`state.json`); авто-повернення й застосування звітів (`reports.json`); журнал правок (`editlog.json`, `card-edit.json`); ролі фокус-групи; формула стану (`rag.json`); погодження (`approval.json`); дати (`dates.json`); синтаксис JS прототипу (`node --check`) |
-| Jest (`scripts/spfx.sh npm run test:unit`) | 29 тестових файлів у `spfx/test/`: правила `logic/`, мапінг даних, тіла записів, значення форм, guard, накладання, папки, i18n і CSS, розділи «Довідки» й огляду; спільні вектори `approval`, `card-edit`, `dates`, `rag`, `reports`, `state`, `report-form` |
-| Прототип у jsdom (`spfx/test/prototypeForm.test.ts`) | ті самі вектори форми статус-звіту (`tests/cases/report-form.json`) проганяються на справжньому `prototype/pmo-prototype.html` через кнопки інтерфейсу (кожен тест — на свіжому прототипі): розбіжність прототипу й додатку валить тест |
+| Jest (`scripts/spfx.sh npm run test:unit`) | 43 тестові файли у `spfx/test/`: правила `logic/`, мапінг даних, тіла записів, значення форм, guard, накладання, папки, i18n і CSS, розділи «Довідки» й огляду; спільні вектори `approval`, `card-edit`, `dates`, `rag`, `reports`, `state`, `report-form` |
+| Компоненти додатку в jsdom (`spfx/test/components.test.tsx`) | справжні компоненти React рендеряться в jsdom: поле суми, перетягування ширини колонок (зокрема скасування жесту й права кнопка), картки статус-звіту й ризику — перевіряється поведінка, а не лише те, що функцію викликано |
+| Прототип у jsdom (`spfx/test/prototypeForm.test.ts`, `prototypeNav.test.ts`, `prototypeForms2.test.ts`) | ті самі вектори форми статус-звіту (`tests/cases/report-form.json`) проганяються на справжньому `prototype/pmo-prototype.html` через кнопки інтерфейсу (кожен тест — на свіжому прототипі): розбіжність прототипу й додатку валить тест |
 | Збірка | `scripts/spfx.sh npm run build` (`heft test --clean --production` і `heft package-solution`) |
 | CI | `.github/workflows/validate.yml`: `Test-Scripts.ps1`, `npm ci`, `npm run test:unit`, `npm run build` на кожен push і pull request |
 | Діагностика на сайті (лише читання) | `-Action whois`, `acl-export`, `perm-check`, `aa-whoami` |

@@ -59,3 +59,60 @@ test('список «Проєкти» — новые сверху (как в п�
   expect(uniq.length).toBeGreaterThan(2);
   expect(uniq).toEqual(uniq.slice().sort((a, b) => b - a));
 });
+
+test('#36 прототип: виды «Мої проєкти (усі)» и «Я PM» есть; «Я PM» — подмножество «Мої проєкти (усі)»', () => {
+  q('[data-act="nav"][data-page="projects"]').click();
+  const sel = q('select[data-act="view"]');
+  const opts = Array.from(sel.options).map((o: W) => o.value);
+  expect(opts).toEqual(expect.arrayContaining(['mine', 'pm']));
+  const ids = (v: string): number[] => { const s = q('select[data-act="view"]'); s.value = v; s.dispatchEvent(new w.Event('change', { bubbles: true }));
+    return Array.from(new Set(Array.from(w.document.querySelectorAll('[data-act="openp"]')).map((x: W) => Number(x.dataset.id)))); };
+  const mine = ids('mine'), pm = ids('pm');
+  expect(pm.length).toBeGreaterThan(0);
+  expect(pm.length).toBeLessThan(mine.length);                 // в демо-данных я и PM, и участник других проектов
+  pm.forEach(id => expect(mine).toContain(id));
+});
+
+test('#58 прототип: карточки отчётов и рисков — те же строки, что в таблице', () => {
+  for (const page of ['reports', 'risks']) {
+    q(`[data-act="nav"][data-page="${page}"]`).click();
+    const rows = w.document.querySelectorAll('.tablewrap.dt.has-cards tbody tr').length;
+    expect(rows).toBeGreaterThan(0);
+    expect(w.document.querySelectorAll('.mcards .mcard').length).toBe(rows);
+  }
+  // карточка открывает отчёт
+  q('[data-act="nav"][data-page="reports"]').click();
+  q('.mcards .mcard').click();
+  expect(w.document.querySelector('.pmo-panel.open, .pmo-panel[aria-hidden="false"], .panel.open') || w.document.querySelector('[data-act="decide"], .rv-meta')).not.toBeNull();
+});
+
+test('#35, #49 прототип: ширина колонки перетаскиванием запоминается, сброс — из меню колонок', () => {
+  q('[data-act="nav"][data-page="risks"]').click();
+  // перерисовка без перехода (смена вида) — ширины уже закреплены по первой раскладке, у заголовков появляется ручка
+  const vs = q('select[data-act="view"]'); vs.value = 'all'; vs.dispatchEvent(new w.Event('change', { bubbles: true }));
+  const h = q('.dt .col-rs');
+  expect(h).not.toBeNull();
+  const key = h.dataset.rs, id = h.dataset.col;
+  const pe = (t: string, x: number): W => { const e = new w.MouseEvent(t, { bubbles: true, cancelable: true, clientX: x }); return e; };
+  h.dispatchEvent(pe('pointerdown', 100)); w.dispatchEvent(pe('pointermove', 160)); w.dispatchEvent(pe('pointerup', 160));
+  const saved = JSON.parse(w.localStorage.getItem('pmo-table5-' + key));
+  expect(saved.w[id]).toBeGreaterThanOrEqual(56);
+  // после отрисовки ширина колонки — заданная
+  const idx = Array.from(q('.dt thead tr').children).findIndex((th: W) => th.querySelector(`.col-rs[data-col="${id}"]`));
+  expect(parseFloat(q('.dt table').querySelectorAll('col')[idx].style.width)).toBe(saved.w[id]);
+  // сброс
+  const b = w.document.createElement('button'); b.dataset.act = 'wreset'; b.dataset.key = key; w.document.body.appendChild(b); b.click();
+  expect(JSON.parse(w.localStorage.getItem('pmo-table5-' + key)).w).toBeUndefined();
+});
+test('кросс-ревью, прототип: отмена жеста — ширина не сохраняется; правая кнопка — не тянет', () => {
+  q('[data-act="nav"][data-page="risks"]').click();
+  const vs = q('select[data-act="view"]'); vs.value = 'all'; vs.dispatchEvent(new w.Event('change', { bubbles: true }));
+  const h = q('.dt .col-rs'); const key = h.dataset.rs;
+  const pe = (t: string, x: number, button = 0): W => new w.MouseEvent(t, { bubbles: true, cancelable: true, clientX: x, button });
+  h.dispatchEvent(pe('pointerdown', 100)); w.dispatchEvent(pe('pointermove', 180)); w.dispatchEvent(pe('pointercancel', 180));
+  w.dispatchEvent(pe('pointerup', 300));
+  expect(((JSON.parse(w.localStorage.getItem('pmo-table5-' + key) || '{}')).w || {})).toEqual({});
+  const h2 = q('.dt .col-rs');
+  h2.dispatchEvent(pe('pointerdown', 100, 2)); w.dispatchEvent(pe('pointerup', 200));
+  expect(((JSON.parse(w.localStorage.getItem('pmo-table5-' + key) || '{}')).w || {})).toEqual({});
+});

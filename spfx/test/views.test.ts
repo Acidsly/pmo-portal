@@ -36,3 +36,13 @@ test('#32: риски архивных проектов — только в св
   expect(riskInView('archived', k, true)).toBe(true); expect(riskInView('archived', k, false)).toBe(false);
   expect(riskInView('open', k, true)).toBe(false); expect(riskInView('high', k, false)).toBe(true);
 });
+
+// #36: «Мої проєкти (усі)» — любая роль; «Я PM» — только PM
+test('#36: «Я PM» — только проекты, где я PM; «Мої проєкти (усі)» — и владелец, и команда', () => {
+  const pm = { id: 1, name: 'A', email: 'A@x.ua' }, other = { id: 2, name: 'B', email: 'b@x.ua' };
+  expect(projectView('pm', P({ manager: pm }), today, me)).toBe(true);
+  expect(projectView('pm', P({ manager: other, owner: pm }), today, me)).toBe(false);
+  expect(projectView('mine', P({ manager: other, owner: pm }), today, me)).toBe(true);
+  expect(projectView('pm', P({ manager: other, stakeholders: [pm] }), today, me)).toBe(false);
+  expect(projectView('pm', P({ manager: null }), today, me)).toBe(false);
+});

@@ -118,3 +118,32 @@ describe('прототип: смена проекта', () => {
     expect(g('f-pr-done').hidden).toBe(true);
   });
 });
+
+describe('прототип: #41 затраты с разрядами, #38 / #39 компоновка', () => {
+  test('затраты показываются с пробелами, в фокусе — без, сохраняется число', () => {
+    const { g } = openForm();
+    const c = g('f-c');
+    expect(c.value).toMatch(/^\d{1,3}( \d{3})*$/);
+    c.focus(); expect(c.value).toMatch(/^\d+$/);
+    c.value = '1450000'; c.dispatchEvent(new w.Event('input', { bubbles: true })); c.blur();
+    expect(c.value).toBe('1 450 000');
+  });
+  test('статус, % и затраты — в одном ряду; три оценки — в блоке .dims', () => {
+    const { form } = openForm();
+    const row = form.querySelector('.fgrid-k');
+    expect(row).not.toBeNull();
+    expect(['f-st', 'f-pr', 'f-c'].every(id => !!row.querySelector('#' + id))).toBe(true);
+    expect(form.querySelectorAll('.dims .ragpick').length).toBe(3);
+  });
+});
+test('прототип #53: при уходе с поля % ведущие нули убираются («00098» → «98»)', () => {
+  const { g } = openForm();
+  const pr = g('f-pr'); pr.focus(); pr.value = '00098'; pr.dispatchEvent(new w.Event('input', { bubbles: true })); pr.blur();
+  expect(pr.value).toBe('98');
+});
+test('прототип: вставка «1450.50» в затраты — 1451; ноль в фокусе — пустое поле', () => {
+  const { g } = openForm();
+  const c = g('f-c'); c.focus(); c.value = '1450.50'; c.dispatchEvent(new w.Event('input', { bubbles: true })); c.blur();
+  expect(c.value).toBe('1 451');
+  c.focus(); c.value = '0'; c.blur(); c.focus(); expect(c.value).toBe('');
+});

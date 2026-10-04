@@ -1,16 +1,18 @@
 import { Project, StatusReport, Risk } from '../data/types';
 import { isActive, freshness, isPlanLate, riskScore } from './status';
 
-export type ProjectView = 'all' | 'strat' | 'problem' | 'mine' | 'stale' | 'late';
+export type ProjectView = 'all' | 'strat' | 'problem' | 'mine' | 'pm' | 'stale' | 'late';
 export type ReportView = 'all' | 'decision' | 'awaiting';
 export type RiskView = 'open' | 'high' | 'all' | 'archived';
-export type ArchiveView = 'all' | 'strat' | 'mine';
+export type ArchiveView = 'all' | 'strat' | 'mine' | 'pm';
 // названия представлений — украинские во всех языках, как в прототипе (подсказка viewsNote)
-export const PV: Record<ProjectView, string> = { all: 'Усі проєкти', strat: 'Стратегічні', problem: 'Проблемні', mine: 'Мої проєкти', stale: 'Немає свіжого звіту', late: 'Прострочені' };
+export const PV: Record<ProjectView, string> = { all: 'Усі проєкти', strat: 'Стратегічні', problem: 'Проблемні', mine: 'Мої проєкти (усі)', pm: 'Я PM', stale: 'Немає свіжого звіту', late: 'Прострочені' };
 export const RV: Record<ReportView, string> = { all: 'Усі звіти', decision: 'Потребують рішення', awaiting: 'Очікують погодження' };
-export const AV: Record<ArchiveView, string> = { all: 'Усі проєкти', strat: 'Стратегічні', mine: 'Мої проєкти' };
+export const AV: Record<ArchiveView, string> = { all: 'Усі проєкти', strat: 'Стратегічні', mine: 'Мої проєкти (усі)', pm: 'Я PM' };
 export const KV: Record<RiskView, string> = { open: 'Відкриті', high: 'Високі ризики', all: 'Усі елементи', archived: 'Ризики архівних проєктів' };
 
+/** #36 «Я PM»: поточний користувач — PM проєкту. */
+export const isPm = (p: Project, me: string): boolean => !!p.manager && !!me && p.manager.email.toLowerCase() === me.toLowerCase();
 export const participants = (p: Project): string[] =>
   [p.manager, p.owner, ...p.stakeholders].filter(x => !!x && !!x.email).map(x => x!.email.toLowerCase());
 
@@ -18,7 +20,8 @@ export function projectView(v: ProjectView, p: Project, today: string, me: strin
   switch (v) {
     case 'strat': return isActive(p.status) && p.type === 'Стратегічний';
     case 'problem': return isActive(p.status) && (p.rag === 'Червоний' || p.rag === 'Жовтий');
-    case 'mine': return participants(p).indexOf(me.toLowerCase()) >= 0;
+    case 'mine': return participants(p).indexOf(me.toLowerCase()) >= 0;   // #36: усі ролі — PM, власник, команда
+    case 'pm': return isPm(p, me);
     case 'stale': { const f = freshness(p.lastUpdate, today); return isActive(p.status) && (f === 'r' || f === 'na'); }
     case 'late': return isPlanLate(p.planEnd, p.status, today);
     default: return true;
@@ -26,7 +29,7 @@ export function projectView(v: ProjectView, p: Project, today: string, me: strin
 }
 /** Представления «Архів»: без условия «активный» (все проекты там завершены). */
 export const archiveView = (v: ArchiveView, p: Project, me: string): boolean =>
-  (v === 'strat' ? p.type === 'Стратегічний' : v === 'mine' ? participants(p).indexOf(me.toLowerCase()) >= 0 : true);
+  (v === 'strat' ? p.type === 'Стратегічний' : v === 'mine' ? participants(p).indexOf(me.toLowerCase()) >= 0 : v === 'pm' ? isPm(p, me) : true);
 export const reportView = (v: ReportView, r: StatusReport): boolean =>
   (v === 'decision' ? r.decision : v === 'awaiting' ? (r.approval || 'На погодженні') === 'На погодженні' : true);
 export const riskView = (v: RiskView, k: Risk): boolean =>

@@ -50,3 +50,33 @@ describe('фильтры колонок не запоминаются (#23, #24)
     expect(st.filters).toEqual({}); expect(st.sort).toEqual({ id: 'a', dir: 'desc' }); expect(st.cols).toEqual(['a', 'b']);
   });
 });
+
+// #35, #49: ширина колонок перетаскиванием, запоминается для каждого списка
+import { resizeCol, resetWidths, colWidths, cleanWidths, COL_MIN, COL_MAX } from '../src/webparts/pmoPortal/logic/table';
+describe('ширина колонок пользователя', () => {
+  const st = { cols: ['a', 'b', 'c'], sort: null, filters: {} };
+  test('перетаскивание: начальная + сдвиг, в пределах', () => {
+    expect(resizeCol(st, 'b', 120, 35).widths).toEqual({ b: 155 });
+    expect(resizeCol(st, 'b', 120, -500).widths).toEqual({ b: COL_MIN });
+    expect(resizeCol(st, 'b', 120, 5000).widths).toEqual({ b: COL_MAX });
+    expect(resizeCol(resizeCol(st, 'a', 100, 10), 'c', 90, 0).widths).toEqual({ a: 110, c: 90 });
+  });
+  test('показ: заданные пользователем, остальные — по раскладке; без раскладки — нет', () => {
+    expect(colWidths(['a', 'b', 'c'], { b: 155 }, [100, 120, 90])).toEqual([100, 155, 90]);
+    expect(colWidths(['a', 'b'], { b: 155 }, null)).toBeNull();
+    expect(colWidths(['a', 'b'], undefined, [100, 120])).toEqual([100, 120]);
+  });
+  test('сброс и чтение из хранилища', () => {
+    expect(resetWidths(resizeCol(st, 'b', 120, 35)).widths).toBeUndefined();
+    expect(cleanWidths({ a: 100.4, b: 'x', c: -5, d: 9999 })).toEqual({ a: 100, d: COL_MAX });
+    expect(cleanWidths([1, 2])).toBeUndefined(); expect(cleanWidths(null)).toBeUndefined(); expect(cleanWidths({})).toBeUndefined();
+  });
+  test('сохраняются и читаются вместе с колонками (отдельно для каждого списка)', () => {
+    const store: Record<string, string> = {};
+    (global as any).localStorage = { getItem: (k: string) => store[k] ?? null, setItem: (k: string, v: string) => { store[k] = v; } };
+    const { saveState, loadState } = require('../src/webparts/pmoPortal/logic/table');
+    saveState('risks', resizeCol(st, 'b', 120, 35));
+    expect(loadState('risks', ['a', 'b', 'c'], ['a', 'b', 'c'], 'a').widths).toEqual({ b: 155 });
+    expect(loadState('reports', ['a', 'b', 'c'], ['a', 'b', 'c'], 'a').widths).toBeUndefined();
+  });
+});

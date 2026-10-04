@@ -1,5 +1,7 @@
 export interface ColDef<R> { label: string; sort?: (r: R) => string | number | null; filter?: (r: R) => string | string[]; }
-export interface TableState { cols: string[]; sort: { id: string; dir: 'asc' | 'desc' } | null; filters: Record<string, string[]>; }
+export interface TableState { cols: string[]; sort: { id: string; dir: 'asc' | 'desc' } | null; filters: Record<string, string[]>;
+  /** #35, #49: ширины колонок, заданные пользователем (перетаскиванием), — по id колонки; запоминаются для каждого списка */
+  widths?: Record<string, number>; }
 
 const empty = (v: unknown): boolean => v === '' || v === null || v === undefined || v === -1;
 const vals = (v: string | string[]): string[] => (Array.isArray(v) ? v.map(String) : [String(v)]);
@@ -45,9 +47,29 @@ export function moveCol(st: TableState, id: string, dir: -1 | 1, lock: string): 
 export function loadState(key: string, defaults: string[], known: string[], lock: string): TableState {
   let st: TableState = { cols: defaults.slice(), sort: null, filters: {} };
   // фильтры колонок не запоминаются: при уходе со страницы сбрасываются (#23, #24); колонки и сортировка — запоминаются
-  try { const raw = localStorage.getItem('pmo-table6-' + key); if (raw) { const j = JSON.parse(raw); st = { ...st, cols: Array.isArray(j.cols) ? j.cols : st.cols, sort: j.sort || null }; } } catch { /* нет хранилища */ }
+  try { const raw = localStorage.getItem('pmo-table6-' + key); if (raw) { const j = JSON.parse(raw); st = { ...st, cols: Array.isArray(j.cols) ? j.cols : st.cols, sort: j.sort || null, widths: cleanWidths(j.w) }; } } catch { /* нет хранилища */ }
   st.cols = st.cols.filter(c => known.indexOf(c) >= 0);
   if (st.cols.indexOf(lock) < 0) st.cols.splice(Math.min(2, st.cols.length), 0, lock);
   return st;
 }
-export function saveState(key: string, st: TableState): void { try { localStorage.setItem('pmo-table6-' + key, JSON.stringify({ cols: st.cols, sort: st.sort })); } catch { /* нет хранилища */ } }
+export function saveState(key: string, st: TableState): void { try { localStorage.setItem('pmo-table6-' + key, JSON.stringify({ cols: st.cols, sort: st.sort, w: st.widths && Object.keys(st.widths).length ? st.widths : undefined })); } catch { /* нет хранилища */ } }
+
+// #35, #49: ширина колонки перетаскиванием границы заголовка (на широком экране); как TS[key].w прототипа
+export const COL_MIN = 56, COL_MAX = 800;
+const clampW = (w: number): number => Math.max(COL_MIN, Math.min(COL_MAX, Math.round(w)));
+/** Ширины из хранилища: только числа, в допустимых пределах; пусто — undefined. */
+export function cleanWidths(j: unknown): Record<string, number> | undefined {
+  if (!j || typeof j !== 'object' || Array.isArray(j)) return undefined;
+  const out: Record<string, number> = {};
+  Object.keys(j as object).forEach(k => { const v = Number((j as Record<string, unknown>)[k]); if (isFinite(v) && v > 0) out[k] = clampW(v); });
+  return Object.keys(out).length ? out : undefined;
+}
+/** Новая ширина колонки после перетаскивания: начальная + сдвиг, в пределах COL_MIN…COL_MAX. */
+export const resizeCol = (st: TableState, id: string, startW: number, dx: number): TableState => ({ ...st, widths: { ...(st.widths || {}), [id]: clampW(startW + dx) } });
+/** «Скинути ширини колонок»: снова по содержимому. */
+export const resetWidths = (st: TableState): TableState => { const r = { ...st }; delete r.widths; return r; };
+/** Ширины для показа: заданные пользователем, остальные — по первой раскладке (measured); без раскладки — нет (таблица как раньше). */
+export function colWidths(cols: string[], user: Record<string, number> | undefined, measured: number[] | null): number[] | null {
+  if (!measured || measured.length !== cols.length) return null;
+  return cols.map((c, i) => (user && user[c]) || measured[i]);
+}

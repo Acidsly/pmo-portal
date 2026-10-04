@@ -4,7 +4,7 @@ import { PortalData } from '../data/SpRepo';
 import { isArch, isActive, newestFirst } from '../logic/status';
 import { RV, reportView } from '../logic/views';
 import { DataTable } from '../components/DataTable';
-import { reportDefs } from '../components/defs';
+import { reportDefs, reportCard } from '../components/defs';
 import { Plus } from '../components/Icons';
 import { Hero, ViewSel, useDefsCtx } from './common';
 
@@ -18,7 +18,7 @@ export const Reports: React.FC<{ data: PortalData }> = ({ data }) => {
   const add = canAdd ? <button className="cmd primary" onClick={() => c.openForm('report')}><Plus />{t('newReport')}</button> : null;
   return <>
     <Hero title={t('navReports')} />
-    <div className="listcard"><DataTable tkey="reports" defs={reportDefs(x)} rows={rows} left={add}
+    <div className="listcard"><DataTable tkey="reports" defs={reportDefs(x)} rows={rows} left={add} card={reportCard(x)}
       right={<ViewSel views={RV} value={c.views.reports} onChange={v => c.setView('reports', v)} />} /></div>
   </>;
 };

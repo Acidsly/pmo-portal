@@ -143,3 +143,17 @@ export function riskDefs(x: DefsCtx): TableDefs<Risk> {
   return { lock: 'proj', cols, defaults: ['strat', 'prio', 'proj', 'title', 'type', 'score', 'strategy', 'owner', 'status', 'due'] };
 }
 
+/** #58: карточки строк на телефоне (DataTable показывает их вместо таблицы на узком экране) — как CARDS прототипа. */
+export const reportCard = (x: DefsCtx) => (r: StatusReport): React.ReactNode => {
+  const pj = x.byId[r.projectId];
+  return <button className="mcard" onClick={() => x.openReport(r.id, r.projectId)}>
+    <span className="mc-h"><b>{pj ? pj.title : ''}</b><ApBadge v={r.approval} /></span>
+    <span className="mc-m">{fmtDate(r.date)} · <span className="ilabel"><RagDot v={calc(r)} notRated={x.t('notRated')} />{calc(r) ? tv(calc(r)) : x.t('notRated')}</span></span>
+    <span className="mc-t">{r.title}</span></button>;
+};
+export const riskCard = (x: DefsCtx) => (k: Risk): React.ReactNode => {
+  const pj = x.byId[k.projectId];
+  return <button className="mcard" onClick={() => x.openRisk(k.id, k.projectId)}>
+    <span className="mc-h"><b>{k.title}</b><Score s={riskScore(k.probability, k.impact)} /></span>
+    <span className="mc-m">{pj ? pj.title : ''} · <StatusPill v={k.status} />{k.due ? <> · {fmtDate(k.due)}</> : null}</span></button>;
+};

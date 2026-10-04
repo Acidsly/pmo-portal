@@ -45,8 +45,8 @@ Everything is counted only over the projects you can see (excluding the archive)
 ## Projects
 
 - **Tiles** or **List** — the switch at the top. Tiles are handier on a phone.
-- **Show:** All projects, Strategic, At risk, My projects (where I am PM, owner or on the team), No recent report, Overdue.
-- **In the list:** click a column header to sort; the funnel ▽ filters by value; the gear ⚙ chooses columns; **CSV** exports the table as shown (the file opens in Excel). New records are on top.
+- **Show:** All projects, Strategic, At risk, My projects (all) — where I am PM, owner or on the team, **I am PM** — only projects where I am the PM, No recent report, Overdue.
+- **In the list:** click a column header to sort; the funnel ▽ filters by value; the gear ⚙ chooses and orders columns (↑ / ↓); on a computer, drag a column header's edge to change its width — it is remembered for each list, "Reset column widths" is in the gear menu; **CSV** exports the table as shown (the file opens in Excel). New records are on top. On a phone, status reports and risks are shown as cards (sorting and filters set on a computer apply there too).
 - **Filters** (funnel and "Show") apply while you stay on the page: switching to another tab resets them to the defaults (column choice and sorting are remembered). Column widths do not change with filters.
 - **"Report" column** — the date of the last approved report; if a report is waiting for the PMO — "awaiting approval · date" or "new report awaiting approval".
 - **Status** is a coloured label: Initiation — purple, Planning — blue, Execution — green, On hold — orange, Archived — grey. The dot next to it is the project health (green, yellow, red, grey — not rated).
@@ -55,7 +55,7 @@ Everything is counted only over the projects you can see (excluding the archive)
 ## Project card
 
 Click a project and its card opens on the right (full screen on a phone):
-- at the top — type, health, status, priority and **Links** (Loop, documents, etc.); **Add status report** and **Edit** buttons (PM only);
+- at the top — type, health, status, priority and **Links** (Loop, documents, etc.); **Add status report** and **Edit project** buttons (PM only);
 - approval notes: "Status report of … is awaiting PMO approval" or "Report of … returned for rework" with the PMO's comment;
 - **Stakeholders**: PM, owner and **Project team** — a table: member, role, what to contact them about;
 - **Timeline** (with the forecast deviation), **Budget and progress** (amounts in US dollars);
@@ -71,7 +71,7 @@ You can share a link to the card: the browser address points exactly to it.
 
 1. In the card — **Add status report** (or the "Status reports" tab → "New status report"). A project can have **only one report awaiting approval**: until the PMO decides, the button is hidden and the card says "The report from … is awaiting PMO approval". Opened from the card, the form is for that project — you cannot switch the project there. In the general form, projects with a report awaiting approval cannot be selected (marked "report of … awaiting approval").
 2. Rate **schedule, budget and resources**: green, yellow, red. **Overall health** is calculated automatically — the worst of the three.
-3. **Key indicators** are prefilled with the current values. Change only what has changed: status, % complete (a whole number from 0 to 100), type, dates, actual costs. Launch, planned end and forecast dates cannot be earlier than the start date. For "Completed — move to archive", % complete becomes 100 and cannot be changed. Enter dates as dd.mm.yyyy (dots are added automatically) or pick them in the calendar — the button on the right of the field. The report date cannot be earlier than the last approved report.
+3. **Key indicators** are prefilled with the current values. Change only what has changed: status, % complete (a whole number from 0 to 100), type, dates, actual costs (amounts are shown with spaces between thousands: 1 450 000). Launch, planned end and forecast dates cannot be earlier than the start date. For "Completed — move to archive", % complete becomes 100 and cannot be changed. Enter dates as dd.mm.yyyy (dots are added automatically) or pick them in the calendar — the button on the right of the field. The report date cannot be earlier than the last approved report.
 4. If you changed the status, type or a date, fill in **Reason for changing indicators** (required, goes to the history).
 5. A **One-line summary** (required), what was done, the plan, issues; tick **Management decision needed** if one is needed and describe it.
 6. **Save.** If something is missing or entered incorrectly, the portal highlights all such fields at once and explains next to the field what is wrong. The report goes **to the PMO for approval**; the card updates after approval. A submitted report cannot be changed.
@@ -122,7 +122,7 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
 
 - A **New project** is created by the PMO: the name (unique — no two projects share a name) and the PM are required (the PM is not prefilled — choose one); the project number is assigned by the system in order (PRJ-001, PRJ-002…) — it is unique and cannot be changed by hand.
 - For ~15 minutes after creation the project is **being prepared** (the card says "The project is being prepared"): after that the PM can add reports, risks and team members.
-- Only the PM can **Edit** the card: name, department, priority, owner, budget, description, and also:
+- Only the PM can **Edit project**: name, department, priority, owner, budget, description, and also:
   - **Project team** — "+ Add member": a person, their **role** (required) and what to contact them about; × removes the member;
   - **Links** — "+ Add link": a name and an address (starting with `https://`); × removes it.
 - Status, health, dates and costs change only through a status report (see "How to change the project status").
@@ -158,7 +158,7 @@ The **Feedback** tab lists all participants' feedback: the text, the author, the
 Do what applies to your role and after each task leave **feedback**: what was unclear, inconvenient or did not work.
 
 1. Open the portal on a computer and on a phone. Is it clear from the home page what is happening with the portfolio? Click the key figures and a risk map cell.
-2. Find your projects ("Show: My projects"). Are all your projects there, and nothing extra?
+2. Find your projects ("Show: My projects (all)" or "I am PM"). Are all your projects there, and nothing extra?
 3. Open a project card: team, links, timeline, change history, access. What is missing?
 4. **PM:** add a team member with a role and a link to a document.
 5. **PM:** submit a status report that changes the completion date (with a reason) and check that the card is waiting for approval.
