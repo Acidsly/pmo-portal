@@ -4,7 +4,7 @@ import { Project, StatusReport, Risk, Comment, ChangeEntry, Person, FeedbackRow,
 import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, REPORT_SELECT, REPORT_EXPAND, RISK_SELECT, RISK_EXPAND,
   COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, TEAM_SELECT, TEAM_EXPAND, mapTeam, APPROVAL_SELECT, APPROVAL_EXPAND, mapApproval, canAdd, canManage,
   withoutFolders, CHANGES_ON_LOAD, changesOf } from './map';
-import { withApproval } from '../logic/approval';
+import { withApproval, approvedIds as approvedOf, pendingReports } from '../logic/approval';
 import { teamPeople } from '../logic/team';
 import { applyPending } from '../logic/overlay';
 import { Regional, regionalFrom, toFormValues } from './formValues';
@@ -76,10 +76,8 @@ export class SpRepo {
     const team = tm.map(mapTeam);
     const states: Record<number, StateJson | undefined> = {}; const lastApplied: Record<number, string> = {};
     for (const x of ps) { states[Number(x.psProject)] = parseState(x.psState); lastApplied[Number(x.psProject)] = String(x.psLastApplied || ''); }
-    // «Погоджено» действует только по решению PMO (как синхронизация): отчёты с решением «Погоджено» в «Погодження звітів»
-    const repProj: Record<number, number> = {}; for (const x of r) repProj[x.Id] = x.srProjectId;
-    const approvedIds: Record<number, boolean> = {};
-    for (const a of approvals) if (a.decision === 'Погоджено' && repProj[a.reportId] === a.projectId) approvedIds[a.reportId] = true;
+    // «Погоджено» действует только по действующему решению PMO — общим правилом с синхронизацией (logic/approval.ts)
+    const approvedIds = approvedOf(reports, approvals);
     // отчёты по проектам один раз (без перебора всех отчётов для каждого проекта)
     const byProj: Record<number, StatusReport[]> = {};
     for (const x of reports) (byProj[x.projectId] = byProj[x.projectId] || []).push(x);
@@ -87,7 +85,7 @@ export class SpRepo {
     const withTeam = (x: Project): Project => { const own = team.filter(m => m.projectId === x.id); return { ...x, team: own, stakeholders: teamPeople(own) }; };
     return { projects: p.map(mapProject).map(x => ({ ...applyState(x, states[x.id]), lastApplied: lastApplied[x.id] || '' })).map(withTeam)
       .map(x => applyPending(x, byProj[x.id] || [], ap ? approvedIds : undefined))
-      .map(x => { const pr = (byProj[x.id] || []).filter(rr => !rr.applied && (!rr.approval || rr.approval === 'На погодженні'))[0]; return pr ? { ...x, pendingDate: pr.date } : x; }), reports, risks: k.map(mapRisk),
+      .map(x => { const pr = pendingReports(byProj[x.id] || [])[0]; return pr ? { ...x, pendingDate: pr.date } : x; }), reports, risks: k.map(mapRisk),
       comments: c.map(mapComment), changes: h.map(mapChange), canCreate: canAdd(perm), canApprove: canAdd(perm), approvals, feedback: canAdd(fbPerm), feedbackAdmin: canManage(fbPerm), feedbackRows };
   }
 
@@ -209,13 +207,10 @@ export class SpRepo {
       this.items('ReportApprovals', APPROVAL_SELECT, APPROVAL_EXPAND, `apProjectId eq ${projectId}`).catch(() => null as any[] | null)]);
     const approvals = (aps || []).map(mapApproval);
     const reports = reps.map(mapReport).map(x => withApproval(x, approvals));
-    const approvedIds: Record<number, boolean> = {};
-    const ownReps: Record<number, boolean> = {}; for (const x of reps) ownReps[x.Id] = true;
-    for (const a of approvals) if (a.decision === 'Погоджено' && ownReps[a.reportId]) approvedIds[a.reportId] = true;
+    const approvedIds = approvedOf(reports, approvals);
     const base = { ...applyState(mapProject(pj), st[0] ? parseState(st[0].psState) : undefined), lastApplied: st[0] ? String(st[0].psLastApplied || '') : '' };
     const project = applyPending(base, reports, aps ? approvedIds : undefined);
-    const pending = reports.filter(r => !r.applied && (!r.approval || r.approval === 'На погодженні'))
-      .map(r => ({ id: r.id, date: r.date, author: r.author ? r.author.email.toLowerCase() : '' })).sort((a, b) => (a.date < b.date ? -1 : 1));
+    const pending = pendingReports(reports).map(r => ({ id: r.id, date: r.date, author: r.author ? r.author.email.toLowerCase() : '' }));
     const lastApprovedDate = reports.filter(r => r.approval === 'Погоджено').reduce((m, r) => (r.date > m ? r.date : m), '');
     const rep = reportId ? reports.filter(r => r.id === reportId)[0] : undefined;
     return { project, etag: String(pj['odata.etag'] || ''), owner: canManage(pj.EffectiveBasePermissions), pending, lastApprovedDate,

@@ -142,7 +142,7 @@ if (-not (Compare-State $rt (& $toHash $sc.compare[0].card)).Count) { Ok "эта
 foreach ($bad in @("", "{oops", "{}", "[1,2]", '{"pmCode":"PRJ-1"}')) { if ($null -eq (ConvertFrom-StateJson $bad)) { Ok "повреждённый эталон «$bad» — нет эталона" } else { Bad "повреждённый эталон «$bad» читается как значения" } }
 
 Write-Host "3e. Правила отчётов: авто-возврат и применение (tests/cases/reports.json)"
-foreach ($n in @("Test-Trusted", "Get-PendingReturns", "Get-ApplyAction")) {
+foreach ($n in @("Test-Trusted", "Get-PendingReturns", "Get-ApplyAction", "CalcRag", "Get-ApprovalResult", "Get-EffectiveApproval")) {
     $fn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $n }, $true) | Select-Object -First 1
     if ($fn) { Invoke-Expression $fn.Extent.Text } else { Bad "нет функции $n" }
 }
@@ -155,6 +155,15 @@ foreach ($c in $rc.apply) {
     $got = Get-ApplyAction $c.rep $c.pm @($c.owners) $c.archived $c.last $c.lastUpdate
     if ($got -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $got, ожидалось $($c.out)" }
 }
+foreach ($c in $rc.effective) {
+    $e = Get-EffectiveApproval $c.rep @($c.aps)
+    $got = if ($e) { "$($e.id):$($e.decision)" } else { "-" }; $exp = if ($c.out) { "$($c.out.id):$($c.out.decision)" } else { "-" }
+    if ($got -eq $exp) { Ok "действующее решение: $($c.name)" } else { Bad "действующее решение: $($c.name): $got, ожидалось $exp" }
+}
+# подтверждение «Погоджено» в синхронизации — именно этим правилом (а не «любое Погоджено от PMO»: ошибка сверки №1)
+$syncSrc = Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")
+if ($syncSrc -match '\$eff = Get-EffectiveApproval' -and $syncSrc -match 'if \(\$eff -and \$eff\.decision -eq "Погоджено"\) \{ \$APPROVED\[\$rid\] = \$true \}' -and ([regex]::Matches($syncSrc, '\$APPROVED\[[^\]]+\] = \$true')).Count -eq 1) {
+    Ok "«Погоджено» подтверждается только действующим решением (Get-EffectiveApproval)" } else { Bad 'Invoke-PMOSync.ps1: $APPROVED заполняется не через Get-EffectiveApproval' }
 
 Write-Host "3f. Журнал правок карточки без потерь и дублей (tests/cases/editlog.json)"
 foreach ($n in @("ConvertFrom-JsonElement", "ConvertFrom-JsonText", "EditLogRows", "Get-EditLogKey", "Get-EditLogPlan", "Remove-EditLogEntries")) {

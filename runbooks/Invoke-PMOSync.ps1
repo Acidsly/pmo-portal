@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:89bf3db54b83 — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:7898b0a63996 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -420,6 +420,20 @@ function Get-PendingReturns($pending, [string]$pm, [string[]]$ownerList, [bool]$
 # Что сделать с погодженим отчётом: apply — перенести показатели; journalOnly — только отметить (есть более новый применённый
 # отчёт: показатели не откатываются); notApplied:arch / notApplied:pm — не применять (проект в архиве / автор не PM).
 # $last — «yyyy-MM-dd#id» последнего применённого (эталон), $lastUpdate — «Останній апдейт» карточки (для старых данных без $last).
+# Какое решение PMO действует для отчёта (векторы tests/cases/reports.json -> effective, те же — в приложении):
+# решения отчёта по порядку Id; учитываются только доверенные (PMO, владелец, приложение) и с проектом отчёта;
+# действует первое действительное от состояния «На погодженні» (Get-ApprovalResult), остальные — уже нет (R10).
+# $rep: s, b, r — оценки отчёта сейчас (после переноса решения PMO), project; $aps: id, decision, s, b, r, note, project, trusted.
+# Возвращает @{ id; decision } или $null.
+function Get-EffectiveApproval($rep, $aps) {
+    foreach ($a in @($aps | Where-Object { $_ } | Sort-Object { [int]$_.id })) {
+        if (-not $a.trusted -or [int]$a.project -ne [int]$rep.project) { continue }
+        $res = Get-ApprovalResult @{ s = [string]$rep.s; b = [string]$rep.b; r = [string]$rep.r; approval = "На погодженні" } `
+                                  @{ decision = [string]$a.decision; s = [string]$a.s; b = [string]$a.b; r = [string]$a.r; note = [string]$a.note }
+        if ($res.valid) { return @{ id = [int]$a.id; decision = $res.decision } }
+    }
+    return $null
+}
 function Get-ApplyAction($rep, [string]$pm, [string[]]$ownerList, [bool]$archived, [string]$last, [string]$lastUpdate) {
     if ($archived) { return "notApplied:arch" }
     if ($rep.author -ne $pm -and -not (Test-Trusted $rep.author $ownerList)) { return "notApplied:pm" }
@@ -779,13 +793,22 @@ foreach ($a in (@($approvals) | Where-Object { $_ } | Where-Object { $_["apAppli
 # ---------------------------------------------------------------------------
 # «Погоджено» в отчёте действует, только если есть решение PMO в «Погодження звітів» (автор — PMO, владелец или приложение,
 # проект совпадает). Иначе поле поставлено в обход портала: вернуть «На погодженні». Применённые раньше отчёты — как есть.
+# Действующее решение — общим правилом Get-EffectiveApproval: недействительное «Погоджено» (смена оценки без комментария,
+# после «Повернуто», не PMO, чужой проект) поддельный «Погоджено» в отчёте не подтверждает.
 $APPROVED = @{}
+$APBYREP = @{}
 foreach ($a in @($approvals) | Where-Object { $_ }) {
-    $whoT = Who $a["Author"]; $lk = $a["apReport"]
-    if (-not $lk -or (Norm $a["apDecision"]) -ne "Погоджено") { continue }
-    if ($whoT -ne "app" -and ($PMO_EMAILS -notcontains $whoT -or -not $whoT) -and -not (Test-Trusted $whoT $OWNER_EMAILS)) { continue }
-    $r = $REPBYID[$lk.LookupId]
-    if ($r -and $a["apProject"] -and $r["srProject"] -and $a["apProject"].LookupId -eq $r["srProject"].LookupId) { $APPROVED[$r.Id] = $true }
+    $lk = $a["apReport"]; if (-not $lk) { continue }
+    $whoT = Who $a["Author"]
+    $trusted = ($whoT -eq "app") -or ([bool]$whoT -and $PMO_EMAILS -contains $whoT) -or (Test-Trusted $whoT $OWNER_EMAILS)
+    if (-not $APBYREP.ContainsKey($lk.LookupId)) { $APBYREP[$lk.LookupId] = @() }
+    $APBYREP[$lk.LookupId] += @{ id = $a.Id; decision = (Norm $a["apDecision"]); s = (Norm $a["apSchedule"]); b = (Norm $a["apBudget"]); r = (Norm $a["apResources"])
+        note = [string]$a["apNote"]; project = $(if ($a["apProject"]) { $a["apProject"].LookupId } else { 0 }); trusted = $trusted }
+}
+foreach ($rid in $APBYREP.Keys) {
+    $r = $REPBYID[$rid]; if (-not $r -or -not $r["srProject"]) { continue }
+    $eff = Get-EffectiveApproval @{ s = (Norm $r["srSchedule"]); b = (Norm $r["srBudget"]); r = (Norm $r["srResources"]); project = $r["srProject"].LookupId } $APBYREP[$rid]
+    if ($eff -and $eff.decision -eq "Погоджено") { $APPROVED[$rid] = $true }
 }
 if ($HAS_AP) {
     foreach ($r in $reports) {
