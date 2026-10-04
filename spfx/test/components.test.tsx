@@ -9,6 +9,7 @@ import { reportCard, riskCard, TableDefs } from '../src/webparts/pmoPortal/compo
 import { makeT } from '../src/webparts/pmoPortal/i18n/i18n';
 import { T } from '../src/webparts/pmoPortal/i18n/strings';
 import { RiskForm } from '../src/webparts/pmoPortal/panels/RiskForm';
+import { ReportForm } from '../src/webparts/pmoPortal/panels/ReportForm';
 
 // Компоненты приложения в jsdom: поведение, а не только «вызывается» (блок 2 отзывов раунда 3 и правки кросс-ревью)
 const tt = makeT(0);
@@ -133,5 +134,28 @@ describe('#47 / #55 форма риска', () => {
     act(() => { Simulate.change(root.querySelector('input[name="k-type"][value="Проблема"]') as HTMLInputElement); });
     expect((root.querySelector('.ph h2') as HTMLElement).textContent).toBe('Нова проблема');
     expect(T.newRisk[0]).toBe('Новий ризик / проблема'); expect(T.addRisk[0]).toBe('Додати ризик / проблему');
+  });
+});
+
+describe('#54 форма отчёта: дата завершення (факт)', () => {
+  const data = { projects: [{ id: 5, title: 'Проєкт П', status: 'Реалізація', type: 'Звичайний', progress: 40, actualCost: 0, start: '2026-03-02', goLive: '', planEnd: '2026-12-01', forecastEnd: '',
+    canEdit: true, manager: { email: 'pm@x', name: 'PM' } }], risks: [], reports: [], comments: [], team: [] } as any;
+  const typeDate = (id: string, v: string): void => { act(() => { Simulate.change(root.querySelector('#' + id) as HTMLInputElement, { target: { value: v } } as any); }); };
+  test('поле только при «Скасовано» / «Завершено»; без даты и позже даты отчёта — ошибка у поля', () => {
+    mount(<ReportForm data={data} projectId={5} onCancel={() => undefined} />);
+    expect(root.querySelector('#f-ae')).toBeNull();
+    const st = root.querySelector('#f-st') as HTMLSelectElement;
+    act(() => { Simulate.change(st, { target: { value: 'Скасовано' } } as any); });
+    expect(root.querySelector('#f-ae')).not.toBeNull();
+    expect((root.querySelector('label[for="f-ae"]') as HTMLElement).textContent).toContain('Дата завершення (факт)');
+    act(() => { Simulate.submit(root.querySelector('form') as HTMLFormElement); });
+    expect((root.querySelector('#f-ae') as HTMLElement).getAttribute('aria-invalid')).toBe('true');
+    typeDate('f-ae', '05.10.2026');                 // позже даты отчёта (сегодня 04.10.2026)
+    act(() => { Simulate.submit(root.querySelector('form') as HTMLFormElement); });
+    expect(root.textContent).toContain('Не може бути пізніше дати звіту.');
+    act(() => { Simulate.change(st, { target: { value: 'Реалізація' } } as any); });
+    expect(root.querySelector('#f-ae')).toBeNull();
+    act(() => { Simulate.change(st, { target: { value: 'Завершено' } } as any); });
+    expect(root.querySelector('#f-ae')).not.toBeNull();
   });
 });

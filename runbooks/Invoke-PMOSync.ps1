@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:aabd75ff79d0 — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:a857d44e4897 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -173,9 +173,9 @@ function ConvertTo-Kyiv([datetime]$d) {
     $u = if ($d.Kind -eq [DateTimeKind]::Local) { $d.ToUniversalTime() } else { [datetime]::SpecifyKind($d, [DateTimeKind]::Utc) }
     return [TimeZoneInfo]::ConvertTimeFromUtc($u, (Get-KyivZone))
 }
-$STATE_DATES = @("pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd", "pmArchivedAt", "pmLastUpdate")
+$STATE_DATES = @("pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd", "pmArchivedAt", "pmLastUpdate", "pmActualEnd")
 function Get-StateKeys { return @("pmStatus", "pmRAG", "pmType", "pmProgress", "pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd",
-                                  "pmActualCost", "pmArchivedAt", "pmLastUpdate", "pmLastReport", "pmCode") }
+                                  "pmActualCost", "pmArchivedAt", "pmLastUpdate", "pmLastReport", "pmCode", "pmActualEnd") }
 # значения ключевых полей записи проекта (как их видит синхронизация: Norm)
 function Get-CardState($item) {
     $st = [ordered]@{}
@@ -466,17 +466,18 @@ function Get-EffectiveApproval($rep, $aps) {
     return $null
 }
 # Что погоджений отчёт переносит в карточку (векторы tests/cases/apply.json, те же — reportTarget приложения):
-# заполненные показатели (% и затраты — целые, x,5 — вверх); «Завершено» / «Скасовано» -> «Архівний» и дата архивации;
-# отчёт не старше последнего (по дате) задаёт ещё стан (худшая из трёх оценок), дату и резюме. Пустые поля карточку не трогают.
-# $rep: status, type, progress, start, goLive, planEnd, forecastEnd, actualCost, date, schedule, budget, resources, title.
+# заполненные показатели (% и затраты — целые, x,5 — вверх); «Завершено» / «Скасовано» -> «Архівний», дата архивации и
+# фактическая дата завершения (#54; при другом статусе не переносится); отчёт не старше последнего (по дате) задаёт ещё стан (худшая из трёх оценок), дату и резюме. Пустые поля карточку не трогают.
+# $rep: status, type, progress, start, goLive, planEnd, forecastEnd, actualCost, actualEnd, date, schedule, budget, resources, title.
 function Get-ReportTarget($rep, [string]$lastUpdate) {
     $t = [ordered]@{}
-    foreach ($k in @("status", "type", "progress", "start", "goLive", "planEnd", "forecastEnd", "actualCost")) {
+    foreach ($k in @("status", "type", "progress", "start", "goLive", "planEnd", "forecastEnd", "actualCost", "actualEnd")) {
         $v = $rep.$k
         if ($null -eq $v -or [string]$v -eq "") { continue }
         $t[$k] = if ($k -in @("progress", "actualCost")) { [string][math]::Round([double]$v, 0, [MidpointRounding]::AwayFromZero) } else { [string]$v }
     }
     if ($t["status"] -in @("Завершено", "Скасовано")) { $t["status"] = "Архівний"; $t["archivedAt"] = [string]$rep.date }
+    elseif ($t.Contains("actualEnd")) { $t.Remove("actualEnd") }
     if (-not $lastUpdate -or [string]$rep.date -ge $lastUpdate) {
         $rag = CalcRag $rep.schedule $rep.budget $rep.resources
         if ($rag) { $t["rag"] = $rag }
@@ -486,7 +487,7 @@ function Get-ReportTarget($rep, [string]$lastUpdate) {
 }
 # поле цели переноса -> поле карточки
 $TARGET_FIELD = [ordered]@{ status = "pmStatus"; type = "pmType"; progress = "pmProgress"; start = "pmStart"; goLive = "pmGoLive"; planEnd = "pmPlanEnd"
-    forecastEnd = "pmForecastEnd"; actualCost = "pmActualCost"; archivedAt = "pmArchivedAt"; rag = "pmRAG"; lastUpdate = "pmLastUpdate"; lastReport = "pmLastReport" }
+    forecastEnd = "pmForecastEnd"; actualCost = "pmActualCost"; actualEnd = "pmActualEnd"; archivedAt = "pmArchivedAt"; rag = "pmRAG"; lastUpdate = "pmLastUpdate"; lastReport = "pmLastReport" }
 # Решение по эталону (векторы tests/cases/state.json -> plan): $state — эталон или $null (нет / повреждён), $hasRecord — строка
 # эталона есть. new — эталона нет: из карточки; rebuild — повреждён: заново из карточки (не откат к пустым значениям);
 # none — совпадает; accept — правил владелец сайта или приложение (скрипт): эталон = карточка; rollback — правка в обход отчёта.
@@ -529,8 +530,9 @@ function Get-ApprovalResult($rep, $ap) {
 $DISPLAY = [ordered]@{
     pmStatus = "Статус проєкту"; pmRAG = "Загальний стан"; pmType = "Тип проєкту"; pmProgress = "% виконання"
     pmStart = "Дата старту"; pmGoLive = "Дата запуску (продакшн)"; pmPlanEnd = "Дата завершення (план)"; pmForecastEnd = "Прогноз завершення"
+    pmActualEnd = "Дата завершення (факт)"
 }
-$DATE_FIELDS = @("pmStart","pmGoLive","pmPlanEnd","pmForecastEnd","pmLastUpdate","pmArchivedAt")
+$DATE_FIELDS = @("pmStart","pmGoLive","pmPlanEnd","pmForecastEnd","pmLastUpdate","pmArchivedAt","pmActualEnd")
 
 # Правки карточки из приложения SPFx (поле pmEditLog): ключ прототипа -> внутреннее имя, подпись строки журнала
 $EDIT_DISPLAY = @{ Title = "Назва проєкту"; pmCode = "Код проєкту"; pmDepartment = "Напрям"; pmLoop = "Посилання на картку в Loop"; pmPriority = "Пріоритет"
@@ -927,7 +929,7 @@ foreach ($r in $pending) {
 
     # что переносится — общим правилом Get-ReportTarget (векторы tests/cases/apply.json, те же — у приложения)
     $tg = Get-ReportTarget ([ordered]@{ status = (Norm $r["srStatus"]); type = (Norm $r["srType"]); progress = $r["srProgress"]; start = (Norm $r["srStart"])
-        goLive = (Norm $r["srGoLive"]); planEnd = (Norm $r["srPlanEnd"]); forecastEnd = (Norm $r["srForecastEnd"]); actualCost = $r["srActualCost"]
+        goLive = (Norm $r["srGoLive"]); planEnd = (Norm $r["srPlanEnd"]); forecastEnd = (Norm $r["srForecastEnd"]); actualCost = $r["srActualCost"]; actualEnd = (Norm $r["srActualEnd"])
         date = $repDate; schedule = (Norm $r["srSchedule"]); budget = (Norm $r["srBudget"]); resources = (Norm $r["srResources"]); title = $title }) $p.Values.pmLastUpdate
     $target = [ordered]@{}; foreach ($k in $tg.Keys) { $target[$TARGET_FIELD[$k]] = $tg[$k] }
 

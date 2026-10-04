@@ -7,7 +7,7 @@ const MAP: [string, keyof Project, 'text' | 'number'][] = [
   ['pmStatus', 'status', 'text'], ['pmRAG', 'rag', 'text'], ['pmType', 'type', 'text'], ['pmProgress', 'progress', 'number'],
   ['pmStart', 'start', 'text'], ['pmGoLive', 'goLive', 'text'], ['pmPlanEnd', 'planEnd', 'text'], ['pmForecastEnd', 'forecastEnd', 'text'],
   ['pmActualCost', 'actualCost', 'number'], ['pmArchivedAt', 'archivedAt', 'text'], ['pmLastUpdate', 'lastUpdate', 'text'],
-  ['pmLastReport', 'lastReport', 'text'], ['pmCode', 'code', 'text']];
+  ['pmLastReport', 'lastReport', 'text'], ['pmCode', 'code', 'text'], ['pmActualEnd', 'actualEnd', 'text']];
 
 export function parseState(json: string | null | undefined): StateJson | undefined {
   if (!json) return undefined;

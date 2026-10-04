@@ -7,6 +7,8 @@ export interface Project {
   manager: Person | null; owner: Person | null; stakeholders: Person[]; department: string;
   status: string; rag: Rag; progress: number; start: string; goLive: string; planEnd: string; forecastEnd: string;
   archivedAt: string; budget: number; actualCost: number; lastUpdate: string; lastReport: string; lastComment: string;
+  /** Дата завершення (факт), #54: из погодженого отчёта «Завершено» / «Скасовано»; у прежних архивных — пусто. */
+  actualEnd?: string;
   /** «Посилання» (pmLinks) и «Команда проєкту»; stakeholders — люди команды. */
   links: Link[]; team: TeamMember[]; description: string;
   /** Пользователь может редактировать элемент (права выдала синхронизация). */
@@ -37,6 +39,8 @@ export interface StatusReport {
   id: number; projectId: number; date: string; period: string; schedule: Rag; budget: Rag; resources: Rag;
   status: string; type: string; progress: number | null; start: string; goLive: string; planEnd: string; forecastEnd: string;
   actualCost: number | null; keyReason: string; title: string; done: string; next: string; issues: string;
+  /** #54: фактическая дата завершения / отмены (только «Завершено» / «Скасовано»). */
+  actualEnd?: string;
   decision: boolean; decisionText: string; applied: boolean; author: Person | null;
   created?: string;
   /** Погодження PMO: На погодженні / Погоджено / Повернуто; кто, когда, комментарий. approvalFresh — решение ещё не перенесено синхронизацией. */

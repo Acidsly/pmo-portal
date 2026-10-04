@@ -79,10 +79,11 @@ export function projectDefs(x: DefsCtx, archive: boolean): TableDefs<Project> {
       sort: p => { const c = lastCm(p); return c && c.author ? c.author.name : ''; }, filter: p => { const c = lastCm(p); return c && c.author ? c.author.name : ''; } },
     dept: { label: fl('dept'), cell: p => tv(p.department), sort: p => p.department, filter: p => p.department },
     loop: { label: fl('links'), cell: p => (p.links.length ? <>{p.links.map((l, i) => <React.Fragment key={i}>{i ? ', ' : ''}<a className="loop" href={l.u} target="_blank" data-interception="off" rel="noopener noreferrer">{l.t} ↗</a></React.Fragment>)}</> : null) },
-    archived: { label: t('archivedAt'), cell: p => dateCell(p.archivedAt), sort: p => p.archivedAt }
+    archived: { label: t('archivedAt'), cell: p => dateCell(p.archivedAt), sort: p => p.archivedAt },
+    ae: { label: t('cAe'), cell: p => dateCell(p.actualEnd || ''), sort: p => p.actualEnd || '' }
   };
   return { lock: 'title', cols,
-    defaults: archive ? ['strat', 'prio', 'title', 'pm', 'owner', 'archived', 'plan', 'budget', 'actual'] : ['strat', 'prio', 'title', 'pm', 'status', 'rag', 'repDate', 'progress', 'plan', 'update'] };
+    defaults: archive ? ['strat', 'prio', 'title', 'pm', 'owner', 'archived', 'ae', 'plan', 'budget', 'actual'] : ['strat', 'prio', 'title', 'pm', 'status', 'rag', 'repDate', 'progress', 'plan', 'update'] };
 }
 
 export function reportDefs(x: DefsCtx): TableDefs<StatusReport> {

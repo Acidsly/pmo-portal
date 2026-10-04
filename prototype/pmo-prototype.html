@@ -693,6 +693,8 @@ const T = {
  errReqAll:['Заповніть усі обов\'язкові поля, позначені *.','Fill in all required fields marked *.','Заполните все обязательные поля, отмеченные *.'],
  errProgress:['Введіть ціле число від 0 до 100.','Enter a whole number from 0 to 100.','Введите целое число от 0 до 100.'],
  errBeforeStart:['Не може бути раніше дати старту.','Cannot be earlier than the start date.','Не может быть раньше даты старта.'],
+ errAfterReport:['Не може бути пізніше дати звіту.','Cannot be later than the report date.','Не может быть позже даты отчёта.'],
+ aeHint:['Коли проєкт фактично завершено або скасовано.','When the project was actually completed or cancelled.','Когда проект фактически завершён или отменён.'],
  errDatesOrder:['Дати запуску й завершення не можуть бути раніше дати старту.','Launch and end dates cannot be earlier than the start date.','Даты запуска и завершения не могут быть раньше даты старта.'],
  repPendingOpt:['звіт від {date} на погодженні','report of {date} awaiting approval','отчёт от {date} на согласовании'],
  progressDone:['Проєкт завершується — 100 %.','The project is being completed — 100%.','Проект завершается — 100 %.'],
@@ -758,7 +760,7 @@ const T = {
  sc0:['Високий (15+)','High (15+)','Высокий (15+)'], sc1:['Середній (8–14)','Medium (8–14)','Средний (8–14)'], sc2:['Низький (до 8)','Low (under 8)','Низкий (до 8)'],
  overdue:['прострочено','overdue','просрочено'],
  cCode:['Код','Code','Код'], cOwner:['Власник','Owner','Собственник'], cGolive:['Запуск','Go-live','Запуск'], cPlan:['Завершення (план)','Completion (plan)','Завершение (план)'],
- cFc:['Прогноз','Forecast','Прогноз'], cDev:['Відхилення, дн.','Deviation, days','Отклонение, дн.'], cBudgetP:['Бюджет','Budget','Бюджет'], cActual:['Факт','Actual','Факт'],
+ cFc:['Прогноз','Forecast','Прогноз'], cAe:['Завершено (факт)','Completed (actual)','Завершён (факт)'], cDev:['Відхилення, дн.','Deviation, days','Отклонение, дн.'], cBudgetP:['Бюджет','Budget','Бюджет'], cActual:['Факт','Actual','Факт'],
  cUse:['Освоєння','Used','Освоение'], cRepAge:['Днів від звіту','Days since report','Дней с отчёта'], cCmtBy:['Автор коментаря','Comment author','Автор комментария'],
  cPeriod:['Період','Period','Период'], cDone:['Зроблено','Done','Сделано'], cNextP:['План','Plan','План'], cIssues:['Проблеми','Issues','Проблемы'],
  cStatusR:['Статус у звіті','Status in report','Статус в отчёте'], cDecFlag:['Рішення','Decision','Решение'], cDecText:['Яке рішення','Decision needed','Какое решение'],
@@ -854,7 +856,7 @@ const FLD = {
  dept:['Напрям','Area','Направление'], status:['Статус проєкту','Project status','Статус проекта'], prio:['Пріоритет','Priority','Приоритет'],
  rag:['Загальний стан','Overall health','Общее состояние'], progress:['% виконання','% complete','% выполнения'],
  start:['Дата старту','Start date','Дата старта'], golive:['Дата запуску (продакшн)','Go-live date (production)','Дата запуска (продакшн)'],
- plan:['Дата завершення (план)','Planned completion','Дата завершения (план)'], fc:['Прогноз завершення','Forecast completion','Прогноз завершения'],
+ plan:['Дата завершення (план)','Planned completion','Дата завершения (план)'], fc:['Прогноз завершення','Forecast completion','Прогноз завершения'], ae:['Дата завершення (факт)','Actual completion date','Дата завершения (факт)'],
  budget:['Бюджет (план)','Budget (plan)','Бюджет (план)'], actual:['Витрати (факт)','Actual cost','Затраты (факт)'], use:['Освоєння бюджету, %','Budget used, %','Освоение бюджета, %'],
  last:['Останній статус-звіт','Last status report','Последний статус-отчёт'], lastReport:['Останній апдейт','Latest update','Последний апдейт'],
  comments:['Коментарі','Comments','Комментарии'], desc:['Мета та опис','Goal and description','Цель и описание'],
@@ -1100,7 +1102,7 @@ const cmtHtml = p => { const c = (p.comments || [])[p.comments.length - 1]; retu
 const valFmt = (f, v) => {
   if (Array.isArray(v)) return v.length ? esc(v.join(', ')) : '<span class="muted">—</span>';
   if (v === '' || v == null) return '<span class="muted">—</span>';
-  if (['start','golive','plan','fc'].includes(f)) return fmt(D(v));
+  if (['start','golive','plan','fc','ae'].includes(f)) return fmt(D(v));
   if (f === 'budget') return money(+v);
   if (f === 'progress') return v + '%';
   if (f === 'rag' || f === 'rSched' || f === 'rBudget' || f === 'rRes') return ragHtml(v);
@@ -1314,7 +1316,8 @@ const PDEF = {
   cmtBy:{l:() => t('cCmtBy'), main:p => { const c = lastCm(p); return c ? person(c.who) : '<span class="muted">—</span>'; }, sort:p => { const c = lastCm(p); return c ? c.who : ''; }, filter:p => { const c = lastCm(p); return c ? c.who : ''; }},
   dept:{l:() => fl('dept'), main:p => esc(tv(p.dept)), sort:p => p.dept, filter:p => p.dept},
   loop:{l:() => fl('links'), main:linksHtml},
-  archived:{l:() => t('archivedAt'), main:p => dateCell(p.archivedAt), sort:p => p.archivedAt || ''}
+  archived:{l:() => t('archivedAt'), main:p => dateCell(p.archivedAt), sort:p => p.archivedAt || ''},
+  ae:{l:() => t('cAe'), main:p => dateCell(p.ae), sort:p => p.ae || ''}
 };
 const RP = r => pById(r.pid);
 const RDEF = {
@@ -1355,7 +1358,7 @@ const KDEF = {
   due:{l:() => fl('kDue'), main:k => { const d = D(k.due); return d < TODAY && k.status !== 'Закрито' ? `<span class="late">${fmt(d)}</span>` : fmt(d); }, sort:k => k.due}
 };
 TDEFS.projects = PDEF; TDEFAULTS.projects = ['strat','prio','title','pm','status','rag','repDate','progress','plan','update'];
-TDEFS.archive = PDEF; TDEFAULTS.archive = ['strat','prio','title','pm','owner','archived','plan','budget','actual'];
+TDEFS.archive = PDEF; TDEFAULTS.archive = ['strat','prio','title','pm','owner','archived','ae','plan','budget','actual'];
 TDEFS.reports = RDEF; TDEFAULTS.reports = ['strat','prio','proj','date','rag','sched','budget','res','title','approval','author','decision'];
 TDEFS.risks = KDEF; TDEFAULTS.risks = ['strat','prio','proj','title','type','score','owner','status','due'];
 
@@ -1746,7 +1749,7 @@ function projectPanel(id, showCm, keep, showCh){
       ? `<div class="tablewrap"><table class="team"><thead><tr><th>${fl('tmPerson')}</th><th>${fl('tmRole')}</th><th>${fl('tmTopics')}</th></tr></thead><tbody>${p.team.map(m => `<tr><td>${person(m.n, roleOf(m.n))}</td><td class="wrap">${esc(m.role)}</td><td class="wrap">${m.topics ? esc(m.topics) : '<span class="muted">—</span>'}</td></tr>`).join('')}</tbody></table></div>`
       : `<p class="muted">${t('noTeam')}</p>`}</div>
     <div class="sec"><h3>${t('secDates')}</h3><div class="group">
-      ${kv('start', fmt(D(p.start)))}${kv('golive', fmt(D(p.golive)))}${kv('plan', planHtml(p))}${kv('fc', p.fc ? fmt(D(p.fc)) + dev : '')}${p.archivedAt ? kv('archived', fmt(D(p.archivedAt))) : ''}</div></div>
+      ${kv('start', fmt(D(p.start)))}${kv('golive', fmt(D(p.golive)))}${kv('plan', planHtml(p))}${kv('fc', p.fc ? fmt(D(p.fc)) + dev : '')}${p.ae ? kv('ae', fmt(D(p.ae))) : ''}${p.archivedAt ? kv('archived', fmt(D(p.archivedAt))) : ''}</div></div>
     <div class="sec"><h3>${t('secMoney')}</h3><div class="group">
       ${kv('progress', barHtml(p.progress))}${kv('last', freshHtml(p))}${kv('budget', money(p.budget))}${kv('actual', money(p.actual) + ' · ' + useHtml(p))}${kv('dept', esc(p.dept))}</div></div>
     <div class="sec"><h3>${t('secChanges')}</h3>${changesHtml(p, showCh)}</div>
@@ -1971,6 +1974,7 @@ function reportForm(pid, base){
         <div class="k-cost"><label class="t" for="f-c">${fl('rCost')}, $</label><input type="text" id="f-c" inputmode="numeric" autocomplete="off" onfocus="this.value=this.value.replace(/\\s/g,'');if(this.value==='0')this.value=''" oninput="const m=/^(.*?)[.,](\\d{1,2})$/.exec(this.value.replace(/\\s/g,''));this.value=m?String(Math.round(+(m[1].replace(/[^0-9]/g,'')||0)+(+m[2].padEnd(2,'0'))/100)):this.value.replace(/[^0-9]/g,'')" onblur="this.value=this.value.replace(/[^0-9]/g,'').replace(/^0+(?=\\d)/,'').replace(/\\B(?=(\\d{3})+(?!\\d))/g,' ')" value="${grp(sel.actual || 0)}"></div>
       </div>
       <p class="note" id="f-arch" hidden style="margin:-4px 0 14px">${t('completeHint')}</p>
+      <div class="frow" id="f-ae-wrap" hidden><label class="t" for="f-ae">${fl('ae')} *</label><input type="date" id="f-ae" value="${esc(b.ae || '')}"><p class="ferr" id="e-ae" hidden></p><p class="hint">${t('aeHint')}</p></div>
       <fieldset class="ragpick"><legend>${fl('type')}</legend>${segPick('f-type', TYPES, sel.type)}</fieldset>
       <div class="fgrid2 frow">
         <div><label class="t" for="f-start">${fl('start')}</label><input type="date" id="f-start" value="${sel.start || ''}"></div>
@@ -1994,7 +1998,7 @@ function reportForm(pid, base){
   const curP = () => pById(+g('f-p').value);
   const keyChanged = () => { const p = curP(); return KEYF.some(([id, k]) => String(g(id).value || '') !== String(p[k] || '')) || (radioVal(form, 'f-type') || p.type) !== p.type; };
   const dimsNow = () => ({sched:radioVal(form, 'sched'), budget:radioVal(form, 'budget'), res:radioVal(form, 'res')});
-  const syncKey = () => { g('f-kr-wrap').hidden = !keyChanged(); g('f-arch').hidden = !['Завершено','Скасовано'].includes(g('f-st').value); g('f-ragv').innerHTML = ragLabel(calcRag(dimsNow())); };
+  const syncKey = () => { g('f-kr-wrap').hidden = !keyChanged(); g('f-arch').hidden = g('f-ae-wrap').hidden = !['Завершено','Скасовано'].includes(g('f-st').value); g('f-ragv').innerHTML = ragLabel(calcRag(dimsNow())); };
   form.addEventListener('input', syncKey); form.addEventListener('change', syncKey);
   g('f-p').addEventListener('change', e => { const p = pById(+e.target.value);
     g('f-pr').disabled = false; prevPr = null; g('f-pr-done').hidden = true;
@@ -2035,13 +2039,17 @@ function reportForm(pid, base){
     if (!prOk){ mark(g('f-pr')); g('e-pr').textContent = t('errProgress'); g('e-pr').hidden = false; first = first || t('errProgress'); }
     const st = g('f-start').value;
     ['golive','plan','fc'].forEach(k => { const v = g('f-' + k).value; if (st && v && v < st){ mark(g('f-' + k)); g('e-' + k).textContent = t('errBeforeStart'); g('e-' + k).hidden = false; first = first || t('errBeforeStart'); } });
+    // #54: фактическая дата — при «Завершено» / «Скасовано»: обязательна, не раньше старта, не позже даты отчёта
+    const arch = ['Завершено','Скасовано'].includes(g('f-st').value), ae = g('f-ae').value;
+    if (arch){ const ek = !ae ? '' : st && ae < st ? 'errBeforeStart' : dstr && ae > dstr ? 'errAfterReport' : '';
+      if (!ae){ req = true; mark(g('f-ae')); } else if (ek){ mark(g('f-ae')); g('e-ae').textContent = t(ek); g('e-ae').hidden = false; first = first || t(ek); } }
     if (req) return err(t('errReqAll'));
     if (first) return err(first);
     const rag = calcRag(dims);
     const progress = g('f-pr').disabled ? 100 : +prv, cost = Math.max(0, Math.round(+g('f-c').value.replace(/\s/g, '') || 0)), dec = g('f-dec').checked;
     // звіт зберігається «На погодженні»; картку оновить applyReport після погодження PMO
     p.reports = (p.reports || []).concat([{id:uid(), date:dstr, rag, sched:dims.sched, budget:dims.budget, res:dims.res,
-      progress, status:g('f-st').value, type:radioVal(form, 'f-type') || p.type, start:g('f-start').value, golive:g('f-golive').value, plan:g('f-plan').value, fc:g('f-fc').value,
+      progress, status:g('f-st').value, type:radioVal(form, 'f-type') || p.type, start:g('f-start').value, golive:g('f-golive').value, plan:g('f-plan').value, fc:g('f-fc').value, ae:arch ? ae : '',
       cost, keyReason:keyChanged() ? kr : '', period:g('f-per').value, title, done:g('f-done').value.trim() || '—', next:g('f-next').value.trim() || '—', issues:g('f-iss').value.trim(),
       author:VIEWER, decision:dec, decisionText:dec ? g('f-dect').value.trim() : '', approval:AP_PEND, apBy:'', apAt:'', apNote:''}]);
     rerenderMain(); projectPanel(p.id, false); persist(p); toast(t('savedReportPending'));
@@ -2064,7 +2072,7 @@ function applyReport(p, r, when){
   Object.assign(p, vals);
   if (r.cost != null) p.actual = r.cost;
   if (newer) Object.assign(p, {lastUpdate:r.date, lastReport:r.title});
-  if (complete) p.archivedAt = r.date;
+  if (complete){ p.archivedAt = r.date; if (r.ae) p.ae = r.ae; }
   if (diffs.length) p.changes = (p.changes || []).concat([{id:uid(), date:when || new Date().toISOString(), who:r.author, kind:'report', reason: r.keyReason ? r.keyReason + ' · ' + r.title : r.title, diffs}]);
   return complete;
 }
@@ -2090,11 +2098,11 @@ function reportView(pid, rid, keep){
   const r = (p.reports || []).find(x => String(x.id) === String(rid)); if (!r) return projectPanel(pid, false);
   state.panel = {kind:'report', id:p.id, rid:String(r.id)};
   const d = D(r.date), pend = r.approval === AP_PEND, applied = isApproved(r);
-  const IND = [['status','status'],['type','type'],['progress','progress'],['start','start'],['golive','golive'],['plan','plan'],['fc','fc'],['cost','rCost']];
+  const IND = [['status','status'],['type','type'],['progress','progress'],['start','start'],['golive','golive'],['plan','plan'],['fc','fc'],['ae','ae'],['cost','rCost']];
   const show = (k, v) => v === '' || v == null ? '<span class="muted">—</span>' : k === 'progress' ? v + '%' : k === 'cost' ? money(+v)
-    : ['start','golive','plan','fc'].includes(k) ? fmt(D(v)) : esc(tv(v === 'Завершено' ? 'Архівний' : v));
+    : ['start','golive','plan','fc','ae'].includes(k) ? fmt(D(v)) : esc(tv(v === 'Завершено' ? 'Архівний' : v));
   const cardK = k => k === 'cost' ? 'actual' : k;
-  const ind = IND.filter(([k]) => r[k] != null).map(([k, l]) => {
+  const ind = IND.filter(([k]) => r[k] != null && !(k === 'ae' && !r[k])).map(([k, l]) => {
     const cur = p[cardK(k)], nv = k === 'status' && ['Завершено','Скасовано'].includes(r[k]) ? 'Архівний' : r[k];
     const ch = !applied && String(cur ?? '') !== String(nv ?? '');
     return `<div class="kv"><span class="k">${fl(l)}</span><span class="v">${ch ? `<span class="dv"><s>${show(k, cur)}</s><span class="arr">→</span>${show(k, r[k])}</span>` : show(k, r[k])}</span></div>`;

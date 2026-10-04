@@ -72,3 +72,35 @@ test('#47 / #55: форма риска — тип перед «Опис», за�
   const r = f.querySelector('input[name="k-type"][value="Проблема"]'); r.checked = true; ev(r, 'change');
   expect(q('.ph h2').textContent).toBe('Нова проблема');
 });
+
+test('#54: «Скасовано» с фактической датой → погодження PMO → дата в карточке и в архиве', () => {
+  // PM (Юрій) подаёт отчёт «Скасовано» из общей формы
+  q('[data-act="nav"][data-page="reports"]').click();
+  q('[data-act="newrep"]:not([data-id])').click();
+  const f = q('#repform'); const g = (id: string): W => f.querySelector('#' + id);
+  const pid = g('f-p').value;
+  const set = (id: string, v: string): void => { g(id).value = v; ev(g(id), 'input'); ev(g(id), 'change'); };
+  ['sched', 'budget', 'res'].forEach(n => { f.querySelector(`input[name="${n}"][value="Червоний"]`).checked = true; });
+  set('f-st', 'Скасовано');
+  expect(q('#f-ae-wrap').hidden).toBe(false);
+  const start = g('f-start').value || '2000-01-01';
+  set('f-d', '2026-10-01'); set('f-t', 'Скасовано'); set('f-kr', 'Рішення PMO');
+  set('f-ae', start > '2026-09-15' ? start : '2026-09-15');
+  const ae = g('f-ae').value;
+  f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+  expect(q('#repform')).toBeNull();
+  // PMO погоджує
+  asPmo();
+  q('[data-act="nav"][data-page="projects"]').click();
+  q(`[data-act="openp"][data-id="${pid}"]`).click();
+  const open = q(`.apnote [data-act="repopen"][data-id="${pid}"]`);
+  expect(open).not.toBeNull(); open.click();
+  q('#apform').dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+  // карточка: «Дата завершення (факт)»; архив — колонка
+  q(`[data-act="nav"][data-page="archive"]`).click();
+  const [y, m, d] = ae.split('-');
+  expect(w.document.querySelector('main, #main, body').textContent).toContain(`${d}.${m}.${y}`);
+  q(`[data-act="openp"][data-id="${pid}"]`).click();
+  const kv = Array.from(w.document.querySelectorAll('#panel .kv, .kv')).map((x: W) => x.textContent).filter((x: string) => x.indexOf('Дата завершення (факт)') === 0);
+  expect(kv[0]).toContain(`${d}.${m}.${y}`);
+});

@@ -145,6 +145,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
       <Kv k={fl('golive')}>{fmtDate(p.goLive)}</Kv>
       <Kv k={fl('plan')}>{p.planEnd ? (isPlanLate(p.planEnd, p.status, today) ? <span className="late">{fmtDate(p.planEnd)}</span> : fmtDate(p.planEnd)) : null}</Kv>
       <Kv k={fl('fc')}>{p.forecastEnd ? <>{fmtDate(p.forecastEnd)}{dev !== null && dev > 0 ? <> <span className="late">+{dev} {t('days')}</span></> : dev !== null && dev < 0 ? <> <span className="muted">{dev} {t('days')}</span></> : null}</> : null}</Kv>
+      {p.actualEnd ? <Kv k={fl('ae')}>{fmtDate(p.actualEnd)}</Kv> : null}
       {p.archivedAt ? <Kv k={t('archivedAt')}>{fmtDate(p.archivedAt)}</Kv> : null}
     </div></div>
 

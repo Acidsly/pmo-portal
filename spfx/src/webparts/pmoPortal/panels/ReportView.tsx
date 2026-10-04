@@ -11,10 +11,10 @@ import { guard } from '../logic/guard';
 import { RagPill, RagDot, ApBadge, fmtDate, fmtDT, money, PersonCell } from '../components/Bits';
 import { Plus } from '../components/Icons';
 
-type Ind = 'status' | 'type' | 'progress' | 'start' | 'goLive' | 'planEnd' | 'forecastEnd' | 'actualCost';
+type Ind = 'status' | 'type' | 'progress' | 'start' | 'goLive' | 'planEnd' | 'forecastEnd' | 'actualEnd' | 'actualCost';
 const IND: [Ind, string][] = [['status', 'status'], ['type', 'type'], ['progress', 'progress'], ['start', 'start'], ['goLive', 'golive'],
-  ['planEnd', 'plan'], ['forecastEnd', 'fc'], ['actualCost', 'rCost']];
-const DATES: Ind[] = ['start', 'goLive', 'planEnd', 'forecastEnd'];
+  ['planEnd', 'plan'], ['forecastEnd', 'fc'], ['actualEnd', 'ae'], ['actualCost', 'rCost']];
+const DATES: Ind[] = ['start', 'goLive', 'planEnd', 'forecastEnd', 'actualEnd'];
 
 /** Статус-отчёт (reportView прототипа): содержание, погодження; PMO — погодити (меняет только оценки) или повернути на доопрацювання. */
 export const ReportView: React.FC<{ data: PortalData; report: StatusReport | undefined; onCancel(): void }> = ({ data, report: r, onCancel }) => {
@@ -52,9 +52,9 @@ export const ReportView: React.FC<{ data: PortalData; report: StatusReport | und
   };
 
   // ключевые показатели, которые отчёт меняет; до погодження — «було → стало» относительно карточки
-  const show = (k: Ind, v: string | number | null): React.ReactNode => (v === '' || v === null || v === undefined ? <span className="muted">—</span>
+  const show = (k: Ind, v: string | number | null | undefined): React.ReactNode => (v === '' || v === null || v === undefined ? <span className="muted">—</span>
     : k === 'progress' ? v + '%' : k === 'actualCost' ? money(Number(v)) : DATES.indexOf(k) >= 0 ? fmtDate(String(v)) : tv(v === 'Завершено' ? 'Архівний' : String(v)));
-  const ind = IND.filter(([k]) => { const v = r[k]; return v !== '' && v !== null; }).map(([k, l]) => {
+  const ind = IND.filter(([k]) => { const v = r[k]; return v !== '' && v !== null && v !== undefined; }).map(([k, l]) => {
     const cur = p[k] as string | number; const nv = k === 'status' && (r.status === 'Завершено' || r.status === 'Скасовано') ? 'Архівний' : r[k];
     const ch = state !== AP_OK && String(cur === undefined || cur === null ? '' : cur) !== String(nv === null ? '' : nv);
     return <div key={k} className="kv"><span className="k">{fl(l)}</span><span className="v">{ch ? <span className="dv"><s>{show(k, cur)}</s><span className="arr">→</span>{show(k, r[k])}</span> : show(k, r[k])}</span></div>;

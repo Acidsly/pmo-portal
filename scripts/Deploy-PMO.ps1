@@ -234,6 +234,7 @@ F $P pmStart       DateTime "Дата старту"        "Start date"         
 F $P pmGoLive      DateTime "Дата запуску (продакшн)" "Go-live date (production)" "Дата запуска (продакшн)" "Format='DateOnly'"
 F $P pmPlanEnd     DateTime "Дата завершення (план)"  "Planned completion"        "Дата завершения (план)"  "Format='DateOnly'"
 F $P pmForecastEnd DateTime "Прогноз завершення" "Forecast completion" "Прогноз завершения"   "Format='DateOnly'"
+F $P pmActualEnd   DateTime "Дата завершення (факт)" "Actual completion date" "Дата завершения (факт)" "Format='DateOnly'"
 F $P pmArchivedAt  DateTime "Дата архівації"     "Archived on"         "Дата архивации"       "Format='DateOnly'"
 F $P pmBudget      Currency "Бюджет (план)"      "Budget (plan)"       "Бюджет (план)"        "LCID='1058' Decimals='0'"
 F $P pmActualCost  Currency "Витрати (факт)"     "Actual cost"         "Затраты (факт)"       "LCID='1058' Decimals='0'"
@@ -319,6 +320,7 @@ F $R srStart       DateTime "Дата старту"        "Start date"         
 F $R srGoLive      DateTime "Дата запуску (продакшн)" "Go-live date (production)" "Дата запуска (продакшн)" "Format='DateOnly'"
 F $R srPlanEnd     DateTime "Дата завершення (план)"  "Planned completion"        "Дата завершения (план)"  "Format='DateOnly'"
 F $R srForecastEnd DateTime "Прогноз завершення" "Forecast completion" "Прогноз завершения"   "Format='DateOnly'"
+F $R srActualEnd   DateTime "Дата завершення (факт)" "Actual completion date" "Дата завершения (факт)" "Format='DateOnly'"
 F $R srActualCost  Currency "Витрати на дату"    "Cost to date"        "Затраты на дату"      "LCID='1058' Decimals='0'"
 F $R srKeyReason   Note     "Причина зміни показників" "Reason for changing indicators" "Причина изменения показателей" "NumLines='3' RichText='FALSE'"
 F $R srDone        Note     "Зроблено за період" "Done this period"    "Сделано за период"    "NumLines='5' RichText='FALSE'"
@@ -529,6 +531,7 @@ if ($Feedback) {
 $keep = @("Залиште порожнім, якщо не змінюється.", "Leave empty if unchanged.", "Оставьте пустым, если не меняется.")
 foreach ($n in @("srType","srProgress","srStart","srGoLive","srPlanEnd","srForecastEnd","srActualCost")) { Desc $R $n $keep[0] $keep[1] $keep[2] }
 Desc $R srStatus "Залиште порожнім, якщо не змінюється. «Завершено» переводить проєкт в архів." "Leave empty if unchanged. «Завершено» moves the project to the archive." "Оставьте пустым, если не меняется. «Завершено» переводит проект в архив."
+Desc $R srActualEnd "Обов'язково для «Завершено» і «Скасовано»: коли проєкт фактично завершено або скасовано (не раніше старту, не пізніше дати звіту)." "Required for «Завершено» and «Скасовано»: when the project was actually completed or cancelled (not before the start, not after the report date)." "Обязательно для «Завершено» и «Скасовано»: когда проект фактически завершён или отменён (не раньше старта, не позже даты отчёта)."
 Desc $R srKeyReason "Обов'язково, якщо змінюєте статус, тип або дати — потрапить у журнал змін." "Required if you change the status, type or dates — goes to the change log." "Обязательно, если меняете статус, тип или даты — попадёт в журнал изменений."
 Desc $R srDecisionText "Заповніть, якщо позначено «Потрібне рішення керівництва»." "Fill in if «Management decision needed» is checked." "Заполните, если отмечено «Требуется решение руководства»."
 Desc $R srSchedule "Загальний стан звіту — найгірша з трьох оцінок." "Overall health is the worst of the three ratings." "Общее состояние отчёта — худшая из трёх оценок."
@@ -579,9 +582,9 @@ Invoke-PnPQuery
 # ===========================================================================
 Write-Host "7. Формы и права списков" -ForegroundColor Cyan
 # Ключевые показатели и служебные поля не редактируются в карточке — только через статус-отчёт
-Set-FormVisibility $P @("pmStatus","pmRAG","pmType","pmProgress","pmStart","pmGoLive","pmPlanEnd","pmForecastEnd",
+Set-FormVisibility $P @("pmStatus","pmRAG","pmType","pmProgress","pmStart","pmGoLive","pmPlanEnd","pmForecastEnd","pmActualEnd",
                         "pmActualCost","pmArchivedAt","pmLastUpdate","pmLastReport","pmLastComment") $true $false
-Set-FormVisibility $P @("pmRAG","pmForecastEnd","pmActualCost","pmArchivedAt","pmLastUpdate","pmLastReport","pmLastComment") $false $false
+Set-FormVisibility $P @("pmRAG","pmForecastEnd","pmActualEnd","pmActualCost","pmArchivedAt","pmLastUpdate","pmLastReport","pmLastComment") $false $false
 # «Стратегічний» в отчётах и рисках заполняет синхронизация
 # «Стратегічний» и «Пріоритет» в отчётах и рисках — копия из проекта, заполняет синхронизация
 Set-FormVisibility $R @("srProjectType","srProjectPriority","srApproval","srApprovedBy","srApprovedAt","srApprovalNote") $false $false

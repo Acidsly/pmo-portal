@@ -103,9 +103,9 @@ function ConvertTo-Kyiv([datetime]$d) {
     $u = if ($d.Kind -eq [DateTimeKind]::Local) { $d.ToUniversalTime() } else { [datetime]::SpecifyKind($d, [DateTimeKind]::Utc) }
     return [TimeZoneInfo]::ConvertTimeFromUtc($u, (Get-KyivZone))
 }
-$STATE_DATES = @("pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd", "pmArchivedAt", "pmLastUpdate")
+$STATE_DATES = @("pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd", "pmArchivedAt", "pmLastUpdate", "pmActualEnd")
 function Get-StateKeys { return @("pmStatus", "pmRAG", "pmType", "pmProgress", "pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd",
-                                  "pmActualCost", "pmArchivedAt", "pmLastUpdate", "pmLastReport", "pmCode") }
+                                  "pmActualCost", "pmArchivedAt", "pmLastUpdate", "pmLastReport", "pmCode", "pmActualEnd") }
 # значения ключевых полей записи проекта (как их видит синхронизация: Norm)
 function Get-CardState($item) {
     $st = [ordered]@{}

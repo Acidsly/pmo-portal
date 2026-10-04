@@ -211,6 +211,7 @@ erDiagram
 | `pmGoLive` | Дата запуску (продакшн) | DateTime | — | Дата | — | так само | ключовий показник |
 | `pmPlanEnd` | Дата завершення (план) | DateTime | — | Дата | — | так само | ключовий показник; зсуви видно в журналі (`kcField = pmPlanEnd`) |
 | `pmForecastEnd` | Прогноз завершення | DateTime | — | Дата | — | синхронізація | ключовий показник |
+| `pmActualEnd` | Дата завершення (факт) | DateTime | — | Дата | — | синхронізація | ключовий показник; зі звіту «Завершено» / «Скасовано» (#54); у проєктів, архівованих раніше, — порожньо |
 | `pmArchivedAt` | Дата архівації | DateTime | — | Дата | — | синхронізація | дата звіту зі статусом «Завершено» / «Скасовано» |
 | `pmBudget` | Бюджет (план) | Currency | — | `LCID='1058'`, 0 знаків | — | додаток | плановий бюджет; у додатку — у доларах США (SPEC 4.1) |
 | `pmActualCost` | Витрати (факт) | Currency | — | `LCID='1058'`, 0 знаків | — | синхронізація | ключовий показник (з `srActualCost`) |
@@ -227,11 +228,11 @@ erDiagram
 
 Стандартні поля, які використовують додаток і синхронізація: `Author`, `Created` (рядок «Створення» в журналі), `Editor` (хто змінив картку — для звірки з еталоном), `EffectiveBasePermissions` (права поточного користувача).
 
-**Форми SharePoint** (розділ 7): `pmStatus`, `pmType`, `pmProgress`, `pmStart`, `pmGoLive`, `pmPlanEnd` — лише у формі створення; `pmRAG`, `pmForecastEnd`, `pmActualCost`, `pmArchivedAt`, `pmLastUpdate`, `pmLastReport`, `pmLastComment` — приховані в обох формах.
+**Форми SharePoint** (розділ 7): `pmStatus`, `pmType`, `pmProgress`, `pmStart`, `pmGoLive`, `pmPlanEnd` — лише у формі створення; `pmRAG`, `pmForecastEnd`, `pmActualEnd`, `pmActualCost`, `pmArchivedAt`, `pmLastUpdate`, `pmLastReport`, `pmLastComment` — приховані в обох формах.
 
 **Представлення:** «Усі проєкти» (базове `AllItems.aspx`, за замовчуванням, без архіву), «Стратегічні», «Проблемні», «Мої проєкти», «Немає свіжого звіту», «Архів». Порядок колонок: `pmType`, `pmPriority`, назва, решта.
 
-**Ключові показники** (міняються лише погодженим статус-звітом, входять в еталон): `pmStatus`, `pmRAG`, `pmType`, `pmProgress`, `pmStart`, `pmGoLive`, `pmPlanEnd`, `pmForecastEnd`, `pmActualCost`, `pmArchivedAt`, `pmLastUpdate`, `pmLastReport`, а також `pmCode`.
+**Ключові показники** (міняються лише погодженим статус-звітом, входять в еталон): `pmStatus`, `pmRAG`, `pmType`, `pmProgress`, `pmStart`, `pmGoLive`, `pmPlanEnd`, `pmForecastEnd`, `pmActualCost`, `pmArchivedAt`, `pmLastUpdate`, `pmLastReport`, `pmActualEnd`, а також `pmCode`. Еталон, записаний до появи ключа, не дає розбіжності з порожнім полем картки.
 
 ---
 
@@ -262,6 +263,7 @@ erDiagram
 | `srGoLive` | Дата запуску (продакшн) | DateTime | — | Дата | — | додаток | так само |
 | `srPlanEnd` | Дата завершення (план) | DateTime | — | Дата | — | додаток | так само |
 | `srForecastEnd` | Прогноз завершення | DateTime | — | Дата | — | додаток | так само |
+| `srActualEnd` | Дата завершення (факт) | DateTime | — | Дата | — | додаток | обов'язкова при «Завершено» / «Скасовано»: не раніше старту, не пізніше дати звіту (#54) |
 | `srActualCost` | Витрати на дату | Currency | — | `LCID='1058'`, 0 знаків | — | додаток | фактичні витрати |
 | `srKeyReason` | Причина зміни показників | Note (3) | — | обов'язкова в додатку при зміні статусу, типу чи дат | — | додаток | потрапляє в журнал (`kcReason`) |
 | `srDone` | Зроблено за період | Note (5) | — | — | — | додаток | |
@@ -276,7 +278,7 @@ erDiagram
 | `srApprovedAt` | Дата погодження | DateTime | — | Дата й час | — | синхронізація | час рішення або авто-повернення |
 | `srApprovalNote` | Коментар PMO | Note (3) | — | — | — | синхронізація | коментар рішення або текст авто-повернення |
 
-**Підказки під полями** (`Desc`): у `srType`, `srProgress`, `srStart`, `srGoLive`, `srPlanEnd`, `srForecastEnd`, `srActualCost` — «Залиште порожнім, якщо не змінюється.»; також `srStatus`, `srKeyReason`, `srDecisionText`, `srSchedule`.
+**Підказки під полями** (`Desc`): у `srType`, `srProgress`, `srStart`, `srGoLive`, `srPlanEnd`, `srForecastEnd`, `srActualCost` — «Залиште порожнім, якщо не змінюється.»; також `srStatus`, `srActualEnd`, `srKeyReason`, `srDecisionText`, `srSchedule`.
 
 **Представлення:** «Усі звіти» (базове), «Потребують рішення» (`srDecision = 1`).
 

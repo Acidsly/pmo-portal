@@ -6,24 +6,25 @@ import { applyAction } from './reportRules';
 const byDateThenId = (a: StatusReport, b: StatusReport): number => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id);
 
 const SHOWN: [keyof Project, string][] = [['status', 'status'], ['rag', 'rag'], ['type', 'type'], ['progress', 'progress'],
-  ['start', 'start'], ['goLive', 'golive'], ['planEnd', 'plan'], ['forecastEnd', 'fc']];
+  ['start', 'start'], ['goLive', 'golive'], ['planEnd', 'plan'], ['forecastEnd', 'fc'], ['actualEnd', 'ae']];
 
 /** Что погоджений отчёт переносит в карточку — как Get-ReportTarget синхронизации (общие векторы tests/cases/apply.json):
- *  заполненные показатели (% и затраты — целые, x,5 — вверх); «Завершено» / «Скасовано» -> «Архівний» и дата архивации;
+ *  заполненные показатели (% и затраты — целые, x,5 — вверх); «Завершено» / «Скасовано» -> «Архівний», дата архивации и фактическая дата (#54);
  *  отчёт не старше последнего (по дате) задаёт стан, дату и резюме. Значения — строки (как поля журнала). */
-export type TargetKey = 'status' | 'type' | 'progress' | 'start' | 'goLive' | 'planEnd' | 'forecastEnd' | 'actualCost' | 'archivedAt' | 'rag' | 'lastUpdate' | 'lastReport';
+export type TargetKey = 'status' | 'type' | 'progress' | 'start' | 'goLive' | 'planEnd' | 'forecastEnd' | 'actualCost' | 'actualEnd' | 'archivedAt' | 'rag' | 'lastUpdate' | 'lastReport';
 export interface TargetIn { status?: string; type?: string; progress?: number | null; start?: string; goLive?: string; planEnd?: string; forecastEnd?: string;
-  actualCost?: number | null; date: string; schedule?: string; budget?: string; resources?: string; title?: string; }
+  actualCost?: number | null; actualEnd?: string; date: string; schedule?: string; budget?: string; resources?: string; title?: string; }
 /** Целое, x,5 — от нуля (MidpointRounding.AwayFromZero синхронизации). */
 export const roundAway = (v: number): number => (v < 0 ? -Math.round(-v) : Math.round(v));
 export function reportTarget(r: TargetIn, lastUpdate: string): Partial<Record<TargetKey, string>> {
   const t: Partial<Record<TargetKey, string>> = {};
-  for (const k of ['status', 'type', 'progress', 'start', 'goLive', 'planEnd', 'forecastEnd', 'actualCost'] as const) {
+  for (const k of ['status', 'type', 'progress', 'start', 'goLive', 'planEnd', 'forecastEnd', 'actualCost', 'actualEnd'] as const) {
     const v = r[k];
     if (v === null || v === undefined || String(v) === '') continue;
     t[k] = k === 'progress' || k === 'actualCost' ? String(roundAway(Number(v))) : String(v);
   }
-  if (t.status === 'Завершено' || t.status === 'Скасовано') { t.status = 'Архівний'; t.archivedAt = r.date; }
+  // #54: фактическая дата — только вместе с «Завершено» / «Скасовано»
+  if (t.status === 'Завершено' || t.status === 'Скасовано') { t.status = 'Архівний'; t.archivedAt = r.date; } else delete t.actualEnd;
   if (!lastUpdate || r.date >= lastUpdate) {
     const rag = calcRag((r.schedule || '') as never, (r.budget || '') as never, (r.resources || '') as never);
     if (rag) t.rag = rag;
@@ -48,7 +49,7 @@ export function applyPending(project: Project, reports: StatusReport[], approved
     const before = { ...p };
     // что переносится — общим правилом reportTarget (те же векторы, что у синхронизации)
     const t = reportTarget({ status: r.status, type: r.type, progress: r.progress, start: r.start, goLive: r.goLive, planEnd: r.planEnd, forecastEnd: r.forecastEnd,
-      actualCost: r.actualCost, date: r.date, schedule: r.schedule, budget: r.budget, resources: r.resources, title: r.title }, p.lastUpdate);
+      actualCost: r.actualCost, actualEnd: r.actualEnd, date: r.date, schedule: r.schedule, budget: r.budget, resources: r.resources, title: r.title }, p.lastUpdate);
     (Object.keys(t) as TargetKey[]).forEach(k => {
       const v = t[k] as string;
       if (k === 'progress' || k === 'actualCost') (p as unknown as Record<string, number>)[k] = Number(v);

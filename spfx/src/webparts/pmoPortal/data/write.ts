@@ -1,7 +1,7 @@
 import { Project, TeamMember } from './types';
 import { roundAway } from '../logic/overlay';
 import { TeamRow } from '../logic/team';
-import { ReportDraft, ProjectDraft, RiskDraft } from '../logic/forms';
+import { ReportDraft, ProjectDraft, RiskDraft, archiveStatus } from '../logic/forms';
 
 type Body = Record<string, unknown>;
 
@@ -21,6 +21,8 @@ export function reportBody(d: ReportDraft, p: Project): Body {
   if (d.actualCost !== p.actualCost) b.srActualCost = Math.max(0, roundAway(d.actualCost));
   const dates: [keyof ReportDraft & keyof Project, string][] = [['start', 'srStart'], ['goLive', 'srGoLive'], ['planEnd', 'srPlanEnd'], ['forecastEnd', 'srForecastEnd']];
   dates.forEach(([k, f]) => { if ((d[k] || '') !== (p[k] || '')) b[f] = spDate(String(d[k] || '')); });
+  // #54: фактическая дата — только при «Завершено» / «Скасовано»
+  if (archiveStatus(d.status) && d.actualEnd) b.srActualEnd = spDate(d.actualEnd);
   return b;
 }
 

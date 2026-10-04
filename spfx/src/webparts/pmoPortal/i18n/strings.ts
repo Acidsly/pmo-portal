@@ -581,6 +581,16 @@ export const T: Record<string, L3> = {
   "Cannot be earlier than the start date.",
   "Не может быть раньше даты старта."
  ],
+ "errAfterReport": [
+  "Не може бути пізніше дати звіту.",
+  "Cannot be later than the report date.",
+  "Не может быть позже даты отчёта."
+ ],
+ "aeHint": [
+  "Коли проєкт фактично завершено або скасовано.",
+  "When the project was actually completed or cancelled.",
+  "Когда проект фактически завершён или отменён."
+ ],
  "errDatesOrder": [
   "Дати запуску й завершення не можуть бути раніше дати старту.",
   "Launch and end dates cannot be earlier than the start date.",
@@ -1116,6 +1126,11 @@ export const T: Record<string, L3> = {
   "Forecast",
   "Прогноз"
  ],
+ "cAe": [
+  "Завершено (факт)",
+  "Completed (actual)",
+  "Завершён (факт)"
+ ],
  "cDev": [
   "Відхилення, дн.",
   "Deviation, days",
@@ -1422,6 +1437,11 @@ export const FLD: Record<string, L3> = {
   "Прогноз завершення",
   "Forecast completion",
   "Прогноз завершения"
+ ],
+ "ae": [
+  "Дата завершення (факт)",
+  "Actual completion date",
+  "Дата завершения (факт)"
  ],
  "budget": [
   "Бюджет (план)",

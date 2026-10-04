@@ -1,5 +1,5 @@
 {
-  "_about": "Форма статус-отчёта: одни и те же сценарии проверяют приложение (spfx/test/reportForm.test.ts — logic/forms.ts) и прототип (spfx/test/prototypeForm.test.ts — prototype/pmo-prototype.html в jsdom). Даты задаются всегда (они отличаются от карточки — нужна причина, если keyReason не пуст).",
+  "_about": "Форма статус-отчёта: одни и те же сценарии проверяют приложение (spfx/test/reportForm.test.ts — logic/forms.ts) и прототип (spfx/test/prototypeForm.test.ts — prototype/pmo-prototype.html в jsdom). Даты задаются всегда (они отличаются от карточки — нужна причина, если keyReason не пуст). Фактическая дата (#54, actualEnd) — при «Завершено» / «Скасовано»: обязательна, не раньше старта, не позже даты отчёта (date).",
   "status": [
     {
       "name": "#52 «Завершено» — 100 % и поле закрыто",
@@ -155,9 +155,139 @@
         "start": "2026-03-02",
         "goLive": "",
         "planEnd": "2026-12-01",
-        "forecastEnd": ""
+        "forecastEnd": "",
+        "date": "2026-10-01",
+        "actualEnd": "2026-09-30"
       },
       "progressText": "500",
+      "out": [],
+      "message": ""
+    },
+    {
+      "name": "#54 «Скасовано» без фактической даты — обязательное поле",
+      "draft": {
+        "schedule": "Зелений",
+        "budget": "Зелений",
+        "resources": "Зелений",
+        "title": "Резюме",
+        "keyReason": "Скасовано",
+        "status": "Скасовано",
+        "start": "2026-03-02",
+        "goLive": "",
+        "planEnd": "2026-12-01",
+        "forecastEnd": "",
+        "date": "2026-10-01",
+        "actualEnd": ""
+      },
+      "progressText": "40",
+      "out": [
+        "actualEnd"
+      ],
+      "message": "errReqAll"
+    },
+    {
+      "name": "#54 «Завершено» без фактической даты — обязательное поле",
+      "draft": {
+        "schedule": "Зелений",
+        "budget": "Зелений",
+        "resources": "Зелений",
+        "title": "Резюме",
+        "keyReason": "Завершено",
+        "status": "Завершено",
+        "start": "2026-03-02",
+        "goLive": "",
+        "planEnd": "2026-12-01",
+        "forecastEnd": "",
+        "date": "2026-10-01",
+        "actualEnd": ""
+      },
+      "progressText": "100",
+      "out": [
+        "actualEnd"
+      ],
+      "message": "errReqAll"
+    },
+    {
+      "name": "#54 фактическая дата раньше старта",
+      "draft": {
+        "schedule": "Зелений",
+        "budget": "Зелений",
+        "resources": "Зелений",
+        "title": "Резюме",
+        "keyReason": "Скасовано",
+        "status": "Скасовано",
+        "start": "2026-03-02",
+        "goLive": "",
+        "planEnd": "2026-12-01",
+        "forecastEnd": "",
+        "date": "2026-10-01",
+        "actualEnd": "2026-02-01"
+      },
+      "progressText": "40",
+      "out": [
+        "actualEnd"
+      ],
+      "message": "errBeforeStart"
+    },
+    {
+      "name": "#54 фактическая дата позже даты отчёта",
+      "draft": {
+        "schedule": "Зелений",
+        "budget": "Зелений",
+        "resources": "Зелений",
+        "title": "Резюме",
+        "keyReason": "Скасовано",
+        "status": "Скасовано",
+        "start": "2026-03-02",
+        "goLive": "",
+        "planEnd": "2026-12-01",
+        "forecastEnd": "",
+        "date": "2026-10-01",
+        "actualEnd": "2026-10-02"
+      },
+      "progressText": "40",
+      "out": [
+        "actualEnd"
+      ],
+      "message": "errAfterReport"
+    },
+    {
+      "name": "#54 фактическая дата = дате отчёта и = старту — без ошибок",
+      "draft": {
+        "schedule": "Зелений",
+        "budget": "Зелений",
+        "resources": "Зелений",
+        "title": "Резюме",
+        "keyReason": "Скасовано",
+        "status": "Скасовано",
+        "start": "2026-03-02",
+        "goLive": "",
+        "planEnd": "2026-12-01",
+        "forecastEnd": "",
+        "date": "2026-10-01",
+        "actualEnd": "2026-10-01"
+      },
+      "progressText": "40",
+      "out": [],
+      "message": ""
+    },
+    {
+      "name": "#54 при обычном статусе фактическая дата не проверяется",
+      "draft": {
+        "schedule": "Зелений",
+        "budget": "Зелений",
+        "resources": "Зелений",
+        "title": "Резюме",
+        "keyReason": "Перенос",
+        "status": "Реалізація",
+        "start": "2026-03-02",
+        "goLive": "",
+        "planEnd": "2026-12-01",
+        "forecastEnd": "",
+        "date": "2026-10-01",
+        "actualEnd": ""
+      },
+      "progressText": "40",
       "out": [],
       "message": ""
     }
