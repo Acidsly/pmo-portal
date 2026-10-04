@@ -162,6 +162,19 @@ foreach ($c in $rc.effective) {
     if ($got -eq $exp) { Ok "действующее решение: $($c.name)" } else { Bad "действующее решение: $($c.name): $got, ожидалось $exp" }
 }
 $syncSrc = Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")
+# «Створення» один раз (R8): нужна ли строка — и эталон пишется раньше строки журнала (ошибка сверки №3)
+$fnc = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Test-NeedCreation" }, $true) | Select-Object -First 1
+if ($fnc) { Invoke-Expression $fnc.Extent.Text } else { Bad "нет функции Test-NeedCreation" }
+foreach ($c in @(@{ a = ""; l = $true; s = $false; out = $true; n = "новый проект: без прав и без эталона — строка" }, @{ a = ""; l = $true; s = $true; out = $false; n = "эталон уже есть (сбой выдачи прав) — строки нет" },
+                 @{ a = "v2:abc"; l = $true; s = $false; out = $false; n = "права уже выданы — строки нет" }, @{ a = ""; l = $false; s = $false; out = $true; n = "без списка эталона — по отметке прав" })) {
+    if ((Test-NeedCreation $c.a $c.l $c.s) -eq $c.out) { Ok "«Створення»: $($c.n)" } else { Bad "«Створення»: $($c.n)" }
+}
+$blk = [regex]::Match($syncSrc, '(?s)if \(Test-NeedCreation .*?\n    \}')
+if ($blk.Success -and $blk.Value.IndexOf('Save-ProjectState') -ge 0 -and $blk.Value.IndexOf('Save-ProjectState') -lt $blk.Value.IndexOf('Add-Change')) { Ok "«Створення»: эталон записывается раньше строки журнала" } else { Bad "«Створення»: строка журнала раньше эталона (задвоится при сбое)" }
+# имя уровня прав «только добавление» одно и то же в развёртывании и синхронизации (иначе синхронизация тихо уйдёт на старую модель прав)
+$depSrc = Get-Content -Raw (Join-Path $root "scripts/Deploy-PMO.ps1")
+$roleDep = [regex]::Match($depSrc, '\$ROLE_ADD\s*=\s*"([^"]+)"').Groups[1].Value; $roleSync = [regex]::Match($syncSrc, '\$ROLE_ADD_NAME\s*=\s*"([^"]+)"').Groups[1].Value
+if ($roleDep -and $roleDep -eq $roleSync) { Ok "уровень прав «$roleDep» — одинаковое имя в Deploy-PMO и Invoke-PMOSync" } else { Bad "имя уровня прав: Deploy-PMO «$roleDep», Invoke-PMOSync «$roleSync»" }
 # решение по эталону: принять / откатить / заново (tests/cases/state.json -> plan)
 $fnp = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Get-StatePlan" }, $true) | Select-Object -First 1
 if ($fnp) { Invoke-Expression $fnp.Extent.Text } else { Bad "нет функции Get-StatePlan" }

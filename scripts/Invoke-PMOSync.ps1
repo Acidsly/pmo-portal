@@ -316,6 +316,8 @@ $TARGET_FIELD = [ordered]@{ status = "pmStatus"; type = "pmType"; progress = "pm
 # Решение по эталону (векторы tests/cases/state.json -> plan): $state — эталон или $null (нет / повреждён), $hasRecord — строка
 # эталона есть. new — эталона нет: из карточки; rebuild — повреждён: заново из карточки (не откат к пустым значениям);
 # none — совпадает; accept — правил владелец сайта или приложение (скрипт): эталон = карточка; rollback — правка в обход отчёта.
+# «Створення» в журнал — один раз (R8): проект ещё без прав и без эталона. Без списка эталона — только по отметке прав.
+function Test-NeedCreation([string]$pmoAcl, [bool]$hasStateList, [bool]$hasState) { return (-not $pmoAcl) -and -not ($hasStateList -and $hasState) }
 function Get-StatePlan($card, $state, [bool]$hasRecord, [string]$editorT, [string[]]$ownerList) {
     if (-not $state) { return @{ action = $(if ($hasRecord) { "rebuild" } else { "new" }); diff = @() } }
     $diff = @(Compare-State $card $state | Where-Object { $_ })
@@ -550,9 +552,14 @@ Log ("Проєктів: {0}, звітів: {1}, ризиків: {2}, комен�
 $STATES = Read-ProjectStates
 $HAS_PS = [bool]$script:HAS_STATE_LIST
 foreach ($p in $PROJ.Values) {
-    # «Створення» — один раз: проект ещё без прав и без эталона (при сбое выдачи прав строка не повторяется)
-    if (-not $p.Values.pmoAcl -and -not ($HAS_PS -and $STATES.ContainsKey($p.Item.Id))) {
+    # «Створення» — один раз: проект ещё без прав и без эталона (при сбое выдачи прав строка не повторяется).
+    # Сначала эталон, потом строка журнала: сбой между ними оставит проект без строки, но не даст её задвоить (ошибка сверки №3)
+    if (Test-NeedCreation ([string]$p.Values.pmoAcl) $HAS_PS ($STATES.ContainsKey($p.Item.Id))) {
         $stats.created++
+        if ($HAS_PS -and -not $DryRun) {
+            $card0 = [ordered]@{}; foreach ($k in Get-StateKeys) { $card0[$k] = [string]$p.Values[$k] }
+            Save-ProjectState $p.Item.Id $card0 $STATES; $stats.stateNew++
+        }
         Add-Change $p.Item.Id "Title" "" ([string]$p.Item["Title"]) "Створення" (Email $p.Item["Author"]) "" ($p.Item["Created"].ToUniversalTime().ToString("o"))
     }
 }
