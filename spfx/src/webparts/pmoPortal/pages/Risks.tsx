@@ -4,7 +4,7 @@ import { PortalData } from '../data/SpRepo';
 import { isArch, isActive, newestFirst } from '../logic/status';
 import { KV, riskInView } from '../logic/views';
 import { DataTable } from '../components/DataTable';
-import { riskDefs } from '../components/defs';
+import { riskDefs, riskCard } from '../components/defs';
 import { Plus } from '../components/Icons';
 import { Hero, ViewSel, useDefsCtx } from './common';
 
@@ -18,7 +18,7 @@ export const Risks: React.FC<{ data: PortalData }> = ({ data }) => {
   const add = canAdd ? <button className="cmd primary" onClick={() => c.openForm('risk:new')}><Plus />{t('newRisk')}</button> : null;
   return <>
     <Hero title={t('navRisks')} />
-    <div className="listcard"><DataTable tkey="risks" defs={riskDefs(x)} rows={rows} left={add}
+    <div className="listcard"><DataTable tkey="risks" defs={riskDefs(x)} rows={rows} left={add} card={riskCard(x)}
       right={<ViewSel views={KV} value={c.views.risks} onChange={v => c.setView('risks', v)} />} /></div>
     <p className="hint">{t('hintRisks')}</p>
   </>;

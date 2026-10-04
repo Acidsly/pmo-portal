@@ -72,3 +72,16 @@ test('#36 прототип: виды «Мої проєкти (усі)» и «Я 
   expect(pm.length).toBeLessThan(mine.length);                 // в демо-данных я и PM, и участник других проектов
   pm.forEach(id => expect(mine).toContain(id));
 });
+
+test('#58 прототип: карточки отчётов и рисков — те же строки, что в таблице', () => {
+  for (const page of ['reports', 'risks']) {
+    q(`[data-act="nav"][data-page="${page}"]`).click();
+    const rows = w.document.querySelectorAll('.tablewrap.dt.has-cards tbody tr').length;
+    expect(rows).toBeGreaterThan(0);
+    expect(w.document.querySelectorAll('.mcards .mcard').length).toBe(rows);
+  }
+  // карточка открывает отчёт
+  q('[data-act="nav"][data-page="reports"]').click();
+  q('.mcards .mcard').click();
+  expect(w.document.querySelector('.pmo-panel.open, .pmo-panel[aria-hidden="false"], .panel.open') || w.document.querySelector('[data-act="decide"], .rv-meta')).not.toBeNull();
+});

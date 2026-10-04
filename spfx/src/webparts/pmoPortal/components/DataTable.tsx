@@ -12,7 +12,8 @@ type PopState = { kind: 'filter'; col: string; anchor: HTMLElement } | { kind: '
 
 /** Таблица прототипа (dataTable, строки 1090–1103): «Показано X з Y», чипы фильтров, сортировка, фильтр, шестерёнка. */
 /** left — кнопки слева в строке команд (cmdbar), right — перед шестерёнкой (выбор представления). */
-export function DataTable<R extends { id: number }>(p: { tkey: string; defs: TableDefs<R>; rows: R[]; empty?: string; left?: React.ReactNode; right?: React.ReactNode }): JSX.Element {
+export function DataTable<R extends { id: number }>(p: { tkey: string; defs: TableDefs<R>; rows: R[]; empty?: string; left?: React.ReactNode; right?: React.ReactNode;
+  /** #58: карточка строки — на узком экране вместо таблицы (те же строки, фильтры и сортировка) */ card?: (r: R) => React.ReactNode }): JSX.Element {
   const { t } = React.useContext(AppCtx);
   const { cols: defs, lock, defaults } = p.defs;
   const known = Object.keys(defs);
@@ -103,10 +104,11 @@ export function DataTable<R extends { id: number }>(p: { tkey: string; defs: Tab
       <button className="iconbtn gear-lg" aria-label={t('cols')} title={t('cols')}
         onClick={e => { const a = e.currentTarget; setPop(pop && pop.kind === 'cols' ? undefined : { kind: 'cols', anchor: a }); }}><Gear /></button></div>
     <div className="dt-bar"><span className="muted">{t('shown')} {data.length} {t('of')} {p.rows.length}</span>{chips}</div>
-    {data.length ? <div className="tablewrap dt" ref={tableRef}><table className={locked ? 'locked' : undefined}
+    {data.length ? <><div className={'tablewrap dt' + (p.card ? ' has-cards' : '')} ref={tableRef}><table className={locked ? 'locked' : undefined}
       style={locked ? { tableLayout: 'fixed', width: locked.reduce((a, b) => a + b, 0) } : undefined}>
       {locked ? <colgroup>{locked.map((w, i) => <col key={shownCols[i]} style={{ width: w }} />)}</colgroup> : null}<thead><tr>{head}</tr></thead>
       <tbody>{data.map(r => <tr key={r.id} className="row">{shownCols.map(id => <td key={id} className={defs[id].cls || ''}>{defs[id].cell(r)}</td>)}</tr>)}</tbody></table></div>
+      {p.card ? <div className="mcards">{data.map(r => <React.Fragment key={r.id}>{p.card!(r)}</React.Fragment>)}</div> : null}</>
       : <p className="empty">{p.empty || t('empty')}</p>}
     {pop ? <Pop anchor={pop.anchor} align={pop.kind === 'filter' ? 'left' : 'right'} onClose={close}>{popBody}</Pop> : null}
   </>;

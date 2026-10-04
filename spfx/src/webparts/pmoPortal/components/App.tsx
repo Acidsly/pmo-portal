@@ -4,6 +4,7 @@ import { Lang, LANG_CODES, langFromCulture, makeT, readLang, saveLang } from '..
 import { Theme, readTheme, saveTheme } from '../theme/theme';
 import { todayIso } from '../logic/dates';
 import { DEFAULT_VIEWS, Route, parse, format, goRoute } from '../logic/route';
+import { setFavicon } from '../logic/favicon';
 import { AppCtx, Ctx, Page, Views } from './ctx';
 import { Header } from './Header';
 import { Panel } from './Panel';
@@ -42,7 +43,7 @@ export const App: React.FC<AppProps> = p => {
   const formRef = React.useRef('');
   const load = (): Promise<void> => Promise.all([p.repo.loadAll(), p.repo.stamp().catch(() => '')])
     .then(([d, st]) => { stampRef.current = st; setData(d); }, e => setErr(String((e && e.message) || e)));
-  React.useEffect(() => { load().catch(() => undefined); }, []);
+  React.useEffect(() => { load().catch(() => undefined); setFavicon(document); }, []);   // #34: значок вкладки «PPM»
   React.useEffect(() => {
     const check = (): void => {
       if (document.visibilityState !== 'visible' || formRef.current) return;

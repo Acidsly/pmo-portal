@@ -502,6 +502,15 @@ form .fsec:first-child{margin-top:0}
 .sec-h h3{margin:0}
 .sec-h .more{display:inline-flex;align-items:center;gap:4px}
 .rlist{display:grid;gap:6px}
+/* #58: на телефоне статус-звіти й ризики — картками (те самі рядки, фільтри й сортування, що в таблиці) */
+.mcards{display:none}
+@media (max-width:600px){.tablewrap.dt.has-cards{display:none}.mcards{display:grid;gap:8px}}
+.mcard{display:grid;gap:4px;background:var(--bg-alt);border:0;border-radius:14px;padding:12px 14px;cursor:pointer;text-align:left;width:100%;color:inherit;font:inherit}
+.mcard:hover{background:var(--track)}
+.mcard .mc-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mcard .mc-h b{font-weight:600}
+.mcard .mc-m{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:13px;color:var(--text-2)}
+.mcard .mc-t{font-size:14px}
 .rrow{display:flex;align-items:center;gap:12px;background:var(--bg-alt);border:0;border-radius:12px;padding:10px 12px;cursor:pointer;text-align:left;width:100%}
 .rrow:hover{background:var(--track)}
 .rrow .rt{flex:1;font-weight:500}

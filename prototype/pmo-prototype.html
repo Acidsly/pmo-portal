@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>PPM — Портфель проєктів</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Cdefs%3E%3ClinearGradient%20id%3D%27g%27%20x1%3D%270%27%20y1%3D%270%27%20x2%3D%271%27%20y2%3D%271%27%3E%3Cstop%20offset%3D%270%27%20stop-color%3D%27%230a84ff%27%2F%3E%3Cstop%20offset%3D%271%27%20stop-color%3D%27%235e5ce6%27%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%2764%27%20height%3D%2764%27%20rx%3D%2716%27%20fill%3D%27url%28%23g%29%27%2F%3E%3Ctext%20x%3D%2732%27%20y%3D%2741%27%20text-anchor%3D%27middle%27%20font-family%3D%27Segoe%20UI%2CHelvetica%2CArial%2Csans-serif%27%20font-size%3D%2724%27%20font-weight%3D%27700%27%20fill%3D%27%23fff%27%20letter-spacing%3D%27-1%27%3EPPM%3C%2Ftext%3E%3C%2Fsvg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap&amp;subset=cyrillic" rel="stylesheet">
@@ -507,6 +508,15 @@ main{padding-bottom:40px}
 .sec-h h3{margin:0}
 .sec-h .more{display:inline-flex;align-items:center;gap:4px}
 .rlist{display:grid;gap:6px}
+/* #58: на телефоне статус-звіти й ризики — картками (те самі рядки, фільтри й сортування, що в таблиці) */
+.mcards{display:none}
+@media (max-width:600px){.tablewrap.dt.has-cards{display:none}.mcards{display:grid;gap:8px}}
+.mcard{display:grid;gap:4px;background:var(--bg-alt);border:0;border-radius:14px;padding:12px 14px;cursor:pointer;text-align:left;width:100%;color:inherit;font:inherit}
+.mcard:hover{background:var(--track)}
+.mcard .mc-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mcard .mc-h b{font-weight:600}
+.mcard .mc-m{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:13px;color:var(--text-2)}
+.mcard .mc-t{font-size:14px}
 .rrow{display:flex;align-items:center;gap:12px;background:var(--bg-alt);border:0;border-radius:12px;padding:10px 12px;cursor:pointer;text-align:left;width:100%}
 .rrow:hover{background:var(--track)}
 .rrow .rt{flex:1;font-weight:500}
@@ -1245,6 +1255,11 @@ const prioLabel = v => `<span class="ilabel">${PRIO_I[v] || ''}${esc(v)}</span>`
 const stratCell = type => type === 'Стратегічний' ? `<span class="ico" title="${t('cStrat')}">${icoStar(true)}</span>` : '';
 const stratLabel = v => v === 'Стратегічний' ? `<span class="ilabel">${icoStar(true)}${v}</span>` : esc(v);
 const ragDot = v => `<span class="ragdot" title="${v || t('notRated')}" aria-label="${v || t('notRated')}" style="background:${v ? RC[v] : 'var(--na)'}"></span>`;
+// #58: карточка строки на телефоне (dataTable добавляет их для «reports» и «risks»)
+const CARDS = {
+  reports:r => { const p = pById(r.pid); return `<button class="mcard" data-act="repopen" data-id="${r.pid}" data-rid="${esc(r.id)}"><span class="mc-h"><b>${esc(p ? p.title : '')}</b>${apBadge(r.approval)}</span><span class="mc-m">${fmt(r.d)} · ${ragLabel(r.rag)}</span><span class="mc-t">${esc(r.title)}</span></button>`; },
+  risks:k => { const p = pById(k.pid); return `<button class="mcard" data-act="riskopen" data-src="list" data-id="${k.pid}" data-rid="${esc(k.id)}"><span class="mc-h"><b>${esc(k.title)}</b>${scoreHtml(k.p * k.i)}</span><span class="mc-m">${esc(p ? p.title : '')} · ${statusPill(k.status)}${k.due ? ` · ${fmt(D(k.due))}` : ''}</span></button>`; }
+};
 const ragLabel = v => `<span class="ilabel">${ragDot(v)}${v ? esc(tv(v)) : t('notRated')}</span>`;
 const freshBucket = d => !d ? '3' : age(d) > 14 ? '2' : age(d) > 8 ? '1' : '0';
 const freshLabel = v => `<span class="ilabel"><span class="dot sm" style="background:${['var(--g)','var(--y)','var(--r)','var(--na)'][+v]}"></span>${t('fr' + v)}</span>`;
@@ -1363,7 +1378,7 @@ function dataTable(key, rows, emptyMsg){
   }).join('');
   const body = data.map(r => `<tr class="row">${cols.map(([id, d]) => `<td class="${d.cls || ''}">${d.main(r)}</td>`).join('')}</tr>`).join('');
   return `<div class="dt-bar"><span class="muted">${t('shown')} ${data.length} ${t('of')} ${rows.length}</span>${chips}</div>
-    ${data.length ? `<div class="tablewrap dt" data-tkey="${key}">${tLockOpen(key, st.cols)}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>` : `<p class="empty">${emptyMsg || t('empty')}</p>`}`;
+    ${data.length ? `<div class="tablewrap dt${CARDS[key] ? ' has-cards' : ''}" data-tkey="${key}">${tLockOpen(key, st.cols)}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${CARDS[key] ? `<div class="mcards">${data.map(CARDS[key]).join('')}</div>` : ''}` : `<p class="empty">${emptyMsg || t('empty')}</p>`}`;
 }
 // #33: на широком экране ширины колонок закрепляются после первой раскладки по содержимому (фильтры и вид их не меняют);
 // пересчёт — при смене колонок, переходе на вкладку и изменении окна. На телефоне и планшете (< 900 px) — как раньше.
