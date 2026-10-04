@@ -57,8 +57,8 @@ flowchart LR
 | | Az.Accounts, Az.Resources, Az.Automation | лише для налаштування Azure Automation з Mac |
 | Оргструктура | Microsoft Graph v1.0: `users/{id}/manager`, `users/{id}`; `sendMail` для нагадувань | — |
 | Ідентичність | Entra ID: застосунки PMO Deploy, PMO Automation, PMO Sync; системна керована ідентичність `aa-pmo-sync` | `scripts/Register-PMOApps.ps1`, `scripts/New-PMOAutomation.ps1` |
-| Розклад | Azure Automation (runtime PowerShell 7.4, runbook `PMO-Sync`, Germany West Central) | зараз пробний режим |
-| | launchd на macOS (`scripts/Set-MacSchedule.ps1`) | робочі запуски до перемикання на Azure |
+| Розклад | Azure Automation (runtime PowerShell 7.4, runbook `PMO-Sync`, Germany West Central) | робочі запуски з 04.10.2026 |
+| | launchd на macOS (`scripts/Set-MacSchedule.ps1`) | запасний варіант (робочі запуски — в Azure Automation з 04.10.2026) |
 | Моніторинг | Azure Monitor: метрика `TotalJob` (Status = Failed) → група дій `ag-pmo-sync` → лист | `scripts/Set-AzureSchedule.ps1` |
 | Документи PDF | Google Chrome без вікна (`--headless=new --print-to-pdf`) | `docs/testing/build.mjs` |
 | CI | GitHub Actions: `Test-Scripts.ps1`, Jest, збірка `.sppkg` | `.github/workflows/validate.yml` |
@@ -141,6 +141,6 @@ pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action sync-dryrun   # пр
 | Додаток: головна, проєкти, звіти, ризики, архів, картка, форми й запис | готово, `pmo-test` (додаток 1.7.0.3) |
 | Погодження PMO, команда проєкту, посилання, еталон показників | готово, `pmo-test` |
 | Модель прав v2 (папки проєктів, роль «Додавання (портал)») | працює на `pmo-test` |
-| Синхронізація в Azure Automation | ресурси, права й runbook готові; розклади в пробному режимі (`-DryRun`), робочі запуски — з Mac |
+| Синхронізація в Azure Automation | робочий режим на тестовому сайті з 04.10.2026; Mac — запасний варіант |
 | Тестування з PM (фокус-група) | триває на `pmo-test` |
 | Перемикання синхронізації на Azure, прод `/sites/ppm`, Microsoft Teams | попереду |
