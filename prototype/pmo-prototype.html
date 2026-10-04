@@ -257,8 +257,14 @@ fieldset.ragpick{border:0;margin:0 0 14px;padding:0}
 .ragpick input{position:absolute;opacity:0;pointer-events:none}
 .ragpick input:checked + label{background:var(--bg);box-shadow:0 1px 3px rgba(0,0,0,.14);font-weight:600}
 .ragpick input:focus-visible + label{outline:3px solid var(--theme-soft)}
-.dims{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 16px}
-@media (max-width:560px){.dims{grid-template-columns:minmax(0,1fr)}}
+.dims{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-bottom:6px}
+.dims .ragpick{margin:0}
+.dims .ragpick legend{float:left;width:110px;padding:9px 0 0;margin:0}
+.dims .ragpick .opts{flex-wrap:nowrap}
+@media (max-width:520px){.dims .ragpick legend{float:none;width:auto;padding:0 0 6px}.dims .ragpick .opts{flex-wrap:wrap}}
+/* #39: статус, % и затраты — одним рядом */
+.fgrid-k{display:grid;grid-template-columns:minmax(0,1fr) 92px minmax(0,180px);gap:12px}
+@media (max-width:520px){.fgrid-k{grid-template-columns:minmax(0,1fr) 92px}.fgrid-k .k-cost{grid-column:1/-1}}
 .err{color:var(--r);font-weight:600;margin:8px 0}
 .ferr{color:var(--r);font-size:12.5px;font-weight:500;margin:4px 0 0}
 [aria-invalid=true]{box-shadow:0 0 0 2px var(--r) !important;border-radius:12px}
@@ -611,7 +617,7 @@ const T = {
  hintRisks:['Оцінка = ймовірність × вплив. Від 15 — червоний, від 8 — жовтий.','Score = probability × impact. 15+ red, 8+ yellow.','Оценка = вероятность × влияние. От 15 — красный, от 8 — жёлтый.'],
  addReport:['Додати статус-звіт','Add status report','Добавить статус-отчёт'],
  changeKey:['Змінити ключові показники','Change key indicators','Изменить ключевые показатели'],
- editProject:['Редагувати','Edit','Редактировать'],
+ editProject:['Редагувати проєкт','Edit project','Редактировать проект'],   // #42: не путать с правкой отчёта
  noEdit:['Змінювати проєкт, статус-звіти й ризики може лише PM проєкту. Вам доступні перегляд і коментарі.','Only the project PM can change the project, status reports and risks. You can view and comment.','Изменять проект, статус-отчёты и риски может только PM проекта. Вам доступны просмотр и комментарии.'],
  secPeople:['Учасники','Stakeholders','Участники'], secDates:['Терміни','Timeline','Сроки'], secMoney:['Бюджет і виконання','Budget and progress','Бюджет и выполнение'],
  secHistory:['Історія станів','Health history','История состояний'], secChanges:['Історія змін','Change history','История изменений'],
@@ -805,7 +811,8 @@ const VAL = {
  'Усі проєкти':['Усі проєкти','All projects','Все проекты'],
  'Стратегічні':['Стратегічні','Strategic','Стратегические'],
  'Проблемні':['Проблемні','At risk','Проблемные'],
- 'Мої проєкти':['Мої проєкти','My projects','Мои проекты'],
+ 'Мої проєкти (усі)':['Мої проєкти (усі)','My projects (all)','Мои проекты (все)'],
+ 'Я PM':['Я PM','I am PM','Я PM'],
  'Немає свіжого звіту':['Немає свіжого звіту','No recent report','Нет свежего отчёта'],
  'Усі звіти':['Усі звіти','All reports','Все отчёты'],
  'Потребують рішення':['Потребують рішення','Decision needed','Требуют решения'],
@@ -1043,6 +1050,8 @@ const lastUpd = p => D(p.lastUpdate);
 // «Немає свіжого звіту» (#3): сначала без отчётов, дальше — от самого давнего; списки — новые сверху (как logic/status.ts)
 const staleFirst = (a, b) => { const x = a.lastUpdate || '', y = b.lastUpdate || ''; return x === y ? a.id - b.id : !x ? -1 : !y ? 1 : x < y ? -1 : 1; };
 const newestFirst = (a, b) => b.id - a.id;
+// #41 / #45: сумма с пробелами между разрядами — «1 450 000» (как groupDigits в logic/money.ts приложения)
+const grp = n => String(Math.max(0, Math.round(+n || 0))).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 const byOrder = (a, b) => (a.type === b.type ? 0 : a.type === 'Стратегічний' ? -1 : 1) || a.prio.localeCompare(b.prio) || a.title.localeCompare(b.title);
 
 /* ================= Renderers ================= */
@@ -1128,12 +1137,13 @@ const PV = {
   all:{t:'Усі проєкти', f:() => true},
   strat:{t:'Стратегічні', f:p => isActive(p) && p.type === 'Стратегічний'},
   problem:{t:'Проблемні', f:p => isActive(p) && (p.rag === 'Червоний' || p.rag === 'Жовтий')},
-  mine:{t:'Мої проєкти', f:p => participants(p).includes(VIEWER)},
+  mine:{t:'Мої проєкти (усі)', f:p => participants(p).includes(VIEWER)},   // #36: усі ролі
+  pm:{t:'Я PM', f:p => p.pm === VIEWER},
   stale:{t:'Немає свіжого звіту', f:p => isActive(p) && (!lastUpd(p) || age(lastUpd(p)) > 14)},
   late:{t:'Прострочені', f:p => isActive(p) && !!D(p.plan) && D(p.plan) < TODAY}
 };
 // вигляди архіву: без умов активності
-const AV = {all:{t:'Усі проєкти', f:() => true}, strat:{t:'Стратегічні', f:p => p.type === 'Стратегічний'}, mine:{t:'Мої проєкти', f:p => participants(p).includes(VIEWER)}};
+const AV = {all:{t:'Усі проєкти', f:() => true}, strat:{t:'Стратегічні', f:p => p.type === 'Стратегічний'}, mine:{t:'Мої проєкти (усі)', f:p => participants(p).includes(VIEWER)}, pm:{t:'Я PM', f:p => p.pm === VIEWER}};
 const RV = {all:{t:'Усі звіти', f:() => true}, decision:{t:'Потребують рішення', f:r => r.decision}, awaiting:{t:'Очікують погодження', f:r => r.approval === AP_PEND}};
 const KV = {open:{t:'Відкриті', f:k => k.status !== 'Закрито'}, high:{t:'Високі ризики', f:k => k.status !== 'Закрито' && k.p * k.i >= 15}, all:{t:'Усі елементи', f:() => true}, archived:{t:'Ризики архівних проєктів', f:() => true, arch:true}};
 const state = {rmCell:null, page:'home', pv:'all', rv:'all', kv:'open', av:'all', homeMode:'tiles', projMode:'tiles', archmode:'tiles', panel:null};
@@ -1769,7 +1779,7 @@ function projectForm(p){
     <h3 class="fsec">${t('secMoney')}</h3>
     <div class="fgrid2 frow">
       <div><label class="t" for="p-prio">${fl('prio')}</label><select id="p-prio">${PRIOS.map(s => opt(s, p.prio)).join('')}</select></div>
-      <div><label class="t" for="p-budget">${fl('budget')}, $</label><input type="number" id="p-budget" min="0" step="10000" value="${p.budget || 0}"></div>
+      <div><label class="t" for="p-budget">${fl('budget')}, $</label><input type="text" id="p-budget" inputmode="numeric" autocomplete="off" onfocus="this.value=this.value.replace(/\\s/g,'')" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onblur="this.value=this.value.replace(/[^0-9]/g,'').replace(/^0+(?=\\d)/,'').replace(/\\B(?=(\\d{3})+(?!\\d))/g,' ')" value="${grp(p.budget || 0)}"></div>
     </div>
     <div class="frow"><label class="t" for="p-desc">${fl('desc')}</label><textarea id="p-desc">${esc(p.desc || '')}</textarea></div>
     <p class="err" hidden></p>
@@ -1786,7 +1796,7 @@ function projectForm(p){
   form.addEventListener('submit', e => {
     e.preventDefault();
     const vals = {title:g('p-title').value.trim(), code:g('p-code').value.trim(), dept:g('p-dept').value,
-      pm:g('p-pm').value, owner:g('p-owner').value, prio:g('p-prio').value, budget:+g('p-budget').value || 0, desc:g('p-desc').value.trim()};
+      pm:g('p-pm').value, owner:g('p-owner').value, prio:g('p-prio').value, budget:Math.round(+g('p-budget').value.replace(/\s/g, '') || 0), desc:g('p-desc').value.trim()};
     if (!vals.title) return err(t('errTitle'));
     // #27: название уникально (без учёта регистра и пробелов); прежнее название при правке не мешает
     const tk = x => String(x || '').trim().replace(/\s+/g, ' ').toLowerCase();
@@ -1912,9 +1922,10 @@ function reportForm(pid, base){
     <div class="ragcalc"><span class="k">${t('ragCalc')}</span><span id="f-ragv">${ragLabel(base ? calcRag(b) : '')}</span><span class="note">${t('ragRule')}</span></div>
     <div class="keysec">
       <h3 class="fsec">${t('keySec')}</h3><p class="note" style="margin:-6px 0 14px">${t('keySecHint')}</p>
-      <div class="fgrid2 frow">
+      <div class="fgrid-k frow">
         <div><label class="t" for="f-st">${fl('status')}</label><select id="f-st">${REPORT_STATUSES.map(v => opt(v, sel.status)).join('')}<option value="Завершено"${sel.status === 'Завершено' ? ' selected' : ''}>${t('completeArch')}</option><option value="Скасовано"${sel.status === 'Скасовано' ? ' selected' : ''}>${t('cancelArch')}</option></select></div>
-        <div><label class="t" for="f-pr">${fl('progress')}</label><input type="text" inputmode="numeric" id="f-pr" value="${sel.status === 'Завершено' ? 100 : sel.progress}"${sel.status === 'Завершено' ? ' disabled' : ''} oninput="this.value = this.value.replace(/[^0-9]/g, '')" onblur="if (/^\d+$/.test(this.value) && +this.value <= 100) this.value = String(+this.value)"><p class="ferr" id="e-pr" hidden></p><p class="hint" id="f-pr-done"${sel.status === 'Завершено' ? '' : ' hidden'}>${t('progressDone')}</p></div>
+        <div><label class="t" for="f-pr">${fl('progress')}</label><input type="text" inputmode="numeric" id="f-pr" value="${sel.status === 'Завершено' ? 100 : sel.progress}"${sel.status === 'Завершено' ? ' disabled' : ''} oninput="this.value = this.value.replace(/[^0-9]/g, '')" onblur="if (/^\\d+$/.test(this.value) && +this.value <= 100) this.value = String(+this.value)"><p class="ferr" id="e-pr" hidden></p><p class="hint" id="f-pr-done"${sel.status === 'Завершено' ? '' : ' hidden'}>${t('progressDone')}</p></div>
+        <div class="k-cost"><label class="t" for="f-c">${fl('rCost')}, $</label><input type="text" id="f-c" inputmode="numeric" autocomplete="off" onfocus="this.value=this.value.replace(/\\s/g,'')" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onblur="this.value=this.value.replace(/[^0-9]/g,'').replace(/^0+(?=\\d)/,'').replace(/\\B(?=(\\d{3})+(?!\\d))/g,' ')" value="${grp(sel.actual || 0)}"></div>
       </div>
       <p class="note" id="f-arch" hidden style="margin:-4px 0 14px">${t('completeHint')}</p>
       <fieldset class="ragpick"><legend>${fl('type')}</legend>${segPick('f-type', TYPES, sel.type)}</fieldset>
@@ -1924,7 +1935,6 @@ function reportForm(pid, base){
         <div><label class="t" for="f-plan">${fl('plan')}</label><input type="date" id="f-plan" value="${sel.plan || ''}"><p class="ferr" id="e-plan" hidden></p></div>
         <div><label class="t" for="f-fc">${fl('fc')}</label><input type="date" id="f-fc" value="${sel.fc || ''}"><p class="ferr" id="e-fc" hidden></p></div>
       </div>
-      <div class="frow"><label class="t" for="f-c">${fl('rCost')}, $</label><input type="number" id="f-c" min="0" step="1000" value="${sel.actual || 0}"></div>
       <div class="frow" id="f-kr-wrap" hidden><label class="t" for="f-kr">${t('keyReason')} *</label><textarea id="f-kr" placeholder="${t('reasonPh')}">${esc(b.keyReason || '')}</textarea></div>
     </div>
     <div class="frow"><label class="t" for="f-t">${fl('rTitle')} *</label><input type="text" id="f-t" placeholder="${t('summaryPh')}" value="${esc(bt('title'))}"></div>
@@ -1946,7 +1956,7 @@ function reportForm(pid, base){
   g('f-p').addEventListener('change', e => { const p = pById(+e.target.value);
     g('f-pr').disabled = false; prevPr = null; g('f-pr-done').hidden = true;
     form.querySelectorAll('[aria-invalid]').forEach(x => x.removeAttribute('aria-invalid')); form.querySelectorAll('.ferr').forEach(x => { x.hidden = true; });
-    g('f-pr').value = p.progress; g('f-c').value = p.actual || 0; g('f-st').value = p.status;
+    g('f-pr').value = p.progress; g('f-c').value = grp(p.actual || 0); g('f-st').value = p.status;
     ['start','golive','plan','fc'].forEach(k => g('f-' + k).value = p[k] || '');
     const tr = form.querySelector(`input[name="f-type"][value="${p.type}"]`); if (tr) tr.checked = true;
     form.querySelectorAll('input[name="rag"]').forEach(x => x.checked = false);
@@ -1985,7 +1995,7 @@ function reportForm(pid, base){
     if (req) return err(t('errReqAll'));
     if (first) return err(first);
     const rag = calcRag(dims);
-    const progress = g('f-pr').disabled ? 100 : +prv, cost = Math.max(0, Math.round(+g('f-c').value || 0)), dec = g('f-dec').checked;
+    const progress = g('f-pr').disabled ? 100 : +prv, cost = Math.max(0, Math.round(+g('f-c').value.replace(/\s/g, '') || 0)), dec = g('f-dec').checked;
     // звіт зберігається «На погодженні»; картку оновить applyReport після погодження PMO
     p.reports = (p.reports || []).concat([{id:uid(), date:dstr, rag, sched:dims.sched, budget:dims.budget, res:dims.res,
       progress, status:g('f-st').value, type:radioVal(form, 'f-type') || p.type, start:g('f-start').value, golive:g('f-golive').value, plan:g('f-plan').value, fc:g('f-fc').value,

@@ -252,8 +252,14 @@ fieldset.ragpick{border:0;margin:0 0 14px;padding:0}
 .ragpick input{position:absolute;opacity:0;pointer-events:none}
 .ragpick input:checked + label{background:var(--bg);box-shadow:0 1px 3px rgba(0,0,0,.14);font-weight:600}
 .ragpick input:focus-visible + label{outline:3px solid var(--theme-soft)}
-.dims{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 16px}
-@media (max-width:560px){.dims{grid-template-columns:minmax(0,1fr)}}
+.dims{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-bottom:6px}
+.dims .ragpick{margin:0}
+.dims .ragpick legend{float:left;width:110px;padding:9px 0 0;margin:0}
+.dims .ragpick .opts{flex-wrap:nowrap}
+@media (max-width:520px){.dims .ragpick legend{float:none;width:auto;padding:0 0 6px}.dims .ragpick .opts{flex-wrap:wrap}}
+/* #39: статус, % и затраты — одним рядом */
+.fgrid-k{display:grid;grid-template-columns:minmax(0,1fr) 92px minmax(0,180px);gap:12px}
+@media (max-width:520px){.fgrid-k{grid-template-columns:minmax(0,1fr) 92px}.fgrid-k .k-cost{grid-column:1/-1}}
 .err{color:var(--r);font-weight:600;margin:8px 0}
 .ferr{color:var(--r);font-size:12.5px;font-weight:500;margin:4px 0 0}
 [aria-invalid=true]{box-shadow:0 0 0 2px var(--r) !important;border-radius:12px}

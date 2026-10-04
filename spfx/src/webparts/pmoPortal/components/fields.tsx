@@ -5,8 +5,20 @@ import { Avatar, ragColor } from './Bits';
 import { tv } from '../i18n/values';
 import { AppCtx } from './ctx';
 import { pickerKey } from '../logic/ui';
+import { groupDigits, parseMoney } from '../logic/money';
 import { maskDmy, parseDmy, formatDmy } from '../logic/dates';
 
+/** Поле суммы (#41, #45): вне фокуса — «1 450 000», в фокусе — цифры без пробелов; значение наружу — целое число. */
+export const MoneyIn: React.FC<{ id: string; value: number; onChange(v: number): void; disabled?: boolean }> = p => {
+  const [focus, setFocus] = React.useState(false);
+  const [txt, setTxt] = React.useState(String(Math.max(0, Math.round(p.value || 0))));
+  React.useEffect(() => { if (!focus) setTxt(String(Math.max(0, Math.round(p.value || 0)))); }, [p.value, focus]);
+  return <input type="text" id={p.id} inputMode="numeric" autoComplete="off" disabled={p.disabled}
+    value={focus ? txt : groupDigits(parseMoney(txt))}
+    onFocus={() => { setFocus(true); setTxt(String(parseMoney(txt))); }}
+    onBlur={() => { setFocus(false); p.onChange(parseMoney(txt)); }}
+    onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setTxt(v); p.onChange(parseMoney(v)); }} />;
+};
 /** Ошибка у конкретного поля (#40, #54). */
 export const FieldErrText: React.FC<{ msg?: string }> = ({ msg }) => (msg ? <p className="ferr">{msg}</p> : null);
 /** Строка формы (frow прототипа): подпись, «*» для обязательного, подсказка. */

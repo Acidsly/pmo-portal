@@ -6,7 +6,7 @@ import { Project, Person } from '../data/types';
 import { ProjectDraft, validateProject, nextCode, cardDiff } from '../logic/forms';
 import { projectBody, projectEditBody, teamBody, teamRows } from '../data/write';
 import { TeamRow, cleanTeam, cleanLinks, teamPlan } from '../logic/team';
-import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts, errText, guardText } from '../components/fields';
+import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts, errText, guardText, MoneyIn } from '../components/fields';
 import { guard, cardFields, changedFields } from '../logic/guard';
 
 const TYPES = ['Стратегічний', 'Звичайний'];
@@ -138,7 +138,7 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
         <div><label className="t" htmlFor="f-prio">{fl('prio')}</label>
           <select id="f-prio" value={d.priority} onChange={e => set({ priority: e.target.value })}><Opts values={PRIOS} /></select></div>
         <div><label className="t" htmlFor="f-bud">{fl('budget')}, $</label>
-          <input type="number" id="f-bud" min={0} step={10000} value={d.budget} onChange={e => set({ budget: Number(e.target.value) || 0 })} /></div>
+          <MoneyIn id="f-bud" value={d.budget} onChange={v => set({ budget: v })} /></div>
       </div>
       <Frow label={fl('desc')} htmlFor="f-desc"><textarea id="f-desc" value={d.description} onChange={e => set({ description: e.target.value })} /></Frow>
       <Err msg={err} />

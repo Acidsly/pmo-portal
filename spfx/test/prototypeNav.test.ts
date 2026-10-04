@@ -59,3 +59,16 @@ test('список «Проєкти» — новые сверху (как в п�
   expect(uniq.length).toBeGreaterThan(2);
   expect(uniq).toEqual(uniq.slice().sort((a, b) => b - a));
 });
+
+test('#36 прототип: виды «Мої проєкти (усі)» и «Я PM» есть; «Я PM» — подмножество «Мої проєкти (усі)»', () => {
+  q('[data-act="nav"][data-page="projects"]').click();
+  const sel = q('select[data-act="view"]');
+  const opts = Array.from(sel.options).map((o: W) => o.value);
+  expect(opts).toEqual(expect.arrayContaining(['mine', 'pm']));
+  const ids = (v: string): number[] => { const s = q('select[data-act="view"]'); s.value = v; s.dispatchEvent(new w.Event('change', { bubbles: true }));
+    return Array.from(new Set(Array.from(w.document.querySelectorAll('[data-act="openp"]')).map((x: W) => Number(x.dataset.id)))); };
+  const mine = ids('mine'), pm = ids('pm');
+  expect(pm.length).toBeGreaterThan(0);
+  expect(pm.length).toBeLessThan(mine.length);                 // в демо-данных я и PM, и участник других проектов
+  pm.forEach(id => expect(mine).toContain(id));
+});

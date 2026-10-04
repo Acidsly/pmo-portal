@@ -7,7 +7,7 @@ import { calcRag, Rag } from '../logic/rag';
 import { ReportDraft, reportFromProject, reportFromReturned, keyChanged, reportErrors, formErrorText, parseProgress, progressLocked, FieldErr,
   initialReport, switchStatus, switchProject, reportToSave, reportProjectChoice } from '../logic/forms';
 import { reportBody } from '../data/write';
-import { Frow, RagPick, SegPick, DateIn, Err, Opts, errText, guardText, FieldErrText } from '../components/fields';
+import { Frow, RagPick, SegPick, DateIn, Err, Opts, errText, guardText, FieldErrText, MoneyIn } from '../components/fields';
 import { fmtDate } from '../components/Bits';
 import { guard } from '../logic/guard';
 import { RagDot } from '../components/Bits';
@@ -94,7 +94,8 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
 
       <div className="keysec">
         <h3 className="fsec">{t('keySec')}</h3><p className="note" style={{ margin: '-6px 0 14px' }}>{t('keySecHint')}</p>
-        <div className="fgrid2 frow">
+        {/* #39: статус, % и затраты — одним рядом (на телефоне затраты — следующей строкой) */}
+        <div className="fgrid-k frow">
           <div><label className="t" htmlFor="f-st">{fl('status')}</label>
             <select id="f-st" value={d.status} onChange={e => setStatus(e.target.value)}>
               <Opts values={REPORT_STATUSES} /><option value="Завершено">{t('completeArch')}</option><option value="Скасовано">{t('cancelArch')}</option></select></div>
@@ -104,6 +105,8 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
               onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setPrTxt(v); const n = parseProgress(v); set({ progress: n === null ? d.progress : n }); }}
               onBlur={() => { const n = parseProgress(prTxt); if (n !== null) setPrTxt(String(n)); }} />
             <FieldErrText msg={fErr('progress')} />{progressLocked(d.status) ? <p className="hint">{t('progressDone')}</p> : null}</div>
+          <div className="k-cost"><label className="t" htmlFor="f-c">{fl('rCost')}, $</label>
+            <MoneyIn id="f-c" value={d.actualCost} onChange={v => set({ actualCost: v })} /></div>
         </div>
         {d.status === 'Завершено' || d.status === 'Скасовано' ? <p className="note" style={{ margin: '-4px 0 14px' }}>{t('completeHint')}</p> : null}
         <fieldset className="ragpick"><legend>{fl('type')}</legend><SegPick name="f-type" options={TYPES} value={d.type} onChange={v => set({ type: v })} /></fieldset>
@@ -113,8 +116,6 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
           <div><label className="t" htmlFor="f-plan">{fl('plan')}</label><DateIn id="f-plan" value={d.planEnd} invalid={bad('planEnd')} onChange={v => set({ planEnd: v })} /><FieldErrText msg={fErr('planEnd')} /></div>
           <div><label className="t" htmlFor="f-fc">{fl('fc')}</label><DateIn id="f-fc" value={d.forecastEnd} invalid={bad('forecastEnd')} onChange={v => set({ forecastEnd: v })} /><FieldErrText msg={fErr('forecastEnd')} /></div>
         </div>
-        <Frow label={`${fl('rCost')}, $`} htmlFor="f-c">
-          <input type="number" id="f-c" min={0} step={1000} value={d.actualCost} onChange={e => set({ actualCost: Number(e.target.value) || 0 })} /></Frow>
         {keyCh ? <Frow label={t('keyReason')} htmlFor="f-kr" req={true}>
           <textarea id="f-kr" placeholder={t('reasonPh')} aria-invalid={bad('keyReason') || undefined} value={d.keyReason} onChange={e => set({ keyReason: e.target.value })} /></Frow> : null}
       </div>
