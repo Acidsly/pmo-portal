@@ -48,6 +48,20 @@ export function teamPlan(before: TeamMember[], after: TeamRow[]): { create: Team
   return { create, update, remove: before.filter(x => !keep[x.id]).map(x => x.id) };
 }
 
+/** Строка команды учитывается — как Test-TeamRowAccepted синхронизации (векторы tests/cases/folders.json -> team, R7):
+ *  в папке проекта — да; в корне — для нового проекта (права ещё не выданы), от владельца сайта или приложения, или от PM. */
+export function teamRowAccepted(inRoot: boolean, projectReady: boolean, author: string, pm: string, owners: string[]): boolean {
+  if (!inRoot || !projectReady) return true;
+  return author === 'app' || (!!author && owners.indexOf(author) >= 0) || (!!author && author === pm);
+}
+/** Для приложения: строка в корне списка «Команда проєкту» (не в папке P<ID>). Автор без e-mail — приложение (скрипт):
+ *  владельцев сайта приложение не знает — их строку в корне синхронизация переносит в папку в ближайший запуск. */
+export function teamVisible(m: { dir?: string; author?: { email: string } | null }, listRoot: string, projectReady: boolean, pm: string): boolean {
+  const inRoot = !!m.dir && m.dir.replace(/\/+$/, '').toLowerCase() === listRoot.replace(/\/+$/, '').toLowerCase();
+  const a = m.author ? (m.author.email || '').toLowerCase() : '';
+  return teamRowAccepted(inRoot, projectReady, a || 'app', pm.toLowerCase(), []);
+}
+
 /** Текст для журнала «Редагування картки». */
 export const teamText = (rows: { user: Person | null; role: string }[]): string =>
   rows.filter(r => r.user).map(r => `${r.user!.name} — ${r.role}`).join('; ');
