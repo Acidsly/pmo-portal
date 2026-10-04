@@ -1650,6 +1650,11 @@ export const EXTRA: Record<string, L3> = {
   "Test participants’ comments and suggestions with the solution team’s answers",
   "Замечания и предложения участников теста и ответы разработчиков решения"
  ],
+ "fbNum": [
+  "№",
+  "No.",
+  "№"
+ ],
  "fbDate": [
   "Дата",
   "Date",
