@@ -133,6 +133,17 @@ foreach ($c in @(
     if ((Test-AppLogin $c.l) -eq $c.out) { Ok $c.n } else { Bad "Test-AppLogin $($c.l)" }
 }
 
+# журнал синхронизации — только через Log (в Azure Automation Write-Host не сохраняется, Write-Output портит возвраты функций)
+$syncAst2 = [System.Management.Automation.Language.Parser]::ParseInput((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")), [ref]$null, [ref]$null)
+$outCmds = $syncAst2.FindAll({ $args[0] -is [System.Management.Automation.Language.CommandAst] -and $args[0].GetCommandName() -in @("Write-Host", "Write-Output", "echo") }, $true)
+$outside = @($outCmds | Where-Object { $fn = $_.Parent; while ($fn -and -not ($fn -is [System.Management.Automation.Language.FunctionDefinitionAst])) { $fn = $fn.Parent }; -not $fn -or $fn.Name -ne "Log" })
+if (-not $outside.Count) { Ok "синхронизация пишет журнал только через Log" } else { Bad "Write-Host / Write-Output вне Log: строки $(@($outside | ForEach-Object { $_.Extent.StartLineNumber }) -join ', ')" }
+# #9 расписание: каждые 15 минут круглые сутки (Mac -AllDay: 96 слотов без 3:00 — пересчёт прав; Azure — 4 часовых со сдвигом + воскресенье)
+$mac = Get-Content -Raw (Join-Path $root "scripts/Set-MacSchedule.ps1")
+if ($mac -match 'foreach \(\$h in 0\.\.23\) \{ foreach \(\$m in 0, 15, 30, 45\)') { Ok "Mac: -AllDay — каждые 15 минут круглые сутки" } else { Bad "Set-MacSchedule.ps1: -AllDay не каждые 15 минут" }
+$az = Get-Content -Raw (Join-Path $root "scripts/Set-AzureSchedule.ps1")
+if ($az -match 'foreach \(\$m in 0, 15, 30, 45\)' -and $az -match '-HourInterval 1' -and $az -match '-WeekInterval 1 -DaysOfWeek Sunday') { Ok "Azure: 4 часовых расписания со сдвигом 15 минут и воскресный пересчёт" } else { Bad "Set-AzureSchedule.ps1: расписание не каждые 15 минут" }
+
 Write-Host "3c2. Runbook Azure Automation (scripts/Build-Runbook.ps1 -> runbooks/Invoke-PMOSync.ps1)"
 $rbPath = Join-Path $root "runbooks/Invoke-PMOSync.ps1"
 if (-not (Test-Path $rbPath)) { Bad "нет runbooks/Invoke-PMOSync.ps1 — запустите scripts/Build-Runbook.ps1" }
