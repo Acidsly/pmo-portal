@@ -91,9 +91,12 @@ export function DataTable<R extends { id: number }>(p: { tkey: string; defs: Tab
     e.preventDefault(); e.stopPropagation();
     const x0 = e.clientX, startW = base ? base[idx] : 0;
     const move = (ev: PointerEvent): void => setDrag({ id, startW, dx: ev.clientX - x0 });
+    // обработчики снимают друг друга — объявлены заранее
+    let up: (ev: PointerEvent) => void = () => undefined;
+    let cancel: () => void = () => undefined;
     const stop = (): void => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', cancel); };
-    const up = (ev: PointerEvent): void => { stop(); setDrag(null); save(resizeCol(stRef.current, id, startW, ev.clientX - x0)); };
-    const cancel = (): void => { stop(); setDrag(null); };   // жест отменён — ширина прежняя
+    up = (ev: PointerEvent): void => { stop(); setDrag(null); save(resizeCol(stRef.current, id, startW, ev.clientX - x0)); };
+    cancel = (): void => { stop(); setDrag(null); };   // жест отменён — ширина прежняя
     window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', cancel);
   };
   const head = shownCols.map((id, idx) => {
