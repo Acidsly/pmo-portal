@@ -3,7 +3,7 @@ import { SpRepo, PortalData } from '../data/SpRepo';
 import { Lang, LANG_CODES, langFromCulture, makeT, readLang, saveLang } from '../i18n/i18n';
 import { Theme, readTheme, saveTheme } from '../theme/theme';
 import { todayIso } from '../logic/dates';
-import { PV, RV, KV, AV } from '../logic/views';
+import { DEFAULT_VIEWS, Route, parse, format, goRoute } from '../logic/route';
 import { AppCtx, Ctx, Page, Views } from './ctx';
 import { Header } from './Header';
 import { Panel } from './Panel';
@@ -28,27 +28,6 @@ import { Toast, useToast } from './Toast';
 export interface AppProps { repo: SpRepo; culture: string; userName: string; userEmail: string; webUrl: string;
   /** Администратор сайта (право «Керування веб-сайтом»): ставит статусы и ответы на отзывы. */
   admin?: boolean; }
-
-const PAGES: Page[] = ['home', 'projects', 'reports', 'risks', 'archive', 'feedback'];
-const DEFAULT_VIEWS: Views = { projects: 'all', reports: 'all', risks: 'open', archive: 'all' };
-interface Route { page: Page; views: Views; projectId: number; form: string; }
-
-/** Адрес: #<вкладка>/<представление>/<id проекта>/<форма> — назад/вперёд браузера, ссылку на карточку можно отправить. */
-const pickDefault = (page: Page): Partial<Views> => (page in DEFAULT_VIEWS ? { [page]: DEFAULT_VIEWS[page as keyof Views] } : {});
-function parse(hash: string, prev: Views): Route {
-  const [pg, view, id, form] = hash.replace(/^#/, '').split('/');
-  const page = (PAGES.indexOf(pg as Page) >= 0 ? pg : 'home') as Page;
-  const views = { ...prev };
-  if (view && page === 'projects' && view in PV) views.projects = view as Views['projects'];
-  if (view && page === 'reports' && view in RV) views.reports = view as Views['reports'];
-  if (view && page === 'risks' && view in KV) views.risks = view as Views['risks'];
-  if (view && page === 'archive' && view in AV) views.archive = view as Views['archive'];
-  return { page, views, projectId: Number(id) || 0, form: form || '' };
-}
-function format(r: Route): string {
-  const v = r.page === 'projects' || r.page === 'reports' || r.page === 'risks' || r.page === 'archive' ? r.views[r.page] : '';
-  return '#' + [r.page, v, r.projectId || '', r.form].join('/').replace(/\/+$/, '');
-}
 
 /** Корень приложения: язык, тема, маршрут, данные; весь CSS прототипа действует внутри .pmo-app. */
 export const App: React.FC<AppProps> = p => {
@@ -84,7 +63,7 @@ export const App: React.FC<AppProps> = p => {
   setValueLang(lang);   // значения выбора — на языке интерфейса (i18n/values.ts)
   const ctx: Ctx = { ...tt, lang, today: todayIso(), me: p.userEmail, webUrl: p.webUrl, views: route.views, canCreate: !!data && data.canCreate,
     // без вида (вкладка в шапке) — вид страницы по умолчанию, а не запомненный (#23, #24); показатели главной передают вид
-    go: (page, view) => { nav(parse('#' + page + '/' + (view || ''), view ? route.views : { ...route.views, ...pickDefault(page) })); window.scrollTo(0, 0); },
+    go: (page, view) => { nav(goRoute(route, page, view)); window.scrollTo(0, 0); },
     setView: (page, view) => nav({ ...route, views: { ...route.views, [page]: view } }),
     openProject: id => nav({ ...route, projectId: id, form: '' }),
     openForm: (form, id) => nav({ ...route, projectId: id || 0, form }),
