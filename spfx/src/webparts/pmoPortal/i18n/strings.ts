@@ -566,6 +566,36 @@ export const T: Record<string, L3> = {
   "Couldn’t save the change. Reload the page and try again.",
   "Не удалось сохранить изменение. Обновите страницу и повторите."
  ],
+ "errReqAll": [
+  "Заповніть усі обов'язкові поля, позначені *.",
+  "Fill in all required fields marked *.",
+  "Заполните все обязательные поля, отмеченные *."
+ ],
+ "errProgress": [
+  "Введіть ціле число від 0 до 100.",
+  "Enter a whole number from 0 to 100.",
+  "Введите целое число от 0 до 100."
+ ],
+ "errBeforeStart": [
+  "Не може бути раніше дати старту.",
+  "Cannot be earlier than the start date.",
+  "Не может быть раньше даты старта."
+ ],
+ "errDatesOrder": [
+  "Дати запуску й завершення не можуть бути раніше дати старту.",
+  "Launch and end dates cannot be earlier than the start date.",
+  "Даты запуска и завершения не могут быть раньше даты старта."
+ ],
+ "repPendingOpt": [
+  "звіт від {date} на погодженні",
+  "report of {date} awaiting approval",
+  "отчёт от {date} на согласовании"
+ ],
+ "progressDone": [
+  "Проєкт завершується — 100 %.",
+  "The project is being completed — 100%.",
+  "Проект завершается — 100 %."
+ ],
  "errTitleTaken": [
   "Проєкт з такою назвою вже є. Вкажіть іншу назву.",
   "A project with this name already exists. Enter a different name.",

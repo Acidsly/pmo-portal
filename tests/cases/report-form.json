@@ -1,0 +1,174 @@
+{
+  "_about": "Форма статус-отчёта: одни и те же сценарии проверяют приложение (spfx/test/reportForm.test.ts — logic/forms.ts) и прототип (spfx/test/prototypeForm.test.ts — prototype/pmo-prototype.html в jsdom). Даты задаются всегда (они отличаются от карточки — нужна причина, если keyReason не пуст).",
+  "status": [
+    {
+      "name": "#52 «Завершено» — 100 % и поле закрыто",
+      "start": {
+        "status": "Реалізація",
+        "progress": 40
+      },
+      "steps": [
+        "Завершено"
+      ],
+      "out": {
+        "progress": 100,
+        "locked": true
+      }
+    },
+    {
+      "name": "#52 «Завершено» → другой статус — прежнее значение",
+      "start": {
+        "status": "Реалізація",
+        "progress": 40
+      },
+      "steps": [
+        "Завершено",
+        "Призупинено"
+      ],
+      "out": {
+        "progress": 40,
+        "locked": false
+      }
+    },
+    {
+      "name": "#52 «Скасовано» — % не меняется",
+      "start": {
+        "status": "Реалізація",
+        "progress": 40
+      },
+      "steps": [
+        "Скасовано"
+      ],
+      "out": {
+        "progress": 40,
+        "locked": false
+      }
+    },
+    {
+      "name": "#52 черновик уже «Завершено» (на основе повернутого) — сразу 100 %",
+      "start": {
+        "status": "Завершено",
+        "progress": 80
+      },
+      "steps": [],
+      "out": {
+        "progress": 100,
+        "locked": true
+      }
+    }
+  ],
+  "validation": [
+    {
+      "name": "#40 пустая форма — все обязательные сразу",
+      "draft": {
+        "schedule": "",
+        "budget": "",
+        "resources": "",
+        "title": "",
+        "keyReason": "",
+        "status": "Реалізація",
+        "start": "2026-03-02",
+        "goLive": "",
+        "planEnd": "2026-12-01",
+        "forecastEnd": ""
+      },
+      "progressText": "40",
+      "out": [
+        "sched",
+        "budget",
+        "res",
+        "keyReason",
+        "title"
+      ],
+      "message": "errReqAll"
+    },
+    {
+      "name": "#53 % вне 0–100 и #54 план раньше старта — ошибки у полей",
+      "draft": {
+        "schedule": "Зелений",
+        "budget": "Зелений",
+        "resources": "Жовтий",
+        "title": "Резюме",
+        "keyReason": "Перенос",
+        "status": "Реалізація",
+        "start": "2026-03-02",
+        "goLive": "2026-01-01",
+        "planEnd": "2026-01-01",
+        "forecastEnd": "2022-01-01"
+      },
+      "progressText": "500",
+      "out": [
+        "progress",
+        "goLive",
+        "planEnd",
+        "forecastEnd"
+      ],
+      "message": "errProgress"
+    },
+    {
+      "name": "#54 дата раньше старта при заполненной форме",
+      "draft": {
+        "schedule": "Зелений",
+        "budget": "Зелений",
+        "resources": "Зелений",
+        "title": "Резюме",
+        "keyReason": "Перенос",
+        "status": "Реалізація",
+        "start": "2026-03-02",
+        "goLive": "",
+        "planEnd": "2026-12-01",
+        "forecastEnd": "2026-02-01"
+      },
+      "progressText": "40",
+      "out": [
+        "forecastEnd"
+      ],
+      "message": "errBeforeStart"
+    },
+    {
+      "name": "#53 ведущие нули допустимы, даты по порядку — без ошибок",
+      "draft": {
+        "schedule": "Зелений",
+        "budget": "Жовтий",
+        "resources": "Зелений",
+        "title": "Резюме",
+        "keyReason": "Перенос",
+        "status": "Реалізація",
+        "start": "2026-03-02",
+        "goLive": "2026-03-02",
+        "planEnd": "2026-12-01",
+        "forecastEnd": "2027-01-15"
+      },
+      "progressText": "00098",
+      "out": [],
+      "message": ""
+    },
+    {
+      "name": "#52 при «Завершено» % не проверяется (100)",
+      "draft": {
+        "schedule": "Зелений",
+        "budget": "Зелений",
+        "resources": "Зелений",
+        "title": "Резюме",
+        "keyReason": "Завершено",
+        "status": "Завершено",
+        "start": "2026-03-02",
+        "goLive": "",
+        "planEnd": "2026-12-01",
+        "forecastEnd": ""
+      },
+      "progressText": "500",
+      "out": [],
+      "message": ""
+    }
+  ],
+  "projectSwitch": [
+    {
+      "name": "#52 «Завершено», затем другой проект — поле % снова открыто, значение нового проекта",
+      "status": "Завершено",
+      "out": {
+        "locked": false
+      }
+    }
+  ]
+}
