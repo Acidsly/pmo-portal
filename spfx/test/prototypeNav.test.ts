@@ -35,3 +35,26 @@ test('#24: вид «Ризики» по умолчанию — «Відкрит�
   q('[data-act="nav"][data-page="risks"]').click();
   expect(viewOf()).toBe('open');
 });
+
+// #3 и порядок списков — как logic/status.ts приложения (staleFirst, newestFirst)
+test('#3: «Немає свіжого статус-звіту» на главной — сначала без отчётов, дальше от самого давнего', () => {
+  const wp = Array.from(w.document.querySelectorAll('.wp')).find((x: W) => /Немає свіжого|No fresh|Нет свежего/.test(x.textContent)) as W;
+  expect(wp).toBeDefined();
+  // колонка «Останній статус-звіт» — предпоследняя (последняя — статус)
+  const rows = Array.from(wp.querySelectorAll('tbody tr')).map((tr: W) => { const td = tr.querySelectorAll('td'); return td[td.length - 2].textContent.trim(); });
+  expect(rows.some(r => /\d{2}\.\d{2}\.\d{4}/.test(r))).toBe(true);   // в демо-данных есть и проекты с давним отчётом
+  expect(rows.length).toBeGreaterThan(1);
+  const iso = (t: string): string => { const m = /(\d{2})\.(\d{2})\.(\d{4})/.exec(t); return m ? `${m[3]}-${m[2]}-${m[1]}` : ''; };
+  const keys = rows.map(iso);
+  const firstDated = keys.findIndex(k => !!k);
+  if (firstDated > 0) expect(keys.slice(0, firstDated).every(k => !k)).toBe(true);           // без отчётов — первыми
+  const dated = keys.filter(k => !!k);
+  expect(dated).toEqual(dated.slice().sort());                                                // дальше — от самого давнего
+});
+test('список «Проєкти» — новые сверху (как в приложении)', () => {
+  q('[data-act="nav"][data-page="projects"]').click();
+  const ids = Array.from(w.document.querySelectorAll('[data-act="openp"]')).map((x: W) => Number(x.dataset.id));
+  const uniq = ids.filter((x, i) => ids.indexOf(x) === i);
+  expect(uniq.length).toBeGreaterThan(2);
+  expect(uniq).toEqual(uniq.slice().sort((a, b) => b - a));
+});
