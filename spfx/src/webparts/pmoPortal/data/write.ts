@@ -36,9 +36,10 @@ export function projectBody(d: ProjectDraft, code: string): Body {
     pmDescription: d.description, pmLinks: JSON.stringify(d.links), pmProgress: 0 };
 }
 
-/** Правка карточки: без ключевых показателей; изменения дописываются в pmEditLog — синхронизация перенесёт их в журнал. */
+/** Правка карточки: без ключевых показателей и без PM / власника (#43: меняет только PMO через «Призначення»);
+ *  изменения дописываются в pmEditLog — синхронизация перенесёт их в журнал. */
 export function projectEditBody(d: ProjectDraft, diffs: { f: string; from: string; to: string }[], who: string, reason: string, prevLog: string): Body {
-  const b: Body = { Title: d.title.trim(), pmCode: d.code, pmPriority: d.priority, pmDepartment: d.department, ...people(d),
+  const b: Body = { Title: d.title.trim(), pmCode: d.code, pmPriority: d.priority, pmDepartment: d.department,
     pmBudget: roundAway(d.budget || 0), pmDescription: d.description, pmLinks: JSON.stringify(d.links) };
   if (diffs.length) {
     let entries: unknown[] = [];

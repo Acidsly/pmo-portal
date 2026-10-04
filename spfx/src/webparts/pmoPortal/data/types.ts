@@ -27,7 +27,13 @@ export interface Project {
   pendingEvents?: ChangeEvent[];
   /** Дата-время создания (ISO) — базовая сортировка «новые сверху». */
   created?: string;
+  /** Есть «Призначення» PMO, ещё не перенесённое синхронизацией (#43): новое не подаётся. */
+  assignPending?: boolean;
 }
+
+/** «Призначення» (#43): решение PMO о смене PM / власника; пусто — без изменений. Переносит синхронизация (paApplied). */
+export interface Assignment { id: number; projectId: number; manager: Person | null; owner: Person | null; note: string; applied: boolean;
+  author: Person | null; created: string; }
 
 /** Строка списка «Команда проєкту»: человек, роль, по каким вопросам обращаться. */
 export interface TeamMember { id: number; projectId: number; user: Person | null; role: string; topics: string;
@@ -61,7 +67,7 @@ export interface Risk {
 
 export interface Comment { id: number; projectId: number; text: string; author: Person | null; created: string; }  // created — ISO дата-время
 export interface ChangeEntry { id: number; projectId: number; date: string; who: Person | null; kind: string; field: string; from: string; to: string; reason: string; }
-export interface ChangeEvent { id: number; date: string; who: Person | null; kind: 'create' | 'key' | 'edit' | 'report' | 'approval'; reason: string; diffs: { f: string; from: string; to: string }[]; }
+export interface ChangeEvent { id: number; date: string; who: Person | null; kind: 'create' | 'key' | 'edit' | 'report' | 'approval' | 'assign'; reason: string; diffs: { f: string; from: string; to: string }[]; }
 
 /** Отзыв фокус-группы: из «Відгуки — загальні» (видят все) + свои / все для администратора (со скриншотами) из «Відгуки». */
 export interface FeedbackRow {

@@ -104,3 +104,36 @@ test('#54: «Скасовано» с фактической датой → по�
   const kv = Array.from(w.document.querySelectorAll('#panel .kv, .kv')).map((x: W) => x.textContent).filter((x: string) => x.indexOf('Дата завершення (факт)') === 0);
   expect(kv[0]).toContain(`${d}.${m}.${y}`);
 });
+
+describe('#43 смена PM / власника — только PMO', () => {
+  const card = (id: number): void => { q('[data-act="nav"][data-page="projects"]').click(); q(`[data-act="openp"][data-id="${id}"]`).click(); };
+  test('PM: кнопки нет, в форме проекта PM и власник — только чтение', () => {
+    card(1);                                                     // PRJ-001: PM — Юрій (текущий пользователь)
+    expect(q('[data-act="assign"]')).toBeNull();
+    q('[data-act="editproj"][data-id="1"]').click();
+    expect(q('#pform select#p-pm')).toBeNull();
+    expect(q('#p-pm-fixed').textContent).toBe('Юрій');
+    expect(q('#pform').textContent).toContain('PM і власника змінює лише PMO.');
+  });
+  test('PMO: без выбора и без причины — ошибки; затем новый PM в карточке и «Призначення» в истории', () => {
+    asPmo(); card(1);
+    q('[data-act="assign"][data-id="1"]').click();
+    const f = q('#aform'); const submit = (): void => { f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true })); };
+    submit(); expect(err(f)).toBe('Оберіть нового PM або нового власника.');
+    const pm = f.querySelector('#a-pm'); pm.value = 'Андрій Мельник'; ev(pm, 'change');
+    submit(); expect(err(f)).toBe('Вкажіть причину зміни.');
+    f.querySelector('#a-note').value = 'Ротація PM'; submit();
+    expect(q('#aform')).toBeNull();
+    const txt = q('#panel, .panel, body').textContent;
+    expect(txt).toContain('Андрій Мельник');
+    q('[data-act="togglech"]') && q('[data-act="togglech"]').click();
+    expect(w.document.body.textContent).toContain('Призначення');
+    expect(w.document.body.textContent).toContain('Ротація PM');
+  });
+  test('PMO: архивный проект — кнопки нет', () => {
+    asPmo();
+    q('[data-act="nav"][data-page="archive"]').click();
+    const a = q('[data-act="openp"]'); expect(a).not.toBeNull(); a.click();
+    expect(q('[data-act="assign"]')).toBeNull();
+  });
+});

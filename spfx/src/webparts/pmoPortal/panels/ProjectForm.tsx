@@ -104,10 +104,12 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
       {isNew ? <fieldset className="ragpick"><legend>{fl('type')}</legend><SegPick name="f-type" options={TYPES} value={d.type} onChange={v => set({ type: v })} /></fieldset> : null}
 
       <h3 className="fsec">{t('fPeople')}</h3>
-      <Frow label={fl('pm')} htmlFor="f-pm" req={true}><PeoplePicker id="f-pm" multi={false} value={d.manager ? [d.manager] : []} search={search}
-        onChange={v => set({ manager: v[0] || null })} /></Frow>
-      <Frow label={fl('owner')} htmlFor="f-own"><PeoplePicker id="f-own" multi={false} value={d.owner ? [d.owner] : []} search={search}
-        onChange={v => set({ owner: v[0] || null })} /></Frow>
+      {/* #43: после создания PM и власника меняет только PMO («Змінити PM / власника» в карточке) */}
+      <Frow label={fl('pm')} htmlFor="f-pm" req={isNew}>{isNew ? <PeoplePicker id="f-pm" multi={false} value={d.manager ? [d.manager] : []} search={search}
+        onChange={v => set({ manager: v[0] || null })} /> : <div className="fixedval" id="f-pm">{d.manager ? d.manager.name : '—'}</div>}</Frow>
+      <Frow label={fl('owner')} htmlFor="f-own">{isNew ? <PeoplePicker id="f-own" multi={false} value={d.owner ? [d.owner] : []} search={search}
+        onChange={v => set({ owner: v[0] || null })} /> : <div className="fixedval" id="f-own">{d.owner ? d.owner.name : '—'}</div>}</Frow>
+      {isNew ? null : <p className="hint" style={{ marginTop: -6 }}>{t('pmOnlyPmo')}</p>}
       <div className="frow"><span className="t lbl-t">{fl('team')}</span>
         <div className="ed-rows">{d.team.map((r, i) => <div className="ed-row tm-row" key={r.id || 'n' + i}>
           <PeoplePicker id={`f-tm${i}`} multi={false} value={r.user ? [r.user] : []} search={search} onChange={v => setRow(i, { user: v[0] || null })} />

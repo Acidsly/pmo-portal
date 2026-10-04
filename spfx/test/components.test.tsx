@@ -10,6 +10,8 @@ import { makeT } from '../src/webparts/pmoPortal/i18n/i18n';
 import { T } from '../src/webparts/pmoPortal/i18n/strings';
 import { RiskForm } from '../src/webparts/pmoPortal/panels/RiskForm';
 import { ReportForm } from '../src/webparts/pmoPortal/panels/ReportForm';
+import { AssignForm } from '../src/webparts/pmoPortal/panels/AssignForm';
+import { ProjectForm } from '../src/webparts/pmoPortal/panels/ProjectForm';
 
 // Компоненты приложения в jsdom: поведение, а не только «вызывается» (блок 2 отзывов раунда 3 и правки кросс-ревью)
 const tt = makeT(0);
@@ -157,5 +159,50 @@ describe('#54 форма отчёта: дата завершення (факт)'
     expect(root.querySelector('#f-ae')).toBeNull();
     act(() => { Simulate.change(st, { target: { value: 'Завершено' } } as any); });
     expect(root.querySelector('#f-ae')).not.toBeNull();
+  });
+});
+
+describe('#43 «Змінити PM / власника» — только PMO', () => {
+  const pr = { id: 5, code: 'PRJ-005', title: 'Проєкт П', status: 'Реалізація', canEdit: false, manager: { id: 1, email: 'pm@x', name: 'Старий PM' }, owner: null,
+    links: [], team: [], department: 'ІТ', priority: '', budget: 0, description: '' };
+  const data = (x: any = {}): any => ({ projects: [{ ...pr, ...x }], risks: [], reports: [], comments: [], team: [], canApprove: true });
+  const pick = async (id: string, who: string): Promise<void> => {
+    jest.useFakeTimers();
+    act(() => { Simulate.change(root.querySelector('#' + id) as HTMLInputElement, { target: { value: who } } as any); });
+    await act(async () => { jest.advanceTimersByTime(300); await Promise.resolve(); });
+    jest.useRealTimers();
+    const opt = root.querySelector('.picker-list .pop-row') as HTMLElement;
+    act(() => { Simulate.mouseDown(opt); });
+  };
+  test('ничего не выбрано — ошибка; без комментария — ошибка; иначе запись в «Призначення» папки проекта', async () => {
+    const calls: any[] = [];
+    const repo = { searchPeople: async () => [{ id: 0, email: 'New@x', name: 'Новий PM' }], fresh: async () => ({ project: pr, pending: [], assigns: 0 }),
+      createIn: async (...a: any[]) => { calls.push(a); return 9; } };
+    const c2 = { ...ctx, repo, reload: async () => undefined, toast() { /* */ }, openProject() { /* */ } };
+    act(() => { ReactDOM.render(<AppCtx.Provider value={c2}><AssignForm data={data()} projectId={5} onCancel={() => undefined} /></AppCtx.Provider>, root); });
+    const submit = async (): Promise<void> => { await act(async () => { Simulate.submit(root.querySelector('form') as HTMLFormElement); await Promise.resolve(); }); };
+    await submit(); expect(root.textContent).toContain('Оберіть нового PM або нового власника.');
+    await pick('a-pm', 'Нов');
+    await submit(); expect(root.textContent).toContain('Вкажіть причину зміни.');
+    act(() => { Simulate.change(root.querySelector('#a-note') as HTMLTextAreaElement, { target: { value: 'Ротація' } } as any); });
+    await submit(); await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    expect(calls.length).toBe(1);
+    expect(calls[0][0]).toBe('ProjectAssignments'); expect(calls[0][1]).toBe(5);
+    expect(calls[0][2]).toMatchObject({ paProjectId: 5, paNote: 'Ротація', paApplied: false });
+    expect(calls[0][3]).toEqual({ paManagerId: 'new@x', paOwnerId: '' });
+  });
+  test('не PMO, архив, уже ожидает — формы нет', () => {
+    for (const d of [{ ...data(), canApprove: false }, data({ status: 'Архівний' }), data({ assignPending: true })]) {
+      mount(<AssignForm data={d} projectId={5} onCancel={() => undefined} />);
+      expect(root.querySelector('form')).toBeNull();
+      ReactDOM.unmountComponentAtNode(root);
+    }
+  });
+  test('у PM в форме проекта PM и власник — только чтение', () => {
+    mount(<ProjectForm data={data({ canEdit: true })} project={{ ...pr, canEdit: true } as any} onCancel={() => undefined} />);
+    expect((root.querySelector('#f-pm') as HTMLElement).tagName).toBe('DIV');
+    expect((root.querySelector('#f-pm') as HTMLElement).textContent).toBe('Старий PM');
+    expect(root.querySelector('#f-own input')).toBeNull();
+    expect(root.textContent).toContain('PM і власника змінює лише PMO.');
   });
 });

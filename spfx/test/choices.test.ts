@@ -21,7 +21,7 @@ const VAL = new Function(`return (${proto.slice(proto.indexOf('{', a), j + 1)});
 
 test('в Deploy-PMO.ps1 найдены значения выбора', () => { expect(choice.size).toBeGreaterThan(30); });
 // виды журнала «Зміни показників» на экран не выводятся: приложение переводит их в события истории (logic/changes.ts, KIND)
-const NOT_SHOWN = ['Створення', 'Статус-звіт', 'Редагування картки', 'Погодження звіту'];
+const NOT_SHOWN = ['Створення', 'Статус-звіт', 'Редагування картки', 'Погодження звіту', 'Призначення'];
 const all = Array.from(choice).filter(v => NOT_SHOWN.indexOf(v) < 0).sort();
 test('виды журнала, которых нет в словаре, все известны logic/changes.ts', () => {
   const src = fs.readFileSync(path.join(root, 'spfx/src/webparts/pmoPortal/logic/changes.ts'), 'utf8');

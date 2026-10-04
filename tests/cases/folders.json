@@ -143,6 +143,22 @@
       "v2": false,
       "out": "read",
       "name": "модель v1: коментарі — читання"
+    },
+    {
+      "list": "Lists/ProjectAssignments",
+      "level": "edit",
+      "archived": false,
+      "v2": true,
+      "out": "read",
+      "name": "#43 призначення: PM — лише перегляд"
+    },
+    {
+      "list": "Lists/ProjectAssignments",
+      "level": "read",
+      "archived": false,
+      "v2": true,
+      "out": "read",
+      "name": "#43 призначення: інші — перегляд"
     }
   ],
   "frozen": [
@@ -360,6 +376,20 @@
       "v2": false,
       "out": "read",
       "name": "PMO у моделі v1: читання папки"
+    },
+    {
+      "list": "Lists/ProjectAssignments",
+      "archived": false,
+      "v2": true,
+      "out": "add",
+      "name": "#43 PMO: призначення — додає"
+    },
+    {
+      "list": "Lists/ProjectAssignments",
+      "archived": true,
+      "v2": true,
+      "out": "read",
+      "name": "#43 PMO: призначення архівного — перегляд"
     }
   ],
   "placement": [
@@ -392,6 +422,12 @@
       "expected": "/sites/x/Lists/RisksIssues/P12",
       "out": true,
       "name": "слеш у кінці — та сама папка"
+    },
+    {
+      "dir": "/sites/x/Lists/ProjectAssignments/P7",
+      "expected": "/sites/x/Lists/ProjectAssignments/P12",
+      "out": false,
+      "name": "#43 призначення в папці чужого проєкту — не враховується"
     }
   ],
   "team": [

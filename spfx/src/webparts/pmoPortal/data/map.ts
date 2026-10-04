@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- ответы REST SharePoint нетипизированы, типы задаются здесь */
-import { Person, Project, StatusReport, Risk, Comment, ChangeEntry, TeamMember, Approval } from './types';
+import { Person, Project, StatusReport, Risk, Comment, ChangeEntry, TeamMember, Approval, Assignment } from './types';
 import { parseLinks } from '../logic/team';
 import { dateOnly } from '../logic/dates';
 import { Rag } from '../logic/rag';
@@ -72,6 +72,10 @@ export const TEAM_EXPAND = 'tmUser,Author';
 export const mapTeam = (r: any): TeamMember => ({ id: r.Id, projectId: r.tmProjectId, user: mapPerson(r.tmUser), role: s(r.tmRole), topics: s(r.tmTopics),
   dir: s(r.FileDirRef), author: mapPerson(r.Author) });
 
+export const ASSIGN_SELECT = ['Id', 'paProjectId', 'paNote', 'paApplied', 'Created', ...people('paManager', 'paOwner', 'Author')].join(',');
+export const ASSIGN_EXPAND = 'paManager,paOwner,Author';
+export const mapAssign = (r: any): Assignment => ({ id: r.Id, projectId: r.paProjectId, manager: mapPerson(r.paManager), owner: mapPerson(r.paOwner),
+  note: s(r.paNote), applied: r.paApplied === true, author: mapPerson(r.Author), created: s(r.Created) });
 export const APPROVAL_SELECT = ['Id', 'apReportId', 'apProjectId', 'apDecision', 'apSchedule', 'apBudget', 'apResources', 'apNote', 'apApplied', 'Created', ...people('Author')].join(',');
 export const APPROVAL_EXPAND = 'Author';
 export const mapApproval = (r: any): Approval => ({ id: r.Id, reportId: r.apReportId, projectId: r.apProjectId, decision: s(r.apDecision),

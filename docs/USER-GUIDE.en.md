@@ -123,11 +123,12 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
 
 - A **New project** is created by the PMO: the name (unique — no two projects share a name) and the PM are required (the PM is not prefilled — choose one); the project number is assigned by the system in order (PRJ-001, PRJ-002…) — it is unique and cannot be changed by hand.
 - For ~15 minutes after creation the project is **being prepared** (the card says "The project is being prepared"): after that the PM can add reports, risks and team members.
-- Only the PM can **Edit project**: name, department, priority, owner, budget, description, and also:
+- Only the PM can **Edit project**: name, department, priority, budget, description, and also:
   - **Project team** — "+ Add member": a person, their **role** (required) and what to contact them about; × removes the member;
   - **Links** — "+ Add link": a name and an address (starting with `https://`); × removes it.
 - Status, health, dates and costs change only through a status report (see "How to change the project status").
 - After the team changes, access rights are recalculated automatically: team members see the project and can comment.
+- After the project is created, only the PMO changes the **PM and the owner**: in the card — **"Change PM / owner"** (new PM, new owner — an empty field means no change, the reason is required). The change shows in the card and in the "Change history" ("Assignment") right away and is finally applied by synchronization within ~15 minutes; until then a new change cannot be submitted. A report of the former PM that is pending approval is returned automatically.
 - After a **PM change** the former PM can no longer change the project right away; the new PM sees "You are assigned as PM of this project: edit access appears within 15 minutes" — the page refreshes by itself.
 
 ## Archive

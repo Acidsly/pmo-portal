@@ -1,0 +1,192 @@
+{
+  "_about": "Решение PMO о смене PM / власника («Призначення», #43): Get-AssignmentPlan синхронизации (Test-Scripts, раздел 3f) и assignmentPlan приложения (logic/assign.ts, spfx/test/assign.test.ts). out.changes — «поле:было>стало».",
+  "pmo": [
+    "pmo@x"
+  ],
+  "owners": [
+    "own@x"
+  ],
+  "cases": [
+    {
+      "name": "PMO меняет PM с комментарием",
+      "a": {
+        "author": "pmo@x",
+        "manager": "new@x",
+        "owner": "",
+        "note": "Ротація"
+      },
+      "pm": "pm@x",
+      "owner": "o@x",
+      "archived": false,
+      "out": {
+        "valid": true,
+        "reason": "",
+        "changes": [
+          "pmManager:pm@x>new@x"
+        ]
+      }
+    },
+    {
+      "name": "PMO меняет PM и власника",
+      "a": {
+        "author": "pmo@x",
+        "manager": "new@x",
+        "owner": "o2@x",
+        "note": "Реорганізація"
+      },
+      "pm": "pm@x",
+      "owner": "o@x",
+      "archived": false,
+      "out": {
+        "valid": true,
+        "reason": "",
+        "changes": [
+          "pmManager:pm@x>new@x",
+          "pmOwner:o@x>o2@x"
+        ]
+      }
+    },
+    {
+      "name": "только власник; PM тот же — не изменение",
+      "a": {
+        "author": "pmo@x",
+        "manager": "pm@x",
+        "owner": "o2@x",
+        "note": "Новий власник"
+      },
+      "pm": "pm@x",
+      "owner": "o@x",
+      "archived": false,
+      "out": {
+        "valid": true,
+        "reason": "",
+        "changes": [
+          "pmOwner:o@x>o2@x"
+        ]
+      }
+    },
+    {
+      "name": "владелец сайта — действует",
+      "a": {
+        "author": "own@x",
+        "manager": "new@x",
+        "owner": "",
+        "note": "Так"
+      },
+      "pm": "pm@x",
+      "owner": "",
+      "archived": false,
+      "out": {
+        "valid": true,
+        "reason": "",
+        "changes": [
+          "pmManager:pm@x>new@x"
+        ]
+      }
+    },
+    {
+      "name": "приложение (скрипт) — действует",
+      "a": {
+        "author": "app",
+        "manager": "new@x",
+        "owner": "",
+        "note": "Скрипт"
+      },
+      "pm": "pm@x",
+      "owner": "",
+      "archived": false,
+      "out": {
+        "valid": true,
+        "reason": "",
+        "changes": [
+          "pmManager:pm@x>new@x"
+        ]
+      }
+    },
+    {
+      "name": "PM сам себе меняет — не PMO: не действует",
+      "a": {
+        "author": "pm@x",
+        "manager": "new@x",
+        "owner": "",
+        "note": "Передаю"
+      },
+      "pm": "pm@x",
+      "owner": "o@x",
+      "archived": false,
+      "out": {
+        "valid": false,
+        "reason": "author",
+        "changes": []
+      }
+    },
+    {
+      "name": "пустой автор — не действует",
+      "a": {
+        "author": "",
+        "manager": "new@x",
+        "owner": "",
+        "note": "?"
+      },
+      "pm": "pm@x",
+      "owner": "o@x",
+      "archived": false,
+      "out": {
+        "valid": false,
+        "reason": "author",
+        "changes": []
+      }
+    },
+    {
+      "name": "без комментария — не действует",
+      "a": {
+        "author": "pmo@x",
+        "manager": "new@x",
+        "owner": "",
+        "note": "   "
+      },
+      "pm": "pm@x",
+      "owner": "o@x",
+      "archived": false,
+      "out": {
+        "valid": false,
+        "reason": "note",
+        "changes": []
+      }
+    },
+    {
+      "name": "проект в архиве — не действует",
+      "a": {
+        "author": "pmo@x",
+        "manager": "new@x",
+        "owner": "",
+        "note": "Пізно"
+      },
+      "pm": "pm@x",
+      "owner": "o@x",
+      "archived": true,
+      "out": {
+        "valid": false,
+        "reason": "arch",
+        "changes": []
+      }
+    },
+    {
+      "name": "ничего не меняется — не действует",
+      "a": {
+        "author": "pmo@x",
+        "manager": "pm@x",
+        "owner": "",
+        "note": "Те саме"
+      },
+      "pm": "pm@x",
+      "owner": "o@x",
+      "archived": false,
+      "out": {
+        "valid": false,
+        "reason": "same",
+        "changes": []
+      }
+    }
+  ]
+}

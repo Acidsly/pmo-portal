@@ -5,7 +5,7 @@ export const FIELD_KEY: Record<string, string> = { Title: 'title', pmStatus: 'st
   pmStart: 'start', pmGoLive: 'golive', pmPlanEnd: 'plan', pmForecastEnd: 'fc', pmActualEnd: 'ae', pmActualCost: 'actual', pmPriority: 'prio', pmManager: 'pm',
   pmOwner: 'owner', pmStakeholders: 'stakeholders', pmDepartment: 'dept', pmLoop: 'loop', pmLinks: 'links', pmTeam: 'team', pmCode: 'code', pmBudget: 'budget',
   srSchedule: 'rSched', srBudget: 'rBudget', srResources: 'rRes', srApproval: 'apStatus' };
-const KIND: Record<string, ChangeEvent['kind']> = { 'Створення': 'create', 'Статус-звіт': 'report', 'Редагування картки': 'edit', 'Погодження звіту': 'approval' };
+const KIND: Record<string, ChangeEvent['kind']> = { 'Створення': 'create', 'Статус-звіт': 'report', 'Редагування картки': 'edit', 'Погодження звіту': 'approval', 'Призначення': 'assign' };
 
 /** Журнал «Зміни показників» (строка на поле) -> события истории прототипа, новые сверху. */
 export function toEvents(rows: ChangeEntry[]): ChangeEvent[] {

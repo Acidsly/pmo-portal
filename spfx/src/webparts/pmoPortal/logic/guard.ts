@@ -9,8 +9,9 @@ export interface Fresh {
   pending: { id: number; date: string; author: string }[];   // отчёты проекта «на погодженні» (не применённые)
   lastApprovedDate: string;  // дата последнего погодженого отчёта проекта
   report?: { id: number; approval: string; author: string; decisions: number };   // для погодження: состояние отчёта и число решений PMO
+  assigns?: number;          // «Призначення» PMO, ещё не перенесённые синхронизацией (#43)
 }
-export type Action = 'editCard' | 'report' | 'risk' | 'team' | 'comment' | 'approve' | 'return';
+export type Action = 'editCard' | 'report' | 'risk' | 'team' | 'comment' | 'approve' | 'return' | 'assign';
 export type Guard = { ok: true } | { ok: false; key: string; args?: Record<string, string> };
 
 const dmy = (iso: string): string => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); return m ? `${m[3]}.${m[2]}.${m[1]}` : iso; };
@@ -21,6 +22,8 @@ export function guard(action: Action, me: string, f: Fresh, opts: { reportDate?:
   const p = f.project, pm = low(p.manager ? p.manager.email : ''), meL = low(me);
   if (isArch(p.status)) return { ok: false, key: 'gArchived' };
   if (action === 'comment') return { ok: true };
+  // #43: смена PM / власника — решение PMO; одно необработанное «Призначення» на проект
+  if (action === 'assign') return f.assigns ? { ok: false, key: 'gAssignPending' } : { ok: true };
   if (action === 'approve' || action === 'return') {
     const r = f.report;
     if (!r) return { ok: false, key: 'gDecided', args: { state: '' } };

@@ -105,11 +105,18 @@ function ConvertTo-Kyiv([datetime]$d) {
 }
 $STATE_DATES = @("pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd", "pmArchivedAt", "pmLastUpdate", "pmActualEnd")
 function Get-StateKeys { return @("pmStatus", "pmRAG", "pmType", "pmProgress", "pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd",
-                                  "pmActualCost", "pmArchivedAt", "pmLastUpdate", "pmLastReport", "pmCode", "pmActualEnd") }
+                                  "pmActualCost", "pmArchivedAt", "pmLastUpdate", "pmLastReport", "pmCode", "pmActualEnd",
+                                  "pmManager", "pmOwner") }
+# PM и владелец в эталоне — e-mail в нижнем регистре (#43: меняет только PMO через «Призначення»)
+$STATE_PEOPLE = @("pmManager", "pmOwner")
+function Get-StateValue([string]$k, $v) {
+    if ($k -in $STATE_PEOPLE) { if ($v -and $v.Email) { return ([string]$v.Email).ToLowerInvariant() } return "" }
+    return Norm $v
+}
 # значения ключевых полей записи проекта (как их видит синхронизация: Norm)
 function Get-CardState($item) {
     $st = [ordered]@{}
-    foreach ($k in Get-StateKeys) { $st[$k] = Norm $item[$k] }
+    foreach ($k in Get-StateKeys) { $st[$k] = Get-StateValue $k $item[$k] }
     return $st
 }
 # расхождения карточки с эталоном: @{ f; card; state } по каждому отличающемуся полю
@@ -125,13 +132,15 @@ function ConvertTo-StateJson($state) {
     $o = [ordered]@{}; foreach ($k in Get-StateKeys) { $o[$k] = [string]$state[$k] }
     return ($o | ConvertTo-Json -Compress)
 }
-# Повреждённый или пустой эталон (нет ключа pmStatus) — $null: «эталона нет», заново из карточки, но никогда не откат к пустым значениям
+# Повреждённый или пустой эталон (нет ключа pmStatus) — $null: «эталона нет», заново из карточки, но никогда не откат к пустым значениям.
+# Ключи, которых в эталоне ещё нет (эталон записан до появления поля), — в «_missing»: их значение берётся из карточки без отката.
 function ConvertFrom-StateJson([string]$json) {
     if (-not $json) { return $null }
     try { $o = ConvertFrom-JsonText $json } catch { return $null }
     if ($o -isnot [System.Collections.IDictionary] -or -not $o.Contains("pmStatus")) { return $null }
     $st = [ordered]@{}
     foreach ($k in Get-StateKeys) { $st[$k] = if ($o.Contains($k) -and $null -ne $o[$k]) { [string]$o[$k] } else { "" } }
+    $st["_missing"] = @(Get-StateKeys | Where-Object { -not $o.Contains($_) })
     return $st
 }
 # значение для записи в карточку из эталона: даты — полдень UTC, пусто — null

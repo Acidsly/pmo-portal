@@ -98,7 +98,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
   const returned = reps[0] && reps[0].approval === 'Повернуто' ? reps[0] : undefined;
   const dev = forecastDelta(p.planEnd, p.forecastEnd);
   const use = budgetUse(p.budget, p.actualCost);
-  const kindL: Record<string, string> = { create: 'kCreate', key: 'kKey', edit: 'kEdit', report: 'kReport', approval: 'kApproval' };
+  const kindL: Record<string, string> = { create: 'kCreate', key: 'kKey', edit: 'kEdit', report: 'kReport', approval: 'kApproval', assign: 'kAssign' };
   const dims: [string, (r: typeof reps[0]) => React.ReactNode][] = [
     [fl('rag'), r => <RagDot v={calcRag(r.schedule, r.budget, r.resources)} notRated={t('notRated')} />],
     [fl('rSched'), r => <RagDot v={r.schedule} notRated={t('notRated')} />],
@@ -122,6 +122,9 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
       : <p className="note lock">🔒 {isArch(p.status) ? t('archivedNote') : !p.access ? t('notReadyNote') : soonPm ? t('gPmSoon') : t('noEdit')}</p>}
     {edit && awaitingAll.length ? <p className="note">{t('onePending').replace('{date}', fmtDate(awaitingAll[0].date))}</p> : null}
     {p.pending ? <p className="note">{t('pendingNote')}</p> : null}
+    {/* #43: PM и власника после создания меняет только PMO — записью «Призначення» */}
+    {data.canApprove && !isArch(p.status) ? (p.assignPending ? <p className="note">{t('assignPendingNote')}</p>
+      : <div className="actbar"><button className="btn" id="assign-btn" onClick={() => c.openForm('assign', p.id)}>{t('assignBtn')}</button></div>) : null}
     {awaitingAll.length || returned ? <div style={{ marginTop: 14 }}>
       {awaitingAll.map(r => <div key={r.id} className="apnote">{t('pendingApproval').replace('{date}', fmtDate(r.date))}
         {data.canApprove ? <button className="link" onClick={() => c.openForm('rep:' + r.id, p.id)}>{t('apTitle')} →</button> : null}</div>)}

@@ -296,6 +296,7 @@ fieldset[aria-invalid=true]{padding:4px 6px}
 .chg-key{background:var(--theme-soft);color:var(--theme)}
 .chg-create{background:color-mix(in srgb,var(--g) 18%,transparent);color:var(--text)}
 .chg-approval{background:color-mix(in srgb,var(--y) 22%,transparent);color:var(--text)}
+.chg-assign{background:color-mix(in srgb,var(--theme) 16%,transparent);color:var(--text)}
 .rep-open{cursor:pointer;transition:background-color .15s}
 .rep-open:hover{background:var(--track)}
 .rep-open:focus-visible{outline:3px solid var(--theme-soft)}
@@ -716,7 +717,16 @@ const T = {
  notSet:['— не вказано —','— not set —','— не указано —'],
  accessRecalc:['Після зміни учасників права доступу буде перераховано.','Access will be recalculated after participants change.','После смены участников права доступа будут пересчитаны.'],
  kCreate:['Проєкт створено','Project created','Проект создан'], kKey:['Зміна ключових показників','Key indicators changed','Изменение ключевых показателей'],
- kEdit:['Редагування картки','Card edited','Редактирование карточки'], kReport:['Оновлено статус-звітом','Updated by status report','Обновлено статус-отчётом'],
+ kEdit:['Редагування картки','Card edited','Редактирование карточки'], kAssign:['Призначення','Assignment','Назначение'],
+ assignBtn:['Змінити PM / власника','Change PM / owner','Сменить PM / владельца'], assignTitle:['Зміна PM / власника','Change of PM / owner','Смена PM / владельца'],
+ assignHint:['Після створення проєкту PM і власника змінює лише PMO. Порожнє поле — без змін.','After the project is created, only the PMO changes the PM and the owner. An empty field means no change.','После создания проекта PM и владельца меняет только PMO. Пустое поле — без изменений.'],
+ assignNewPm:['Новий PM','New PM','Новый PM'], assignNewOwner:['Новий власник','New owner','Новый владелец'], assignNote:['Коментар (причина)','Comment (reason)','Комментарий (причина)'],
+ errAssignSame:['Оберіть нового PM або нового власника.','Choose a new PM or a new owner.','Выберите нового PM или нового владельца.'],
+ errAssignNote:['Вкажіть причину зміни.','Enter the reason for the change.','Укажите причину изменения.'],
+ savedAssign:['Зміну збережено — картка оновиться після синхронізації.','Change saved — the card updates after synchronization.','Изменение сохранено — карточка обновится после синхронизации.'],
+ assignPendingNote:['Зміна PM / власника очікує обробки синхронізацією.','The PM / owner change is waiting for synchronization.','Смена PM / владельца ожидает обработки синхронизацией.'],
+ gAssignPending:['Зміна PM / власника вже очікує обробки — дочекайтеся синхронізації.','A PM / owner change is already waiting — wait for synchronization.','Смена PM / владельца уже ожидает обработки — дождитесь синхронизации.'],
+ pmOnlyPmo:['PM і власника змінює лише PMO.','Only the PMO changes the PM and the owner.','PM и владельца меняет только PMO.'], kReport:['Оновлено статус-звітом','Updated by status report','Обновлено статус-отчётом'],
  loading:['Завантаження даних зі списків…','Loading data from lists…','Загрузка данных из списков…'],
  emptyDb:['Список «Проєкти» порожній. Створіть перший проєкт або завантажте демо-дані.','The Projects list is empty. Create the first project or load demo data.','Список «Проекты» пуст. Создайте первый проект или загрузите демо-данные.'],
  seed:['Завантажити демо-дані','Load demo data','Загрузить демо-данные'], seeding:['Завантаження…','Loading…','Загрузка…'],
@@ -1695,7 +1705,7 @@ function accessList(p){
 function changesHtml(p, showAll){
   const list = (p.changes || []).slice().sort((a, b) => D(b.date) - D(a.date));
   if (!list.length) return `<p class="empty">${t('noChanges')}</p>`;
-  const kindL = {create:'kCreate', key:'kKey', edit:'kEdit', report:'kReport', approval:'kApproval'};
+  const kindL = {create:'kCreate', key:'kKey', edit:'kEdit', report:'kReport', approval:'kApproval', assign:'kAssign'};
   const item = c => `<div class="chg">
     <div class="chg-h">${avatar(c.who, 'sm')}<b>${esc(c.who)}</b><span class="muted">${fmtDT(D(c.date))}</span><span class="chg-k chg-${c.kind}">${t(kindL[c.kind] || 'kEdit')}</span></div>
     ${c.diffs && c.diffs.length ? `<div class="diffs">${c.diffs.map(d => `<div class="diff"><span class="df">${fl(d.f)}</span><span class="dv"><s>${valFmt(d.f, d.from)}</s><span class="arr">→</span>${valFmt(d.f, d.to)}</span></div>`).join('')}</div>` : ''}
@@ -1739,7 +1749,7 @@ function projectPanel(id, showCm, keep, showCh){
   openPanel(`<div class="ph"><div><div class="k">${esc(p.code)} · ${t('listLabel')} «${t('navProjects')}»</div><h2>${esc(p.title)}</h2></div>${closeBtn()}</div>
     <div class="badges">${typeHtml(p.type)}${ragHtml(p.rag)}${statusPill(p.status)}<span class="badge">${esc(tv(p.prio))}</span></div>
     ${(p.links || []).length ? `<div class="lnk-sec"><div class="k">${fl('links')}</div>${linksHtml(p)}</div>` : ''}
-    ${actions}${onePend}
+    ${actions}${onePend}${isPMO() && !isArch(p) ? `<div class="actbar"><button class="btn" data-act="assign" data-id="${p.id}">${t('assignBtn')}</button></div>` : ''}
     ${apNotes ? `<div style="margin-top:14px">${apNotes}</div>` : ''}
     ${p.desc ? `<p class="desc">${esc(p.desc)}</p>` : ''}
     <div class="sec"><h3>${t('secPeople')}</h3>
@@ -1801,10 +1811,13 @@ function projectForm(p){
     </div>
     ${isNew ? `<fieldset class="ragpick"><legend>${fl('type')} *</legend>${segPick('p-type', TYPES, p.type)}</fieldset>` : ''}
     <h3 class="fsec">${t('fPeople')}</h3>
-    <div class="frow"><label class="t" for="p-pm">${fl('pm')} * <span class="muted">· ${t('m365')}</span></label>${peopleSelect('p-pm', p.pm, true)}</div>
+    ${isNew ? `<div class="frow"><label class="t" for="p-pm">${fl('pm')} * <span class="muted">· ${t('m365')}</span></label>${peopleSelect('p-pm', p.pm, true)}</div>
     <div class="fgrid2 frow">
       <div><label class="t" for="p-owner">${fl('owner')}</label>${peopleSelect('p-owner', p.owner)}</div>
-    </div>
+    </div>` : `<div class="fgrid2 frow">
+      <div><label class="t">${fl('pm')}</label><div class="fixedval" id="p-pm-fixed">${esc(p.pm || '—')}</div><input type="hidden" id="p-pm" value="${esc(p.pm || '')}"></div>
+      <div><label class="t">${fl('owner')}</label><div class="fixedval">${esc(p.owner || '—')}</div><input type="hidden" id="p-owner" value="${esc(p.owner || '')}"></div>
+    </div><p class="hint" style="margin-top:-6px">${t('pmOnlyPmo')}</p>`}
     <div class="frow"><span class="t lbl-t">${fl('team')} <span class="muted">· ${t('m365')}</span></span>
       <div class="ed-rows" id="p-team">${((p.team || []).length ? p.team : [{}]).map(tmRow).join('')}</div>
       <button type="button" class="btn add" data-ed="addtm">${t('addMember')}</button></div>
@@ -1884,6 +1897,38 @@ function projectForm(p){
       if (canSee(p)) projectPanel(p.id, false); else closePanel();
       persist(p); toast(t('savedEdit'));
     }
+  });
+}
+
+// #43: смена PM / власника после создания — только PMO; в приложении — запись «Призначення», синхронизация переносит
+function assignForm(p){
+  if (!p || !isPMO() || isArch(p)) return;
+  state.panel = {kind:'form'};
+  openPanel(`${formHead(t('assignTitle'), `${esc(p.code)} · ${t('listLabel')} «${t('navProjects')}»`)}
+  <p class="note">${t('assignHint')}</p>
+  <form id="aform" novalidate>
+    <div class="fgrid2 frow"><div><label class="t">${fl('pm')}</label><div class="fixedval">${esc(p.pm || '—')}</div></div>
+      <div><label class="t" for="a-pm">${t('assignNewPm')}</label>${peopleSelect('a-pm', '')}</div></div>
+    <div class="fgrid2 frow"><div><label class="t">${fl('owner')}</label><div class="fixedval">${esc(p.owner || '—')}</div></div>
+      <div><label class="t" for="a-own">${t('assignNewOwner')}</label>${peopleSelect('a-own', '')}</div></div>
+    <div class="frow"><label class="t" for="a-note">${t('assignNote')} *</label><textarea id="a-note"></textarea></div>
+    <p class="err" hidden></p>
+    <div class="actions"><button type="submit" class="btn primary">${t('save')}</button><button type="button" class="btn" data-act="backp" data-id="${p.id}">${t('cancel')}</button></div>
+  </form>`);
+  const form = document.getElementById('aform'), err = fErr(form), g = id => form.querySelector('#' + id);
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    // те же правила, что у синхронизации (tests/cases/assignments.json): что-то меняется, комментарий есть
+    const pm = g('a-pm').value, own = g('a-own').value, note = g('a-note').value.trim();
+    const diffs = [];
+    if (pm && pm !== p.pm) diffs.push({f:'pm', from:p.pm || '—', to:pm});
+    if (own && own !== p.owner) diffs.push({f:'owner', from:p.owner || '—', to:own});
+    if (!diffs.length) return err(t('errAssignSame'));
+    if (!note) return err(t('errAssignNote'));
+    if (pm) p.pm = pm;
+    if (own) p.owner = own;
+    p.changes = (p.changes || []).concat([{id:uid(), date:new Date().toISOString(), who:VIEWER, kind:'assign', reason:note, diffs}]);
+    rerenderMain(); projectPanel(p.id, false); persist(p); toast(t('savedAssign'));
   });
 }
 
@@ -2176,6 +2221,7 @@ document.addEventListener('click', e => {
   else if (a === 'riskopen') riskForm(id, el.dataset.rid, el.dataset.src === 'list');
   else if (a === 'newproj') projectForm(null);
   else if (a === 'editproj') projectForm(pById(id));
+  else if (a === 'assign') assignForm(pById(id));
   else if (a === 'backp') { if (id) projectPanel(id, false); else closePanel(); }
   else if (a === 'close') closePanel();
   else if (a === 'seed'){ el.disabled = true; el.textContent = t('seeding'); seed().catch(err => { console.error(err); toast(t('saveErr')); }); }

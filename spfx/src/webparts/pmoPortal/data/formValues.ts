@@ -12,7 +12,8 @@ const SCHEMA: Record<string, Record<string, Kind>> = {
   RisksIssues: { riProjectId: 'lookup', riOwnerId: 'user', riDue: 'date', riProbability: 'number', riImpact: 'number' },
   ProjectTeam: { tmProjectId: 'lookup', tmUserId: 'user' },
   ProjectComments: { cmProjectId: 'lookup' },
-  ReportApprovals: { apReportId: 'lookup', apProjectId: 'lookup' }
+  ReportApprovals: { apReportId: 'lookup', apProjectId: 'lookup' },
+  ProjectAssignments: { paProjectId: 'lookup', paManagerId: 'user', paOwnerId: 'user', paApplied: 'bool' }
 };
 
 /** «2026-09-30» или «2026-09-30T12:00:00Z» → «30.09.2026» по порядку и разделителю сайта; пусто — ''. */

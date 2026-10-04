@@ -751,6 +751,71 @@ export const T: Record<string, L3> = {
   "Card edited",
   "Редактирование карточки"
  ],
+ "kAssign": [
+  "Призначення",
+  "Assignment",
+  "Назначение"
+ ],
+ "assignBtn": [
+  "Змінити PM / власника",
+  "Change PM / owner",
+  "Сменить PM / владельца"
+ ],
+ "assignTitle": [
+  "Зміна PM / власника",
+  "Change of PM / owner",
+  "Смена PM / владельца"
+ ],
+ "assignHint": [
+  "Після створення проєкту PM і власника змінює лише PMO. Порожнє поле — без змін.",
+  "After the project is created, only the PMO changes the PM and the owner. An empty field means no change.",
+  "После создания проекта PM и владельца меняет только PMO. Пустое поле — без изменений."
+ ],
+ "assignNewPm": [
+  "Новий PM",
+  "New PM",
+  "Новый PM"
+ ],
+ "assignNewOwner": [
+  "Новий власник",
+  "New owner",
+  "Новый владелец"
+ ],
+ "assignNote": [
+  "Коментар (причина)",
+  "Comment (reason)",
+  "Комментарий (причина)"
+ ],
+ "errAssignSame": [
+  "Оберіть нового PM або нового власника.",
+  "Choose a new PM or a new owner.",
+  "Выберите нового PM или нового владельца."
+ ],
+ "errAssignNote": [
+  "Вкажіть причину зміни.",
+  "Enter the reason for the change.",
+  "Укажите причину изменения."
+ ],
+ "savedAssign": [
+  "Зміну збережено — картка оновиться після синхронізації.",
+  "Change saved — the card updates after synchronization.",
+  "Изменение сохранено — карточка обновится после синхронизации."
+ ],
+ "assignPendingNote": [
+  "Зміна PM / власника очікує обробки синхронізацією.",
+  "The PM / owner change is waiting for synchronization.",
+  "Смена PM / владельца ожидает обработки синхронизацией."
+ ],
+ "gAssignPending": [
+  "Зміна PM / власника вже очікує обробки — дочекайтеся синхронізації.",
+  "A PM / owner change is already waiting — wait for synchronization.",
+  "Смена PM / владельца уже ожидает обработки — дождитесь синхронизации."
+ ],
+ "pmOnlyPmo": [
+  "PM і власника змінює лише PMO.",
+  "Only the PMO changes the PM and the owner.",
+  "PM и владельца меняет только PMO."
+ ],
  "kReport": [
   "Оновлено статус-звітом",
   "Updated by status report",
