@@ -9,9 +9,11 @@ const deploy = fs.readFileSync(path.join(root, 'scripts/Deploy-PMO.ps1'), 'utf8'
 const proto = fs.readFileSync(path.join(root, 'prototype/pmo-prototype.html'), 'utf8');
 const arr = (src: string): string[] => (src.match(/"([^"]*)"/g) || []).map(x => x.slice(1, -1));
 const vars: Record<string, string[]> = {};
-for (const m of deploy.matchAll(/^\s*\$(\w+)\s*=\s*@\(([^)]*)\)/gm)) vars[m[1]] = arr(m[2]);
+for (const m of deploy.matchAll(/^\s*\$(\w+)\s*=\s*@\(((?:\s*"[^"]*"\s*,?)*)\)/gm)) vars[m[1]] = arr(m[2]);
 const choice = new Set<string>();
-for (const m of deploy.matchAll(/\(Choices (?:@\(([^)]*)\)|\$(\w+))/g)) (m[1] !== undefined ? arr(m[1]) : vars[m[2]] || []).forEach(v => choice.add(v));
+for (const m of deploy.matchAll(/\(Choices (?:@\(((?:\s*"[^"]*"\s*,?)*)\)|\$(\w+))/g)) (m[1] !== undefined ? arr(m[1]) : vars[m[2]] || []).forEach(v => choice.add(v));
+// значения со скобками и апострофом тоже разобраны
+test('разбор: «Зниження (пом\'якшення)», «Передача» и «Прийняття» найдены', () => { ['Зниження (пом\'якшення)', 'Передача', 'Прийняття'].forEach(v => expect(choice.has(v)).toBe(true)); });
 // словарь прототипа: литерал const VAL = { ... } (так же берёт его tools/extract-prototype.mjs)
 const a = proto.indexOf('const VAL = {'); let d = 0, j = proto.indexOf('{', a);
 for (let i = j; i < proto.length; i++) { if (proto[i] === '{') d++; else if (proto[i] === '}' && --d === 0) { j = i; break; } }
