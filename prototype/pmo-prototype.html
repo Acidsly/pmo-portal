@@ -510,7 +510,7 @@ main{padding-bottom:40px}
 .rlist{display:grid;gap:6px}
 /* #35, #49: ширина колонки — перетаскиванием границы заголовка (широкий экран) */
 .dt th{position:relative}
-.col-rs{position:absolute;top:0;right:-4px;width:8px;height:100%;cursor:col-resize;z-index:2;touch-action:none}
+.col-rs{position:absolute;top:0;right:-2px;width:6px;height:100%;cursor:col-resize;z-index:2;touch-action:none}
 .col-rs:hover,.col-rs.on{background:var(--theme-soft)}
 /* #58: на телефоне статус-звіти й ризики — картками (те самі рядки, фільтри й сортування, що в таблиці) */
 .mcards{display:none}
@@ -1409,7 +1409,7 @@ function tLockMeasure(){
 }
 addEventListener('resize', () => { TW = {}; });
 document.addEventListener('pointerdown', e => {
-  const h = e.target.closest && e.target.closest('.col-rs'); if (!h) return;
+  const h = e.target.closest && e.target.closest('.col-rs'); if (!h || e.button) return;
   e.preventDefault(); e.stopPropagation();
   const key = h.dataset.rs, id = h.dataset.col, th = h.closest('th'), tr = th.parentElement, idx = [...tr.children].indexOf(th);
   const col = th.closest('table').querySelectorAll('col')[idx]; if (!col) return;
@@ -1417,9 +1417,10 @@ document.addEventListener('pointerdown', e => {
   const wOf = x => Math.max(56, Math.min(800, Math.round(w0 + x - x0)));
   h.classList.add('on');
   const move = ev => { col.style.width = wOf(ev.clientX) + 'px'; };
-  const up = ev => { removeEventListener('pointermove', move); removeEventListener('pointerup', up);
-    TS[key].w = Object.assign({}, TS[key].w || {}, {[id]: wOf(ev.clientX)}); tSave(key); rerenderMain(); };
-  addEventListener('pointermove', move); addEventListener('pointerup', up);
+  const stop = () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up); removeEventListener('pointercancel', cancel); };
+  const up = ev => { stop(); TS[key].w = Object.assign({}, TS[key].w || {}, {[id]: wOf(ev.clientX)}); tSave(key); rerenderMain(); };
+  const cancel = () => { stop(); rerenderMain(); };   // жест отменён — ширина прежняя
+  addEventListener('pointermove', move); addEventListener('pointerup', up); addEventListener('pointercancel', cancel);
 }, true);
 
 /* popovers */
@@ -1817,7 +1818,7 @@ function projectForm(p){
     <h3 class="fsec">${t('secMoney')}</h3>
     <div class="fgrid2 frow">
       <div><label class="t" for="p-prio">${fl('prio')}</label><select id="p-prio">${PRIOS.map(s => opt(s, p.prio)).join('')}</select></div>
-      <div><label class="t" for="p-budget">${fl('budget')}, $</label><input type="text" id="p-budget" inputmode="numeric" autocomplete="off" onfocus="this.value=this.value.replace(/\\s/g,'')" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onblur="this.value=this.value.replace(/[^0-9]/g,'').replace(/^0+(?=\\d)/,'').replace(/\\B(?=(\\d{3})+(?!\\d))/g,' ')" value="${grp(p.budget || 0)}"></div>
+      <div><label class="t" for="p-budget">${fl('budget')}, $</label><input type="text" id="p-budget" inputmode="numeric" autocomplete="off" onfocus="this.value=this.value.replace(/\\s/g,'');if(this.value==='0')this.value=''" oninput="const m=/^(.*?)[.,](\\d{1,2})$/.exec(this.value.replace(/\\s/g,''));this.value=m?String(Math.round(+(m[1].replace(/[^0-9]/g,'')||0)+(+m[2].padEnd(2,'0'))/100)):this.value.replace(/[^0-9]/g,'')" onblur="this.value=this.value.replace(/[^0-9]/g,'').replace(/^0+(?=\\d)/,'').replace(/\\B(?=(\\d{3})+(?!\\d))/g,' ')" value="${grp(p.budget || 0)}"></div>
     </div>
     <div class="frow"><label class="t" for="p-desc">${fl('desc')}</label><textarea id="p-desc">${esc(p.desc || '')}</textarea></div>
     <p class="err" hidden></p>
@@ -1963,7 +1964,7 @@ function reportForm(pid, base){
       <div class="fgrid-k frow">
         <div><label class="t" for="f-st">${fl('status')}</label><select id="f-st">${REPORT_STATUSES.map(v => opt(v, sel.status)).join('')}<option value="Завершено"${sel.status === 'Завершено' ? ' selected' : ''}>${t('completeArch')}</option><option value="Скасовано"${sel.status === 'Скасовано' ? ' selected' : ''}>${t('cancelArch')}</option></select></div>
         <div><label class="t" for="f-pr">${fl('progress')}</label><input type="text" inputmode="numeric" id="f-pr" value="${sel.status === 'Завершено' ? 100 : sel.progress}"${sel.status === 'Завершено' ? ' disabled' : ''} oninput="this.value = this.value.replace(/[^0-9]/g, '')" onblur="if (/^\\d+$/.test(this.value) && +this.value <= 100) this.value = String(+this.value)"><p class="ferr" id="e-pr" hidden></p><p class="hint" id="f-pr-done"${sel.status === 'Завершено' ? '' : ' hidden'}>${t('progressDone')}</p></div>
-        <div class="k-cost"><label class="t" for="f-c">${fl('rCost')}, $</label><input type="text" id="f-c" inputmode="numeric" autocomplete="off" onfocus="this.value=this.value.replace(/\\s/g,'')" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onblur="this.value=this.value.replace(/[^0-9]/g,'').replace(/^0+(?=\\d)/,'').replace(/\\B(?=(\\d{3})+(?!\\d))/g,' ')" value="${grp(sel.actual || 0)}"></div>
+        <div class="k-cost"><label class="t" for="f-c">${fl('rCost')}, $</label><input type="text" id="f-c" inputmode="numeric" autocomplete="off" onfocus="this.value=this.value.replace(/\\s/g,'');if(this.value==='0')this.value=''" oninput="const m=/^(.*?)[.,](\\d{1,2})$/.exec(this.value.replace(/\\s/g,''));this.value=m?String(Math.round(+(m[1].replace(/[^0-9]/g,'')||0)+(+m[2].padEnd(2,'0'))/100)):this.value.replace(/[^0-9]/g,'')" onblur="this.value=this.value.replace(/[^0-9]/g,'').replace(/^0+(?=\\d)/,'').replace(/\\B(?=(\\d{3})+(?!\\d))/g,' ')" value="${grp(sel.actual || 0)}"></div>
       </div>
       <p class="note" id="f-arch" hidden style="margin:-4px 0 14px">${t('completeHint')}</p>
       <fieldset class="ragpick"><legend>${fl('type')}</legend>${segPick('f-type', TYPES, sel.type)}</fieldset>

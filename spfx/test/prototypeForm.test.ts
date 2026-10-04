@@ -141,3 +141,9 @@ test('прототип #53: при уходе с поля % ведущие ну�
   const pr = g('f-pr'); pr.focus(); pr.value = '00098'; pr.dispatchEvent(new w.Event('input', { bubbles: true })); pr.blur();
   expect(pr.value).toBe('98');
 });
+test('прототип: вставка «1450.50» в затраты — 1451; ноль в фокусе — пустое поле', () => {
+  const { g } = openForm();
+  const c = g('f-c'); c.focus(); c.value = '1450.50'; c.dispatchEvent(new w.Event('input', { bubbles: true })); c.blur();
+  expect(c.value).toBe('1 451');
+  c.focus(); c.value = '0'; c.blur(); c.focus(); expect(c.value).toBe('');
+});

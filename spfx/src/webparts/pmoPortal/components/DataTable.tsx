@@ -13,7 +13,7 @@ type PopState = { kind: 'filter'; col: string; anchor: HTMLElement } | { kind: '
 /** Таблица прототипа (dataTable, строки 1090–1103): «Показано X з Y», чипы фильтров, сортировка, фильтр, шестерёнка. */
 /** left — кнопки слева в строке команд (cmdbar), right — перед шестерёнкой (выбор представления). */
 export function DataTable<R extends { id: number }>(p: { tkey: string; defs: TableDefs<R>; rows: R[]; empty?: string; left?: React.ReactNode; right?: React.ReactNode;
-  /** #58: карточка строки — на узком экране вместо таблицы (те же строки, фильтры и сортировка) */ card?: (r: R) => React.ReactNode }): JSX.Element {
+  /** #58: карточка строки — на узком экране вместо таблицы (те же строки; сортировка и фильтры — заданные на широком экране) */ card?: (r: R) => React.ReactNode }): JSX.Element {
   const { t } = React.useContext(AppCtx);
   const { cols: defs, lock, defaults } = p.defs;
   const known = Object.keys(defs);
@@ -85,15 +85,16 @@ export function DataTable<R extends { id: number }>(p: { tkey: string; defs: Tab
   const [drag, setDrag] = React.useState<{ id: string; startW: number; dx: number } | null>(null);
   const base = colWidths(shownCols, st.widths, locked);
   const widths = base && drag ? base.map((w, k) => (shownCols[k] === drag.id ? resizeCol(st, drag.id, drag.startW, drag.dx).widths![drag.id] : w)) : base;
+  const stRef = React.useRef(st); stRef.current = st;   // по отпусканию — свежее состояние таблицы, а не на момент нажатия
   const startResize = (id: string, idx: number) => (e: React.PointerEvent<HTMLSpanElement>): void => {
+    if (e.button) return;   // только основная кнопка
     e.preventDefault(); e.stopPropagation();
     const x0 = e.clientX, startW = base ? base[idx] : 0;
     const move = (ev: PointerEvent): void => setDrag({ id, startW, dx: ev.clientX - x0 });
-    const up = (ev: PointerEvent): void => {
-      window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up);
-      setDrag(null); save(resizeCol(st, id, startW, ev.clientX - x0));
-    };
-    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+    const stop = (): void => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', cancel); };
+    const up = (ev: PointerEvent): void => { stop(); setDrag(null); save(resizeCol(stRef.current, id, startW, ev.clientX - x0)); };
+    const cancel = (): void => { stop(); setDrag(null); };   // жест отменён — ширина прежняя
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', cancel);
   };
   const head = shownCols.map((id, idx) => {
     const d = defs[id]; const s = st.sort && st.sort.id === id ? st.sort.dir : '';

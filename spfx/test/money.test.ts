@@ -17,3 +17,8 @@ test('формы отчёта и проекта используют поле с
   expect(rd('panels/ProjectForm.tsx')).toMatch(/<MoneyIn id="f-bud"/);
   expect(rd('panels/ReportForm.tsx')).not.toMatch(/type="number" id="f-c"/);
 });
+test('кросс-ревью: вставка суммы с копейками — округление до целого, а не сумма в 100 раз больше', () => {
+  expect(parseMoney('1450.50')).toBe(1451); expect(parseMoney('1 450,00')).toBe(1450); expect(parseMoney('1450,4')).toBe(1450);
+  expect(parseMoney('2,400,000')).toBe(2400000); expect(parseMoney('12.5')).toBe(13); expect(parseMoney('0,49')).toBe(0);
+  expect(parseMoney('1450,')).toBe(1450);
+});
