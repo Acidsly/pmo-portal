@@ -99,7 +99,7 @@ $cc = Get-Content -Raw (Join-Path $root "tests/cases/cache.json") | ConvertFrom-
 $ccNow = [datetimeoffset]::Parse($cc.now, [cultureinfo]::InvariantCulture).UtcDateTime
 foreach ($c in $cc.read) {
     $r = Read-ManagerCache $c.text $ccNow $cc.hours
-    $got = if ($r) { "mgr=" + (($r.mgr.Keys | Sort-Object | ForEach-Object { "$_>$($r.mgr[$_])" }) -join ",") + ";people=" + (($r.people.Keys | Sort-Object | ForEach-Object { "$_>$($r.people[$_].n)|$($r.people[$_].j)" }) -join ",") + ";age=" + [math]::Round($r.age) } else { "-" }
+    $got = if ($r) { "mgr=" + (($r.mgr.Keys | Sort-Object | ForEach-Object { "$_>$($r.mgr[$_])" }) -join ",") + ";people=" + (($r.people.Keys | Sort-Object | ForEach-Object { "$_>$($r.people[$_].n)|$($r.people[$_].j)" }) -join ",") + ";age=" + [int][math]::Round($r.age) } else { "-" }
     $exp = if ($c.out) { "mgr=" + (($c.out.mgr.PSObject.Properties | Sort-Object Name | ForEach-Object { "$($_.Name)>$($_.Value)" }) -join ",") + ";people=" + (($c.out.people.PSObject.Properties | Sort-Object Name | ForEach-Object { "$($_.Name)>$($_.Value)" }) -join ",") + ";age=" + $c.out.age } else { "-" }
     if ($got -eq $exp) { Ok "кэш: $($c.name)" } else { Bad "кэш: $($c.name): $got, ожидалось $exp" }
 }
