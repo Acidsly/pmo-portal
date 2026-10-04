@@ -60,6 +60,35 @@ function Test-LockPlan([string]$text, [datetime]$nowUtc) {
     return "busy"
 }
 
+# Чья блокировка (векторы tests/cases/lock.json -> owner): своя — только если запись разбирается и run совпадает.
+function Test-LockOwner([string]$text, [string]$run) {
+    if (-not $text -or -not $run) { return $false }
+    try { $j = ConvertFrom-JsonText $text } catch { return $false }
+    return [bool]$j -and ($j -is [System.Collections.IDictionary]) -and [string]$j["run"] -eq $run
+}
+
+# Кэш оргструктуры (векторы tests/cases/cache.json): $text — JSON {saved, mgr, people}; срок — $hours от saved.
+# $null — нет, повреждён или устарел (читать Entra ID заново); иначе @{ saved (ISO UTC); mgr; people; age (часов) }.
+function Read-ManagerCache([string]$text, [datetime]$nowUtc, [double]$hours) {
+    if (-not $text) { return $null }
+    try { $c = ConvertFrom-JsonText $text } catch { return $null }
+    if (-not ($c -is [System.Collections.IDictionary]) -or -not $c.Contains("saved")) { return $null }
+    try { $saved = [datetimeoffset]::Parse([string]$c["saved"], [cultureinfo]::InvariantCulture).UtcDateTime } catch { return $null }
+    $age = ($nowUtc.ToUniversalTime() - $saved).TotalHours
+    if ($age -lt 0 -or $age -ge $hours) { return $null }
+    $mgr = @{}; if ($c["mgr"] -is [System.Collections.IDictionary]) { foreach ($k in $c["mgr"].Keys) { $mgr[$k] = [string]$c["mgr"][$k] } }
+    $ppl = @{}; if ($c["people"] -is [System.Collections.IDictionary]) { foreach ($k in $c["people"].Keys) { $x = $c["people"][$k]; $ppl[$k] = @{ n = [string]$x["n"]; j = [string]$x["j"] } } }
+    return @{ saved = $saved.ToString("o"); mgr = $mgr; people = $ppl; age = $age }
+}
+# Что сохранить в кэш: руководители без сбоев чтения ($fail), люди; срок — от первого чтения Entra ID ($cacheSaved),
+# новые люди дописываются, но срок не продлевают.
+function Get-ManagerCacheJson($mgr, $people, $fail, [string]$cacheSaved, [datetime]$nowUtc) {
+    $mgrOut = [ordered]@{}; foreach ($k in @($mgr.Keys | Sort-Object)) { if (-not $fail.ContainsKey($k)) { $mgrOut[$k] = $mgr[$k] } }
+    $pplOut = [ordered]@{}; foreach ($k in @($people.Keys | Sort-Object)) { $pplOut[$k] = [ordered]@{ n = $people[$k].n; j = $people[$k].j } }
+    $saved = if ($cacheSaved) { $cacheSaved } else { $nowUtc.ToUniversalTime().ToString("o") }
+    return [ordered]@{ saved = $saved; mgr = $mgrOut; people = $pplOut } | ConvertTo-Json -Depth 4 -Compress
+}
+
 # Время по Киеву: Azure Automation работает в UTC, Mac — в поясе пользователя; даты для людей — всегда по Киеву.
 function Get-KyivZone {
     if ($script:KYIV_ZONE) { return $script:KYIV_ZONE }
