@@ -69,12 +69,12 @@ You can share a link to the card: the browser address points exactly to it.
 
 ## Status report (for the PM)
 
-1. In the card — **Add status report** (or the "Status reports" tab → "New status report"). A project can have **only one report awaiting approval**: until the PMO decides, the button is hidden and the card says "The report from … is awaiting PMO approval".
+1. In the card — **Add status report** (or the "Status reports" tab → "New status report"). A project can have **only one report awaiting approval**: until the PMO decides, the button is hidden and the card says "The report from … is awaiting PMO approval". Opened from the card, the form is for that project — you cannot switch the project there. In the general form, projects with a report awaiting approval cannot be selected (marked "report of … awaiting approval").
 2. Rate **schedule, budget and resources**: green, yellow, red. **Overall health** is calculated automatically — the worst of the three.
-3. **Key indicators** are prefilled with the current values. Change only what has changed: status, % complete (0 to 100), type, dates, actual costs. Enter dates as dd.mm.yyyy (dots are added automatically) or pick them in the calendar — the button on the right of the field. The report date cannot be earlier than the last approved report.
+3. **Key indicators** are prefilled with the current values. Change only what has changed: status, % complete (a whole number from 0 to 100), type, dates, actual costs. Launch, planned end and forecast dates cannot be earlier than the start date. For "Completed — move to archive", % complete becomes 100 and cannot be changed. Enter dates as dd.mm.yyyy (dots are added automatically) or pick them in the calendar — the button on the right of the field. The report date cannot be earlier than the last approved report.
 4. If you changed the status, type or a date, fill in **Reason for changing indicators** (required, goes to the history).
 5. A **One-line summary** (required), what was done, the plan, issues; tick **Management decision needed** if one is needed and describe it.
-6. **Save.** The report goes **to the PMO for approval**; the card updates after approval. A submitted report cannot be changed.
+6. **Save.** If something is missing or entered incorrectly, the portal highlights all such fields at once and explains next to the field what is wrong. The report goes **to the PMO for approval**; the card updates after approval. A submitted report cannot be changed.
 7. If the PMO **returned** the report, the PMO's comment is shown in the card and in the report itself. Click **New report based on the returned one**: the form is filled with the returned report's data — fix it and save.
 8. A report is **returned automatically** if the project PM changed before the PMO decision (the new PM submits a current report) or the project moved to the archive — the comment explains why.
 

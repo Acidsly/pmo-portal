@@ -260,6 +260,11 @@ fieldset.ragpick{border:0;margin:0 0 14px;padding:0}
 .dims{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 16px}
 @media (max-width:560px){.dims{grid-template-columns:minmax(0,1fr)}}
 .err{color:var(--r);font-weight:600;margin:8px 0}
+.ferr{color:var(--r);font-size:12.5px;font-weight:500;margin:4px 0 0}
+[aria-invalid=true]{box-shadow:0 0 0 2px var(--r) !important;border-radius:12px}
+fieldset[aria-invalid=true]{padding:4px 6px}
+.date-in:has(.date-native[aria-invalid=true]) input[type=text]{box-shadow:0 0 0 2px var(--r)}
+.fixedval{background:var(--bg-alt);border-radius:12px;padding:10px 12px;font-weight:600}
 .actions{display:flex;gap:10px;margin-top:20px}
 .check{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14px}
 .check input{width:18px;height:18px;accent-color:var(--theme)}
@@ -665,6 +670,12 @@ const T = {
  savedKey:['Показники оновлено, зміну записано в історію.','Indicators updated and logged to history.','Показатели обновлены, изменение записано в историю.'],
  cmtSaved:['Коментар додано.','Comment added.','Комментарий добавлен.'],
  saveErr:['Не вдалося зберегти зміну. Оновіть сторінку та повторіть.','Couldn’t save the change. Reload the page and try again.','Не удалось сохранить изменение. Обновите страницу и повторите.'],
+ errReqAll:['Заповніть усі обов\'язкові поля, позначені *.','Fill in all required fields marked *.','Заполните все обязательные поля, отмеченные *.'],
+ errProgress:['Введіть ціле число від 0 до 100.','Enter a whole number from 0 to 100.','Введите целое число от 0 до 100.'],
+ errBeforeStart:['Не може бути раніше дати старту.','Cannot be earlier than the start date.','Не может быть раньше даты старта.'],
+ errDatesOrder:['Дати запуску й завершення не можуть бути раніше дати старту.','Launch and end dates cannot be earlier than the start date.','Даты запуска и завершения не могут быть раньше даты старта.'],
+ repPendingOpt:['звіт від {date} на погодженні','report of {date} awaiting approval','отчёт от {date} на согласовании'],
+ progressDone:['Проєкт завершується — 100 %.','The project is being completed — 100%.','Проект завершается — 100 %.'],
  errTitleTaken:['Проєкт з такою назвою вже є. Вкажіть іншу назву.','A project with this name already exists. Enter a different name.','Проект с таким названием уже есть. Укажите другое название.'],
  datePh:['дд.мм.рррр','dd.mm.yyyy','дд.мм.гггг'], pickDate:['Обрати дату в календарі','Pick a date in the calendar','Выбрать дату в календаре'],
  repPending:['на погодженні · {date}','awaiting approval · {date}','на согласовании · {date}'], repPendingNew:['новий звіт на погодженні','new report awaiting approval','новый отчёт на согласовании'],
@@ -1770,6 +1781,8 @@ function projectForm(p){
     const tk = x => String(x || '').trim().replace(/\s+/g, ' ').toLowerCase();
     if (tk(vals.title) !== tk(isNew ? '' : p.title) && PROJ.some(x => (isNew || x.id !== p.id) && tk(x.title) === tk(vals.title))) return err(t('errTitleTaken'));
     if (!vals.pm) return err(t('errPM'));
+    // #54: даты нового проекта не раньше старта
+    if (isNew && g('p-start').value && ['p-golive','p-plan'].some(id => g(id).value && g(id).value < g('p-start').value)) return err(t('errDatesOrder'));
     const team = [], links = [];
     for (const r of form.querySelectorAll('#p-team .tm-row')){
       const n = r.querySelector('.tm-n').value, role = r.querySelector('.tm-r').value.trim(), topics = r.querySelector('.tm-t').value.trim();
@@ -1867,14 +1880,18 @@ function reportForm(pid, base){
   state.panel = {kind:'form'};
   const act = visP().filter(p => isActive(p) && canEditP(p)).sort(byOrder);
   if (!act.length) return;
-  const p0 = (pid && act.find(p => p.id === pid)) || act[0];
+  // #37: из карточки — проект зафиксирован; из «Статус-звіти» — первый без отчёта на погодженні (#51)
+  const fixedP = pid && act.find(p => p.id === pid);
+  const p0 = fixedP || act.find(p => !pendDate(p)) || act[0];
   // «новий звіт на основі повернутого»: оцінки, показники й тексти беруться з повернутого звіту
   const b = base || {}, bv = (k, d) => b[k] != null && b[k] !== '' ? b[k] : d, bt = k => b[k] && b[k] !== '—' ? b[k] : '';
   const sel = base ? Object.assign({}, p0, {status:bv('status', p0.status), progress:bv('progress', p0.progress), type:bv('type', p0.type),
     start:bv('start', p0.start), golive:bv('golive', p0.golive), plan:bv('plan', p0.plan), fc:bv('fc', p0.fc), actual:bv('cost', p0.actual)}) : p0;
   openPanel(`${formHead(t('newReport'), `${t('listLabel')} «${t('navReports')}»`)}
   <form id="repform" novalidate>
-    <div class="frow"><label class="t" for="f-p">${fl('rProj')} *</label><select id="f-p">${act.map(p => `<option value="${p.id}"${p.id === sel.id ? ' selected' : ''}>${esc(p.title)}</option>`).join('')}</select></div>
+    ${fixedP ? `<div class="frow"><label class="t">${fl('rProj')}</label><div class="fixedval">${esc(fixedP.title)}</div><input type="hidden" id="f-p" value="${fixedP.id}"></div>`
+      : `<div class="frow"><label class="t" for="f-p">${fl('rProj')} *</label><select id="f-p">${act.map(p => `<option value="${p.id}"${p.id === sel.id ? ' selected' : ''}${pendDate(p) && p.id !== sel.id ? ' disabled' : ''}>${esc(p.title)}${pendDate(p) ? ' — ' + esc(t('repPendingOpt').replace('{date}', fmt(pendDate(p)))) : ''}</option>`).join('')}</select></div>`}
+    <p class="note lock" id="f-pend"${pendDate(sel) ? '' : ' hidden'}>${pendDate(sel) ? '🔒 ' + esc(t('gPending').replace('{date}', fmt(pendDate(sel)))) : ''}</p>
     <div class="fgrid frow">
       <div><label class="t" for="f-d">${fl('rDate')} *</label><input type="date" id="f-d" value="${iso(TODAY)}"></div>
       <div><label class="t" for="f-per">${fl('rPeriod')}</label><select id="f-per"><option>Тиждень</option><option selected>2 тижні</option><option>Місяць</option><option>Квартал</option></select></div>
@@ -1886,15 +1903,15 @@ function reportForm(pid, base){
       <h3 class="fsec">${t('keySec')}</h3><p class="note" style="margin:-6px 0 14px">${t('keySecHint')}</p>
       <div class="fgrid2 frow">
         <div><label class="t" for="f-st">${fl('status')}</label><select id="f-st">${REPORT_STATUSES.map(v => opt(v, sel.status)).join('')}<option value="Завершено"${sel.status === 'Завершено' ? ' selected' : ''}>${t('completeArch')}</option><option value="Скасовано"${sel.status === 'Скасовано' ? ' selected' : ''}>${t('cancelArch')}</option></select></div>
-        <div><label class="t" for="f-pr">${fl('progress')}</label><input type="number" id="f-pr" min="0" max="100" step="1" value="${sel.progress}" oninput="if (this.value !== '') this.value = Math.max(0, Math.min(100, Math.round(+this.value || 0)))"></div>
+        <div><label class="t" for="f-pr">${fl('progress')}</label><input type="text" inputmode="numeric" id="f-pr" value="${sel.status === 'Завершено' ? 100 : sel.progress}"${sel.status === 'Завершено' ? ' disabled' : ''} oninput="this.value = this.value.replace(/[^0-9]/g, '')" onblur="if (/^\d+$/.test(this.value) && +this.value <= 100) this.value = String(+this.value)"><p class="ferr" id="e-pr" hidden></p><p class="hint" id="f-pr-done"${sel.status === 'Завершено' ? '' : ' hidden'}>${t('progressDone')}</p></div>
       </div>
       <p class="note" id="f-arch" hidden style="margin:-4px 0 14px">${t('completeHint')}</p>
       <fieldset class="ragpick"><legend>${fl('type')}</legend>${segPick('f-type', TYPES, sel.type)}</fieldset>
       <div class="fgrid2 frow">
         <div><label class="t" for="f-start">${fl('start')}</label><input type="date" id="f-start" value="${sel.start || ''}"></div>
-        <div><label class="t" for="f-golive">${fl('golive')}</label><input type="date" id="f-golive" value="${sel.golive || ''}"></div>
-        <div><label class="t" for="f-plan">${fl('plan')}</label><input type="date" id="f-plan" value="${sel.plan || ''}"></div>
-        <div><label class="t" for="f-fc">${fl('fc')}</label><input type="date" id="f-fc" value="${sel.fc || ''}"></div>
+        <div><label class="t" for="f-golive">${fl('golive')}</label><input type="date" id="f-golive" value="${sel.golive || ''}"><p class="ferr" id="e-golive" hidden></p></div>
+        <div><label class="t" for="f-plan">${fl('plan')}</label><input type="date" id="f-plan" value="${sel.plan || ''}"><p class="ferr" id="e-plan" hidden></p></div>
+        <div><label class="t" for="f-fc">${fl('fc')}</label><input type="date" id="f-fc" value="${sel.fc || ''}"><p class="ferr" id="e-fc" hidden></p></div>
       </div>
       <div class="frow"><label class="t" for="f-c">${fl('rCost')}, $</label><input type="number" id="f-c" min="0" step="1000" value="${sel.actual || 0}"></div>
       <div class="frow" id="f-kr-wrap" hidden><label class="t" for="f-kr">${t('keyReason')} *</label><textarea id="f-kr" placeholder="${t('reasonPh')}">${esc(b.keyReason || '')}</textarea></div>
@@ -1923,18 +1940,39 @@ function reportForm(pid, base){
     const rr = form.querySelector(`input[name="rag"][value="${p.rag}"]`); if (rr) rr.checked = true;
     syncKey(); });
   g('f-dec').addEventListener('change', e => { g('f-dec-wrap').hidden = !e.target.checked; });
+  // #52: «Завершено» — 100 % и поле закрыто; другой статус — прежнее значение
+  let prevPr = null;
+  g('f-st').addEventListener('change', e => { const pr = g('f-pr'), done = e.target.value === 'Завершено';
+    if (done && !pr.disabled){ prevPr = pr.value; pr.value = '100'; pr.disabled = true; }
+    else if (!done && pr.disabled){ pr.value = prevPr != null ? prevPr : curP().progress; pr.disabled = false; prevPr = null; }
+    g('f-pr-done').hidden = !done; });
+  if (g('f-p').tagName === 'SELECT') g('f-p').addEventListener('change', () => { const pd = pendDate(curP());
+    g('f-pend').hidden = !pd; g('f-pend').textContent = pd ? '🔒 ' + t('gPending').replace('{date}', fmt(pd)) : ''; });
+  // #40: подсветка снимается при правке поля
+  form.addEventListener('input', e => { if (e.target.removeAttribute) e.target.removeAttribute('aria-invalid'); const fs = e.target.closest && e.target.closest('fieldset[aria-invalid]'); if (fs) fs.removeAttribute('aria-invalid'); });
   if (base) syncKey();
   form.addEventListener('submit', e => {
     e.preventDefault();
     const dims = dimsNow(), title = g('f-t').value.trim(), dstr = g('f-d').value;
-    if (Object.values(dims).some(v => !v)) return err(t('errDims'));
-    const rag = calcRag(dims);
-    if (!title){ g('f-t').focus(); return err(t('errSum')); }
-    if (!dstr) return err(t('errDate'));
     const p = pById(+g('f-p').value);
+    if (pendDate(p)) return err(t('gPending').replace('{date}', fmt(pendDate(p))));
     const kr = g('f-kr').value.trim();
-    if (keyChanged() && !kr){ g('f-kr').focus(); return err(t('errKeyReason')); }
-    const progress = Math.max(0, Math.min(100, +g('f-pr').value || 0)), cost = Math.max(0, +g('f-c').value || 0), dec = g('f-dec').checked;
+    // #40: все ошибки сразу — подсветка полей и общее сообщение; #53 % 0–100; #54 даты не раньше старта
+    form.querySelectorAll('[aria-invalid]').forEach(x => x.removeAttribute('aria-invalid')); form.querySelectorAll('.ferr').forEach(x => { x.hidden = true; });
+    const mark = el => el && el.setAttribute('aria-invalid', 'true');
+    let req = false, first = '';
+    ['sched','budget','res'].forEach(k => { if (!dims[k]) { req = true; mark(form.querySelector(`input[name="${k}"]`).closest('fieldset')); } });
+    if (!dstr){ req = true; mark(g('f-d')); }
+    if (keyChanged() && !kr){ req = true; mark(g('f-kr')); }
+    if (!title){ req = true; mark(g('f-t')); }
+    const prv = g('f-pr').value, prOk = g('f-pr').disabled || (/^\d+$/.test(prv) && +prv <= 100);
+    if (!prOk){ mark(g('f-pr')); g('e-pr').textContent = t('errProgress'); g('e-pr').hidden = false; first = first || t('errProgress'); }
+    const st = g('f-start').value;
+    ['golive','plan','fc'].forEach(k => { const v = g('f-' + k).value; if (st && v && v < st){ mark(g('f-' + k)); g('e-' + k).textContent = t('errBeforeStart'); g('e-' + k).hidden = false; first = first || t('errBeforeStart'); } });
+    if (req) return err(t('errReqAll'));
+    if (first) return err(first);
+    const rag = calcRag(dims);
+    const progress = g('f-pr').disabled ? 100 : +prv, cost = Math.max(0, +g('f-c').value || 0), dec = g('f-dec').checked;
     // звіт зберігається «На погодженні»; картку оновить applyReport після погодження PMO
     p.reports = (p.reports || []).concat([{id:uid(), date:dstr, rag, sched:dims.sched, budget:dims.budget, res:dims.res,
       progress, status:g('f-st').value, type:radioVal(form, 'f-type') || p.type, start:g('f-start').value, golive:g('f-golive').value, plan:g('f-plan').value, fc:g('f-fc').value,

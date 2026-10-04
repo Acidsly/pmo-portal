@@ -255,6 +255,11 @@ fieldset.ragpick{border:0;margin:0 0 14px;padding:0}
 .dims{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 16px}
 @media (max-width:560px){.dims{grid-template-columns:minmax(0,1fr)}}
 .err{color:var(--r);font-weight:600;margin:8px 0}
+.ferr{color:var(--r);font-size:12.5px;font-weight:500;margin:4px 0 0}
+[aria-invalid=true]{box-shadow:0 0 0 2px var(--r) !important;border-radius:12px}
+fieldset[aria-invalid=true]{padding:4px 6px}
+.date-in:has(.date-native[aria-invalid=true]) input[type=text]{box-shadow:0 0 0 2px var(--r)}
+.fixedval{background:var(--bg-alt);border-radius:12px;padding:10px 12px;font-weight:600}
 .actions{display:flex;gap:10px;margin-top:20px}
 .check{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14px}
 .check input{width:18px;height:18px;accent-color:var(--theme)}

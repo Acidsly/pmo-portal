@@ -6,9 +6,11 @@ import { tv } from '../i18n/values';
 import { AppCtx } from './ctx';
 import { maskDmy, parseDmy, formatDmy } from '../logic/dates';
 
+/** Ошибка у конкретного поля (#40, #54). */
+export const FieldErrText: React.FC<{ msg?: string }> = ({ msg }) => (msg ? <p className="ferr">{msg}</p> : null);
 /** Строка формы (frow прототипа): подпись, «*» для обязательного, подсказка. */
-export const Frow: React.FC<{ label: string; htmlFor?: string; req?: boolean; hint?: string; children?: React.ReactNode }> = p =>
-  <div className="frow"><label className="t" htmlFor={p.htmlFor}>{p.label}{p.req ? ' *' : ''}</label>{p.children}{p.hint ? <p className="hint">{p.hint}</p> : null}</div>;
+export const Frow: React.FC<{ label: string; htmlFor?: string; req?: boolean; hint?: string; err?: string; children?: React.ReactNode }> = p =>
+  <div className="frow"><label className="t" htmlFor={p.htmlFor}>{p.label}{p.req ? ' *' : ''}</label>{p.children}{p.hint ? <p className="hint">{p.hint}</p> : null}<FieldErrText msg={p.err} /></div>;
 
 /** Выбор одного значения кнопками (segPick прототипа: div.opts, radio + label). */
 export function SegPick<V extends string>(p: { name: string; options: V[]; value: V; onChange(v: V): void; dots?: boolean; disabled?: boolean }): JSX.Element {
@@ -19,14 +21,14 @@ export function SegPick<V extends string>(p: { name: string; options: V[]; value
 }
 
 /** Оценка RAG (ragPick прототипа): fieldset.ragpick с тремя кнопками-точками. */
-export const RagPick: React.FC<{ name: string; label: string; req?: boolean; value: Rag; onChange(v: Rag): void }> = p =>
-  <fieldset className="ragpick"><legend>{p.label}{p.req ? ' *' : ''}</legend>
+export const RagPick: React.FC<{ name: string; label: string; req?: boolean; value: Rag; onChange(v: Rag): void; invalid?: boolean }> = p =>
+  <fieldset className="ragpick" aria-invalid={p.invalid || undefined}><legend>{p.label}{p.req ? ' *' : ''}</legend>
     <SegPick name={p.name} options={RAGS} value={p.value} onChange={p.onChange} dots={true} /></fieldset>;
 
 /** Дата YYYY-MM-DD (input type=date). */
 /** Поле даты (#26): «дд.мм.рррр» с подсказкой на языке интерфейса (встроенное поле браузера берёт язык Windows/Chrome),
  *  цифровая клавиатура на телефоне; кнопка — календарь браузера. Значение наружу — ISO «yyyy-mm-dd» или ''. */
-export const DateIn: React.FC<{ id: string; value: string; onChange(v: string): void; disabled?: boolean }> = p => {
+export const DateIn: React.FC<{ id: string; value: string; onChange(v: string): void; disabled?: boolean; invalid?: boolean }> = p => {
   const { t } = React.useContext(AppCtx);
   const [txt, setTxt] = React.useState(formatDmy(p.value));
   const native = React.useRef<HTMLInputElement>(null);
@@ -37,7 +39,7 @@ export const DateIn: React.FC<{ id: string; value: string; onChange(v: string): 
     try { if (el.showPicker) el.showPicker(); else el.click(); } catch { el.click(); }
   };
   return <span className="date-in">
-    <input type="text" id={p.id} inputMode="numeric" autoComplete="off" placeholder={t('datePh')} value={txt} disabled={p.disabled}
+    <input type="text" id={p.id} inputMode="numeric" autoComplete="off" placeholder={t('datePh')} value={txt} disabled={p.disabled} aria-invalid={p.invalid || undefined}
       onChange={e => { const m = maskDmy(e.target.value); setTxt(m); const v = parseDmy(m); const nv = v === null ? '' : v; if (nv !== p.value) p.onChange(nv); }}
       onBlur={() => { if (parseDmy(txt) === null) setTxt(''); }} />   {/* неполная дата — значения нет (а не прежняя дата) */}
     <button type="button" className="date-btn" aria-label={t('pickDate')} title={t('pickDate')} disabled={p.disabled} onClick={pick}>

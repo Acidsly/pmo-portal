@@ -47,6 +47,41 @@ export function reportFromReturned(r: StatusReport, p: Project, today: string): 
 const KEYS: ('status' | 'type' | 'start' | 'goLive' | 'planEnd' | 'forecastEnd')[] = ['status', 'type', 'start', 'goLive', 'planEnd', 'forecastEnd'];
 export const keyChanged = (d: ReportDraft, p: Project): boolean => KEYS.some(k => String(d[k] || '') !== String(p[k] || ''));
 
+/** Даты, которые раньше даты старта (#54): запуск, план и прогноз не могут быть раньше старта; пустые не проверяются. */
+export type DateKey = 'goLive' | 'planEnd' | 'forecastEnd';
+export function datesBeforeStart(d: { start: string; goLive: string; planEnd: string; forecastEnd?: string }): DateKey[] {
+  if (!d.start) return [];
+  return (['goLive', 'planEnd', 'forecastEnd'] as DateKey[]).filter(k => !!d[k] && String(d[k]) < d.start);
+}
+/** «% виконання» из поля ввода (#53): целое 0–100, ведущие нули допустимы («00098» → 98); иначе null (вне диапазона, дробь, текст). */
+export function parseProgress(txt: string): number | null {
+  const s = String(txt).trim();
+  if (!/^\d{1,6}$/.test(s)) return null;
+  const n = Number(s);
+  return n >= 0 && n <= 100 ? n : null;
+}
+/** Статус «Завершено» — % виконання 100 и поле закрыто (#52); «Скасовано» — без изменений. */
+export const progressLocked = (status: string): boolean => status === 'Завершено';
+
+/** Ошибка поля формы: f — поле (для подсветки), k — ключ текста. */
+export interface FieldErr { f: string; k: string }
+/** Все ошибки формы отчёта сразу (#40): незаполненные обязательные поля, % вне 0–100, даты раньше старта.
+ *  progressText — текст поля «% виконання» (без него берётся d.progress). */
+export function reportErrors(d: ReportDraft, p: Project, progressText?: string): FieldErr[] {
+  const out: FieldErr[] = [];
+  if (!d.schedule) out.push({ f: 'sched', k: 'errReq' });
+  if (!d.budget) out.push({ f: 'budget', k: 'errReq' });
+  if (!d.resources) out.push({ f: 'res', k: 'errReq' });
+  if (!d.date) out.push({ f: 'date', k: 'errReq' });
+  if (keyChanged(d, p) && !d.keyReason.trim()) out.push({ f: 'keyReason', k: 'errReq' });
+  if (!d.title.trim()) out.push({ f: 'title', k: 'errReq' });
+  if (progressText !== undefined && !progressLocked(d.status) && parseProgress(progressText) === null) out.push({ f: 'progress', k: 'errProgress' });
+  datesBeforeStart(d).forEach(k => out.push({ f: k, k: 'errBeforeStart' }));
+  return out;
+}
+/** Общее сообщение формы: есть незаполненные — «Заповніть усі обов'язкові поля, позначені *», иначе — первая ошибка поля. */
+export const formErrorText = (errs: FieldErr[]): string => (!errs.length ? '' : errs.some(e => e.k === 'errReq') ? 'errReqAll' : errs[0].k);
+
 /** Ключ ошибки или '' — порядок проверок прототипа: оценки, резюме, дата, причина. */
 export function validateReport(d: ReportDraft, p: Project): string {
   if (!d.schedule || !d.budget || !d.resources) return 'errDims';
@@ -67,7 +102,7 @@ export const titleKey = (s: string): string => (s || '').trim().replace(/\s+/g, 
 export const validateProject = (d: ProjectDraft, otherCodes: string[] = [], otherTitles: string[] = [], prevTitle = ''): string =>
   (!d.title.trim() ? 'errTitle' : !d.manager ? 'errPM'
     : titleKey(d.title) !== titleKey(prevTitle) && otherTitles.some(x => titleKey(x) === titleKey(d.title)) ? 'errTitleTaken'
-    : codeTaken(d.code, otherCodes) ? 'errCode' : validateTeamLinks(d.team, d.links));
+    : codeTaken(d.code, otherCodes) ? 'errCode' : datesBeforeStart(d).length ? 'errDatesOrder' : validateTeamLinks(d.team, d.links));
 export const validateRisk = (d: RiskDraft): string => (!d.title.trim() ? 'errRiskTitle' : '');
 
 /** Изменения карточки для журнала («Редагування картки»); описание не журналируется, как в прототипе. */
