@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:6db0152036ab — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:ec01bcba04ad — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -457,6 +457,15 @@ function Get-ReportTarget($rep, [string]$lastUpdate) {
 # поле цели переноса -> поле карточки
 $TARGET_FIELD = [ordered]@{ status = "pmStatus"; type = "pmType"; progress = "pmProgress"; start = "pmStart"; goLive = "pmGoLive"; planEnd = "pmPlanEnd"
     forecastEnd = "pmForecastEnd"; actualCost = "pmActualCost"; archivedAt = "pmArchivedAt"; rag = "pmRAG"; lastUpdate = "pmLastUpdate"; lastReport = "pmLastReport" }
+# Решение по эталону (векторы tests/cases/state.json -> plan): $state — эталон или $null (нет / повреждён), $hasRecord — строка
+# эталона есть. new — эталона нет: из карточки; rebuild — повреждён: заново из карточки (не откат к пустым значениям);
+# none — совпадает; accept — правил владелец сайта или приложение (скрипт): эталон = карточка; rollback — правка в обход отчёта.
+function Get-StatePlan($card, $state, [bool]$hasRecord, [string]$editorT, [string[]]$ownerList) {
+    if (-not $state) { return @{ action = $(if ($hasRecord) { "rebuild" } else { "new" }); diff = @() } }
+    $diff = @(Compare-State $card $state | Where-Object { $_ })
+    if (-not $diff.Count) { return @{ action = "none"; diff = @() } }
+    return @{ action = $(if (Test-Trusted $editorT $ownerList) { "accept" } else { "rollback" }); diff = $diff }
+}
 function Get-ApplyAction($rep, [string]$pm, [string[]]$ownerList, [bool]$archived, [string]$last, [string]$lastUpdate) {
     if ($archived) { return "notApplied:arch" }
     if ($rep.author -ne $pm -and -not (Test-Trusted $rep.author $ownerList)) { return "notApplied:pm" }
@@ -702,18 +711,20 @@ if ($HAS_PS) {
     foreach ($p in $PROJ.Values) {
         $card = [ordered]@{}; foreach ($k in Get-StateKeys) { $card[$k] = [string]$p.Values[$k] }
         $st = $STATES[$p.Item.Id]
-        if (-not $st -or -not $st.state) {
+        $editorT = Who $p.Item["Editor"]; $editor = WhoMail $editorT
+        # решение — общим правилом Get-StatePlan (векторы tests/cases/state.json -> plan)
+        $plan = Get-StatePlan $card $(if ($st) { $st.state } else { $null }) ([bool]$st) $editorT $OWNER_EMAILS
+        if ($plan.action -in @("new", "rebuild")) {
             # нет эталона или он повреждён — заново из карточки (никогда не откат к пустым значениям)
-            if ($st) { Warn "Еталон «$($p.Item["Title"])» пошкоджено — створено заново з картки" }
+            if ($plan.action -eq "rebuild") { Warn "Еталон «$($p.Item["Title"])» пошкоджено — створено заново з картки" }
             $stats.stateNew++
             if (-not $DryRun) { Save-ProjectState $p.Item.Id $card $STATES } else { Log "  еталон: + «$($p.Item["Title"])»" }
             continue
         }
-        $diff = Compare-State $card $st.state
-        if (-not $diff.Count) { continue }
-        $editorT = Who $p.Item["Editor"]; $editor = WhoMail $editorT
+        if ($plan.action -eq "none") { continue }
+        $diff = $plan.diff
         $when = (Get-Date).ToUniversalTime().ToString("o")
-        if (Test-Trusted $editorT $OWNER_EMAILS) {
+        if ($plan.action -eq "accept") {
             # правка владельца сайта или скрипта (приложение) — законна: эталон = карточка
             Log "  еталон «$($p.Item["Title"])»: оновлено за карткою ($(@($diff | ForEach-Object { $_.f }) -join ', '))"
             foreach ($d in $diff) { Add-Change $p.Item.Id $d.f (Human $d.f $d.state) (Human $d.f $d.card) "Редагування картки" $editor "Змінено власником сайту або службовим скриптом" $when }

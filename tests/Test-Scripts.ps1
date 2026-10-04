@@ -139,7 +139,8 @@ foreach ($c in $sc.write) { $r = Get-StateWriteValue $c.f $c.v; if ($r -eq $c.ou
 $rt = ConvertFrom-StateJson (ConvertTo-StateJson (& $toHash $sc.compare[0].card))
 if (-not (Compare-State $rt (& $toHash $sc.compare[0].card)).Count) { Ok "эталон: запись и чтение JSON без искажений (даты, числа, пустые)" } else { Bad "эталон: JSON искажает значения" }
 # повреждённый или пустой эталон — «эталона нет» ($null), а не пустые значения для отката
-foreach ($bad in @("", "{oops", "{}", "[1,2]", '{"pmCode":"PRJ-1"}')) { if ($null -eq (ConvertFrom-StateJson $bad)) { Ok "повреждённый эталон «$bad» — нет эталона" } else { Bad "повреждённый эталон «$bad» читается как значения" } }
+# (векторы state.json -> parse — те же у parseState приложения)
+foreach ($c in $sc.parse) { $ok = $null -ne (ConvertFrom-StateJson $c.json); if ($ok -eq [bool]$c.valid) { Ok "разбор эталона: $($c.name)" } else { Bad "разбор эталона: $($c.name): $ok" } }
 
 Write-Host "3e. Правила отчётов: авто-возврат и применение (tests/cases/reports.json)"
 foreach ($n in @("Test-Trusted", "Get-PendingReturns", "Get-ApplyAction", "CalcRag", "Get-ApprovalResult", "Get-EffectiveApproval", "Get-ReportTarget")) {
@@ -161,6 +162,17 @@ foreach ($c in $rc.effective) {
     if ($got -eq $exp) { Ok "действующее решение: $($c.name)" } else { Bad "действующее решение: $($c.name): $got, ожидалось $exp" }
 }
 $syncSrc = Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")
+# решение по эталону: принять / откатить / заново (tests/cases/state.json -> plan)
+$fnp = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Get-StatePlan" }, $true) | Select-Object -First 1
+if ($fnp) { Invoke-Expression $fnp.Extent.Text } else { Bad "нет функции Get-StatePlan" }
+$scp = Get-Content -Raw (Join-Path $root "tests/cases/state.json") | ConvertFrom-Json -DateKind String
+$toH = { param($o) if ($null -eq $o) { return $null }; $h = [ordered]@{}; foreach ($k in Get-StateKeys) { $h[$k] = [string]$o.$k }; $h }
+foreach ($c in $scp.plan) {
+    $exp = "$($c.out):$(@($c.fields) -join ',')"
+    try { $pl = Get-StatePlan (& $toH $c.card) (& $toH $c.state) ([bool]$c.record) $c.editor @($c.owners); $got = "$($pl.action):$(@($pl.diff | ForEach-Object { $_.f }) -join ',')" }
+    catch { $got = "исключение: $($_.Exception.Message)" }
+    if ($got -eq $exp) { Ok "эталон: $($c.name)" } else { Bad "эталон: $($c.name): $got, ожидалось $exp" }
+}
 # перенос отчёта в карточку (tests/cases/apply.json — те же векторы у reportTarget приложения)
 foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/apply.json") | ConvertFrom-Json -DateKind String).cases) {
     $rep = @{}; foreach ($pp in $c.rep.PSObject.Properties) { $rep[$pp.Name] = $pp.Value }
@@ -169,6 +181,7 @@ foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/apply.json") | Co
     $exp = ($c.out.PSObject.Properties | Sort-Object Name | ForEach-Object { "$($_.Name)=$($_.Value)" }) -join "; "
     if ($got -eq $exp) { Ok "перенос в карточку: $($c.name)" } else { Bad "перенос в карточку: $($c.name): [$got], ожидалось [$exp]" }
 }
+if ($syncSrc -match '\$plan = Get-StatePlan \$card') { Ok "раздел 0a решает по эталону общим правилом Get-StatePlan" } else { Bad "Invoke-PMOSync.ps1: раздел 0a не использует Get-StatePlan" }
 if ($syncSrc -match '\$tg = Get-ReportTarget') { Ok "раздел 1 переносит отчёт общим правилом Get-ReportTarget" } else { Bad "Invoke-PMOSync.ps1: раздел 1 не использует Get-ReportTarget" }
 # подтверждение «Погоджено» в синхронизации — именно этим правилом (а не «любое Погоджено от PMO»: ошибка сверки №1)
 if ($syncSrc -match '\$eff = Get-EffectiveApproval' -and $syncSrc -match 'if \(\$eff -and \$eff\.decision -eq "Погоджено"\) \{ \$APPROVED\[\$rid\] = \$true \}' -and ([regex]::Matches($syncSrc, '\$APPROVED\[[^\]]+\] = \$true')).Count -eq 1) {
