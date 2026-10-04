@@ -8,6 +8,7 @@ import { DataTable } from '../src/webparts/pmoPortal/components/DataTable';
 import { reportCard, riskCard, TableDefs } from '../src/webparts/pmoPortal/components/defs';
 import { makeT } from '../src/webparts/pmoPortal/i18n/i18n';
 import { T } from '../src/webparts/pmoPortal/i18n/strings';
+import { RiskForm } from '../src/webparts/pmoPortal/panels/RiskForm';
 
 // Компоненты приложения в jsdom: поведение, а не только «вызывается» (блок 2 отзывов раунда 3 и правки кросс-ревью)
 const tt = makeT(0);
@@ -119,4 +120,18 @@ test('«Відгуки»: номер отзыва (#N) — первая коло
   expect(src).toMatch(/defaults: \['num', 'date'/);
   expect(src).toMatch(/num: \{ label: t\('fbNum'\), cell: r => <button className="linklike" onClick=\{\(\) => open\(r\)\}>#\{r\.id\}<\/button>, sort: r => r\.id/);
   expect(T.fbNum || (require('../src/webparts/pmoPortal/i18n/strings') as any).EXTRA.fbNum).toEqual(['№', 'No.', '№']);
+});
+
+describe('#47 / #55 форма риска', () => {
+  const data = { projects: [{ id: 5, title: 'Проєкт П', status: 'Реалізація', canEdit: true, manager: { email: 'pm@x', name: 'PM' } }], risks: [], reports: [], comments: [], team: [] } as any;
+  test('тип — перед «Опис»; заголовок новой записи — по типу; кнопки — «ризик / проблема»', () => {
+    mount(<RiskForm data={data} projectId={5} riskId={0} onCancel={() => undefined} />);
+    const ty = root.querySelector('fieldset.ragpick') as HTMLElement, ta = root.querySelector('#k-title') as HTMLElement;
+    expect(ty.compareDocumentPosition(ta) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect((root.querySelector('label[for="k-title"]') as HTMLElement).textContent).toContain('Опис');
+    expect((root.querySelector('.ph h2') as HTMLElement).textContent).toBe('Новий ризик');
+    act(() => { Simulate.change(root.querySelector('input[name="k-type"][value="Проблема"]') as HTMLInputElement); });
+    expect((root.querySelector('.ph h2') as HTMLElement).textContent).toBe('Нова проблема');
+    expect(T.newRisk[0]).toBe('Новий ризик / проблема'); expect(T.addRisk[0]).toBe('Додати ризик / проблему');
+  });
 });

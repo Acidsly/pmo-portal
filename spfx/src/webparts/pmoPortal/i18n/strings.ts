@@ -1197,14 +1197,24 @@ export const T: Record<string, L3> = {
   "Старт"
  ],
  "newRisk": [
+  "Новий ризик / проблема",
+  "New risk / issue",
+  "Новый риск / проблема"
+ ],
+ "addRisk": [
+  "Додати ризик / проблему",
+  "Add risk / issue",
+  "Добавить риск / проблему"
+ ],
+ "newRiskT": [
   "Новий ризик",
   "New risk",
   "Новый риск"
  ],
- "addRisk": [
-  "Додати ризик",
-  "Add risk",
-  "Добавить риск"
+ "newIssueT": [
+  "Нова проблема",
+  "New issue",
+  "Новая проблема"
  ],
  "riskCard": [
   "Ризик / проблема",
@@ -1537,6 +1547,11 @@ export const FLD: Record<string, L3> = {
   "Ризик / проблема",
   "Risk / issue",
   "Риск / проблема"
+ ],
+ "kDesc": [
+  "Опис",
+  "Description",
+  "Описание"
  ],
  "kType": [
   "Тип",

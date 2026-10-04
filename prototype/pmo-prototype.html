@@ -763,7 +763,8 @@ const T = {
  cPeriod:['Період','Period','Период'], cDone:['Зроблено','Done','Сделано'], cNextP:['План','Plan','План'], cIssues:['Проблеми','Issues','Проблемы'],
  cStatusR:['Статус у звіті','Status in report','Статус в отчёте'], cDecFlag:['Рішення','Decision','Решение'], cDecText:['Яке рішення','Decision needed','Какое решение'],
  cProb:['Ймовірність','Probability','Вероятность'], cImp:['Вплив','Impact','Влияние'], cStart2:['Старт','Start','Старт'],
- newRisk:['Новий ризик','New risk','Новый риск'], addRisk:['Додати ризик','Add risk','Добавить риск'], riskCard:['Ризик / проблема','Risk / issue','Риск / проблема'],
+ newRisk:['Новий ризик / проблема','New risk / issue','Новый риск / проблема'], addRisk:['Додати ризик / проблему','Add risk / issue','Добавить риск / проблему'],
+ newRiskT:['Новий ризик','New risk','Новый риск'], newIssueT:['Нова проблема','New issue','Новая проблема'], riskCard:['Ризик / проблема','Risk / issue','Риск / проблема'],
  riskHow:['Оцінка = ймовірність × вплив, кожне від 1 до 5. 15–25 — високий (червоний), 8–14 — середній (жовтий), 1–7 — низький (зелений).',
    'Score = probability × impact, each from 1 to 5. 15–25 high (red), 8–14 medium (yellow), 1–7 low (green).',
    'Оценка = вероятность × влияние, каждое от 1 до 5. 15–25 — высокий (красный), 8–14 — средний (жёлтый), 1–7 — низкий (зелёный).'],
@@ -864,7 +865,7 @@ const FLD = {
  rDec:['Потрібне рішення керівництва','Management decision needed','Требуется решение руководства'], rDecText:['Яке рішення потрібне','Decision required','Какое решение нужно'],
  rAuthor:['Автор','Created by','Автор'],
  apStatus:['Погодження','Approval','Согласование'], apNote:['Коментар PMO','PMO comment','Комментарий PMO'],
- kTitle:['Ризик / проблема','Risk / issue','Риск / проблема'], kType:['Тип','Type','Тип'], kStrategy:['Стратегія реагування','Response strategy','Стратегия реагирования'], kContingency:['План дій у разі настання','Contingency plan','План действий при наступлении'], kScore:['Оцінка','Score','Оценка'], kPI:['Ймов. × вплив','Prob. × impact','Вер. × влияние'],
+ kTitle:['Ризик / проблема','Risk / issue','Риск / проблема'], kDesc:['Опис','Description','Описание'], kType:['Тип','Type','Тип'], kStrategy:['Стратегія реагування','Response strategy','Стратегия реагирования'], kContingency:['План дій у разі настання','Contingency plan','План действий при наступлении'], kScore:['Оцінка','Score','Оценка'], kPI:['Ймов. × вплив','Prob. × impact','Вер. × влияние'],
  kOwner:['Власник ризику','Risk owner','Владелец риска'], kStatus:['Статус','Status','Статус'], kDue:['Термін виконання заходів','Mitigation due date','Срок выполнения мер']
 };
 const t = k => (T[k] || [k,k,k])[LI];
@@ -1893,13 +1894,15 @@ function riskForm(pid, rid, fromList){
   state.panel = {kind:'form'};
   const dis = edit ? '' : ' disabled';
   const scale = (name, val, pre) => `<div class="opts scale">${[1,2,3,4,5].map(n => `<input type="radio" id="${name}${n}" name="${name}" value="${n}"${+val === n ? ' checked' : ''}${dis}><label for="${name}${n}">${n}</label>`).join('')}</div><p class="scale-d" id="${name}-d">${t(pre + val)}</p>`;
-  openPanel(`${formHead(k ? t('riskCard') : t('newRisk'), `${t('listLabel')} «${t('navRisks')}»`)}
+  // #47 / #55: заголовок новой записи — по типу (меняется при выборе типа)
+  const newTitle = ty => ty === 'Проблема' ? t('newIssueT') : t('newRiskT');
+  openPanel(`${formHead(k ? t('riskCard') : newTitle(cur.type), `${t('listLabel')} «${t('navRisks')}»`)}
   ${edit ? '' : `<p class="note lock">🔒 ${t('readOnly')}</p>`}
   <form id="kform" novalidate>
     <div class="frow"><label class="t" for="k-p">${fl('rProj')} *</label>
       ${k || (pid && !fromList) ? `<div class="fixed">${esc(p.title)}</div>` : `<select id="k-p">${pool.map(x => `<option value="${x.id}"${x.id === p.id ? ' selected' : ''}>${esc(x.title)}</option>`).join('')}</select>`}</div>
-    <div class="frow"><label class="t" for="k-title">${fl('kTitle')} *</label><textarea id="k-title"${dis}>${esc(cur.title)}</textarea></div>
     <fieldset class="ragpick"><legend>${fl('kType')}</legend>${segPick('k-type', ['Ризик','Проблема'], cur.type)}</fieldset>
+    <div class="frow"><label class="t" for="k-title">${fl('kDesc')} *</label><textarea id="k-title"${dis}>${esc(cur.title)}</textarea></div>
     <div class="scorecalc">
       <div class="frow"><span class="lbl-t">${t('cProb')}</span>${scale('k-pr', cur.p, 'p')}</div>
       <div class="frow"><span class="lbl-t">${t('cImp')}</span>${scale('k-im', cur.i, 'i')}</div>
@@ -1923,6 +1926,7 @@ function riskForm(pid, rid, fromList){
     g('k-score').innerHTML = `${scoreHtml(sc)} <b>${t('sc' + scoreBucket(sc))}</b> <span class="muted">= ${pr} × ${im}</span>`;
     g('k-pr-d').textContent = t('p' + pr); g('k-im-d').textContent = t('i' + im); };
   form.addEventListener('change', sync); sync();
+  if (!k) form.addEventListener('change', e => { if (e.target.name === 'k-type') { const h = panel.querySelector('.ph h2'); if (h) h.textContent = newTitle(e.target.value); } });
   form.addEventListener('submit', e => {
     e.preventDefault(); if (!edit) return;
     if (g('k-p')) p = pById(+g('k-p').value);

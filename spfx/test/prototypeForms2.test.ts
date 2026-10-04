@@ -60,3 +60,15 @@ test('#32: «Ризики архівних проєктів» — непусто
   const active = Array.from(w.document.querySelectorAll('[data-act="openp"]')).map((x: W) => x.textContent.trim());
   projArch.forEach((t: string) => expect(active).not.toContain(t));
 });
+
+test('#47 / #55: форма риска — тип перед «Опис», заголовок по типу, кнопка «Новий ризик / проблема»', () => {
+  q('[data-act="nav"][data-page="risks"]').click();
+  const b = q('[data-act="newrisk"]'); expect(b.textContent).toContain('Новий ризик / проблема');
+  b.click();
+  const f = q('#kform'), ty = f.querySelector('fieldset.ragpick'), ta = f.querySelector('#k-title');
+  expect(ty.compareDocumentPosition(ta) & w.Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(f.querySelector('label[for="k-title"]').textContent).toContain('Опис');
+  expect(q('#panel .ph h2, .ph h2').textContent).toBe('Новий ризик');
+  const r = f.querySelector('input[name="k-type"][value="Проблема"]'); r.checked = true; ev(r, 'change');
+  expect(q('.ph h2').textContent).toBe('Нова проблема');
+});

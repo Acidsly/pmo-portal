@@ -107,7 +107,8 @@ The status (Initiation, Planning, Execution, On hold, Cancelled, Completed) chan
 
 ## Risks and issues
 
-- Add one from the card ("Add risk", PM only) or on the "Risks and issues" tab.
+- Add one from the card ("Add risk / issue", PM only) or on the "Risks and issues" tab → "New risk / issue".
+- First choose the **type** (Risk or Issue) — the form title follows it ("New risk" / "New issue"), then fill in the **description**.
 - **Probability** and **impact** are 1 to 5; the **score** = probability × impact: 15–25 — high (red), 8–14 — medium (yellow), 1–7 — low (green).
 - **Response strategy:** Avoid, Reduce (mitigate), Transfer, Accept (clicking the selected one again clears the choice).
 - **Risk reduction actions** — what we do now; **Contingency plan** — what we do if the risk occurs.
