@@ -151,7 +151,7 @@ The **Feedback** tab → **Leave feedback** (or the "Feedback" button in Help): 
 
 Your device is added automatically; in the text, say on which screen you noticed the problem.
 
-The **Feedback** tab lists all participants' feedback: the text, the author, the review status (New, Accepted, Done, Commented, Rejected) and the developers' answer. Screenshots are visible only to the author and the developers. The status and the answer are set by the solution's developers.
+The **Feedback** tab lists all participants' feedback: the number (#46 — answers refer to feedback by it), the text, the author, the review status (New, Accepted, Done, Commented, Rejected) and the developers' answer. Screenshots are visible only to the author and the developers. The status and the answer are set by the solution's developers.
 
 ## Tasks for the focus group
 

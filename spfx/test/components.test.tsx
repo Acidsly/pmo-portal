@@ -113,3 +113,10 @@ test('#38 / #39: в форме отчёта статус, % и затраты �
   ['id="f-st"', 'id="f-pr"', 'id="f-c"'].forEach(id => expect(row).toContain(id));
   expect((src.match(/<RagPick name="(sched|budget|res)"/g) || []).length).toBe(3);
 });
+
+test('«Відгуки»: номер отзыва (#N) — первая колонка, по нему сортируется', () => {
+  const src = require('fs').readFileSync(require('path').join(__dirname, '../src/webparts/pmoPortal/pages/Feedback.tsx'), 'utf8');
+  expect(src).toMatch(/defaults: \['num', 'date'/);
+  expect(src).toMatch(/num: \{ label: t\('fbNum'\), cell: r => <button className="linklike" onClick=\{\(\) => open\(r\)\}>#\{r\.id\}<\/button>, sort: r => r\.id/);
+  expect(T.fbNum || (require('../src/webparts/pmoPortal/i18n/strings') as any).EXTRA.fbNum).toEqual(['№', 'No.', '№']);
+});
