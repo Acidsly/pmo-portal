@@ -104,3 +104,15 @@ test('#35, #49 прототип: ширина колонки перетаски�
   const b = w.document.createElement('button'); b.dataset.act = 'wreset'; b.dataset.key = key; w.document.body.appendChild(b); b.click();
   expect(JSON.parse(w.localStorage.getItem('pmo-table5-' + key)).w).toBeUndefined();
 });
+test('кросс-ревью, прототип: отмена жеста — ширина не сохраняется; правая кнопка — не тянет', () => {
+  q('[data-act="nav"][data-page="risks"]').click();
+  const vs = q('select[data-act="view"]'); vs.value = 'all'; vs.dispatchEvent(new w.Event('change', { bubbles: true }));
+  const h = q('.dt .col-rs'); const key = h.dataset.rs;
+  const pe = (t: string, x: number, button = 0): W => new w.MouseEvent(t, { bubbles: true, cancelable: true, clientX: x, button });
+  h.dispatchEvent(pe('pointerdown', 100)); w.dispatchEvent(pe('pointermove', 180)); w.dispatchEvent(pe('pointercancel', 180));
+  w.dispatchEvent(pe('pointerup', 300));
+  expect(((JSON.parse(w.localStorage.getItem('pmo-table5-' + key) || '{}')).w || {})).toEqual({});
+  const h2 = q('.dt .col-rs');
+  h2.dispatchEvent(pe('pointerdown', 100, 2)); w.dispatchEvent(pe('pointerup', 200));
+  expect(((JSON.parse(w.localStorage.getItem('pmo-table5-' + key) || '{}')).w || {})).toEqual({});
+});
