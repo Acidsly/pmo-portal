@@ -393,5 +393,63 @@
       "out": true,
       "name": "слеш у кінці — та сама папка"
     }
+  ],
+  "team": [
+    {
+      "name": "в папке проекта (писал PM по правам папки) — учитывается",
+      "inRoot": false,
+      "ready": true,
+      "author": "pmo@x",
+      "pm": "pm@x",
+      "out": true
+    },
+    {
+      "name": "в корне у нового проекта (PMO при создании) — учитывается",
+      "inRoot": true,
+      "ready": false,
+      "author": "pmo@x",
+      "pm": "pm@x",
+      "out": true
+    },
+    {
+      "name": "ошибка сверки №2: в корне у проекта с правами от PMO — не учитывается",
+      "inRoot": true,
+      "ready": true,
+      "author": "pmo@x",
+      "pm": "pm@x",
+      "out": false
+    },
+    {
+      "name": "в корне у проекта с правами от владельца сайта — учитывается",
+      "inRoot": true,
+      "ready": true,
+      "author": "own@x",
+      "pm": "pm@x",
+      "out": true
+    },
+    {
+      "name": "в корне у проекта с правами от приложения (скрипт) — учитывается",
+      "inRoot": true,
+      "ready": true,
+      "author": "app",
+      "pm": "pm@x",
+      "out": true
+    },
+    {
+      "name": "в корне у проекта с правами от PM (старые данные) — учитывается",
+      "inRoot": true,
+      "ready": true,
+      "author": "pm@x",
+      "pm": "pm@x",
+      "out": true
+    },
+    {
+      "name": "в корне у проекта с правами без автора — не учитывается",
+      "inRoot": true,
+      "ready": true,
+      "author": "",
+      "pm": "",
+      "out": false
+    }
   ]
 }

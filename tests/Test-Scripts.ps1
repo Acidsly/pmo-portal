@@ -75,6 +75,10 @@ foreach ($c in $fc.group) { $r = Get-GroupFolderRole $c.list $c.archived $c.v2; 
 foreach ($c in $fc.frozen) { $r = Test-ArchiveFrozen $c.status $c.mark $c.ready $c.rebuild $c.prefix; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $r, ожидалось $($c.out)" } }
 foreach ($c in $fc.placement) { $r = Test-RowPlacement $c.dir $c.expected; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $r, ожидалось $($c.out)" } }
 foreach ($c in $fc.row) { $r = Get-RowAction $c.dir $c.expected $c.acl $c.ready; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): «$r», ожидалось «$($c.out)»" } }
+$fnt = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -in @("Test-TeamRowAccepted", "Test-Trusted") }, $true)
+foreach ($f in $fnt) { Invoke-Expression $f.Extent.Text }
+foreach ($c in $fc.team) { $r = Test-TeamRowAccepted $c.inRoot $c.ready $c.author $c.pm @("own@x"); if ($r -eq $c.out) { Ok "команда: $($c.name)" } else { Bad "команда: $($c.name): $r" } }
+if ((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")) -match 'TEAM_REJECTED\[\$it\.Id\]\) \{ continue \}') { Ok "команда: отклонённая строка не переносится в папку" } else { Bad "команда: отклонённая строка переносится в папку (раздел 5)" }
 foreach ($c in $fc.mark) { $r = Get-AclMark $c.hash $c.archived $c.v2; if ($r -eq $c.out) { Ok "отметка $($c.hash)/$($c.archived)/v2=$($c.v2) -> $r" } else { Bad "отметка: $r, ожидалось $($c.out)" } }
 # все запросы CSOM синхронизации — с повтором при 429 (Invoke-PnPQuery -RetryCount), без голого ExecuteQuery()
 if ((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")) -match 'ExecuteQuery\(\)') { Bad "Invoke-PMOSync.ps1: ExecuteQuery() без повтора" } else { Ok "запросы CSOM — с повтором при 429" }

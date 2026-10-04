@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:9f9a9fc9c579 — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:041d23a5e49f — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -567,6 +567,13 @@ function Add-Change($projectId, [string]$field, [string]$from, [string]$to, [str
 function Get-FolderName($projectId) { return "P$([int]$projectId)" }
 # Запись дочернего списка лежит правильно: в папке своего проекта или в корне списка (ещё не перенесена). В папке другого
 # проекта — нет: поле проекта не совпадает с папкой (запись создана в своей папке со ссылкой на чужой проект). Векторы folders.json.
+# Строка «Команда проєкту» учитывается (векторы tests/cases/folders.json -> team; ошибка сверки №2, R7): в папке проекта — да
+# (туда пишет только PM: права папки); в корне — только для нового проекта (PMO при создании, права ещё не выданы),
+# от владельца сайта или приложения; иначе это добавление в чужой проект в обход прав — не учитывается и не переносится.
+function Test-TeamRowAccepted([bool]$inRoot, [bool]$projectReady, [string]$authorT, [string]$pm, [string[]]$ownerList) {
+    if (-not $inRoot -or -not $projectReady) { return $true }
+    return (Test-Trusted $authorT $ownerList) -or ([bool]$authorT -and $authorT -eq $pm)
+}
 function Test-RowPlacement([string]$dir, [string]$expected) {
     $d = $dir.TrimEnd("/"); $e = $expected.TrimEnd("/")
     if ($d -eq $e) { return $true }
@@ -669,6 +676,15 @@ $teamItems = Select-Placed $teamItems $L_TEAM "tmProject"
 $reports   = Select-Placed $reports $L_REP "srProject"
 $risks     = Select-Placed $risks $L_RISK "riProject"
 $comments  = Select-Placed $comments $L_CMT "cmProject"
+# строки команды в корне у проекта с уже выданными правами — только от PM, владельца сайта или приложения (R7)
+$PRJINFO = @{}; foreach ($it in @($projects)) { if ($it) { $PRJINFO[$it.Id] = @{ ready = [bool][string]$it["pmoAcl"]; pm = (Email $it["pmManager"]) } } }
+$TEAM_REJECTED = @{}
+$teamItems = @(@($teamItems) | Where-Object { $_ } | Where-Object {
+    $lk = $_["tmProject"]; if (-not $lk -or -not $PRJINFO.ContainsKey($lk.LookupId)) { return $true }
+    $inRoot = ([string]$_["FileDirRef"]).TrimEnd("/") -eq "$WEBREL/$L_TEAM"
+    $ok = Test-TeamRowAccepted $inRoot $PRJINFO[$lk.LookupId].ready (Who $_["Author"]) $PRJINFO[$lk.LookupId].pm $OWNER_EMAILS
+    if (-not $ok) { $TEAM_REJECTED[$_.Id] = $true; Warn "Команда: рядок #$($_.Id) додано в проєкт #$($lk.LookupId) не PM ($(WhoMail (Who $_["Author"]))) — не враховується" }
+    $ok })
 $TEAM = @{}
 foreach ($it in @($teamItems)) { if (-not $it) { continue }
     $lk = $it["tmProject"]; $e = Email $it["tmUser"]
@@ -1194,6 +1210,7 @@ Update-SyncLock
 # Порядок для одной записи: перенос, сброс прав, очистка pmoAcl — при сбое посередине следующий запуск повторит.
 foreach ($l in $CHILD.Keys) {
     foreach ($it in (Get-ListRows $l)) {
+        if ($l -eq $L_TEAM -and $TEAM_REJECTED[$it.Id]) { continue }   # добавлена не PM в проект с правами — не переносится (R7)
         $lk = $it[$CHILD[$l]]; if (-not $lk -or -not $PROJ.ContainsKey($lk.LookupId)) { continue }
         $name = Get-FolderName $lk.LookupId
         $dir = "$WEBREL/$l/$name"
