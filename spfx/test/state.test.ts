@@ -22,3 +22,9 @@ describe('эталон ключевых полей — как синхрониз
     expect(p).toMatchObject({ budget: 500, title: 'Мій', description: 'Опис', status: 'Планування' });
   });
 });
+
+// разбор эталона — те же векторы, что у ConvertFrom-StateJson синхронизации (state.json -> parse)
+import stateCases from '../../tests/cases/state.json';
+describe('разбор эталона (общие векторы с синхронизацией)', () => {
+  for (const c of (stateCases as any).parse) test(c.name, () => { expect(parseState(c.json) !== undefined).toBe(c.valid); });
+});

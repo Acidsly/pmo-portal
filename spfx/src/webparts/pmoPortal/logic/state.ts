@@ -11,7 +11,8 @@ const MAP: [string, keyof Project, 'text' | 'number'][] = [
 
 export function parseState(json: string | null | undefined): StateJson | undefined {
   if (!json) return undefined;
-  try { const o = JSON.parse(json); return o && typeof o === 'object' ? o as StateJson : undefined; } catch { return undefined; }
+  // как ConvertFrom-StateJson синхронизации (векторы state.json -> parse): эталон — объект с полем pmStatus; иначе «эталона нет»
+  try { const o = JSON.parse(json); return o && typeof o === 'object' && !Array.isArray(o) && 'pmStatus' in o ? o as StateJson : undefined; } catch { return undefined; }
 }
 export function applyState(p: Project, st: StateJson | undefined): Project {
   if (!st) return p;

@@ -1,4 +1,5 @@
 import { Project, TeamMember } from './types';
+import { roundAway } from '../logic/overlay';
 import { TeamRow } from '../logic/team';
 import { ReportDraft, ProjectDraft, RiskDraft } from '../logic/forms';
 
@@ -16,7 +17,8 @@ export function reportBody(d: ReportDraft, p: Project): Body {
   if (d.type !== p.type) b.srType = d.type;
   // % выполнения — в каждом отчёте (матрица состояний в карточке); без изменения синхронизация журнал не пишет
   b.srProgress = Math.max(0, Math.min(100, d.progress));
-  if (d.actualCost !== p.actualCost) b.srActualCost = Math.max(0, d.actualCost);
+  // суммы — целые доллары, x,5 — вверх (как синхронизация, ошибка сверки №5)
+  if (d.actualCost !== p.actualCost) b.srActualCost = Math.max(0, roundAway(d.actualCost));
   const dates: [keyof ReportDraft & keyof Project, string][] = [['start', 'srStart'], ['goLive', 'srGoLive'], ['planEnd', 'srPlanEnd'], ['forecastEnd', 'srForecastEnd']];
   dates.forEach(([k, f]) => { if ((d[k] || '') !== (p[k] || '')) b[f] = spDate(String(d[k] || '')); });
   return b;
@@ -28,14 +30,14 @@ const people = (d: ProjectDraft): Body => ({ pmManagerId: d.manager ? d.manager.
 /** Новый проект: статус, тип и даты задаются при создании (дальше — только через отчёт). */
 export function projectBody(d: ProjectDraft, code: string): Body {
   return { Title: d.title.trim(), pmCode: code, pmType: d.type, pmPriority: d.priority, pmDepartment: d.department, ...people(d),
-    pmStatus: d.status, pmStart: spDate(d.start), pmGoLive: spDate(d.goLive), pmPlanEnd: spDate(d.planEnd), pmBudget: d.budget || 0,
+    pmStatus: d.status, pmStart: spDate(d.start), pmGoLive: spDate(d.goLive), pmPlanEnd: spDate(d.planEnd), pmBudget: roundAway(d.budget || 0),
     pmDescription: d.description, pmLinks: JSON.stringify(d.links), pmProgress: 0 };
 }
 
 /** Правка карточки: без ключевых показателей; изменения дописываются в pmEditLog — синхронизация перенесёт их в журнал. */
 export function projectEditBody(d: ProjectDraft, diffs: { f: string; from: string; to: string }[], who: string, reason: string, prevLog: string): Body {
   const b: Body = { Title: d.title.trim(), pmCode: d.code, pmPriority: d.priority, pmDepartment: d.department, ...people(d),
-    pmBudget: d.budget || 0, pmDescription: d.description, pmLinks: JSON.stringify(d.links) };
+    pmBudget: roundAway(d.budget || 0), pmDescription: d.description, pmLinks: JSON.stringify(d.links) };
   if (diffs.length) {
     let entries: unknown[] = [];
     try { const prev = prevLog ? JSON.parse(prevLog) : undefined; if (prev && Array.isArray(prev.entries)) entries = prev.entries; } catch { /* повреждённый журнал — начинаем заново */ }

@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:89bf3db54b83 — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:041d23a5e49f — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -86,7 +86,8 @@ function ToSpDate([string]$d) { if ($d) { return "$($d)T12:00:00Z" } return $nul
 function Norm($v) {
     if ($null -eq $v) { return "" }
     if ($v -is [datetime]) { return DateOnly $v }
-    if ($v -is [double] -or $v -is [int] -or $v -is [decimal]) { return [string][math]::Round([double]$v) }
+    # суммы и проценты — целые; x,5 — вверх (обычное округление, как в приложении), а не к чётному
+    if ($v -is [double] -or $v -is [int] -or $v -is [decimal]) { return [string][math]::Round([double]$v, 0, [MidpointRounding]::AwayFromZero) }
     return [string]$v
 }
 
@@ -420,6 +421,53 @@ function Get-PendingReturns($pending, [string]$pm, [string[]]$ownerList, [bool]$
 # Что сделать с погодженим отчётом: apply — перенести показатели; journalOnly — только отметить (есть более новый применённый
 # отчёт: показатели не откатываются); notApplied:arch / notApplied:pm — не применять (проект в архиве / автор не PM).
 # $last — «yyyy-MM-dd#id» последнего применённого (эталон), $lastUpdate — «Останній апдейт» карточки (для старых данных без $last).
+# Какое решение PMO действует для отчёта (векторы tests/cases/reports.json -> effective, те же — в приложении):
+# решения отчёта по порядку Id; учитываются только доверенные (PMO, владелец, приложение) и с проектом отчёта;
+# действует первое действительное от состояния «На погодженні» (Get-ApprovalResult), остальные — уже нет (R10).
+# $rep: s, b, r — оценки отчёта сейчас (после переноса решения PMO), project; $aps: id, decision, s, b, r, note, project, trusted.
+# Возвращает @{ id; decision } или $null.
+function Get-EffectiveApproval($rep, $aps) {
+    foreach ($a in @($aps | Where-Object { $_ } | Sort-Object { [int]$_.id })) {
+        if (-not $a.trusted -or [int]$a.project -ne [int]$rep.project) { continue }
+        $res = Get-ApprovalResult @{ s = [string]$rep.s; b = [string]$rep.b; r = [string]$rep.r; approval = "На погодженні" } `
+                                  @{ decision = [string]$a.decision; s = [string]$a.s; b = [string]$a.b; r = [string]$a.r; note = [string]$a.note }
+        if ($res.valid) { return @{ id = [int]$a.id; decision = $res.decision } }
+    }
+    return $null
+}
+# Что погоджений отчёт переносит в карточку (векторы tests/cases/apply.json, те же — reportTarget приложения):
+# заполненные показатели (% и затраты — целые, x,5 — вверх); «Завершено» / «Скасовано» -> «Архівний» и дата архивации;
+# отчёт не старше последнего (по дате) задаёт ещё стан (худшая из трёх оценок), дату и резюме. Пустые поля карточку не трогают.
+# $rep: status, type, progress, start, goLive, planEnd, forecastEnd, actualCost, date, schedule, budget, resources, title.
+function Get-ReportTarget($rep, [string]$lastUpdate) {
+    $t = [ordered]@{}
+    foreach ($k in @("status", "type", "progress", "start", "goLive", "planEnd", "forecastEnd", "actualCost")) {
+        $v = $rep.$k
+        if ($null -eq $v -or [string]$v -eq "") { continue }
+        $t[$k] = if ($k -in @("progress", "actualCost")) { [string][math]::Round([double]$v, 0, [MidpointRounding]::AwayFromZero) } else { [string]$v }
+    }
+    if ($t["status"] -in @("Завершено", "Скасовано")) { $t["status"] = "Архівний"; $t["archivedAt"] = [string]$rep.date }
+    if (-not $lastUpdate -or [string]$rep.date -ge $lastUpdate) {
+        $rag = CalcRag $rep.schedule $rep.budget $rep.resources
+        if ($rag) { $t["rag"] = $rag }
+        $t["lastUpdate"] = [string]$rep.date; $t["lastReport"] = [string]$rep.title
+    }
+    return $t
+}
+# поле цели переноса -> поле карточки
+$TARGET_FIELD = [ordered]@{ status = "pmStatus"; type = "pmType"; progress = "pmProgress"; start = "pmStart"; goLive = "pmGoLive"; planEnd = "pmPlanEnd"
+    forecastEnd = "pmForecastEnd"; actualCost = "pmActualCost"; archivedAt = "pmArchivedAt"; rag = "pmRAG"; lastUpdate = "pmLastUpdate"; lastReport = "pmLastReport" }
+# Решение по эталону (векторы tests/cases/state.json -> plan): $state — эталон или $null (нет / повреждён), $hasRecord — строка
+# эталона есть. new — эталона нет: из карточки; rebuild — повреждён: заново из карточки (не откат к пустым значениям);
+# none — совпадает; accept — правил владелец сайта или приложение (скрипт): эталон = карточка; rollback — правка в обход отчёта.
+# «Створення» в журнал — один раз (R8): проект ещё без прав и без эталона. Без списка эталона — только по отметке прав.
+function Test-NeedCreation([string]$pmoAcl, [bool]$hasStateList, [bool]$hasState) { return (-not $pmoAcl) -and -not ($hasStateList -and $hasState) }
+function Get-StatePlan($card, $state, [bool]$hasRecord, [string]$editorT, [string[]]$ownerList) {
+    if (-not $state) { return @{ action = $(if ($hasRecord) { "rebuild" } else { "new" }); diff = @() } }
+    $diff = @(Compare-State $card $state | Where-Object { $_ })
+    if (-not $diff.Count) { return @{ action = "none"; diff = @() } }
+    return @{ action = $(if (Test-Trusted $editorT $ownerList) { "accept" } else { "rollback" }); diff = $diff }
+}
 function Get-ApplyAction($rep, [string]$pm, [string[]]$ownerList, [bool]$archived, [string]$last, [string]$lastUpdate) {
     if ($archived) { return "notApplied:arch" }
     if ($rep.author -ne $pm -and -not (Test-Trusted $rep.author $ownerList)) { return "notApplied:pm" }
@@ -451,11 +499,6 @@ function Get-ApprovalResult($rep, $ap) {
 $DISPLAY = [ordered]@{
     pmStatus = "Статус проєкту"; pmRAG = "Загальний стан"; pmType = "Тип проєкту"; pmProgress = "% виконання"
     pmStart = "Дата старту"; pmGoLive = "Дата запуску (продакшн)"; pmPlanEnd = "Дата завершення (план)"; pmForecastEnd = "Прогноз завершення"
-}
-# поле отчёта -> поле проекта
-$MAP = [ordered]@{
-    srStatus = "pmStatus"; srType = "pmType"; srProgress = "pmProgress"; srStart = "pmStart"; srGoLive = "pmGoLive"
-    srPlanEnd = "pmPlanEnd"; srForecastEnd = "pmForecastEnd"; srActualCost = "pmActualCost"
 }
 $DATE_FIELDS = @("pmStart","pmGoLive","pmPlanEnd","pmForecastEnd","pmLastUpdate","pmArchivedAt")
 
@@ -524,6 +567,13 @@ function Add-Change($projectId, [string]$field, [string]$from, [string]$to, [str
 function Get-FolderName($projectId) { return "P$([int]$projectId)" }
 # Запись дочернего списка лежит правильно: в папке своего проекта или в корне списка (ещё не перенесена). В папке другого
 # проекта — нет: поле проекта не совпадает с папкой (запись создана в своей папке со ссылкой на чужой проект). Векторы folders.json.
+# Строка «Команда проєкту» учитывается (векторы tests/cases/folders.json -> team; ошибка сверки №2, R7): в папке проекта — да
+# (туда пишет только PM: права папки); в корне — только для нового проекта (PMO при создании, права ещё не выданы),
+# от владельца сайта или приложения; иначе это добавление в чужой проект в обход прав — не учитывается и не переносится.
+function Test-TeamRowAccepted([bool]$inRoot, [bool]$projectReady, [string]$authorT, [string]$pm, [string[]]$ownerList) {
+    if (-not $inRoot -or -not $projectReady) { return $true }
+    return (Test-Trusted $authorT $ownerList) -or ([bool]$authorT -and $authorT -eq $pm)
+}
 function Test-RowPlacement([string]$dir, [string]$expected) {
     $d = $dir.TrimEnd("/"); $e = $expected.TrimEnd("/")
     if ($d -eq $e) { return $true }
@@ -626,6 +676,15 @@ $teamItems = Select-Placed $teamItems $L_TEAM "tmProject"
 $reports   = Select-Placed $reports $L_REP "srProject"
 $risks     = Select-Placed $risks $L_RISK "riProject"
 $comments  = Select-Placed $comments $L_CMT "cmProject"
+# строки команды в корне у проекта с уже выданными правами — только от PM, владельца сайта или приложения (R7)
+$PRJINFO = @{}; foreach ($it in @($projects)) { if ($it) { $PRJINFO[$it.Id] = @{ ready = [bool][string]$it["pmoAcl"]; pm = (Email $it["pmManager"]) } } }
+$TEAM_REJECTED = @{}
+$teamItems = @(@($teamItems) | Where-Object { $_ } | Where-Object {
+    $lk = $_["tmProject"]; if (-not $lk -or -not $PRJINFO.ContainsKey($lk.LookupId)) { return $true }
+    $inRoot = ([string]$_["FileDirRef"]).TrimEnd("/") -eq "$WEBREL/$L_TEAM"
+    $ok = Test-TeamRowAccepted $inRoot $PRJINFO[$lk.LookupId].ready (Who $_["Author"]) $PRJINFO[$lk.LookupId].pm $OWNER_EMAILS
+    if (-not $ok) { $TEAM_REJECTED[$_.Id] = $true; Warn "Команда: рядок #$($_.Id) додано в проєкт #$($lk.LookupId) не PM ($(WhoMail (Who $_["Author"]))) — не враховується" }
+    $ok })
 $TEAM = @{}
 foreach ($it in @($teamItems)) { if (-not $it) { continue }
     $lk = $it["tmProject"]; $e = Email $it["tmUser"]
@@ -653,9 +712,14 @@ Log ("Проєктів: {0}, звітів: {1}, ризиків: {2}, комен�
 $STATES = Read-ProjectStates
 $HAS_PS = [bool]$script:HAS_STATE_LIST
 foreach ($p in $PROJ.Values) {
-    # «Створення» — один раз: проект ещё без прав и без эталона (при сбое выдачи прав строка не повторяется)
-    if (-not $p.Values.pmoAcl -and -not ($HAS_PS -and $STATES.ContainsKey($p.Item.Id))) {
+    # «Створення» — один раз: проект ещё без прав и без эталона (при сбое выдачи прав строка не повторяется).
+    # Сначала эталон, потом строка журнала: сбой между ними оставит проект без строки, но не даст её задвоить (ошибка сверки №3)
+    if (Test-NeedCreation ([string]$p.Values.pmoAcl) $HAS_PS ($STATES.ContainsKey($p.Item.Id))) {
         $stats.created++
+        if ($HAS_PS -and -not $DryRun) {
+            $card0 = [ordered]@{}; foreach ($k in Get-StateKeys) { $card0[$k] = [string]$p.Values[$k] }
+            Save-ProjectState $p.Item.Id $card0 $STATES; $stats.stateNew++
+        }
         Add-Change $p.Item.Id "Title" "" ([string]$p.Item["Title"]) "Створення" (Email $p.Item["Author"]) "" ($p.Item["Created"].ToUniversalTime().ToString("o"))
     }
 }
@@ -670,18 +734,20 @@ if ($HAS_PS) {
     foreach ($p in $PROJ.Values) {
         $card = [ordered]@{}; foreach ($k in Get-StateKeys) { $card[$k] = [string]$p.Values[$k] }
         $st = $STATES[$p.Item.Id]
-        if (-not $st -or -not $st.state) {
+        $editorT = Who $p.Item["Editor"]; $editor = WhoMail $editorT
+        # решение — общим правилом Get-StatePlan (векторы tests/cases/state.json -> plan)
+        $plan = Get-StatePlan $card $(if ($st) { $st.state } else { $null }) ([bool]$st) $editorT $OWNER_EMAILS
+        if ($plan.action -in @("new", "rebuild")) {
             # нет эталона или он повреждён — заново из карточки (никогда не откат к пустым значениям)
-            if ($st) { Warn "Еталон «$($p.Item["Title"])» пошкоджено — створено заново з картки" }
+            if ($plan.action -eq "rebuild") { Warn "Еталон «$($p.Item["Title"])» пошкоджено — створено заново з картки" }
             $stats.stateNew++
             if (-not $DryRun) { Save-ProjectState $p.Item.Id $card $STATES } else { Log "  еталон: + «$($p.Item["Title"])»" }
             continue
         }
-        $diff = Compare-State $card $st.state
-        if (-not $diff.Count) { continue }
-        $editorT = Who $p.Item["Editor"]; $editor = WhoMail $editorT
+        if ($plan.action -eq "none") { continue }
+        $diff = $plan.diff
         $when = (Get-Date).ToUniversalTime().ToString("o")
-        if (Test-Trusted $editorT $OWNER_EMAILS) {
+        if ($plan.action -eq "accept") {
             # правка владельца сайта или скрипта (приложение) — законна: эталон = карточка
             Log "  еталон «$($p.Item["Title"])»: оновлено за карткою ($(@($diff | ForEach-Object { $_.f }) -join ', '))"
             foreach ($d in $diff) { Add-Change $p.Item.Id $d.f (Human $d.f $d.state) (Human $d.f $d.card) "Редагування картки" $editor "Змінено власником сайту або службовим скриптом" $when }
@@ -779,13 +845,22 @@ foreach ($a in (@($approvals) | Where-Object { $_ } | Where-Object { $_["apAppli
 # ---------------------------------------------------------------------------
 # «Погоджено» в отчёте действует, только если есть решение PMO в «Погодження звітів» (автор — PMO, владелец или приложение,
 # проект совпадает). Иначе поле поставлено в обход портала: вернуть «На погодженні». Применённые раньше отчёты — как есть.
+# Действующее решение — общим правилом Get-EffectiveApproval: недействительное «Погоджено» (смена оценки без комментария,
+# после «Повернуто», не PMO, чужой проект) поддельный «Погоджено» в отчёте не подтверждает.
 $APPROVED = @{}
+$APBYREP = @{}
 foreach ($a in @($approvals) | Where-Object { $_ }) {
-    $whoT = Who $a["Author"]; $lk = $a["apReport"]
-    if (-not $lk -or (Norm $a["apDecision"]) -ne "Погоджено") { continue }
-    if ($whoT -ne "app" -and ($PMO_EMAILS -notcontains $whoT -or -not $whoT) -and -not (Test-Trusted $whoT $OWNER_EMAILS)) { continue }
-    $r = $REPBYID[$lk.LookupId]
-    if ($r -and $a["apProject"] -and $r["srProject"] -and $a["apProject"].LookupId -eq $r["srProject"].LookupId) { $APPROVED[$r.Id] = $true }
+    $lk = $a["apReport"]; if (-not $lk) { continue }
+    $whoT = Who $a["Author"]
+    $trusted = ($whoT -eq "app") -or ([bool]$whoT -and $PMO_EMAILS -contains $whoT) -or (Test-Trusted $whoT $OWNER_EMAILS)
+    if (-not $APBYREP.ContainsKey($lk.LookupId)) { $APBYREP[$lk.LookupId] = @() }
+    $APBYREP[$lk.LookupId] += @{ id = $a.Id; decision = (Norm $a["apDecision"]); s = (Norm $a["apSchedule"]); b = (Norm $a["apBudget"]); r = (Norm $a["apResources"])
+        note = [string]$a["apNote"]; project = $(if ($a["apProject"]) { $a["apProject"].LookupId } else { 0 }); trusted = $trusted }
+}
+foreach ($rid in $APBYREP.Keys) {
+    $r = $REPBYID[$rid]; if (-not $r -or -not $r["srProject"]) { continue }
+    $eff = Get-EffectiveApproval @{ s = (Norm $r["srSchedule"]); b = (Norm $r["srBudget"]); r = (Norm $r["srResources"]); project = $r["srProject"].LookupId } $APBYREP[$rid]
+    if ($eff -and $eff.decision -eq "Погоджено") { $APPROVED[$rid] = $true }
 }
 if ($HAS_AP) {
     foreach ($r in $reports) {
@@ -803,8 +878,6 @@ foreach ($r in $pending) {
     $p = $PROJ[$lk.LookupId]; if (-not $p) { Warn "Отчёт $($r.Id): проект $($lk.LookupId) не найден"; continue }
     $stats.reports++
     $repDate = DateOnly $r["srDate"]
-    $rag     = CalcRag $r["srSchedule"] $r["srBudget"] $r["srResources"]
-    $newer   = (-not $p.Values.pmLastUpdate) -or ($repDate -ge $p.Values.pmLastUpdate)
     $authorT = Who $r["Author"]; $author = WhoMail $authorT
     # правила применения (векторы tests/cases/reports.json): архив / автор не PM — не применять (отметка один раз, без вечных
     # предупреждений); есть более новый применённый отчёт — только отметить, показатели не откатываются
@@ -822,17 +895,11 @@ foreach ($r in $pending) {
     $reason  = @($r["srKeyReason"], $title) | Where-Object { $_ } | Join-String -Separator " · "
     Log "  звіт #$($r.Id) ($repDate) -> «$($p.Item["Title"])»"
 
-    $target = [ordered]@{}
-    foreach ($src in $MAP.Keys) {
-        $v = Norm $r[$src]
-        if ($v -ne "") { $target[$MAP[$src]] = $v }
-    }
-    if ($target.pmStatus -in @("Завершено", "Скасовано")) { $target.pmStatus = "Архівний"; $target.pmArchivedAt = $repDate }
-    if ($newer) {
-        if ($rag) { $target.pmRAG = $rag }
-        $target.pmLastUpdate = $repDate
-        $target.pmLastReport = $title
-    }
+    # что переносится — общим правилом Get-ReportTarget (векторы tests/cases/apply.json, те же — у приложения)
+    $tg = Get-ReportTarget ([ordered]@{ status = (Norm $r["srStatus"]); type = (Norm $r["srType"]); progress = $r["srProgress"]; start = (Norm $r["srStart"])
+        goLive = (Norm $r["srGoLive"]); planEnd = (Norm $r["srPlanEnd"]); forecastEnd = (Norm $r["srForecastEnd"]); actualCost = $r["srActualCost"]
+        date = $repDate; schedule = (Norm $r["srSchedule"]); budget = (Norm $r["srBudget"]); resources = (Norm $r["srResources"]); title = $title }) $p.Values.pmLastUpdate
+    $target = [ordered]@{}; foreach ($k in $tg.Keys) { $target[$TARGET_FIELD[$k]] = $tg[$k] }
 
     $changed = [ordered]@{}
     foreach ($k in $target.Keys) { if ($p.Values[$k] -ne $target[$k]) { $changed[$k] = $target[$k] } }
@@ -1143,6 +1210,7 @@ Update-SyncLock
 # Порядок для одной записи: перенос, сброс прав, очистка pmoAcl — при сбое посередине следующий запуск повторит.
 foreach ($l in $CHILD.Keys) {
     foreach ($it in (Get-ListRows $l)) {
+        if ($l -eq $L_TEAM -and $TEAM_REJECTED[$it.Id]) { continue }   # добавлена не PM в проект с правами — не переносится (R7)
         $lk = $it[$CHILD[$l]]; if (-not $lk -or -not $PROJ.ContainsKey($lk.LookupId)) { continue }
         $name = Get-FolderName $lk.LookupId
         $dir = "$WEBREL/$l/$name"

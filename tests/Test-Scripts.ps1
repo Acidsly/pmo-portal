@@ -35,7 +35,7 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/report-form.json", "config/focus-group.example.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/report-form.json", "tests/cases/apply.json", "config/focus-group.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
@@ -75,6 +75,10 @@ foreach ($c in $fc.group) { $r = Get-GroupFolderRole $c.list $c.archived $c.v2; 
 foreach ($c in $fc.frozen) { $r = Test-ArchiveFrozen $c.status $c.mark $c.ready $c.rebuild $c.prefix; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $r, ожидалось $($c.out)" } }
 foreach ($c in $fc.placement) { $r = Test-RowPlacement $c.dir $c.expected; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $r, ожидалось $($c.out)" } }
 foreach ($c in $fc.row) { $r = Get-RowAction $c.dir $c.expected $c.acl $c.ready; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): «$r», ожидалось «$($c.out)»" } }
+$fnt = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -in @("Test-TeamRowAccepted", "Test-Trusted") }, $true)
+foreach ($f in $fnt) { Invoke-Expression $f.Extent.Text }
+foreach ($c in $fc.team) { $r = Test-TeamRowAccepted $c.inRoot $c.ready $c.author $c.pm @("own@x"); if ($r -eq $c.out) { Ok "команда: $($c.name)" } else { Bad "команда: $($c.name): $r" } }
+if ((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")) -match 'TEAM_REJECTED\[\$it\.Id\]\) \{ continue \}') { Ok "команда: отклонённая строка не переносится в папку" } else { Bad "команда: отклонённая строка переносится в папку (раздел 5)" }
 foreach ($c in $fc.mark) { $r = Get-AclMark $c.hash $c.archived $c.v2; if ($r -eq $c.out) { Ok "отметка $($c.hash)/$($c.archived)/v2=$($c.v2) -> $r" } else { Bad "отметка: $r, ожидалось $($c.out)" } }
 # все запросы CSOM синхронизации — с повтором при 429 (Invoke-PnPQuery -RetryCount), без голого ExecuteQuery()
 if ((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")) -match 'ExecuteQuery\(\)') { Bad "Invoke-PMOSync.ps1: ExecuteQuery() без повтора" } else { Ok "запросы CSOM — с повтором при 429" }
@@ -139,10 +143,11 @@ foreach ($c in $sc.write) { $r = Get-StateWriteValue $c.f $c.v; if ($r -eq $c.ou
 $rt = ConvertFrom-StateJson (ConvertTo-StateJson (& $toHash $sc.compare[0].card))
 if (-not (Compare-State $rt (& $toHash $sc.compare[0].card)).Count) { Ok "эталон: запись и чтение JSON без искажений (даты, числа, пустые)" } else { Bad "эталон: JSON искажает значения" }
 # повреждённый или пустой эталон — «эталона нет» ($null), а не пустые значения для отката
-foreach ($bad in @("", "{oops", "{}", "[1,2]", '{"pmCode":"PRJ-1"}')) { if ($null -eq (ConvertFrom-StateJson $bad)) { Ok "повреждённый эталон «$bad» — нет эталона" } else { Bad "повреждённый эталон «$bad» читается как значения" } }
+# (векторы state.json -> parse — те же у parseState приложения)
+foreach ($c in $sc.parse) { $ok = $null -ne (ConvertFrom-StateJson $c.json); if ($ok -eq [bool]$c.valid) { Ok "разбор эталона: $($c.name)" } else { Bad "разбор эталона: $($c.name): $ok" } }
 
 Write-Host "3e. Правила отчётов: авто-возврат и применение (tests/cases/reports.json)"
-foreach ($n in @("Test-Trusted", "Get-PendingReturns", "Get-ApplyAction")) {
+foreach ($n in @("Test-Trusted", "Get-PendingReturns", "Get-ApplyAction", "CalcRag", "Get-ApprovalResult", "Get-EffectiveApproval", "Get-ReportTarget")) {
     $fn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $n }, $true) | Select-Object -First 1
     if ($fn) { Invoke-Expression $fn.Extent.Text } else { Bad "нет функции $n" }
 }
@@ -155,6 +160,49 @@ foreach ($c in $rc.apply) {
     $got = Get-ApplyAction $c.rep $c.pm @($c.owners) $c.archived $c.last $c.lastUpdate
     if ($got -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $got, ожидалось $($c.out)" }
 }
+foreach ($c in $rc.effective) {
+    $e = Get-EffectiveApproval $c.rep @($c.aps)
+    $got = if ($e) { "$($e.id):$($e.decision)" } else { "-" }; $exp = if ($c.out) { "$($c.out.id):$($c.out.decision)" } else { "-" }
+    if ($got -eq $exp) { Ok "действующее решение: $($c.name)" } else { Bad "действующее решение: $($c.name): $got, ожидалось $exp" }
+}
+$syncSrc = Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")
+# «Створення» один раз (R8): нужна ли строка — и эталон пишется раньше строки журнала (ошибка сверки №3)
+$fnc = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Test-NeedCreation" }, $true) | Select-Object -First 1
+if ($fnc) { Invoke-Expression $fnc.Extent.Text } else { Bad "нет функции Test-NeedCreation" }
+foreach ($c in @(@{ a = ""; l = $true; s = $false; out = $true; n = "новый проект: без прав и без эталона — строка" }, @{ a = ""; l = $true; s = $true; out = $false; n = "эталон уже есть (сбой выдачи прав) — строки нет" },
+                 @{ a = "v2:abc"; l = $true; s = $false; out = $false; n = "права уже выданы — строки нет" }, @{ a = ""; l = $false; s = $false; out = $true; n = "без списка эталона — по отметке прав" })) {
+    if ((Test-NeedCreation $c.a $c.l $c.s) -eq $c.out) { Ok "«Створення»: $($c.n)" } else { Bad "«Створення»: $($c.n)" }
+}
+$blk = [regex]::Match($syncSrc, '(?s)if \(Test-NeedCreation .*?\n    \}')
+if ($blk.Success -and $blk.Value.IndexOf('Save-ProjectState') -ge 0 -and $blk.Value.IndexOf('Save-ProjectState') -lt $blk.Value.IndexOf('Add-Change')) { Ok "«Створення»: эталон записывается раньше строки журнала" } else { Bad "«Створення»: строка журнала раньше эталона (задвоится при сбое)" }
+# имя уровня прав «только добавление» одно и то же в развёртывании и синхронизации (иначе синхронизация тихо уйдёт на старую модель прав)
+$depSrc = Get-Content -Raw (Join-Path $root "scripts/Deploy-PMO.ps1")
+$roleDep = [regex]::Match($depSrc, '\$ROLE_ADD\s*=\s*"([^"]+)"').Groups[1].Value; $roleSync = [regex]::Match($syncSrc, '\$ROLE_ADD_NAME\s*=\s*"([^"]+)"').Groups[1].Value
+if ($roleDep -and $roleDep -eq $roleSync) { Ok "уровень прав «$roleDep» — одинаковое имя в Deploy-PMO и Invoke-PMOSync" } else { Bad "имя уровня прав: Deploy-PMO «$roleDep», Invoke-PMOSync «$roleSync»" }
+# решение по эталону: принять / откатить / заново (tests/cases/state.json -> plan)
+$fnp = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Get-StatePlan" }, $true) | Select-Object -First 1
+if ($fnp) { Invoke-Expression $fnp.Extent.Text } else { Bad "нет функции Get-StatePlan" }
+$scp = Get-Content -Raw (Join-Path $root "tests/cases/state.json") | ConvertFrom-Json -DateKind String
+$toH = { param($o) if ($null -eq $o) { return $null }; $h = [ordered]@{}; foreach ($k in Get-StateKeys) { $h[$k] = [string]$o.$k }; $h }
+foreach ($c in $scp.plan) {
+    $exp = "$($c.out):$(@($c.fields) -join ',')"
+    try { $pl = Get-StatePlan (& $toH $c.card) (& $toH $c.state) ([bool]$c.record) $c.editor @($c.owners); $got = "$($pl.action):$(@($pl.diff | ForEach-Object { $_.f }) -join ',')" }
+    catch { $got = "исключение: $($_.Exception.Message)" }
+    if ($got -eq $exp) { Ok "эталон: $($c.name)" } else { Bad "эталон: $($c.name): $got, ожидалось $exp" }
+}
+# перенос отчёта в карточку (tests/cases/apply.json — те же векторы у reportTarget приложения)
+foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/apply.json") | ConvertFrom-Json -DateKind String).cases) {
+    $rep = @{}; foreach ($pp in $c.rep.PSObject.Properties) { $rep[$pp.Name] = $pp.Value }
+    $t = Get-ReportTarget $rep $c.lastUpdate
+    $got = ($t.Keys | Sort-Object | ForEach-Object { "$_=$($t[$_])" }) -join "; "
+    $exp = ($c.out.PSObject.Properties | Sort-Object Name | ForEach-Object { "$($_.Name)=$($_.Value)" }) -join "; "
+    if ($got -eq $exp) { Ok "перенос в карточку: $($c.name)" } else { Bad "перенос в карточку: $($c.name): [$got], ожидалось [$exp]" }
+}
+if ($syncSrc -match '\$plan = Get-StatePlan \$card') { Ok "раздел 0a решает по эталону общим правилом Get-StatePlan" } else { Bad "Invoke-PMOSync.ps1: раздел 0a не использует Get-StatePlan" }
+if ($syncSrc -match '\$tg = Get-ReportTarget') { Ok "раздел 1 переносит отчёт общим правилом Get-ReportTarget" } else { Bad "Invoke-PMOSync.ps1: раздел 1 не использует Get-ReportTarget" }
+# подтверждение «Погоджено» в синхронизации — именно этим правилом (а не «любое Погоджено от PMO»: ошибка сверки №1)
+if ($syncSrc -match '\$eff = Get-EffectiveApproval' -and $syncSrc -match 'if \(\$eff -and \$eff\.decision -eq "Погоджено"\) \{ \$APPROVED\[\$rid\] = \$true \}' -and ([regex]::Matches($syncSrc, '\$APPROVED\[[^\]]+\] = \$true')).Count -eq 1) {
+    Ok "«Погоджено» подтверждается только действующим решением (Get-EffectiveApproval)" } else { Bad 'Invoke-PMOSync.ps1: $APPROVED заполняется не через Get-EffectiveApproval' }
 
 Write-Host "3f. Журнал правок карточки без потерь и дублей (tests/cases/editlog.json)"
 foreach ($n in @("ConvertFrom-JsonElement", "ConvertFrom-JsonText", "EditLogRows", "Get-EditLogKey", "Get-EditLogPlan", "Remove-EditLogEntries")) {
