@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { nextLock, cellText } from '../logic/ui';
 import { tv } from '../i18n/values';
 import { toCsv } from '../logic/csv';
 import { AppCtx } from './ctx';
@@ -75,12 +76,12 @@ export function DataTable<R extends { id: number }>(p: { tkey: string; defs: Tab
   const colsKey = shownCols.join(',');
   const [lockW, setLockW] = React.useState<{ key: string; w: number[] } | null>(null);
   React.useLayoutEffect(() => {
-    if (window.innerWidth < 900) { if (lockW) setLockW(null); return; }
-    if (lockW && lockW.key === colsKey) return;
-    const el = tableRef.current; if (!el) return;
-    if (!el.clientWidth) return;   // скрытая вкладка / панель — ширины ещё нет
-    const w = Array.prototype.map.call(el.querySelectorAll('thead th'), (th: Element) => Math.round(th.getBoundingClientRect().width)) as number[];
-    if (w.length === shownCols.length && w.every(x => x > 0)) setLockW({ key: colsKey, w });
+    // решение — logic/ui.ts nextLock; замер — только когда таблица видна (скрытая вкладка / панель — ширины ещё нет)
+    const el = tableRef.current;
+    const need = window.innerWidth >= 900 && !(lockW && lockW.key === colsKey) && !!el && !!el.clientWidth;
+    const w = need ? Array.prototype.map.call(el!.querySelectorAll('thead th'), (th: Element) => Math.round(th.getBoundingClientRect().width)) as number[] : null;
+    const nl = nextLock(window.innerWidth, lockW, colsKey, shownCols.length, w);
+    if (nl !== lockW) setLockW(nl);
   });
   React.useEffect(() => {
     const on = (): void => setLockW(null);
@@ -90,8 +91,7 @@ export function DataTable<R extends { id: number }>(p: { tkey: string; defs: Tab
   const locked = lockW && lockW.key === colsKey ? lockW.w : null;
   const exportCsv = (): void => {
     const el = tableRef.current; if (!el) return;
-    const text = (c: Element): string => ((c as HTMLElement).innerText || '').trim() || (c.querySelector('[title]') ? (c.querySelector('[title]') as HTMLElement).title : '');
-    const rows = Array.prototype.map.call(el.querySelectorAll('tbody tr'), (tr: Element) => Array.prototype.map.call(tr.children, text) as string[]) as string[][];
+    const rows = Array.prototype.map.call(el.querySelectorAll('tbody tr'), (tr: Element) => Array.prototype.map.call(tr.children, cellText) as string[]) as string[][];
     const blob = new Blob([toCsv(shownCols.map(id => defs[id].label), rows)], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${p.tkey}-${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a); a.click(); a.remove(); window.setTimeout(() => URL.revokeObjectURL(a.href), 1000);

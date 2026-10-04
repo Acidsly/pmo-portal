@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { createWithCode } from '../logic/ui';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
 import { Project, Person } from '../data/types';
@@ -57,13 +58,7 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
       };
       if (isNew) {
         // номер — только автоматически: следующий PRJ-###; если его успел занять другой PMO (уникальность списка) — следующий
-        const codes = data.projects.map(p => p.code);
-        let id = 0;
-        for (let i = 0; !id; i++) {
-          const code = nextCode(codes);
-          try { id = await c.repo.create('Projects', projectBody(x, code)); }
-          catch (er) { if (i < 5 && /unique|унікальн|уникальн|duplicate|already exists/i.test(String((er as Error).message || er))) codes.push(code); else throw er; }
-        }
+        const id = await createWithCode(data.projects.map(p => p.code), nextCode, code => c.repo.create('Projects', projectBody(x, code)));
         await writeTeam(id, [], true);
         await c.reload(); c.toast(t('savedProject')); c.openProject(id);
       } else {

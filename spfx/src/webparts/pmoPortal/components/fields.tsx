@@ -4,6 +4,7 @@ import { Rag, RAGS } from '../logic/rag';
 import { Avatar, ragColor } from './Bits';
 import { tv } from '../i18n/values';
 import { AppCtx } from './ctx';
+import { pickerKey } from '../logic/ui';
 import { maskDmy, parseDmy, formatDmy } from '../logic/dates';
 
 /** Ошибка у конкретного поля (#40, #54). */
@@ -82,10 +83,12 @@ export const PeoplePicker: React.FC<{ id: string; value: Person[]; multi: boolea
       {p.disabled ? null : <button type="button" className="x-sm" aria-label="×" onClick={() => p.onChange(p.value.filter(v => v.email !== x.email))}>×</button>}</span>)}
     {canAdd && !p.disabled ? <input id={p.id} type="search" value={q} placeholder={p.placeholder} autoComplete="off" onChange={e => setQ(e.target.value)}
       onKeyDown={e => {
-        if (e.key === 'ArrowDown') { e.preventDefault(); setHi(Math.min(hi + 1, found.length - 1)); }
-        else if (e.key === 'ArrowUp') { e.preventDefault(); setHi(Math.max(hi - 1, 0)); }
-        else if (e.key === 'Enter') { e.preventDefault(); if (found[hi]) add(found[hi]); }   // Enter не отправляет форму
-        else if (e.key === 'Escape') { setQ(''); setFound([]); }
+        // #8: решение — logic/ui.ts pickerKey (Enter выбирает и не отправляет форму)
+        const a = pickerKey(e.key, hi, found.length);
+        if (a.prevent) e.preventDefault();
+        if (a.hi !== hi) setHi(a.hi);
+        if (a.pick !== null && found[a.pick]) add(found[a.pick]);
+        if (a.clear) { setQ(''); setFound([]); }
       }} /> : null}
     {found.length ? <div className="pop-list picker-list" role="listbox">{found.map((x, i) =>
       <button type="button" key={x.email} className={'pop-row' + (i === hi ? ' on' : '')} role="option" aria-selected={i === hi} onMouseDown={e => { e.preventDefault(); add(x); }}>
