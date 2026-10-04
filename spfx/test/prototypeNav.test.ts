@@ -85,3 +85,22 @@ test('#58 прототип: карточки отчётов и рисков — 
   q('.mcards .mcard').click();
   expect(w.document.querySelector('.pmo-panel.open, .pmo-panel[aria-hidden="false"], .panel.open') || w.document.querySelector('[data-act="decide"], .rv-meta')).not.toBeNull();
 });
+
+test('#35, #49 прототип: ширина колонки перетаскиванием запоминается, сброс — из меню колонок', () => {
+  q('[data-act="nav"][data-page="risks"]').click();
+  // перерисовка без перехода (смена вида) — ширины уже закреплены по первой раскладке, у заголовков появляется ручка
+  const vs = q('select[data-act="view"]'); vs.value = 'all'; vs.dispatchEvent(new w.Event('change', { bubbles: true }));
+  const h = q('.dt .col-rs');
+  expect(h).not.toBeNull();
+  const key = h.dataset.rs, id = h.dataset.col;
+  const pe = (t: string, x: number): W => { const e = new w.MouseEvent(t, { bubbles: true, cancelable: true, clientX: x }); return e; };
+  h.dispatchEvent(pe('pointerdown', 100)); w.dispatchEvent(pe('pointermove', 160)); w.dispatchEvent(pe('pointerup', 160));
+  const saved = JSON.parse(w.localStorage.getItem('pmo-table5-' + key));
+  expect(saved.w[id]).toBeGreaterThanOrEqual(56);
+  // после отрисовки ширина колонки — заданная
+  const idx = Array.from(q('.dt thead tr').children).findIndex((th: W) => th.querySelector(`.col-rs[data-col="${id}"]`));
+  expect(parseFloat(q('.dt table').querySelectorAll('col')[idx].style.width)).toBe(saved.w[id]);
+  // сброс
+  const b = w.document.createElement('button'); b.dataset.act = 'wreset'; b.dataset.key = key; w.document.body.appendChild(b); b.click();
+  expect(JSON.parse(w.localStorage.getItem('pmo-table5-' + key)).w).toBeUndefined();
+});

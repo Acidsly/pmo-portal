@@ -846,6 +846,16 @@ export const T: Record<string, L3> = {
   "Reset to default",
   "Как по умолчанию"
  ],
+ "colWidthsReset": [
+  "Скинути ширини колонок",
+  "Reset column widths",
+  "Сбросить ширины колонок"
+ ],
+ "colResize": [
+  "Перетягніть, щоб змінити ширину колонки",
+  "Drag to resize the column",
+  "Потяните, чтобы изменить ширину колонки"
+ ],
  "filter": [
   "Фільтр",
   "Filter",

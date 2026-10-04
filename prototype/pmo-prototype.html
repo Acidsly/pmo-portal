@@ -508,6 +508,10 @@ main{padding-bottom:40px}
 .sec-h h3{margin:0}
 .sec-h .more{display:inline-flex;align-items:center;gap:4px}
 .rlist{display:grid;gap:6px}
+/* #35, #49: ширина колонки — перетаскиванием границы заголовка (широкий экран) */
+.dt th{position:relative}
+.col-rs{position:absolute;top:0;right:-4px;width:8px;height:100%;cursor:col-resize;z-index:2;touch-action:none}
+.col-rs:hover,.col-rs.on{background:var(--theme-soft)}
 /* #58: на телефоне статус-звіти й ризики — картками (те самі рядки, фільтри й сортування, що в таблиці) */
 .mcards{display:none}
 @media (max-width:600px){.tablewrap.dt.has-cards{display:none}.mcards{display:grid;gap:8px}}
@@ -726,6 +730,7 @@ const T = {
  onePending:['Звіт від {date} на погодженні PMO — новий можна подати після рішення.','The report from {date} is awaiting PMO approval — a new one can be submitted after the decision.','Отчёт от {date} на согласовании PMO — новый можно подать после решения.'], archNoComments:['Проєкт в архіві: лише перегляд.','The project is archived: view only.','Проект в архиве: только просмотр.'],
  archivedAt:['Дата архівації','Archived on','Дата архивации'],
  cols:['Поля та порядок','Columns and order','Поля и порядок'], colsReset:['Як за замовчуванням','Reset to default','Как по умолчанию'],
+ colWidthsReset:['Скинути ширини колонок','Reset column widths','Сбросить ширины колонок'], colResize:['Перетягніть, щоб змінити ширину колонки','Drag to resize the column','Потяните, чтобы изменить ширину колонки'],
  filter:['Фільтр','Filter','Фильтр'], clear:['Очистити','Clear','Очистить'], search:['Пошук','Search','Поиск'],
  shown:['Показано','Shown','Показано'], of:['з','of','из'], yes:['Так','Yes','Да'], no:['Ні','No','Нет'],
  sortBy:['Сортувати','Sort','Сортировать'],
@@ -1231,13 +1236,16 @@ function tState(key){
   let st = null;
   try { st = JSON.parse(localStorage.getItem('pmo-table5-' + key)); } catch(e) {}
   if (!st || !Array.isArray(st.cols)) st = {cols:TDEFAULTS[key].slice(), sort:null, filters:{}};
+  // #35, #49: ширины пользователя (как logic/table.ts cleanWidths): числа 56–800
+  const w = st.w && typeof st.w === 'object' && !Array.isArray(st.w) ? st.w : {};
+  st.w = Object.fromEntries(Object.entries(w).filter(([, v]) => isFinite(+v) && +v > 0).map(([k, v]) => [k, Math.max(56, Math.min(800, Math.round(+v)))]));
   st.cols = st.cols.filter(c => TDEFS[key][c] && c !== '_lock');
   if (!st.cols.includes(TDEFS[key]._lock)) st.cols.splice(Math.min(2, st.cols.length), 0, TDEFS[key]._lock);
   st.filters = {};
   return (TS[key] = st);
 }
 // запоминаются колонки и сортировка; фильтры колонок — только пока открыта страница (сбрасываются при переходе на вкладку)
-function tSave(key){ try { localStorage.setItem('pmo-table5-' + key, JSON.stringify({cols:TS[key].cols, sort:TS[key].sort})); } catch(e) {} }
+function tSave(key){ try { localStorage.setItem('pmo-table5-' + key, JSON.stringify({cols:TS[key].cols, sort:TS[key].sort, w:TS[key].w && Object.keys(TS[key].w).length ? TS[key].w : undefined})); } catch(e) {} }
 const two = (a, b) => `<div class="c1">${a}</div>${b ? `<div class="c2">${b}</div>` : ''}`;
 const ragOrder = v => ({'Червоний':0,'Жовтий':1,'Зелений':2}[v] ?? 3);
 const fvLabel = (def, v) => def.flabel ? def.flabel(v) : (v === '' ? t('notSet') : esc(v));
@@ -1371,10 +1379,11 @@ function dataTable(key, rows, emptyMsg){
   const st = tState(key), defs = TDEFS[key], data = applyTable(key, rows), cols = st.cols.map(c => [c, defs[c]]);
   const chips = Object.entries(st.filters).filter(([id, v]) => v && v.length && defs[id]).map(([id, v]) =>
     `<span class="fchip">${defs[id].l()}: ${v.map(x => fvLabel(defs[id], x)).join(', ')}<button data-act="fclear" data-key="${key}" data-col="${id}" aria-label="${t('clear')}">×</button></span>`).join('');
+  const lockedNow = TW[key] && TW[key].cols === st.cols.join(',') && innerWidth >= 900;
   const head = cols.map(([id, d]) => {
     const s = st.sort && st.sort.id === id ? st.sort.dir : '';
     const fa = st.filters[id] && st.filters[id].length;
-    return `<th class="${d.cls || ''}"><span class="th${d.filter ? ' hasf' : ''}">${d.sort ? `<button class="sortb${s ? ' on' : ''}" data-act="tsort" data-key="${key}" data-col="${id}" title="${t('sortBy')}: ${d.l()}">${d.h ? d.h() : d.l()}<i>${icoSort(s)}</i></button>` : `<span>${d.h ? d.h() : d.l()}</span>`}${d.filter ? `<button class="fbtn${fa ? ' on' : ''}" data-act="tfilter" data-key="${key}" data-col="${id}" aria-label="${t('filter')}: ${d.l()}">${icoFunnel}</button>` : ''}</span></th>`;
+    return `<th class="${d.cls || ''}"><span class="th${d.filter ? ' hasf' : ''}">${d.sort ? `<button class="sortb${s ? ' on' : ''}" data-act="tsort" data-key="${key}" data-col="${id}" title="${t('sortBy')}: ${d.l()}">${d.h ? d.h() : d.l()}<i>${icoSort(s)}</i></button>` : `<span>${d.h ? d.h() : d.l()}</span>`}${d.filter ? `<button class="fbtn${fa ? ' on' : ''}" data-act="tfilter" data-key="${key}" data-col="${id}" aria-label="${t('filter')}: ${d.l()}">${icoFunnel}</button>` : ''}</span>${lockedNow ? `<span class="col-rs" data-rs="${key}" data-col="${id}" title="${t('colResize')}"></span>` : ''}</th>`;
   }).join('');
   const body = data.map(r => `<tr class="row">${cols.map(([id, d]) => `<td class="${d.cls || ''}">${d.main(r)}</td>`).join('')}</tr>`).join('');
   return `<div class="dt-bar"><span class="muted">${t('shown')} ${data.length} ${t('of')} ${rows.length}</span>${chips}</div>
@@ -1386,7 +1395,8 @@ let TW = {};
 function tLockOpen(key, cols){
   const w = TW[key];
   if (!w || w.cols !== cols.join(',') || innerWidth < 900) return '<table>';
-  return `<table class="locked" style="table-layout:fixed;width:${w.w.reduce((a, b) => a + b, 0)}px"><colgroup>${w.w.map(x => `<col style="width:${x}px">`).join('')}</colgroup>`;
+  const user = (TS[key] && TS[key].w) || {}, ws = cols.map((c, i) => user[c] || w.w[i]);
+  return `<table class="locked" style="table-layout:fixed;width:${ws.reduce((a, b) => a + b, 0)}px"><colgroup>${ws.map(x => `<col style="width:${x}px">`).join('')}</colgroup>`;
 }
 function tLockMeasure(){
   if (innerWidth < 900) return;
@@ -1398,6 +1408,19 @@ function tLockMeasure(){
   });
 }
 addEventListener('resize', () => { TW = {}; });
+document.addEventListener('pointerdown', e => {
+  const h = e.target.closest && e.target.closest('.col-rs'); if (!h) return;
+  e.preventDefault(); e.stopPropagation();
+  const key = h.dataset.rs, id = h.dataset.col, th = h.closest('th'), tr = th.parentElement, idx = [...tr.children].indexOf(th);
+  const col = th.closest('table').querySelectorAll('col')[idx]; if (!col) return;
+  const x0 = e.clientX, w0 = parseFloat(col.style.width) || th.getBoundingClientRect().width;
+  const wOf = x => Math.max(56, Math.min(800, Math.round(w0 + x - x0)));
+  h.classList.add('on');
+  const move = ev => { col.style.width = wOf(ev.clientX) + 'px'; };
+  const up = ev => { removeEventListener('pointermove', move); removeEventListener('pointerup', up);
+    TS[key].w = Object.assign({}, TS[key].w || {}, {[id]: wOf(ev.clientX)}); tSave(key); rerenderMain(); };
+  addEventListener('pointermove', move); addEventListener('pointerup', up);
+}, true);
 
 /* popovers */
 const pop = document.getElementById('pop');
@@ -1431,7 +1454,7 @@ function renderPop(){
       const on = st.cols.includes(id), idx = st.cols.indexOf(id), lock = id === defs._lock;
       return `<div class="pop-row col-row"><label><input type="checkbox" data-col="${id}"${on ? ' checked' : ''}${lock ? ' disabled' : ''}><span>${defs[id].l()}</span></label>
         <span class="mv"><button data-act="cmove" data-col="${id}" data-dir="-1" aria-label="↑"${!on || idx <= 1 ? ' disabled' : ''}>↑</button><button data-act="cmove" data-col="${id}" data-dir="1" aria-label="↓"${!on || lock || idx === st.cols.length - 1 ? ' disabled' : ''}>↓</button></span></div>`; }).join('')}</div>
-      <div class="pop-f"><button class="more" data-act="creset">${t('colsReset')}</button></div>`;
+      <div class="pop-f"><button class="more" data-act="creset">${t('colsReset')}</button>${st.w && Object.keys(st.w).length ? `<button class="more" data-act="wreset" data-key="${POP.key}">${t('colWidthsReset')}</button>` : ''}</div>`;
   } else if (POP.kind === 'user'){
     pop.innerHTML = `<div class="pop-me">${avatar(VIEWER, 'lg')}<span class="pn"><b>${esc(VIEWER)}</b><small>${esc(roleOf(VIEWER))}</small><small>${esc(email(VIEWER))}</small></span></div>
       <div class="pop-sep">${t('switchUser')}</div>
@@ -2123,6 +2146,7 @@ document.addEventListener('click', e => {
   const a = el.dataset.act, id = el.dataset.id ? +el.dataset.id : null;
   // вкладка в шапке — всегда её вид по умолчанию и без фильтров колонок (#23, #24); показатели главной (goview) ставят свой вид
   if (a === 'nav'){ state.page = el.dataset.page; Object.assign(state, {pv:'all', rv:'all', kv:'open', av:'all'}); Object.keys(TS).forEach(k => { TS[k].filters = {}; }); TW = {}; closePop(); closePanel(); render(); window.scrollTo(0, 0); }
+  else if (a === 'wreset'){ const k = el.dataset.key; if (TS[k]) { TS[k].w = {}; tSave(k); } closePop(); rerenderMain(); }
   else if (a === 'lang'){ LI = +el.dataset.i; render(); }
   else if (a === 'theme'){ THEME = el.dataset.t; try { localStorage.setItem('pmo-theme', THEME); } catch(e) {} applyTheme(); renderChrome(); }
   else if (a === 'goview'){ state.page = el.dataset.page; state[{projects:'pv', reports:'rv', risks:'kv', archive:'av'}[state.page]] = el.dataset.view; render(); window.scrollTo(0, 0); }

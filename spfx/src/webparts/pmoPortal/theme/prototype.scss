@@ -502,6 +502,10 @@ form .fsec:first-child{margin-top:0}
 .sec-h h3{margin:0}
 .sec-h .more{display:inline-flex;align-items:center;gap:4px}
 .rlist{display:grid;gap:6px}
+/* #35, #49: ширина колонки — перетаскиванием границы заголовка (широкий экран) */
+.dt th{position:relative}
+.col-rs{position:absolute;top:0;right:-4px;width:8px;height:100%;cursor:col-resize;z-index:2;touch-action:none}
+.col-rs:hover,.col-rs.on{background:var(--theme-soft)}
 /* #58: на телефоне статус-звіти й ризики — картками (те самі рядки, фільтри й сортування, що в таблиці) */
 .mcards{display:none}
 @media (max-width:600px){.tablewrap.dt.has-cards{display:none}.mcards{display:grid;gap:8px}}
