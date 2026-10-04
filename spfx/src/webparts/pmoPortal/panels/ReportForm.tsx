@@ -5,7 +5,7 @@ import { Project } from '../data/types';
 import { isActive, byOrder } from '../logic/status';
 import { calcRag, Rag } from '../logic/rag';
 import { ReportDraft, reportFromProject, reportFromReturned, keyChanged, reportErrors, formErrorText, parseProgress, progressLocked, FieldErr,
-  initialReport, switchStatus, switchProject, reportToSave, reportProjectChoice } from '../logic/forms';
+  initialReport, switchStatus, switchProject, reportToSave, reportProjectChoice, archiveStatus } from '../logic/forms';
 import { reportBody } from '../data/write';
 import { Frow, RagPick, SegPick, DateIn, Err, Opts, errText, guardText, FieldErrText, MoneyIn } from '../components/fields';
 import { fmtDate } from '../components/Bits';
@@ -108,7 +108,11 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
           <div className="k-cost"><label className="t" htmlFor="f-c">{fl('rCost')}, $</label>
             <MoneyIn id="f-c" value={d.actualCost} onChange={v => set({ actualCost: v })} /></div>
         </div>
-        {d.status === 'Завершено' || d.status === 'Скасовано' ? <p className="note" style={{ margin: '-4px 0 14px' }}>{t('completeHint')}</p> : null}
+        {archiveStatus(d.status) ? <><p className="note" style={{ margin: '-4px 0 14px' }}>{t('completeHint')}</p>
+          {/* #54: когда проект фактически завершён или отменён — обязательно, не раньше старта, не позже даты отчёта */}
+          <div className="frow" id="f-ae-wrap"><label className="t" htmlFor="f-ae">{fl('ae')} *</label>
+            <DateIn id="f-ae" value={d.actualEnd} invalid={bad('actualEnd')} onChange={v => set({ actualEnd: v })} /><FieldErrText msg={fErr('actualEnd')} />
+            <p className="hint">{t('aeHint')}</p></div></> : null}
         <fieldset className="ragpick"><legend>{fl('type')}</legend><SegPick name="f-type" options={TYPES} value={d.type} onChange={v => set({ type: v })} /></fieldset>
         <div className="fgrid2 frow">
           <div><label className="t" htmlFor="f-start">{fl('start')}</label><DateIn id="f-start" value={d.start} onChange={v => set({ start: v })} /></div>

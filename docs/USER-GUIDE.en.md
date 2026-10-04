@@ -59,7 +59,7 @@ Click a project and its card opens on the right (full screen on a phone):
 - approval notes: "Status report of … is awaiting PMO approval" or "Report of … returned for rework" with the PMO's comment;
 - **Stakeholders**: PM, owner and **Project team** — a table: member, role, what to contact them about;
 - **Timeline** (with the forecast deviation), **Budget and progress** (amounts in US dollars);
-- **Change history** — who changed what and when: "old → new", the reason (including PMO decisions — "Report approval");
+- **Change history** — who changed what and when: "old → new", the reason (including PMO decisions — "Report approval"); also **report submissions** ("Report submitted", including "New report based on the returned one") and **risks and issues** ("Added", field changes, "Closed") — with an "Open report" / "Open risk" link. These events appear after synchronization (~15 minutes);
 - **Comments** — the feed and "Add comment";
 - **Health history** — ratings from the latest reports;
 - **Status reports** — with the approval mark; click the date or summary to open a report; **Risks and issues**;
@@ -78,7 +78,7 @@ You can share a link to the card: the browser address points exactly to it.
 7. If the PMO **returned** the report, the PMO's comment is shown in the card and in the report itself. Click **New report based on the returned one**: the form is filled with the returned report's data — fix it and save.
 8. A report is **returned automatically** if the project PM changed before the PMO decision (the new PM submits a current report) or the project moved to the archive — the comment explains why.
 
-The **"Completed — move to archive"** and **"Cancelled — move to archive"** status options send the project to the archive once the report is approved — after that the project is view-only.
+The **"Completed — move to archive"** and **"Cancelled — move to archive"** status options send the project to the archive once the report is approved — after that the project is view-only. They require the **"Actual completion date"** — when the project was actually completed or cancelled: not before the start date and not after the report date.
 
 ## Approving status reports (for the PMO)
 
@@ -103,11 +103,12 @@ The status (Initiation, Planning, Execution, On hold, Cancelled, Completed) chan
 3. Fills in **Reason for changing indicators** — why the status changes; the reason goes to the history.
 4. Rates schedule, budget, resources, writes the summary → **Save**. The report goes for approval.
 5. **The PMO** approves the report — the status in the card changes, and "Report approval" and "Updated by status report" rows appear in the history ("old → new", the reason). If the PMO returns the report, the status does not change and the PM submits a new report.
-6. **"Completed — move to archive"** or **"Cancelled — move to archive"** — after approval the project gets the "Archived" status and an archive date and moves to the "Archive" tab; after that it is view-only. That the project was cancelled is shown in its last status report and in the "Change history".
+6. **"Completed — move to archive"** or **"Cancelled — move to archive"** — after approval the project gets the "Archived" status, an archive date and the "Actual completion date" and moves to the "Archive" tab; after that it is view-only. That the project was cancelled is shown in its last status report and in the "Change history".
 
 ## Risks and issues
 
-- Add one from the card ("Add risk", PM only) or on the "Risks and issues" tab.
+- Add one from the card ("Add risk / issue", PM only) or on the "Risks and issues" tab → "New risk / issue".
+- First choose the **type** (Risk or Issue) — the form title follows it ("New risk" / "New issue"), then fill in the **description**.
 - **Probability** and **impact** are 1 to 5; the **score** = probability × impact: 15–25 — high (red), 8–14 — medium (yellow), 1–7 — low (green).
 - **Response strategy:** Avoid, Reduce (mitigate), Transfer, Accept (clicking the selected one again clears the choice).
 - **Risk reduction actions** — what we do now; **Contingency plan** — what we do if the risk occurs.
@@ -122,11 +123,12 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
 
 - A **New project** is created by the PMO: the name (unique — no two projects share a name) and the PM are required (the PM is not prefilled — choose one); the project number is assigned by the system in order (PRJ-001, PRJ-002…) — it is unique and cannot be changed by hand.
 - For ~15 minutes after creation the project is **being prepared** (the card says "The project is being prepared"): after that the PM can add reports, risks and team members.
-- Only the PM can **Edit project**: name, department, priority, owner, budget, description, and also:
+- Only the PM can **Edit project**: name, department, priority, budget, description, and also:
   - **Project team** — "+ Add member": a person, their **role** (required) and what to contact them about; × removes the member;
   - **Links** — "+ Add link": a name and an address (starting with `https://`); × removes it.
 - Status, health, dates and costs change only through a status report (see "How to change the project status").
 - After the team changes, access rights are recalculated automatically: team members see the project and can comment.
+- After the project is created, only the PMO changes the **PM and the owner**: in the card — **"Change PM / owner"** (new PM, new owner — an empty field means no change, the reason is required). The change shows in the card and in the "Change history" ("Assignment") right away and is finally applied by synchronization within ~15 minutes; until then a new change cannot be submitted. A report of the former PM that is pending approval is returned automatically.
 - After a **PM change** the former PM can no longer change the project right away; the new PM sees "You are assigned as PM of this project: edit access appears within 15 minutes" — the page refreshes by itself.
 
 ## Archive

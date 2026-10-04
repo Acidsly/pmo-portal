@@ -103,13 +103,20 @@ function ConvertTo-Kyiv([datetime]$d) {
     $u = if ($d.Kind -eq [DateTimeKind]::Local) { $d.ToUniversalTime() } else { [datetime]::SpecifyKind($d, [DateTimeKind]::Utc) }
     return [TimeZoneInfo]::ConvertTimeFromUtc($u, (Get-KyivZone))
 }
-$STATE_DATES = @("pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd", "pmArchivedAt", "pmLastUpdate")
+$STATE_DATES = @("pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd", "pmArchivedAt", "pmLastUpdate", "pmActualEnd")
 function Get-StateKeys { return @("pmStatus", "pmRAG", "pmType", "pmProgress", "pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd",
-                                  "pmActualCost", "pmArchivedAt", "pmLastUpdate", "pmLastReport", "pmCode") }
+                                  "pmActualCost", "pmArchivedAt", "pmLastUpdate", "pmLastReport", "pmCode", "pmActualEnd",
+                                  "pmManager", "pmOwner") }
+# PM и владелец в эталоне — e-mail в нижнем регистре (#43: меняет только PMO через «Призначення»)
+$STATE_PEOPLE = @("pmManager", "pmOwner")
+function Get-StateValue([string]$k, $v) {
+    if ($k -in $STATE_PEOPLE) { if ($v -and $v.Email) { return ([string]$v.Email).ToLowerInvariant() } return "" }
+    return Norm $v
+}
 # значения ключевых полей записи проекта (как их видит синхронизация: Norm)
 function Get-CardState($item) {
     $st = [ordered]@{}
-    foreach ($k in Get-StateKeys) { $st[$k] = Norm $item[$k] }
+    foreach ($k in Get-StateKeys) { $st[$k] = Get-StateValue $k $item[$k] }
     return $st
 }
 # расхождения карточки с эталоном: @{ f; card; state } по каждому отличающемуся полю
@@ -125,13 +132,15 @@ function ConvertTo-StateJson($state) {
     $o = [ordered]@{}; foreach ($k in Get-StateKeys) { $o[$k] = [string]$state[$k] }
     return ($o | ConvertTo-Json -Compress)
 }
-# Повреждённый или пустой эталон (нет ключа pmStatus) — $null: «эталона нет», заново из карточки, но никогда не откат к пустым значениям
+# Повреждённый или пустой эталон (нет ключа pmStatus) — $null: «эталона нет», заново из карточки, но никогда не откат к пустым значениям.
+# Ключи, которых в эталоне ещё нет (эталон записан до появления поля), — в «_missing»: их значение берётся из карточки без отката.
 function ConvertFrom-StateJson([string]$json) {
     if (-not $json) { return $null }
     try { $o = ConvertFrom-JsonText $json } catch { return $null }
     if ($o -isnot [System.Collections.IDictionary] -or -not $o.Contains("pmStatus")) { return $null }
     $st = [ordered]@{}
     foreach ($k in Get-StateKeys) { $st[$k] = if ($o.Contains($k) -and $null -ne $o[$k]) { [string]$o[$k] } else { "" } }
+    $st["_missing"] = @(Get-StateKeys | Where-Object { -not $o.Contains($_) })
     return $st
 }
 # значение для записи в карточку из эталона: даты — полдень UTC, пусто — null
@@ -148,7 +157,7 @@ function Read-ProjectStates {
     if (-not $script:HAS_STATE_LIST) { return $map }
     foreach ($it in @(Get-PnPListItem -List $STATE_LIST -PageSize 500)) {
         if (-not $it -or $null -eq $it["psProject"] -or [int]$it["psProject"] -eq $LOCK_PROJECT) { continue }
-        $map[[int]$it["psProject"]] = @{ id = $it.Id; state = (ConvertFrom-StateJson ([string]$it["psState"])); done = [string]$it["psEditDone"]; last = [string]$it["psLastApplied"] }
+        $map[[int]$it["psProject"]] = @{ id = $it.Id; state = (ConvertFrom-StateJson ([string]$it["psState"])); done = [string]$it["psEditDone"]; last = [string]$it["psLastApplied"]; hist = [string]$it["psHistory"] }
     }
     return $map
 }
@@ -158,7 +167,7 @@ function Save-ProjectState([int]$projectId, $state, $states, [hashtable]$extra =
     $vals = @{ psState = (ConvertTo-StateJson $state) } + $extra
     $cur = $states[$projectId]
     if ($cur) { Set-PnPListItem -List $STATE_LIST -Identity $cur.id -Values $vals -UpdateType SystemUpdate | Out-Null }
-    else { $it = Add-PnPListItem -List $STATE_LIST -Values ($vals + @{ Title = "P$projectId"; psProject = $projectId }); $cur = @{ id = $it.Id; done = ""; last = "" }; $states[$projectId] = $cur }
+    else { $it = Add-PnPListItem -List $STATE_LIST -Values ($vals + @{ Title = "P$projectId"; psProject = $projectId }); $cur = @{ id = $it.Id; done = ""; last = ""; hist = "" }; $states[$projectId] = $cur }
     $cur.state = $state
     if ($extra.ContainsKey("psEditDone")) { $cur.done = $extra.psEditDone }
     if ($extra.ContainsKey("psLastApplied")) { $cur.last = $extra.psLastApplied }

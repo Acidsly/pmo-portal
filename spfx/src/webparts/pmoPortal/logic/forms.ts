@@ -6,6 +6,10 @@ import { Rag } from './rag';
 export interface ReportDraft {
   projectId: number; date: string; period: string; schedule: Rag; budget: Rag; resources: Rag;
   status: string; type: string; progress: number; start: string; goLive: string; planEnd: string; forecastEnd: string; actualCost: number;
+  /** #54: дата завершення (факт) — только при «Завершено» / «Скасовано». */
+  actualEnd: string;
+  /** #46: новый отчёт на основе повернутого — его номер (srBasedOn). */
+  basedOn?: number;
   title: string; done: string; next: string; issues: string; decision: boolean; decisionText: string; keyReason: string;
 }
 /** Черновик проекта (форма projectForm прототипа). */
@@ -30,7 +34,7 @@ export function nextCode(codes: string[]): string {
 export function reportFromProject(p: Project, today: string): ReportDraft {
   return { projectId: p.id, date: today, period: '2 тижні', schedule: '', budget: '', resources: '',
     status: p.status, type: p.type, progress: p.progress, start: p.start, goLive: p.goLive, planEnd: p.planEnd, forecastEnd: p.forecastEnd,
-    actualCost: p.actualCost, title: '', done: '', next: '', issues: '', decision: false, decisionText: '', keyReason: '' };
+    actualCost: p.actualCost, actualEnd: '', title: '', done: '', next: '', issues: '', decision: false, decisionText: '', keyReason: '' };
 }
 
 /** Новый отчёт на основе повернутого PMO: оценки, показатели и тексты повернутого, дата — сегодня. */
@@ -39,7 +43,7 @@ export function reportFromReturned(r: StatusReport, p: Project, today: string): 
   return { ...base, period: r.period || base.period, schedule: r.schedule, budget: r.budget, resources: r.resources,
     status: r.status || base.status, type: r.type || base.type, progress: r.progress === null ? base.progress : r.progress,
     start: r.start || base.start, goLive: r.goLive || base.goLive, planEnd: r.planEnd || base.planEnd, forecastEnd: r.forecastEnd || base.forecastEnd,
-    actualCost: r.actualCost === null ? base.actualCost : r.actualCost, title: r.title, done: r.done, next: r.next, issues: r.issues,
+    actualCost: r.actualCost === null ? base.actualCost : r.actualCost, actualEnd: r.actualEnd || '', basedOn: r.id, title: r.title, done: r.done, next: r.next, issues: r.issues,
     decision: r.decision, decisionText: r.decisionText, keyReason: r.keyReason };
 }
 
@@ -62,6 +66,8 @@ export function parseProgress(txt: string): number | null {
 }
 /** Статус «Завершено» — % виконання 100 и поле закрыто (#52); «Скасовано» — без изменений. */
 export const progressLocked = (status: string): boolean => status === 'Завершено';
+/** «Завершено» и «Скасовано» переводят проект в архив — нужна фактическая дата (#54). */
+export const archiveStatus = (status: string): boolean => status === 'Завершено' || status === 'Скасовано';
 
 /** Состояние формы отчёта (векторы tests/cases/report-form.json, они же проверяют прототип):
  *  черновик при открытии — «Завершено» сразу 100 % (#52, «на основе повернутого»). */
@@ -75,8 +81,11 @@ export function switchStatus(d: ReportDraft, prev: number | null, status: string
 /** Смена проекта в общей форме: показатели — нового проекта (статус, %, даты; поле % снова открыто), оценки и тексты — введённые. */
 export const switchProject = (d: ReportDraft, np: Project): ReportDraft => initialReport({ ...reportFromProject(np, d.date), schedule: d.schedule, budget: d.budget, resources: d.resources,
   title: d.title, done: d.done, next: d.next, issues: d.issues, decision: d.decision, decisionText: d.decisionText });
-/** Что записывается: при «Завершено» — всегда 100 %. */
-export const reportToSave = (d: ReportDraft): ReportDraft => (progressLocked(d.status) ? { ...d, progress: 100 } : d);
+/** Что записывается: при «Завершено» — всегда 100 %; фактическая дата — только при «Завершено» / «Скасовано» (#54). */
+export const reportToSave = (d: ReportDraft): ReportDraft => {
+  const x = progressLocked(d.status) ? { ...d, progress: 100 } : d;
+  return archiveStatus(x.status) ? x : { ...x, actualEnd: '' };
+};
 /** Выбор проекта (#37, #51): из карточки (projectId) — проект зафиксирован; иначе — первый без отчёта на погодженні;
  *  недоступны проекты с отчётом на погодженні (кроме выбранного — для него форма покажет плашку и не даст сохранить). */
 export function reportProjectChoice(act: Project[], projectId: number): { fixed?: Project; first?: Project; disabled: number[] } {
@@ -99,6 +108,12 @@ export function reportErrors(d: ReportDraft, p: Project, progressText?: string):
   if (!d.title.trim()) out.push({ f: 'title', k: 'errReq' });
   if (progressText !== undefined && !progressLocked(d.status) && parseProgress(progressText) === null) out.push({ f: 'progress', k: 'errProgress' });
   datesBeforeStart(d).forEach(k => out.push({ f: k, k: 'errBeforeStart' }));
+  // #54: фактическая дата — обязательна при «Завершено» / «Скасовано», не раньше старта и не позже даты отчёта
+  if (archiveStatus(d.status)) {
+    if (!d.actualEnd) out.push({ f: 'actualEnd', k: 'errReq' });
+    else if (d.start && d.actualEnd < d.start) out.push({ f: 'actualEnd', k: 'errBeforeStart' });
+    else if (d.date && d.actualEnd > d.date) out.push({ f: 'actualEnd', k: 'errAfterReport' });
+  }
   return out;
 }
 /** Общее сообщение формы: есть незаполненные — «Заповніть усі обов'язкові поля, позначені *», иначе — первая ошибка поля. */

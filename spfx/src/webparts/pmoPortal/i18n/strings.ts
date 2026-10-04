@@ -581,6 +581,16 @@ export const T: Record<string, L3> = {
   "Cannot be earlier than the start date.",
   "Не может быть раньше даты старта."
  ],
+ "errAfterReport": [
+  "Не може бути пізніше дати звіту.",
+  "Cannot be later than the report date.",
+  "Не может быть позже даты отчёта."
+ ],
+ "aeHint": [
+  "Коли проєкт фактично завершено або скасовано.",
+  "When the project was actually completed or cancelled.",
+  "Когда проект фактически завершён или отменён."
+ ],
  "errDatesOrder": [
   "Дати запуску й завершення не можуть бути раніше дати старту.",
   "Launch and end dates cannot be earlier than the start date.",
@@ -740,6 +750,86 @@ export const T: Record<string, L3> = {
   "Редагування картки",
   "Card edited",
   "Редактирование карточки"
+ ],
+ "kAssign": [
+  "Призначення",
+  "Assignment",
+  "Назначение"
+ ],
+ "kSubmit": [
+  "Подання звіту",
+  "Report submitted",
+  "Подача отчёта"
+ ],
+ "kRiskEv": [
+  "Ризик / проблема",
+  "Risk / issue",
+  "Риск / проблема"
+ ],
+ "openRisk": [
+  "Відкрити ризик",
+  "Open risk",
+  "Открыть риск"
+ ],
+ "assignBtn": [
+  "Змінити PM / власника",
+  "Change PM / owner",
+  "Сменить PM / владельца"
+ ],
+ "assignTitle": [
+  "Зміна PM / власника",
+  "Change of PM / owner",
+  "Смена PM / владельца"
+ ],
+ "assignHint": [
+  "Після створення проєкту PM і власника змінює лише PMO. Порожнє поле — без змін.",
+  "After the project is created, only the PMO changes the PM and the owner. An empty field means no change.",
+  "После создания проекта PM и владельца меняет только PMO. Пустое поле — без изменений."
+ ],
+ "assignNewPm": [
+  "Новий PM",
+  "New PM",
+  "Новый PM"
+ ],
+ "assignNewOwner": [
+  "Новий власник",
+  "New owner",
+  "Новый владелец"
+ ],
+ "assignNote": [
+  "Коментар (причина)",
+  "Comment (reason)",
+  "Комментарий (причина)"
+ ],
+ "errAssignSame": [
+  "Оберіть нового PM або нового власника.",
+  "Choose a new PM or a new owner.",
+  "Выберите нового PM или нового владельца."
+ ],
+ "errAssignNote": [
+  "Вкажіть причину зміни.",
+  "Enter the reason for the change.",
+  "Укажите причину изменения."
+ ],
+ "savedAssign": [
+  "Зміну збережено — картка оновиться після синхронізації.",
+  "Change saved — the card updates after synchronization.",
+  "Изменение сохранено — карточка обновится после синхронизации."
+ ],
+ "assignPendingNote": [
+  "Зміна PM / власника очікує обробки синхронізацією.",
+  "The PM / owner change is waiting for synchronization.",
+  "Смена PM / владельца ожидает обработки синхронизацией."
+ ],
+ "gAssignPending": [
+  "Зміна PM / власника вже очікує обробки — дочекайтеся синхронізації.",
+  "A PM / owner change is already waiting — wait for synchronization.",
+  "Смена PM / владельца уже ожидает обработки — дождитесь синхронизации."
+ ],
+ "pmOnlyPmo": [
+  "PM і власника змінює лише PMO.",
+  "Only the PMO changes the PM and the owner.",
+  "PM и владельца меняет только PMO."
  ],
  "kReport": [
   "Оновлено статус-звітом",
@@ -1116,6 +1206,11 @@ export const T: Record<string, L3> = {
   "Forecast",
   "Прогноз"
  ],
+ "cAe": [
+  "Завершено (факт)",
+  "Completed (actual)",
+  "Завершён (факт)"
+ ],
  "cDev": [
   "Відхилення, дн.",
   "Deviation, days",
@@ -1197,14 +1292,24 @@ export const T: Record<string, L3> = {
   "Старт"
  ],
  "newRisk": [
+  "Новий ризик / проблема",
+  "New risk / issue",
+  "Новый риск / проблема"
+ ],
+ "addRisk": [
+  "Додати ризик / проблему",
+  "Add risk / issue",
+  "Добавить риск / проблему"
+ ],
+ "newRiskT": [
   "Новий ризик",
   "New risk",
   "Новый риск"
  ],
- "addRisk": [
-  "Додати ризик",
-  "Add risk",
-  "Добавить риск"
+ "newIssueT": [
+  "Нова проблема",
+  "New issue",
+  "Новая проблема"
  ],
  "riskCard": [
   "Ризик / проблема",
@@ -1413,6 +1518,11 @@ export const FLD: Record<string, L3> = {
   "Forecast completion",
   "Прогноз завершения"
  ],
+ "ae": [
+  "Дата завершення (факт)",
+  "Actual completion date",
+  "Дата завершения (факт)"
+ ],
  "budget": [
   "Бюджет (план)",
   "Budget (plan)",
@@ -1537,6 +1647,26 @@ export const FLD: Record<string, L3> = {
   "Ризик / проблема",
   "Risk / issue",
   "Риск / проблема"
+ ],
+ "kDesc": [
+  "Опис",
+  "Description",
+  "Описание"
+ ],
+ "kProb": [
+  "Ймовірність",
+  "Probability",
+  "Вероятность"
+ ],
+ "kImp": [
+  "Вплив",
+  "Impact",
+  "Влияние"
+ ],
+ "kNew": [
+  "Додано",
+  "Added",
+  "Добавлено"
  ],
  "kType": [
   "Тип",

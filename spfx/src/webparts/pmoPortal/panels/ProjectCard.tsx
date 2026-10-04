@@ -41,6 +41,11 @@ const Kv: React.FC<{ k: string; children?: React.ReactNode }> = ({ k, children }
   <div className="kv"><span className="k">{k}</span><span className="v">{children || <span className="muted">—</span>}</span></div>;
 
 /** Карточка проекта — разделы и порядок projectPanel прототипа (строки 1289–1340), только чтение. */
+/** #46 / #48: ссылка из события истории на отчёт или риск. */
+export const RefLink: React.FC<{ r: { type: 'report' | 'risk'; id: number }; pid: number }> = ({ r, pid }) => {
+  const c = React.useContext(AppCtx);
+  return <button className="link chg-ref" onClick={() => c.openForm((r.type === 'report' ? 'rep:' : 'risk:') + r.id, pid)}>{c.t(r.type === 'report' ? 'openReport' : 'openRisk')} →</button>;
+};
 export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: SpRepo; onClose(): void }> = ({ project: p, data, repo, onClose }) => {
   const c = React.useContext(AppCtx); const { t, fl, today } = c;
   const [cm, setCm] = React.useState('');
@@ -98,7 +103,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
   const returned = reps[0] && reps[0].approval === 'Повернуто' ? reps[0] : undefined;
   const dev = forecastDelta(p.planEnd, p.forecastEnd);
   const use = budgetUse(p.budget, p.actualCost);
-  const kindL: Record<string, string> = { create: 'kCreate', key: 'kKey', edit: 'kEdit', report: 'kReport', approval: 'kApproval' };
+  const kindL: Record<string, string> = { create: 'kCreate', key: 'kKey', edit: 'kEdit', report: 'kReport', approval: 'kApproval', assign: 'kAssign', submit: 'kSubmit', risk: 'kRiskEv' };
   const dims: [string, (r: typeof reps[0]) => React.ReactNode][] = [
     [fl('rag'), r => <RagDot v={calcRag(r.schedule, r.budget, r.resources)} notRated={t('notRated')} />],
     [fl('rSched'), r => <RagDot v={r.schedule} notRated={t('notRated')} />],
@@ -122,6 +127,9 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
       : <p className="note lock">🔒 {isArch(p.status) ? t('archivedNote') : !p.access ? t('notReadyNote') : soonPm ? t('gPmSoon') : t('noEdit')}</p>}
     {edit && awaitingAll.length ? <p className="note">{t('onePending').replace('{date}', fmtDate(awaitingAll[0].date))}</p> : null}
     {p.pending ? <p className="note">{t('pendingNote')}</p> : null}
+    {/* #43: PM и власника после создания меняет только PMO — записью «Призначення» */}
+    {data.canApprove && !isArch(p.status) ? (p.assignPending ? <p className="note">{t('assignPendingNote')}</p>
+      : <div className="actbar"><button className="btn" id="assign-btn" onClick={() => c.openForm('assign', p.id)}>{t('assignBtn')}</button></div>) : null}
     {awaitingAll.length || returned ? <div style={{ marginTop: 14 }}>
       {awaitingAll.map(r => <div key={r.id} className="apnote">{t('pendingApproval').replace('{date}', fmtDate(r.date))}
         {data.canApprove ? <button className="link" onClick={() => c.openForm('rep:' + r.id, p.id)}>{t('apTitle')} →</button> : null}</div>)}
@@ -145,6 +153,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
       <Kv k={fl('golive')}>{fmtDate(p.goLive)}</Kv>
       <Kv k={fl('plan')}>{p.planEnd ? (isPlanLate(p.planEnd, p.status, today) ? <span className="late">{fmtDate(p.planEnd)}</span> : fmtDate(p.planEnd)) : null}</Kv>
       <Kv k={fl('fc')}>{p.forecastEnd ? <>{fmtDate(p.forecastEnd)}{dev !== null && dev > 0 ? <> <span className="late">+{dev} {t('days')}</span></> : dev !== null && dev < 0 ? <> <span className="muted">{dev} {t('days')}</span></> : null}</> : null}</Kv>
+      {p.actualEnd ? <Kv k={fl('ae')}>{fmtDate(p.actualEnd)}</Kv> : null}
       {p.archivedAt ? <Kv k={t('archivedAt')}>{fmtDate(p.archivedAt)}</Kv> : null}
     </div></div>
 
@@ -164,6 +173,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
           {c.diffs.length ? <div className="diffs">{c.diffs.map((d, i) => <div key={i} className="diff"><span className="df">{fl(d.f)}</span>
             <span className="dv"><s>{tv(d.from) || '—'}</s><span className="arr">→</span>{tv(d.to) || '—'}</span></div>)}</div> : null}
           {c.reason ? <div className="chg-r">{c.reason}</div> : null}
+          {c.ref ? <RefLink r={c.ref} pid={p.id} /> : null}
         </div>)}
         {events.length > 3 ? <button className="more" onClick={() => setShowCh(!showCh)}>{showCh ? t('hideHistory') : `${t('showHistory')} (${events.length})`}</button> : null}
       </div> : journal ? <p className="empty">{t('noChanges')}</p> : null}

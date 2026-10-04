@@ -234,6 +234,7 @@ F $P pmStart       DateTime "Дата старту"        "Start date"         
 F $P pmGoLive      DateTime "Дата запуску (продакшн)" "Go-live date (production)" "Дата запуска (продакшн)" "Format='DateOnly'"
 F $P pmPlanEnd     DateTime "Дата завершення (план)"  "Planned completion"        "Дата завершения (план)"  "Format='DateOnly'"
 F $P pmForecastEnd DateTime "Прогноз завершення" "Forecast completion" "Прогноз завершения"   "Format='DateOnly'"
+F $P pmActualEnd   DateTime "Дата завершення (факт)" "Actual completion date" "Дата завершения (факт)" "Format='DateOnly'"
 F $P pmArchivedAt  DateTime "Дата архівації"     "Archived on"         "Дата архивации"       "Format='DateOnly'"
 F $P pmBudget      Currency "Бюджет (план)"      "Budget (plan)"       "Бюджет (план)"        "LCID='1058' Decimals='0'"
 F $P pmActualCost  Currency "Витрати (факт)"     "Actual cost"         "Затраты (факт)"       "LCID='1058' Decimals='0'"
@@ -319,6 +320,9 @@ F $R srStart       DateTime "Дата старту"        "Start date"         
 F $R srGoLive      DateTime "Дата запуску (продакшн)" "Go-live date (production)" "Дата запуска (продакшн)" "Format='DateOnly'"
 F $R srPlanEnd     DateTime "Дата завершення (план)"  "Planned completion"        "Дата завершения (план)"  "Format='DateOnly'"
 F $R srForecastEnd DateTime "Прогноз завершення" "Forecast completion" "Прогноз завершения"   "Format='DateOnly'"
+# #46: новый отчёт на основе повернутого — номер повернутого (пишет приложение при создании; синхронизация проверяет)
+F $R srBasedOn     Number   "На основі звіту"    "Based on report"     "На основе отчёта"     "Decimals='0'"
+F $R srActualEnd   DateTime "Дата завершення (факт)" "Actual completion date" "Дата завершения (факт)" "Format='DateOnly'"
 F $R srActualCost  Currency "Витрати на дату"    "Cost to date"        "Затраты на дату"      "LCID='1058' Decimals='0'"
 F $R srKeyReason   Note     "Причина зміни показників" "Reason for changing indicators" "Причина изменения показателей" "NumLines='3' RichText='FALSE'"
 F $R srDone        Note     "Зроблено за період" "Done this period"    "Сделано за период"    "NumLines='5' RichText='FALSE'"
@@ -386,7 +390,7 @@ $C = Ensure-List "Lists/KeyChanges" "Зміни показників" "Indicator
 F $C kcProject     Lookup   "Проєкт"             "Project"             "Проект"               $lookup
 F $C kcDate        DateTime "Дата зміни"         "Changed on"          "Дата изменения"       "Format='DateTime' Required='TRUE'" "<Default>[today]</Default>"
 F $C kcChangedBy   User     "Хто змінив"         "Changed by"          "Кто изменил"          "UserSelectionMode='PeopleOnly'"
-$kinds = @("Створення","Статус-звіт","Редагування картки","Погодження звіту")
+$kinds = @("Створення","Статус-звіт","Редагування картки","Погодження звіту","Призначення","Подання звіту","Ризик")
 F $C kcKind        Choice   "Тип зміни"          "Change type"         "Тип изменения"        "Format='Dropdown'" (Choices $kinds "Статус-звіт")
 $cur = Get-PnPField -List $C -Identity kcKind
 if (@($kinds | Where-Object { $cur.Choices -notcontains $_ }).Count) { Set-PnPField -List $C -Identity kcKind -Values @{ Choices = [string[]]$kinds } | Out-Null; Write-Host "    типы изменений: $($kinds -join ', ')" }
@@ -396,6 +400,8 @@ if (-not (Get-PnPField -List $C -Identity kcField).Indexed) { Set-PnPField -List
 F $C kcFrom        Note     "Було"               "Old value"           "Было"                 "NumLines='2' RichText='FALSE'"
 F $C kcTo          Note     "Стало"              "New value"           "Стало"                "NumLines='2' RichText='FALSE'"
 F $C kcReason      Note     "Причина зміни"      "Reason"              "Причина изменения"    "NumLines='3' RichText='FALSE'"
+# #46 / #48: номер отчёта или риска события — история карточки открывает запись
+F $C kcItem        Number   "Запис"              "Item"                "Запись"               "Decimals='0'"
 F $C pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='64'"
 $script:Loc += , @($C, "Title", "Показник", "Indicator", "Показатель")
 
@@ -425,6 +431,18 @@ F $AP apApplied     Boolean  "Службове: застосовано" "System:
 F $AP pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='64'"
 $script:Loc += , @($AP, "Title", "Коротко", "Summary", "Кратко")
 Set-PnPField -List $AP -Identity "Title" -Values @{ Required = $false } | Out-Null
+
+# 6d. Призначення (#43) — решение PMO о смене PM / власника после создания проекта; переносит синхронизация (сама карточка PM не меняется)
+Write-Host "6d. Список «Призначення»" -ForegroundColor Cyan
+$PA = Ensure-List "Lists/ProjectAssignments" "Призначення" "Assignments" "Назначения"
+F $PA paProject     Lookup   "Проєкт"             "Project"             "Проект"               $lookup
+F $PA paManager     User     "Новий PM"           "New PM"              "Новый PM"             "UserSelectionMode='PeopleOnly'"
+F $PA paOwner       User     "Новий власник"      "New owner"           "Новый владелец"       "UserSelectionMode='PeopleOnly'"
+F $PA paNote        Note     "Коментар"           "Comment"             "Комментарий"          "NumLines='4' RichText='FALSE'"
+F $PA paApplied     Boolean  "Службове: застосовано" "System: applied"  "Служебное: применено" "Hidden='TRUE'" "<Default>0</Default>"
+F $PA pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='64'"
+$script:Loc += , @($PA, "Title", "Коротко", "Summary", "Кратко")
+Set-PnPField -List $PA -Identity "Title" -Values @{ Required = $false } | Out-Null
 
 # 6a. Команда проєкту — стейкхолдеры таблицей: пользователь, роль в проекте, с каких вопросов обращаться
 Write-Host "6a. Список «Команда проєкту»" -ForegroundColor Cyan
@@ -482,6 +500,8 @@ F $PS psProject     Number   "Проєкт (ID)"        "Project (ID)"        "�
 F $PS psState       Note     "Ключові показники"  "Key indicators"      "Ключевые показатели"  "NumLines='6' RichText='FALSE'"
 F $PS psEditDone    Note     "Перенесені правки"  "Journaled edits"     "Перенесённые правки"  "NumLines='3' RichText='FALSE'"
 F $PS psLastApplied Text     "Останній застосований звіт" "Last applied report" "Последний применённый отчёт" "MaxLength='40'"
+# #46 / #48: снимок учтённых отчётов и рисков для истории (пишет только синхронизация)
+F $PS psHistory     Note     "Історія: знімок"    "History snapshot"    "История: снимок"      "NumLines='3' RichText='FALSE'"
 
 # 6b. Відгуки — замечания фокус-группы из приложения (текст, экран, устройство, скриншоты-вложения)
 if ($Feedback) {
@@ -529,6 +549,7 @@ if ($Feedback) {
 $keep = @("Залиште порожнім, якщо не змінюється.", "Leave empty if unchanged.", "Оставьте пустым, если не меняется.")
 foreach ($n in @("srType","srProgress","srStart","srGoLive","srPlanEnd","srForecastEnd","srActualCost")) { Desc $R $n $keep[0] $keep[1] $keep[2] }
 Desc $R srStatus "Залиште порожнім, якщо не змінюється. «Завершено» переводить проєкт в архів." "Leave empty if unchanged. «Завершено» moves the project to the archive." "Оставьте пустым, если не меняется. «Завершено» переводит проект в архив."
+Desc $R srActualEnd "Обов'язково для «Завершено» і «Скасовано»: коли проєкт фактично завершено або скасовано (не раніше старту, не пізніше дати звіту)." "Required for «Завершено» and «Скасовано»: when the project was actually completed or cancelled (not before the start, not after the report date)." "Обязательно для «Завершено» и «Скасовано»: когда проект фактически завершён или отменён (не раньше старта, не позже даты отчёта)."
 Desc $R srKeyReason "Обов'язково, якщо змінюєте статус, тип або дати — потрапить у журнал змін." "Required if you change the status, type or dates — goes to the change log." "Обязательно, если меняете статус, тип или даты — попадёт в журнал изменений."
 Desc $R srDecisionText "Заповніть, якщо позначено «Потрібне рішення керівництва»." "Fill in if «Management decision needed» is checked." "Заполните, если отмечено «Требуется решение руководства»."
 Desc $R srSchedule "Загальний стан звіту — найгірша з трьох оцінок." "Overall health is the worst of the three ratings." "Общее состояние отчёта — худшая из трёх оценок."
@@ -579,9 +600,9 @@ Invoke-PnPQuery
 # ===========================================================================
 Write-Host "7. Формы и права списков" -ForegroundColor Cyan
 # Ключевые показатели и служебные поля не редактируются в карточке — только через статус-отчёт
-Set-FormVisibility $P @("pmStatus","pmRAG","pmType","pmProgress","pmStart","pmGoLive","pmPlanEnd","pmForecastEnd",
+Set-FormVisibility $P @("pmStatus","pmRAG","pmType","pmProgress","pmStart","pmGoLive","pmPlanEnd","pmForecastEnd","pmActualEnd",
                         "pmActualCost","pmArchivedAt","pmLastUpdate","pmLastReport","pmLastComment") $true $false
-Set-FormVisibility $P @("pmRAG","pmForecastEnd","pmActualCost","pmArchivedAt","pmLastUpdate","pmLastReport","pmLastComment") $false $false
+Set-FormVisibility $P @("pmRAG","pmForecastEnd","pmActualEnd","pmActualCost","pmArchivedAt","pmLastUpdate","pmLastReport","pmLastComment") $false $false
 # «Стратегічний» в отчётах и рисках заполняет синхронизация
 # «Стратегічний» и «Пріоритет» в отчётах и рисках — копия из проекта, заполняет синхронизация
 Set-FormVisibility $R @("srProjectType","srProjectPriority","srApproval","srApprovedBy","srApprovedAt","srApprovalNote") $false $false
@@ -612,10 +633,12 @@ Set-ListRoles "Lists/ProjectComments" @{ $members.Title = $ROLE_READ; $PMO_GROUP
 # команду нового проекта при создании записывает PMO (папки ещё нет) — в корень; синхронизация перенесёт в папку
 Set-ListRoles "Lists/ProjectTeam"     @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_EDIT }
 Set-ListRoles "Lists/ReportApprovals" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
+# призначення — «додавання» PMO на папке активного проекта (синхронизация); PM и остальные — чтение
+Set-ListRoles "Lists/ProjectAssignments" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
 Set-ListRoles "Lists/ProjectState"    @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
 # свежие проверки приложения перед записью — фильтры по индексированным полям
 foreach ($ix in @(@("Lists/Projects", "Title"), @("Lists/StatusReports", "srProject"), @("Lists/RisksIssues", "riProject"), @("Lists/ProjectComments", "cmProject"),
-                  @("Lists/ProjectTeam", "tmProject"), @("Lists/ReportApprovals", "apReport"), @("Lists/ReportApprovals", "apProject"))) {
+                  @("Lists/ProjectTeam", "tmProject"), @("Lists/ReportApprovals", "apReport"), @("Lists/ReportApprovals", "apProject"), @("Lists/ProjectAssignments", "paProject"))) {
     $fx = Get-PnPField -List $ix[0] -Identity $ix[1]
     if (-not $fx.Indexed) { Set-PnPField -List $ix[0] -Identity $ix[1] -Values @{ Indexed = $true } | Out-Null; Write-Host "    индекс $($ix[0]).$($ix[1])" }
 }
@@ -663,6 +686,7 @@ $vRisks = Ensure-View $K "Відкриті" $kFields `
     "<OrderBy><FieldRef Name='riScore' Ascending='FALSE'/></OrderBy><Where><Neq><FieldRef Name='riStatus'/><Value Type='Choice'>Закрито</Value></Neq></Where>"
 
 $null = Set-BaseView $C "Усі зміни" @("kcProject","kcDate","kcChangedBy","kcKind","LinkTitle","kcFrom","kcTo","kcReason") "<OrderBy><FieldRef Name='kcDate' Ascending='FALSE'/></OrderBy>"
+$null = Set-BaseView $PA "Усі призначення" @("paProject","paManager","paOwner","paNote","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
 $null = Set-BaseView $AP "Усі погодження" @("apProject","apReport","apDecision","apSchedule","apBudget","apResources","apNote","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
 $null = Set-BaseView $TM "Уся команда" @("tmProject","tmUser","tmRole","tmTopics") "<OrderBy><FieldRef Name='tmProject'/></OrderBy>"
 $null = Set-BaseView $M "Усі коментарі" @("cmProject","cmText","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
@@ -723,7 +747,7 @@ foreach ($lib in @("SitePages", "SiteAssets", "Shared Documents")) {
     if (Get-PnPList -Identity $lib -ErrorAction SilentlyContinue) { Set-ListRoles $lib @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ } }
 }
 # списки портала не видны в «Вміст сайту» и поиске по сайту; приложение и владельцы открывают их по адресу
-$portalLists = @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/KeyChanges", "Lists/ProjectComments", "Lists/ProjectTeam", "Lists/ReportApprovals", "Lists/ProjectState") + $(if ($Feedback) { @("Lists/Feedback", "Lists/FeedbackPublic") } else { @() })
+$portalLists = @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/KeyChanges", "Lists/ProjectComments", "Lists/ProjectTeam", "Lists/ReportApprovals", "Lists/ProjectAssignments", "Lists/ProjectState") + $(if ($Feedback) { @("Lists/Feedback", "Lists/FeedbackPublic") } else { @() })
 foreach ($u in $portalLists) {
     $l = Get-PnPList -Identity $u -Includes Hidden
     if (-not $l.Hidden) { Set-PnPList -Identity $u -Hidden $true | Out-Null; Write-Host "    скрыт список $u" }

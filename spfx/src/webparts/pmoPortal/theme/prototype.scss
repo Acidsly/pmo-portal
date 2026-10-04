@@ -290,6 +290,10 @@ fieldset[aria-invalid=true]{padding:4px 6px}
 .chg-key{background:var(--theme-soft);color:var(--theme)}
 .chg-create{background:color-mix(in srgb,var(--g) 18%,transparent);color:var(--text)}
 .chg-approval{background:color-mix(in srgb,var(--y) 22%,transparent);color:var(--text)}
+.chg-assign{background:color-mix(in srgb,var(--theme) 16%,transparent);color:var(--text)}
+.chg-submit{background:color-mix(in srgb,var(--theme) 10%,transparent);color:var(--text)}
+.chg-risk{background:color-mix(in srgb,var(--r) 14%,transparent);color:var(--text)}
+.chg-ref{margin-top:4px}
 .rep-open{cursor:pointer;transition:background-color .15s}
 .rep-open:hover{background:var(--track)}
 .rep-open:focus-visible{outline:3px solid var(--theme-soft)}

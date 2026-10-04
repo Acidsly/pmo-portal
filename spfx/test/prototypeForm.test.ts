@@ -54,7 +54,7 @@ function openFromCard(): W {
 }
 const setVal = (el: W, v: string): void => { el.value = v; ev(el, 'input'); ev(el, 'change'); };
 const setStatus = (g: (id: string) => W, st: string): void => { const s = g('f-st'); s.value = st; ev(s, 'change'); };
-const FIELD: Record<string, string> = { 'f-d': 'date', 'f-kr': 'keyReason', 'f-t': 'title', 'f-pr': 'progress', 'f-golive': 'goLive', 'f-plan': 'planEnd', 'f-fc': 'forecastEnd' };
+const FIELD: Record<string, string> = { 'f-ae': 'actualEnd', 'f-d': 'date', 'f-kr': 'keyReason', 'f-t': 'title', 'f-pr': 'progress', 'f-golive': 'goLive', 'f-plan': 'planEnd', 'f-fc': 'forecastEnd' };
 
 test('прототип: #37 из карточки проект зафиксирован; #51 проекты с отчётом на погодженні недоступны', () => {
   const form = openFromCard();
@@ -93,6 +93,8 @@ describe('прототип: проверка формы (#40, #53, #54)', () => 
     setVal(g('f-start'), d.start); setVal(g('f-golive'), d.goLive); setVal(g('f-plan'), d.planEnd); setVal(g('f-fc'), d.forecastEnd);
     if (!g('f-pr').disabled) setVal(g('f-pr'), c.progressText);
     setVal(g('f-t'), d.title); setVal(g('f-kr'), d.keyReason);
+    if (d.date) setVal(g('f-d'), d.date);
+    if (d.actualEnd !== undefined) setVal(g('f-ae'), d.actualEnd);
     form.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
     const got = Array.from(form.querySelectorAll('[aria-invalid="true"]')).map((el: W) => {
       if (el.tagName === 'FIELDSET') return (el.querySelector('input[type=radio]') || {}).name;

@@ -8,6 +8,11 @@ import { DataTable } from '../src/webparts/pmoPortal/components/DataTable';
 import { reportCard, riskCard, TableDefs } from '../src/webparts/pmoPortal/components/defs';
 import { makeT } from '../src/webparts/pmoPortal/i18n/i18n';
 import { T } from '../src/webparts/pmoPortal/i18n/strings';
+import { RiskForm } from '../src/webparts/pmoPortal/panels/RiskForm';
+import { ReportForm } from '../src/webparts/pmoPortal/panels/ReportForm';
+import { AssignForm } from '../src/webparts/pmoPortal/panels/AssignForm';
+import { ProjectForm } from '../src/webparts/pmoPortal/panels/ProjectForm';
+import { RefLink } from '../src/webparts/pmoPortal/panels/ProjectCard';
 
 // Компоненты приложения в jsdom: поведение, а не только «вызывается» (блок 2 отзывов раунда 3 и правки кросс-ревью)
 const tt = makeT(0);
@@ -119,4 +124,96 @@ test('«Відгуки»: номер отзыва (#N) — первая коло
   expect(src).toMatch(/defaults: \['num', 'date'/);
   expect(src).toMatch(/num: \{ label: t\('fbNum'\), cell: r => <button className="linklike" onClick=\{\(\) => open\(r\)\}>#\{r\.id\}<\/button>, sort: r => r\.id/);
   expect(T.fbNum || (require('../src/webparts/pmoPortal/i18n/strings') as any).EXTRA.fbNum).toEqual(['№', 'No.', '№']);
+});
+
+describe('#47 / #55 форма риска', () => {
+  const data = { projects: [{ id: 5, title: 'Проєкт П', status: 'Реалізація', canEdit: true, manager: { email: 'pm@x', name: 'PM' } }], risks: [], reports: [], comments: [], team: [] } as any;
+  test('тип — перед «Опис»; заголовок новой записи — по типу; кнопки — «ризик / проблема»', () => {
+    mount(<RiskForm data={data} projectId={5} riskId={0} onCancel={() => undefined} />);
+    const ty = root.querySelector('fieldset.ragpick') as HTMLElement, ta = root.querySelector('#k-title') as HTMLElement;
+    expect(ty.compareDocumentPosition(ta) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect((root.querySelector('label[for="k-title"]') as HTMLElement).textContent).toContain('Опис');
+    expect((root.querySelector('.ph h2') as HTMLElement).textContent).toBe('Новий ризик');
+    act(() => { Simulate.change(root.querySelector('input[name="k-type"][value="Проблема"]') as HTMLInputElement); });
+    expect((root.querySelector('.ph h2') as HTMLElement).textContent).toBe('Нова проблема');
+    expect(T.newRisk[0]).toBe('Новий ризик / проблема'); expect(T.addRisk[0]).toBe('Додати ризик / проблему');
+  });
+});
+
+describe('#54 форма отчёта: дата завершення (факт)', () => {
+  const data = { projects: [{ id: 5, title: 'Проєкт П', status: 'Реалізація', type: 'Звичайний', progress: 40, actualCost: 0, start: '2026-03-02', goLive: '', planEnd: '2026-12-01', forecastEnd: '',
+    canEdit: true, manager: { email: 'pm@x', name: 'PM' } }], risks: [], reports: [], comments: [], team: [] } as any;
+  const typeDate = (id: string, v: string): void => { act(() => { Simulate.change(root.querySelector('#' + id) as HTMLInputElement, { target: { value: v } } as any); }); };
+  test('поле только при «Скасовано» / «Завершено»; без даты и позже даты отчёта — ошибка у поля', () => {
+    mount(<ReportForm data={data} projectId={5} onCancel={() => undefined} />);
+    expect(root.querySelector('#f-ae')).toBeNull();
+    const st = root.querySelector('#f-st') as HTMLSelectElement;
+    act(() => { Simulate.change(st, { target: { value: 'Скасовано' } } as any); });
+    expect(root.querySelector('#f-ae')).not.toBeNull();
+    expect((root.querySelector('label[for="f-ae"]') as HTMLElement).textContent).toContain('Дата завершення (факт)');
+    act(() => { Simulate.submit(root.querySelector('form') as HTMLFormElement); });
+    expect((root.querySelector('#f-ae') as HTMLElement).getAttribute('aria-invalid')).toBe('true');
+    typeDate('f-ae', '05.10.2026');                 // позже даты отчёта (сегодня 04.10.2026)
+    act(() => { Simulate.submit(root.querySelector('form') as HTMLFormElement); });
+    expect(root.textContent).toContain('Не може бути пізніше дати звіту.');
+    act(() => { Simulate.change(st, { target: { value: 'Реалізація' } } as any); });
+    expect(root.querySelector('#f-ae')).toBeNull();
+    act(() => { Simulate.change(st, { target: { value: 'Завершено' } } as any); });
+    expect(root.querySelector('#f-ae')).not.toBeNull();
+  });
+});
+
+describe('#43 «Змінити PM / власника» — только PMO', () => {
+  const pr = { id: 5, code: 'PRJ-005', title: 'Проєкт П', status: 'Реалізація', canEdit: false, manager: { id: 1, email: 'pm@x', name: 'Старий PM' }, owner: null,
+    links: [], team: [], department: 'ІТ', priority: '', budget: 0, description: '' };
+  const data = (x: any = {}): any => ({ projects: [{ ...pr, ...x }], risks: [], reports: [], comments: [], team: [], canApprove: true });
+  const pick = async (id: string, who: string): Promise<void> => {
+    jest.useFakeTimers();
+    act(() => { Simulate.change(root.querySelector('#' + id) as HTMLInputElement, { target: { value: who } } as any); });
+    await act(async () => { jest.advanceTimersByTime(300); await Promise.resolve(); });
+    jest.useRealTimers();
+    const opt = root.querySelector('.picker-list .pop-row') as HTMLElement;
+    act(() => { Simulate.mouseDown(opt); });
+  };
+  test('ничего не выбрано — ошибка; без комментария — ошибка; иначе запись в «Призначення» папки проекта', async () => {
+    const calls: any[] = [];
+    const repo = { searchPeople: async () => [{ id: 0, email: 'New@x', name: 'Новий PM' }], fresh: async () => ({ project: pr, pending: [], assigns: 0 }),
+      createIn: async (...a: any[]) => { calls.push(a); return 9; } };
+    const c2 = { ...ctx, repo, reload: async () => undefined, toast() { /* */ }, openProject() { /* */ } };
+    act(() => { ReactDOM.render(<AppCtx.Provider value={c2}><AssignForm data={data()} projectId={5} onCancel={() => undefined} /></AppCtx.Provider>, root); });
+    const submit = async (): Promise<void> => { await act(async () => { Simulate.submit(root.querySelector('form') as HTMLFormElement); await Promise.resolve(); }); };
+    await submit(); expect(root.textContent).toContain('Оберіть нового PM або нового власника.');
+    await pick('a-pm', 'Нов');
+    await submit(); expect(root.textContent).toContain('Вкажіть причину зміни.');
+    act(() => { Simulate.change(root.querySelector('#a-note') as HTMLTextAreaElement, { target: { value: 'Ротація' } } as any); });
+    await submit(); await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    expect(calls.length).toBe(1);
+    expect(calls[0][0]).toBe('ProjectAssignments'); expect(calls[0][1]).toBe(5);
+    expect(calls[0][2]).toMatchObject({ paProjectId: 5, paNote: 'Ротація', paApplied: false });
+    expect(calls[0][3]).toEqual({ paManagerId: 'new@x', paOwnerId: '' });
+  });
+  test('не PMO, архив, уже ожидает — формы нет', () => {
+    for (const d of [{ ...data(), canApprove: false }, data({ status: 'Архівний' }), data({ assignPending: true })]) {
+      mount(<AssignForm data={d} projectId={5} onCancel={() => undefined} />);
+      expect(root.querySelector('form')).toBeNull();
+      ReactDOM.unmountComponentAtNode(root);
+    }
+  });
+  test('у PM в форме проекта PM и власник — только чтение', () => {
+    mount(<ProjectForm data={data({ canEdit: true })} project={{ ...pr, canEdit: true } as any} onCancel={() => undefined} />);
+    expect((root.querySelector('#f-pm') as HTMLElement).tagName).toBe('DIV');
+    expect((root.querySelector('#f-pm') as HTMLElement).textContent).toBe('Старий PM');
+    expect(root.querySelector('#f-own input')).toBeNull();
+    expect(root.textContent).toContain('PM і власника змінює лише PMO.');
+  });
+});
+
+test('#46 / #48: ссылка из истории открывает отчёт или риск', () => {
+  const opened: string[] = [];
+  const c2 = { ...ctx, openForm: (f: string, id: number) => opened.push(`${f}@${id}`) };
+  act(() => { ReactDOM.render(<AppCtx.Provider value={c2}><RefLink r={{ type: 'report', id: 12 }} pid={5} /><RefLink r={{ type: 'risk', id: 7 }} pid={5} /></AppCtx.Provider>, root); });
+  const b = root.querySelectorAll('.chg-ref');
+  expect(Array.from(b).map(x => x.textContent)).toEqual(['Відкрити звіт →', 'Відкрити ризик →']);
+  act(() => { (b[0] as HTMLElement).click(); (b[1] as HTMLElement).click(); });
+  expect(opened).toEqual(['rep:12@5', 'risk:7@5']);
 });

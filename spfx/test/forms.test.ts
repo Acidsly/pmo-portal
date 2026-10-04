@@ -63,7 +63,7 @@ describe('#27: уникальное название проекта', () => {
 });
 
 // раунд 3: #40 все ошибки сразу, #52 «Завершено» — 100 %, #53 % 0–100 без молчаливой замены, #54 даты не раньше старта
-import { datesBeforeStart, parseProgress, progressLocked, reportErrors, formErrorText } from '../src/webparts/pmoPortal/logic/forms';
+import { datesBeforeStart, parseProgress, progressLocked, reportErrors, formErrorText, reportToSave } from '../src/webparts/pmoPortal/logic/forms';
 test('#54: запуск, план и прогноз не раньше старта; пустые не проверяются', () => {
   expect(datesBeforeStart({ start: '2026-03-02', goLive: '2026-01-01', planEnd: '2026-01-01', forecastEnd: '2022-01-01' })).toEqual(['goLive', 'planEnd', 'forecastEnd']);
   expect(datesBeforeStart({ start: '2026-03-02', goLive: '2026-03-02', planEnd: '', forecastEnd: '2026-12-01' })).toEqual([]);
@@ -83,7 +83,18 @@ test('#40: все незаполненные поля сразу и общее �
   const ok = { ...d, schedule: 'Зелений' as const, budget: 'Зелений' as const, resources: 'Зелений' as const, title: 'Т', keyReason: 'Пауза' };
   expect(formErrorText(reportErrors(ok, p, '40'))).toBe('errBeforeStart');
   expect(reportErrors({ ...ok, planEnd: '2026-12-01' }, p, '40')).toEqual([]);
-  expect(reportErrors({ ...ok, planEnd: '2026-12-01', status: 'Завершено' }, p, '500')).toEqual([]);   // при «Завершено» поле закрыто (100)
+  // при «Завершено» поле % закрыто (100); #54 — нужна фактическая дата
+  expect(reportErrors({ ...ok, planEnd: '2026-12-01', status: 'Завершено', actualEnd: '2026-10-01' }, p, '500')).toEqual([]);
+  expect(reportErrors({ ...ok, planEnd: '2026-12-01', status: 'Завершено' }, p, '500').map(x => x.f)).toEqual(['actualEnd']);
+});
+test('#54: фактическая дата записывается только при «Завершено» / «Скасовано»', () => {
+  const { reportBody } = require('../src/webparts/pmoPortal/data/write');
+  const p = { id: 1, status: 'Реалізація', type: 'Звичайний', progress: 40, actualCost: 0, start: '2026-03-02', goLive: '', planEnd: '2026-12-01', forecastEnd: '' } as any;
+  const d = { ...reportFromProject(p, '2026-10-04'), actualEnd: '2026-10-01' };
+  expect(reportToSave({ ...d, status: 'Реалізація' }).actualEnd).toBe('');
+  expect(reportBody(reportToSave({ ...d, status: 'Реалізація' }), p).srActualEnd).toBeUndefined();
+  expect(reportBody(reportToSave({ ...d, status: 'Скасовано' }), p).srActualEnd).toBe('2026-10-01T12:00:00Z');
+  expect(reportBody(reportToSave({ ...d, status: 'Завершено' }), p).srActualEnd).toBe('2026-10-01T12:00:00Z');
 });
 test('#54: даты проверяются только у нового проекта — правка карточки со старыми датами сохраняется', () => {
   const m = { id: 1, name: 'M', email: 'm@x.ua' };

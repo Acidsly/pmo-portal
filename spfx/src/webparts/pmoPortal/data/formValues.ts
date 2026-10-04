@@ -7,12 +7,13 @@ type Kind = 'lookup' | 'user' | 'date' | 'number' | 'bool';
 
 /** Типы полей тел записи (write.ts) по спискам; остальное — текст и выбор. Ключи — как в теле JSON (lookup и пользователь с «Id»). */
 const SCHEMA: Record<string, Record<string, Kind>> = {
-  StatusReports: { srProjectId: 'lookup', srDate: 'date', srStart: 'date', srGoLive: 'date', srPlanEnd: 'date', srForecastEnd: 'date',
-    srProgress: 'number', srActualCost: 'number', srDecision: 'bool', srApplied: 'bool' },
+  StatusReports: { srProjectId: 'lookup', srDate: 'date', srStart: 'date', srGoLive: 'date', srPlanEnd: 'date', srForecastEnd: 'date', srActualEnd: 'date',
+    srProgress: 'number', srActualCost: 'number', srBasedOn: 'number', srDecision: 'bool', srApplied: 'bool' },
   RisksIssues: { riProjectId: 'lookup', riOwnerId: 'user', riDue: 'date', riProbability: 'number', riImpact: 'number' },
   ProjectTeam: { tmProjectId: 'lookup', tmUserId: 'user' },
   ProjectComments: { cmProjectId: 'lookup' },
-  ReportApprovals: { apReportId: 'lookup', apProjectId: 'lookup' }
+  ReportApprovals: { apReportId: 'lookup', apProjectId: 'lookup' },
+  ProjectAssignments: { paProjectId: 'lookup', paManagerId: 'user', paOwnerId: 'user', paApplied: 'bool' }
 };
 
 /** «2026-09-30» или «2026-09-30T12:00:00Z» → «30.09.2026» по порядку и разделителю сайта; пусто — ''. */

@@ -22,6 +22,7 @@ import { Help } from '../panels/Help';
 import { Overview } from '../panels/Overview';
 import { Feedback } from '../pages/Feedback';
 import { FeedbackView } from '../panels/FeedbackView';
+import { AssignForm } from '../panels/AssignForm';
 import { RiskForm } from '../panels/RiskForm';
 import { ReportView } from '../panels/ReportView';
 import { Toast, useToast } from './Toast';
@@ -84,6 +85,7 @@ export const App: React.FC<AppProps> = p => {
   else if (data && route.form.indexOf('report-from:') === 0) panelEl = <ReportForm key={route.form} data={data} projectId={route.projectId} fromId={Number(route.form.slice(12)) || 0} onCancel={project ? back : close} />;
   else if (data && route.form.indexOf('rep:') === 0) { const id = Number(route.form.slice(4)); panelEl = <ReportView key={id} data={data} report={data.reports.filter(r => r.id === id)[0]} onCancel={project ? back : close} />; }
   else if (data && (route.form === 'project' || route.form === 'edit')) panelEl = <ProjectForm data={data} project={route.form === 'edit' ? project : undefined} onCancel={project ? back : close} />;
+  else if (data && route.form === 'assign') panelEl = <AssignForm data={data} projectId={route.projectId} onCancel={project ? back : close} />;
   else if (data && route.form.indexOf('risk:') === 0) panelEl = <RiskForm data={data} projectId={route.projectId} riskId={Number(route.form.slice(5)) || 0} onCancel={project ? back : close} />;
   else if (data && project) panelEl = <ProjectCard project={project} data={data} repo={p.repo} onClose={close} />;
   const pageEl = !data ? null

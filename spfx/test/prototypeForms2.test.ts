@@ -60,3 +60,126 @@ test('#32: «Ризики архівних проєктів» — непусто
   const active = Array.from(w.document.querySelectorAll('[data-act="openp"]')).map((x: W) => x.textContent.trim());
   projArch.forEach((t: string) => expect(active).not.toContain(t));
 });
+
+test('#47 / #55: форма риска — тип перед «Опис», заголовок по типу, кнопка «Новий ризик / проблема»', () => {
+  q('[data-act="nav"][data-page="risks"]').click();
+  const b = q('[data-act="newrisk"]'); expect(b.textContent).toContain('Новий ризик / проблема');
+  b.click();
+  const f = q('#kform'), ty = f.querySelector('fieldset.ragpick'), ta = f.querySelector('#k-title');
+  expect(ty.compareDocumentPosition(ta) & w.Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(f.querySelector('label[for="k-title"]').textContent).toContain('Опис');
+  expect(q('#panel .ph h2, .ph h2').textContent).toBe('Новий ризик');
+  const r = f.querySelector('input[name="k-type"][value="Проблема"]'); r.checked = true; ev(r, 'change');
+  expect(q('.ph h2').textContent).toBe('Нова проблема');
+});
+
+test('#54: «Скасовано» с фактической датой → погодження PMO → дата в карточке и в архиве', () => {
+  // PM (Юрій) подаёт отчёт «Скасовано» из общей формы
+  q('[data-act="nav"][data-page="reports"]').click();
+  q('[data-act="newrep"]:not([data-id])').click();
+  const f = q('#repform'); const g = (id: string): W => f.querySelector('#' + id);
+  const pid = g('f-p').value;
+  const set = (id: string, v: string): void => { g(id).value = v; ev(g(id), 'input'); ev(g(id), 'change'); };
+  ['sched', 'budget', 'res'].forEach(n => { f.querySelector(`input[name="${n}"][value="Червоний"]`).checked = true; });
+  set('f-st', 'Скасовано');
+  expect(q('#f-ae-wrap').hidden).toBe(false);
+  const start = g('f-start').value || '2000-01-01';
+  set('f-d', '2026-10-01'); set('f-t', 'Скасовано'); set('f-kr', 'Рішення PMO');
+  set('f-ae', start > '2026-09-15' ? start : '2026-09-15');
+  const ae = g('f-ae').value;
+  f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+  expect(q('#repform')).toBeNull();
+  // PMO погоджує
+  asPmo();
+  q('[data-act="nav"][data-page="projects"]').click();
+  q(`[data-act="openp"][data-id="${pid}"]`).click();
+  const open = q(`.apnote [data-act="repopen"][data-id="${pid}"]`);
+  expect(open).not.toBeNull(); open.click();
+  q('#apform').dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+  // карточка: «Дата завершення (факт)»; архив — колонка
+  q(`[data-act="nav"][data-page="archive"]`).click();
+  const [y, m, d] = ae.split('-');
+  expect(w.document.querySelector('main, #main, body').textContent).toContain(`${d}.${m}.${y}`);
+  q(`[data-act="openp"][data-id="${pid}"]`).click();
+  const kv = Array.from(w.document.querySelectorAll('#panel .kv, .kv')).map((x: W) => x.textContent).filter((x: string) => x.indexOf('Дата завершення (факт)') === 0);
+  expect(kv[0]).toContain(`${d}.${m}.${y}`);
+});
+
+describe('#43 смена PM / власника — только PMO', () => {
+  const card = (id: number): void => { q('[data-act="nav"][data-page="projects"]').click(); q(`[data-act="openp"][data-id="${id}"]`).click(); };
+  test('PM: кнопки нет, в форме проекта PM и власник — только чтение', () => {
+    card(1);                                                     // PRJ-001: PM — Юрій (текущий пользователь)
+    expect(q('[data-act="assign"]')).toBeNull();
+    q('[data-act="editproj"][data-id="1"]').click();
+    expect(q('#pform select#p-pm')).toBeNull();
+    expect(q('#p-pm-fixed').textContent).toBe('Юрій');
+    expect(q('#pform').textContent).toContain('PM і власника змінює лише PMO.');
+  });
+  test('PMO: без выбора и без причины — ошибки; затем новый PM в карточке и «Призначення» в истории', () => {
+    asPmo(); card(1);
+    q('[data-act="assign"][data-id="1"]').click();
+    const f = q('#aform'); const submit = (): void => { f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true })); };
+    submit(); expect(err(f)).toBe('Оберіть нового PM або нового власника.');
+    const pm = f.querySelector('#a-pm'); pm.value = 'Андрій Мельник'; ev(pm, 'change');
+    submit(); expect(err(f)).toBe('Вкажіть причину зміни.');
+    f.querySelector('#a-note').value = 'Ротація PM'; submit();
+    expect(q('#aform')).toBeNull();
+    const txt = q('#panel, .panel, body').textContent;
+    expect(txt).toContain('Андрій Мельник');
+    q('[data-act="togglech"]') && q('[data-act="togglech"]').click();
+    expect(w.document.body.textContent).toContain('Призначення');
+    expect(w.document.body.textContent).toContain('Ротація PM');
+  });
+  test('PMO: архивный проект — кнопки нет', () => {
+    asPmo();
+    q('[data-act="nav"][data-page="archive"]').click();
+    const a = q('[data-act="openp"]'); expect(a).not.toBeNull(); a.click();
+    expect(q('[data-act="assign"]')).toBeNull();
+  });
+});
+
+describe('#46 / #48 события отчётов и рисков в истории', () => {
+  const asUser = (n: string): void => { const b = w.document.createElement('button'); b.dataset.act = 'asuser'; b.dataset.n = n; w.document.body.appendChild(b); b.click(); b.remove(); };
+  const card = (id: number): void => { q('[data-act="nav"][data-page="projects"]').click(); q(`[data-act="openp"][data-id="${id}"]`).click(); };
+  const history = (): string => { const b = q('[data-act="togglech"]'); if (b && /\(/.test(b.textContent)) b.click(); return (q('#panel') || w.document.body).textContent; };
+  const fillReport = (f: W, title: string): void => {
+    ['sched', 'budget', 'res'].forEach(n => { const r = f.querySelector(`input[name="${n}"][value="Зелений"]`); r.checked = true; ev(r, 'change'); });
+    const t = f.querySelector('#f-t'); t.value = title; ev(t, 'input');
+    const kr = f.querySelector('#f-kr'); if (kr) { kr.value = 'Причина'; ev(kr, 'input'); }
+    f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+  };
+  test('#46 «Новий звіт на основі повернутого» — событие со ссылкой на отчёт', () => {
+    asUser('Ірина Бондаренко'); card(3);
+    q('[data-act="newfromret"][data-id="3"]').click();
+    fillReport(q('#repform'), 'Виправлений звіт');
+    expect(q('#repform')).toBeNull();
+    card(3);
+    const h = history();
+    expect(h).toContain('Подання звіту');
+    expect(h).toMatch(/Новий звіт на основі повернутого від \d\d\.\d\d\.\d{4} · Виправлений звіт/);
+    const link = Array.from(w.document.querySelectorAll('.chg-ref[data-act="repopen"]'))[0] as W;
+    expect(link).toBeDefined(); link.click();
+    expect(q('#panel .ph h2, .ph h2').textContent).toBe('Виправлений звіт');
+  });
+  test('#48 риск: «Додано», затем «Закрито» с изменением оценки; ссылка открывает риск', () => {
+    card(1);
+    q('[data-act="newrisk"][data-id="1"]').click();
+    let f = q('#kform');
+    f.querySelector('#k-title').value = 'Новий ризик історії'; ev(f.querySelector('#k-title'), 'input');
+    f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    card(1);
+    expect(history()).toContain('Додано: Новий ризик історії');
+    const open = Array.from(w.document.querySelectorAll('.chg-ref[data-act="riskopen"]'))[0] as W;
+    expect(open).toBeDefined(); open.click();
+    f = q('#kform');
+    expect(f.querySelector('#k-title').value).toBe('Новий ризик історії');
+    const st = f.querySelector('#k-status'); st.value = 'Закрито'; ev(st, 'change');
+    const pr = f.querySelector('input[name="k-pr"][value="5"]'); pr.checked = true; ev(pr, 'change');
+    f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    card(1);
+    const h = history();
+    expect(h).toContain('Закрито: Новий ризик історії');
+    expect(h).toMatch(/Ймовірність\s*3\s*→\s*5/);
+    expect(h).toMatch(/Оцінка\s*9\s*→\s*15/);
+  });
+});

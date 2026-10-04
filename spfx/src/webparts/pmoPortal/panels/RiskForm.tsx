@@ -64,7 +64,7 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
   if (!p) return <><div className="ph"><div><h2>{t('newRisk')}</h2></div><button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     <p className="note lock">🔒 {t('noEdit')}</p></>;
   return <>
-    <div className="ph"><div><div className="k">{t('listLabel')} «{t('navRisks')}»</div><h2>{k ? t('riskCard') : t('newRisk')}</h2></div>
+    <div className="ph"><div><div className="k">{t('listLabel')} «{t('navRisks')}»</div><h2>{k ? t('riskCard') : d.type === 'Проблема' ? t('newIssueT') : t('newRiskT')}</h2></div>
       <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     {edit ? null : <p className="note lock">🔒 {t('readOnly')}</p>}
     <form onSubmit={save} noValidate={true}>
@@ -72,8 +72,9 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
         {fixedId ? <div className="fixed">{p.title}</div>
           : <select id="k-p" value={pid} onChange={e => { const np = Number(e.target.value); setPid(np); const pr = data.projects.filter(x => x.id === np)[0]; set({ projectId: np, owner: pr ? pr.manager : null }); }}>
             {pool.map(x => <option key={x.id} value={x.id}>{x.title}</option>)}</select>}</Frow>
-      <Frow label={fl('kTitle')} htmlFor="k-title" req={true}><textarea id="k-title" disabled={!edit} value={d.title} onChange={e => set({ title: e.target.value })} /></Frow>
+      {/* #47 / #55: сначала тип, потом «Опис»; заголовок новой записи — по типу */}
       <fieldset className="ragpick"><legend>{fl('kType')}</legend><SegPick name="k-type" options={TYPES} value={d.type} disabled={!edit} onChange={v => set({ type: v })} /></fieldset>
+      <Frow label={fl('kDesc')} htmlFor="k-title" req={true}><textarea id="k-title" disabled={!edit} value={d.title} onChange={e => set({ title: e.target.value })} /></Frow>
       <div className="scorecalc">
         <div className="frow"><span className="lbl-t">{t('cProb')}</span><Scale name="k-pr" value={d.probability} desc={t('p' + d.probability)} disabled={!edit} onChange={v => set({ probability: v })} /></div>
         <div className="frow"><span className="lbl-t">{t('cImp')}</span><Scale name="k-im" value={d.impact} desc={t('i' + d.impact)} disabled={!edit} onChange={v => set({ impact: v })} /></div>

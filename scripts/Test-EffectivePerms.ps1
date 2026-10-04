@@ -35,7 +35,7 @@ function Get-Bits([string]$url) {
 }
 $fmt = { param($b) "{0}{1}{2}" -f $(if ($b.add) { "A" } else { "-" }), $(if ($b.edit) { "E" } else { "-" }), $(if ($b.del) { "D" } else { "-" }) }
 $projects = @(Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "ID", "pmCode", "pmStatus", "pmManager")
-$lists = @("Lists/StatusReports", "Lists/RisksIssues", "Lists/ProjectComments", "Lists/ProjectTeam", "Lists/ReportApprovals", "Lists/ProjectState")
+$lists = @("Lists/StatusReports", "Lists/RisksIssues", "Lists/ProjectComments", "Lists/ProjectTeam", "Lists/ReportApprovals", "Lists/ProjectAssignments", "Lists/ProjectState")
 Write-Host "Права $($user.Title) ($Email): A — додавати, E — змінювати, D — видаляти" -ForegroundColor Cyan
 foreach ($l in $lists) {
     $lst = Get-PnPList -Identity $l

@@ -296,6 +296,10 @@ fieldset[aria-invalid=true]{padding:4px 6px}
 .chg-key{background:var(--theme-soft);color:var(--theme)}
 .chg-create{background:color-mix(in srgb,var(--g) 18%,transparent);color:var(--text)}
 .chg-approval{background:color-mix(in srgb,var(--y) 22%,transparent);color:var(--text)}
+.chg-assign{background:color-mix(in srgb,var(--theme) 16%,transparent);color:var(--text)}
+.chg-submit{background:color-mix(in srgb,var(--theme) 10%,transparent);color:var(--text)}
+.chg-risk{background:color-mix(in srgb,var(--r) 14%,transparent);color:var(--text)}
+.chg-ref{margin-top:4px}
 .rep-open{cursor:pointer;transition:background-color .15s}
 .rep-open:hover{background:var(--track)}
 .rep-open:focus-visible{outline:3px solid var(--theme-soft)}
@@ -693,6 +697,8 @@ const T = {
  errReqAll:['Заповніть усі обов\'язкові поля, позначені *.','Fill in all required fields marked *.','Заполните все обязательные поля, отмеченные *.'],
  errProgress:['Введіть ціле число від 0 до 100.','Enter a whole number from 0 to 100.','Введите целое число от 0 до 100.'],
  errBeforeStart:['Не може бути раніше дати старту.','Cannot be earlier than the start date.','Не может быть раньше даты старта.'],
+ errAfterReport:['Не може бути пізніше дати звіту.','Cannot be later than the report date.','Не может быть позже даты отчёта.'],
+ aeHint:['Коли проєкт фактично завершено або скасовано.','When the project was actually completed or cancelled.','Когда проект фактически завершён или отменён.'],
  errDatesOrder:['Дати запуску й завершення не можуть бути раніше дати старту.','Launch and end dates cannot be earlier than the start date.','Даты запуска и завершения не могут быть раньше даты старта.'],
  repPendingOpt:['звіт від {date} на погодженні','report of {date} awaiting approval','отчёт от {date} на согласовании'],
  progressDone:['Проєкт завершується — 100 %.','The project is being completed — 100%.','Проект завершается — 100 %.'],
@@ -714,7 +720,17 @@ const T = {
  notSet:['— не вказано —','— not set —','— не указано —'],
  accessRecalc:['Після зміни учасників права доступу буде перераховано.','Access will be recalculated after participants change.','После смены участников права доступа будут пересчитаны.'],
  kCreate:['Проєкт створено','Project created','Проект создан'], kKey:['Зміна ключових показників','Key indicators changed','Изменение ключевых показателей'],
- kEdit:['Редагування картки','Card edited','Редактирование карточки'], kReport:['Оновлено статус-звітом','Updated by status report','Обновлено статус-отчётом'],
+ kEdit:['Редагування картки','Card edited','Редактирование карточки'], kAssign:['Призначення','Assignment','Назначение'],
+ kSubmit:['Подання звіту','Report submitted','Подача отчёта'], kRiskEv:['Ризик / проблема','Risk / issue','Риск / проблема'], openRisk:['Відкрити ризик','Open risk','Открыть риск'],
+ assignBtn:['Змінити PM / власника','Change PM / owner','Сменить PM / владельца'], assignTitle:['Зміна PM / власника','Change of PM / owner','Смена PM / владельца'],
+ assignHint:['Після створення проєкту PM і власника змінює лише PMO. Порожнє поле — без змін.','After the project is created, only the PMO changes the PM and the owner. An empty field means no change.','После создания проекта PM и владельца меняет только PMO. Пустое поле — без изменений.'],
+ assignNewPm:['Новий PM','New PM','Новый PM'], assignNewOwner:['Новий власник','New owner','Новый владелец'], assignNote:['Коментар (причина)','Comment (reason)','Комментарий (причина)'],
+ errAssignSame:['Оберіть нового PM або нового власника.','Choose a new PM or a new owner.','Выберите нового PM или нового владельца.'],
+ errAssignNote:['Вкажіть причину зміни.','Enter the reason for the change.','Укажите причину изменения.'],
+ savedAssign:['Зміну збережено — картка оновиться після синхронізації.','Change saved — the card updates after synchronization.','Изменение сохранено — карточка обновится после синхронизации.'],
+ assignPendingNote:['Зміна PM / власника очікує обробки синхронізацією.','The PM / owner change is waiting for synchronization.','Смена PM / владельца ожидает обработки синхронизацией.'],
+ gAssignPending:['Зміна PM / власника вже очікує обробки — дочекайтеся синхронізації.','A PM / owner change is already waiting — wait for synchronization.','Смена PM / владельца уже ожидает обработки — дождитесь синхронизации.'],
+ pmOnlyPmo:['PM і власника змінює лише PMO.','Only the PMO changes the PM and the owner.','PM и владельца меняет только PMO.'], kReport:['Оновлено статус-звітом','Updated by status report','Обновлено статус-отчётом'],
  loading:['Завантаження даних зі списків…','Loading data from lists…','Загрузка данных из списков…'],
  emptyDb:['Список «Проєкти» порожній. Створіть перший проєкт або завантажте демо-дані.','The Projects list is empty. Create the first project or load demo data.','Список «Проекты» пуст. Создайте первый проект или загрузите демо-данные.'],
  seed:['Завантажити демо-дані','Load demo data','Загрузить демо-данные'], seeding:['Завантаження…','Loading…','Загрузка…'],
@@ -758,12 +774,13 @@ const T = {
  sc0:['Високий (15+)','High (15+)','Высокий (15+)'], sc1:['Середній (8–14)','Medium (8–14)','Средний (8–14)'], sc2:['Низький (до 8)','Low (under 8)','Низкий (до 8)'],
  overdue:['прострочено','overdue','просрочено'],
  cCode:['Код','Code','Код'], cOwner:['Власник','Owner','Собственник'], cGolive:['Запуск','Go-live','Запуск'], cPlan:['Завершення (план)','Completion (plan)','Завершение (план)'],
- cFc:['Прогноз','Forecast','Прогноз'], cDev:['Відхилення, дн.','Deviation, days','Отклонение, дн.'], cBudgetP:['Бюджет','Budget','Бюджет'], cActual:['Факт','Actual','Факт'],
+ cFc:['Прогноз','Forecast','Прогноз'], cAe:['Завершено (факт)','Completed (actual)','Завершён (факт)'], cDev:['Відхилення, дн.','Deviation, days','Отклонение, дн.'], cBudgetP:['Бюджет','Budget','Бюджет'], cActual:['Факт','Actual','Факт'],
  cUse:['Освоєння','Used','Освоение'], cRepAge:['Днів від звіту','Days since report','Дней с отчёта'], cCmtBy:['Автор коментаря','Comment author','Автор комментария'],
  cPeriod:['Період','Period','Период'], cDone:['Зроблено','Done','Сделано'], cNextP:['План','Plan','План'], cIssues:['Проблеми','Issues','Проблемы'],
  cStatusR:['Статус у звіті','Status in report','Статус в отчёте'], cDecFlag:['Рішення','Decision','Решение'], cDecText:['Яке рішення','Decision needed','Какое решение'],
  cProb:['Ймовірність','Probability','Вероятность'], cImp:['Вплив','Impact','Влияние'], cStart2:['Старт','Start','Старт'],
- newRisk:['Новий ризик','New risk','Новый риск'], addRisk:['Додати ризик','Add risk','Добавить риск'], riskCard:['Ризик / проблема','Risk / issue','Риск / проблема'],
+ newRisk:['Новий ризик / проблема','New risk / issue','Новый риск / проблема'], addRisk:['Додати ризик / проблему','Add risk / issue','Добавить риск / проблему'],
+ newRiskT:['Новий ризик','New risk','Новый риск'], newIssueT:['Нова проблема','New issue','Новая проблема'], riskCard:['Ризик / проблема','Risk / issue','Риск / проблема'],
  riskHow:['Оцінка = ймовірність × вплив, кожне від 1 до 5. 15–25 — високий (червоний), 8–14 — середній (жовтий), 1–7 — низький (зелений).',
    'Score = probability × impact, each from 1 to 5. 15–25 high (red), 8–14 medium (yellow), 1–7 low (green).',
    'Оценка = вероятность × влияние, каждое от 1 до 5. 15–25 — высокий (красный), 8–14 — средний (жёлтый), 1–7 — низкий (зелёный).'],
@@ -853,7 +870,7 @@ const FLD = {
  dept:['Напрям','Area','Направление'], status:['Статус проєкту','Project status','Статус проекта'], prio:['Пріоритет','Priority','Приоритет'],
  rag:['Загальний стан','Overall health','Общее состояние'], progress:['% виконання','% complete','% выполнения'],
  start:['Дата старту','Start date','Дата старта'], golive:['Дата запуску (продакшн)','Go-live date (production)','Дата запуска (продакшн)'],
- plan:['Дата завершення (план)','Planned completion','Дата завершения (план)'], fc:['Прогноз завершення','Forecast completion','Прогноз завершения'],
+ plan:['Дата завершення (план)','Planned completion','Дата завершения (план)'], fc:['Прогноз завершення','Forecast completion','Прогноз завершения'], ae:['Дата завершення (факт)','Actual completion date','Дата завершения (факт)'],
  budget:['Бюджет (план)','Budget (plan)','Бюджет (план)'], actual:['Витрати (факт)','Actual cost','Затраты (факт)'], use:['Освоєння бюджету, %','Budget used, %','Освоение бюджета, %'],
  last:['Останній статус-звіт','Last status report','Последний статус-отчёт'], lastReport:['Останній апдейт','Latest update','Последний апдейт'],
  comments:['Коментарі','Comments','Комментарии'], desc:['Мета та опис','Goal and description','Цель и описание'],
@@ -864,7 +881,7 @@ const FLD = {
  rDec:['Потрібне рішення керівництва','Management decision needed','Требуется решение руководства'], rDecText:['Яке рішення потрібне','Decision required','Какое решение нужно'],
  rAuthor:['Автор','Created by','Автор'],
  apStatus:['Погодження','Approval','Согласование'], apNote:['Коментар PMO','PMO comment','Комментарий PMO'],
- kTitle:['Ризик / проблема','Risk / issue','Риск / проблема'], kType:['Тип','Type','Тип'], kStrategy:['Стратегія реагування','Response strategy','Стратегия реагирования'], kContingency:['План дій у разі настання','Contingency plan','План действий при наступлении'], kScore:['Оцінка','Score','Оценка'], kPI:['Ймов. × вплив','Prob. × impact','Вер. × влияние'],
+ kTitle:['Ризик / проблема','Risk / issue','Риск / проблема'], kDesc:['Опис','Description','Описание'], kProb:['Ймовірність','Probability','Вероятность'], kImp:['Вплив','Impact','Влияние'], kNew:['Додано','Added','Добавлено'], kType:['Тип','Type','Тип'], kStrategy:['Стратегія реагування','Response strategy','Стратегия реагирования'], kContingency:['План дій у разі настання','Contingency plan','План действий при наступлении'], kScore:['Оцінка','Score','Оценка'], kPI:['Ймов. × вплив','Prob. × impact','Вер. × влияние'],
  kOwner:['Власник ризику','Risk owner','Владелец риска'], kStatus:['Статус','Status','Статус'], kDue:['Термін виконання заходів','Mitigation due date','Срок выполнения мер']
 };
 const t = k => (T[k] || [k,k,k])[LI];
@@ -1099,7 +1116,7 @@ const cmtHtml = p => { const c = (p.comments || [])[p.comments.length - 1]; retu
 const valFmt = (f, v) => {
   if (Array.isArray(v)) return v.length ? esc(v.join(', ')) : '<span class="muted">—</span>';
   if (v === '' || v == null) return '<span class="muted">—</span>';
-  if (['start','golive','plan','fc'].includes(f)) return fmt(D(v));
+  if (['start','golive','plan','fc','ae'].includes(f)) return fmt(D(v));
   if (f === 'budget') return money(+v);
   if (f === 'progress') return v + '%';
   if (f === 'rag' || f === 'rSched' || f === 'rBudget' || f === 'rRes') return ragHtml(v);
@@ -1313,7 +1330,8 @@ const PDEF = {
   cmtBy:{l:() => t('cCmtBy'), main:p => { const c = lastCm(p); return c ? person(c.who) : '<span class="muted">—</span>'; }, sort:p => { const c = lastCm(p); return c ? c.who : ''; }, filter:p => { const c = lastCm(p); return c ? c.who : ''; }},
   dept:{l:() => fl('dept'), main:p => esc(tv(p.dept)), sort:p => p.dept, filter:p => p.dept},
   loop:{l:() => fl('links'), main:linksHtml},
-  archived:{l:() => t('archivedAt'), main:p => dateCell(p.archivedAt), sort:p => p.archivedAt || ''}
+  archived:{l:() => t('archivedAt'), main:p => dateCell(p.archivedAt), sort:p => p.archivedAt || ''},
+  ae:{l:() => t('cAe'), main:p => dateCell(p.ae), sort:p => p.ae || ''}
 };
 const RP = r => pById(r.pid);
 const RDEF = {
@@ -1354,7 +1372,7 @@ const KDEF = {
   due:{l:() => fl('kDue'), main:k => { const d = D(k.due); return d < TODAY && k.status !== 'Закрито' ? `<span class="late">${fmt(d)}</span>` : fmt(d); }, sort:k => k.due}
 };
 TDEFS.projects = PDEF; TDEFAULTS.projects = ['strat','prio','title','pm','status','rag','repDate','progress','plan','update'];
-TDEFS.archive = PDEF; TDEFAULTS.archive = ['strat','prio','title','pm','owner','archived','plan','budget','actual'];
+TDEFS.archive = PDEF; TDEFAULTS.archive = ['strat','prio','title','pm','owner','archived','ae','plan','budget','actual'];
 TDEFS.reports = RDEF; TDEFAULTS.reports = ['strat','prio','proj','date','rag','sched','budget','res','title','approval','author','decision'];
 TDEFS.risks = KDEF; TDEFAULTS.risks = ['strat','prio','proj','title','type','score','owner','status','due'];
 
@@ -1691,11 +1709,12 @@ function accessList(p){
 function changesHtml(p, showAll){
   const list = (p.changes || []).slice().sort((a, b) => D(b.date) - D(a.date));
   if (!list.length) return `<p class="empty">${t('noChanges')}</p>`;
-  const kindL = {create:'kCreate', key:'kKey', edit:'kEdit', report:'kReport', approval:'kApproval'};
+  const kindL = {create:'kCreate', key:'kKey', edit:'kEdit', report:'kReport', approval:'kApproval', assign:'kAssign', submit:'kSubmit', risk:'kRiskEv'};
   const item = c => `<div class="chg">
     <div class="chg-h">${avatar(c.who, 'sm')}<b>${esc(c.who)}</b><span class="muted">${fmtDT(D(c.date))}</span><span class="chg-k chg-${c.kind}">${t(kindL[c.kind] || 'kEdit')}</span></div>
     ${c.diffs && c.diffs.length ? `<div class="diffs">${c.diffs.map(d => `<div class="diff"><span class="df">${fl(d.f)}</span><span class="dv"><s>${valFmt(d.f, d.from)}</s><span class="arr">→</span>${valFmt(d.f, d.to)}</span></div>`).join('')}</div>` : ''}
-    ${c.reason ? `<div class="chg-r">${esc(c.reason)}</div>` : ''}</div>`;
+    ${c.reason ? `<div class="chg-r">${esc(c.reason)}</div>` : ''}
+    ${c.ref ? `<button class="link chg-ref" data-act="${c.ref.type === 'report' ? 'repopen' : 'riskopen'}" data-id="${p.id}" data-rid="${esc(c.ref.id)}">${t(c.ref.type === 'report' ? 'openReport' : 'openRisk')} →</button>` : ''}</div>`;
   const shown = showAll ? list : list.slice(0, 3);
   return `<div class="cmts">${shown.map(item).join('')}${list.length > 3 ? `<button class="more" data-act="togglech">${showAll ? t('hideHistory') : t('showHistory') + ` (${list.length})`}</button>` : ''}</div>`;
 }
@@ -1735,7 +1754,7 @@ function projectPanel(id, showCm, keep, showCh){
   openPanel(`<div class="ph"><div><div class="k">${esc(p.code)} · ${t('listLabel')} «${t('navProjects')}»</div><h2>${esc(p.title)}</h2></div>${closeBtn()}</div>
     <div class="badges">${typeHtml(p.type)}${ragHtml(p.rag)}${statusPill(p.status)}<span class="badge">${esc(tv(p.prio))}</span></div>
     ${(p.links || []).length ? `<div class="lnk-sec"><div class="k">${fl('links')}</div>${linksHtml(p)}</div>` : ''}
-    ${actions}${onePend}
+    ${actions}${onePend}${isPMO() && !isArch(p) ? `<div class="actbar"><button class="btn" data-act="assign" data-id="${p.id}">${t('assignBtn')}</button></div>` : ''}
     ${apNotes ? `<div style="margin-top:14px">${apNotes}</div>` : ''}
     ${p.desc ? `<p class="desc">${esc(p.desc)}</p>` : ''}
     <div class="sec"><h3>${t('secPeople')}</h3>
@@ -1745,7 +1764,7 @@ function projectPanel(id, showCm, keep, showCh){
       ? `<div class="tablewrap"><table class="team"><thead><tr><th>${fl('tmPerson')}</th><th>${fl('tmRole')}</th><th>${fl('tmTopics')}</th></tr></thead><tbody>${p.team.map(m => `<tr><td>${person(m.n, roleOf(m.n))}</td><td class="wrap">${esc(m.role)}</td><td class="wrap">${m.topics ? esc(m.topics) : '<span class="muted">—</span>'}</td></tr>`).join('')}</tbody></table></div>`
       : `<p class="muted">${t('noTeam')}</p>`}</div>
     <div class="sec"><h3>${t('secDates')}</h3><div class="group">
-      ${kv('start', fmt(D(p.start)))}${kv('golive', fmt(D(p.golive)))}${kv('plan', planHtml(p))}${kv('fc', p.fc ? fmt(D(p.fc)) + dev : '')}${p.archivedAt ? kv('archived', fmt(D(p.archivedAt))) : ''}</div></div>
+      ${kv('start', fmt(D(p.start)))}${kv('golive', fmt(D(p.golive)))}${kv('plan', planHtml(p))}${kv('fc', p.fc ? fmt(D(p.fc)) + dev : '')}${p.ae ? kv('ae', fmt(D(p.ae))) : ''}${p.archivedAt ? kv('archived', fmt(D(p.archivedAt))) : ''}</div></div>
     <div class="sec"><h3>${t('secMoney')}</h3><div class="group">
       ${kv('progress', barHtml(p.progress))}${kv('last', freshHtml(p))}${kv('budget', money(p.budget))}${kv('actual', money(p.actual) + ' · ' + useHtml(p))}${kv('dept', esc(p.dept))}</div></div>
     <div class="sec"><h3>${t('secChanges')}</h3>${changesHtml(p, showCh)}</div>
@@ -1797,10 +1816,13 @@ function projectForm(p){
     </div>
     ${isNew ? `<fieldset class="ragpick"><legend>${fl('type')} *</legend>${segPick('p-type', TYPES, p.type)}</fieldset>` : ''}
     <h3 class="fsec">${t('fPeople')}</h3>
-    <div class="frow"><label class="t" for="p-pm">${fl('pm')} * <span class="muted">· ${t('m365')}</span></label>${peopleSelect('p-pm', p.pm, true)}</div>
+    ${isNew ? `<div class="frow"><label class="t" for="p-pm">${fl('pm')} * <span class="muted">· ${t('m365')}</span></label>${peopleSelect('p-pm', p.pm, true)}</div>
     <div class="fgrid2 frow">
       <div><label class="t" for="p-owner">${fl('owner')}</label>${peopleSelect('p-owner', p.owner)}</div>
-    </div>
+    </div>` : `<div class="fgrid2 frow">
+      <div><label class="t">${fl('pm')}</label><div class="fixedval" id="p-pm-fixed">${esc(p.pm || '—')}</div><input type="hidden" id="p-pm" value="${esc(p.pm || '')}"></div>
+      <div><label class="t">${fl('owner')}</label><div class="fixedval">${esc(p.owner || '—')}</div><input type="hidden" id="p-owner" value="${esc(p.owner || '')}"></div>
+    </div><p class="hint" style="margin-top:-6px">${t('pmOnlyPmo')}</p>`}
     <div class="frow"><span class="t lbl-t">${fl('team')} <span class="muted">· ${t('m365')}</span></span>
       <div class="ed-rows" id="p-team">${((p.team || []).length ? p.team : [{}]).map(tmRow).join('')}</div>
       <button type="button" class="btn add" data-ed="addtm">${t('addMember')}</button></div>
@@ -1883,6 +1905,38 @@ function projectForm(p){
   });
 }
 
+// #43: смена PM / власника после создания — только PMO; в приложении — запись «Призначення», синхронизация переносит
+function assignForm(p){
+  if (!p || !isPMO() || isArch(p)) return;
+  state.panel = {kind:'form'};
+  openPanel(`${formHead(t('assignTitle'), `${esc(p.code)} · ${t('listLabel')} «${t('navProjects')}»`)}
+  <p class="note">${t('assignHint')}</p>
+  <form id="aform" novalidate>
+    <div class="fgrid2 frow"><div><label class="t">${fl('pm')}</label><div class="fixedval">${esc(p.pm || '—')}</div></div>
+      <div><label class="t" for="a-pm">${t('assignNewPm')}</label>${peopleSelect('a-pm', '')}</div></div>
+    <div class="fgrid2 frow"><div><label class="t">${fl('owner')}</label><div class="fixedval">${esc(p.owner || '—')}</div></div>
+      <div><label class="t" for="a-own">${t('assignNewOwner')}</label>${peopleSelect('a-own', '')}</div></div>
+    <div class="frow"><label class="t" for="a-note">${t('assignNote')} *</label><textarea id="a-note"></textarea></div>
+    <p class="err" hidden></p>
+    <div class="actions"><button type="submit" class="btn primary">${t('save')}</button><button type="button" class="btn" data-act="backp" data-id="${p.id}">${t('cancel')}</button></div>
+  </form>`);
+  const form = document.getElementById('aform'), err = fErr(form), g = id => form.querySelector('#' + id);
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    // те же правила, что у синхронизации (tests/cases/assignments.json): что-то меняется, комментарий есть
+    const pm = g('a-pm').value, own = g('a-own').value, note = g('a-note').value.trim();
+    const diffs = [];
+    if (pm && pm !== p.pm) diffs.push({f:'pm', from:p.pm || '—', to:pm});
+    if (own && own !== p.owner) diffs.push({f:'owner', from:p.owner || '—', to:own});
+    if (!diffs.length) return err(t('errAssignSame'));
+    if (!note) return err(t('errAssignNote'));
+    if (pm) p.pm = pm;
+    if (own) p.owner = own;
+    p.changes = (p.changes || []).concat([{id:uid(), date:new Date().toISOString(), who:VIEWER, kind:'assign', reason:note, diffs}]);
+    rerenderMain(); projectPanel(p.id, false); persist(p); toast(t('savedAssign'));
+  });
+}
+
 function riskForm(pid, rid, fromList){
   const pool = visP().filter(p => isActive(p) && canEditP(p)).sort(byOrder);
   let p = pid ? pById(pid) : pool[0];
@@ -1893,13 +1947,15 @@ function riskForm(pid, rid, fromList){
   state.panel = {kind:'form'};
   const dis = edit ? '' : ' disabled';
   const scale = (name, val, pre) => `<div class="opts scale">${[1,2,3,4,5].map(n => `<input type="radio" id="${name}${n}" name="${name}" value="${n}"${+val === n ? ' checked' : ''}${dis}><label for="${name}${n}">${n}</label>`).join('')}</div><p class="scale-d" id="${name}-d">${t(pre + val)}</p>`;
-  openPanel(`${formHead(k ? t('riskCard') : t('newRisk'), `${t('listLabel')} «${t('navRisks')}»`)}
+  // #47 / #55: заголовок новой записи — по типу (меняется при выборе типа)
+  const newTitle = ty => ty === 'Проблема' ? t('newIssueT') : t('newRiskT');
+  openPanel(`${formHead(k ? t('riskCard') : newTitle(cur.type), `${t('listLabel')} «${t('navRisks')}»`)}
   ${edit ? '' : `<p class="note lock">🔒 ${t('readOnly')}</p>`}
   <form id="kform" novalidate>
     <div class="frow"><label class="t" for="k-p">${fl('rProj')} *</label>
       ${k || (pid && !fromList) ? `<div class="fixed">${esc(p.title)}</div>` : `<select id="k-p">${pool.map(x => `<option value="${x.id}"${x.id === p.id ? ' selected' : ''}>${esc(x.title)}</option>`).join('')}</select>`}</div>
-    <div class="frow"><label class="t" for="k-title">${fl('kTitle')} *</label><textarea id="k-title"${dis}>${esc(cur.title)}</textarea></div>
     <fieldset class="ragpick"><legend>${fl('kType')}</legend>${segPick('k-type', ['Ризик','Проблема'], cur.type)}</fieldset>
+    <div class="frow"><label class="t" for="k-title">${fl('kDesc')} *</label><textarea id="k-title"${dis}>${esc(cur.title)}</textarea></div>
     <div class="scorecalc">
       <div class="frow"><span class="lbl-t">${t('cProb')}</span>${scale('k-pr', cur.p, 'p')}</div>
       <div class="frow"><span class="lbl-t">${t('cImp')}</span>${scale('k-im', cur.i, 'i')}</div>
@@ -1923,13 +1979,22 @@ function riskForm(pid, rid, fromList){
     g('k-score').innerHTML = `${scoreHtml(sc)} <b>${t('sc' + scoreBucket(sc))}</b> <span class="muted">= ${pr} × ${im}</span>`;
     g('k-pr-d').textContent = t('p' + pr); g('k-im-d').textContent = t('i' + im); };
   form.addEventListener('change', sync); sync();
+  if (!k) form.addEventListener('change', e => { if (e.target.name === 'k-type') { const h = panel.querySelector('.ph h2'); if (h) h.textContent = newTitle(e.target.value); } });
   form.addEventListener('submit', e => {
     e.preventDefault(); if (!edit) return;
     if (g('k-p')) p = pById(+g('k-p').value);
     const vals = {title:g('k-title').value.trim(), type:radioVal(form, 'k-type') || 'Ризик', p:+radioVal(form, 'k-pr') || 1, i:+radioVal(form, 'k-im') || 1,
       owner:g('k-owner').value, status:g('k-status').value, due:g('k-due').value, mitigation:g('k-mit').value.trim(), strategy:radioVal(form, 'k-str') || '', contingency:g('k-cont').value.trim()};
     if (!vals.title){ g('k-title').focus(); return err(t('errRiskTitle')); }
-    if (k) Object.assign(k, vals); else p.risks = (p.risks || []).concat([Object.assign({id:uid()}, vals)]);
+    // #48: «Ризик» в истории — «Додано», изменения полей «було → стало», «Закрито»
+    const KF = [['title','kDesc'],['type','kType'],['p','kProb'],['i','kImp'],['status','kStatus'],['strategy','kStrategy'],['owner','kOwner'],['due','kDue']];
+    const nid = k ? k.id : uid();
+    const rdiffs = k ? KF.filter(([f]) => String(k[f] ?? '') !== String(vals[f] ?? '')).map(([f, l]) => ({f:l, from:f === 'due' && k[f] ? fmt(D(k[f])) : String(k[f] ?? ''), to:f === 'due' && vals[f] ? fmt(D(vals[f])) : String(vals[f] ?? '')}))
+      : [{f:'kNew', from:'', to:vals.type}];
+    if (k && k.p * k.i !== vals.p * vals.i) rdiffs.push({f:'kScore', from:String(k.p * k.i), to:String(vals.p * vals.i)});
+    if (rdiffs.length) p.changes = (p.changes || []).concat([{id:uid(), date:new Date().toISOString(), who:VIEWER, kind:'risk', ref:{type:'risk', id:nid},
+      reason:!k ? 'Додано: ' + vals.title : vals.status === 'Закрито' && k.status !== 'Закрито' ? 'Закрито: ' + vals.title : vals.title, diffs:rdiffs}]);
+    if (k) Object.assign(k, vals); else p.risks = (p.risks || []).concat([Object.assign({id:nid}, vals)]);
     rerenderMain();
     if (pid && !fromList) projectPanel(p.id, false); else closePanel();
     persist(p); toast(t('savedRisk'));
@@ -1967,6 +2032,7 @@ function reportForm(pid, base){
         <div class="k-cost"><label class="t" for="f-c">${fl('rCost')}, $</label><input type="text" id="f-c" inputmode="numeric" autocomplete="off" onfocus="this.value=this.value.replace(/\\s/g,'');if(this.value==='0')this.value=''" oninput="const m=/^(.*?)[.,](\\d{1,2})$/.exec(this.value.replace(/\\s/g,''));this.value=m?String(Math.round(+(m[1].replace(/[^0-9]/g,'')||0)+(+m[2].padEnd(2,'0'))/100)):this.value.replace(/[^0-9]/g,'')" onblur="this.value=this.value.replace(/[^0-9]/g,'').replace(/^0+(?=\\d)/,'').replace(/\\B(?=(\\d{3})+(?!\\d))/g,' ')" value="${grp(sel.actual || 0)}"></div>
       </div>
       <p class="note" id="f-arch" hidden style="margin:-4px 0 14px">${t('completeHint')}</p>
+      <div class="frow" id="f-ae-wrap" hidden><label class="t" for="f-ae">${fl('ae')} *</label><input type="date" id="f-ae" value="${esc(b.ae || '')}"><p class="ferr" id="e-ae" hidden></p><p class="hint">${t('aeHint')}</p></div>
       <fieldset class="ragpick"><legend>${fl('type')}</legend>${segPick('f-type', TYPES, sel.type)}</fieldset>
       <div class="fgrid2 frow">
         <div><label class="t" for="f-start">${fl('start')}</label><input type="date" id="f-start" value="${sel.start || ''}"></div>
@@ -1990,7 +2056,7 @@ function reportForm(pid, base){
   const curP = () => pById(+g('f-p').value);
   const keyChanged = () => { const p = curP(); return KEYF.some(([id, k]) => String(g(id).value || '') !== String(p[k] || '')) || (radioVal(form, 'f-type') || p.type) !== p.type; };
   const dimsNow = () => ({sched:radioVal(form, 'sched'), budget:radioVal(form, 'budget'), res:radioVal(form, 'res')});
-  const syncKey = () => { g('f-kr-wrap').hidden = !keyChanged(); g('f-arch').hidden = !['Завершено','Скасовано'].includes(g('f-st').value); g('f-ragv').innerHTML = ragLabel(calcRag(dimsNow())); };
+  const syncKey = () => { g('f-kr-wrap').hidden = !keyChanged(); g('f-arch').hidden = g('f-ae-wrap').hidden = !['Завершено','Скасовано'].includes(g('f-st').value); g('f-ragv').innerHTML = ragLabel(calcRag(dimsNow())); };
   form.addEventListener('input', syncKey); form.addEventListener('change', syncKey);
   g('f-p').addEventListener('change', e => { const p = pById(+e.target.value);
     g('f-pr').disabled = false; prevPr = null; g('f-pr-done').hidden = true;
@@ -2031,13 +2097,21 @@ function reportForm(pid, base){
     if (!prOk){ mark(g('f-pr')); g('e-pr').textContent = t('errProgress'); g('e-pr').hidden = false; first = first || t('errProgress'); }
     const st = g('f-start').value;
     ['golive','plan','fc'].forEach(k => { const v = g('f-' + k).value; if (st && v && v < st){ mark(g('f-' + k)); g('e-' + k).textContent = t('errBeforeStart'); g('e-' + k).hidden = false; first = first || t('errBeforeStart'); } });
+    // #54: фактическая дата — при «Завершено» / «Скасовано»: обязательна, не раньше старта, не позже даты отчёта
+    const arch = ['Завершено','Скасовано'].includes(g('f-st').value), ae = g('f-ae').value;
+    if (arch){ const ek = !ae ? '' : st && ae < st ? 'errBeforeStart' : dstr && ae > dstr ? 'errAfterReport' : '';
+      if (!ae){ req = true; mark(g('f-ae')); } else if (ek){ mark(g('f-ae')); g('e-ae').textContent = t(ek); g('e-ae').hidden = false; first = first || t(ek); } }
     if (req) return err(t('errReqAll'));
     if (first) return err(first);
     const rag = calcRag(dims);
     const progress = g('f-pr').disabled ? 100 : +prv, cost = Math.max(0, Math.round(+g('f-c').value.replace(/\s/g, '') || 0)), dec = g('f-dec').checked;
     // звіт зберігається «На погодженні»; картку оновить applyReport після погодження PMO
-    p.reports = (p.reports || []).concat([{id:uid(), date:dstr, rag, sched:dims.sched, budget:dims.budget, res:dims.res,
-      progress, status:g('f-st').value, type:radioVal(form, 'f-type') || p.type, start:g('f-start').value, golive:g('f-golive').value, plan:g('f-plan').value, fc:g('f-fc').value,
+    const rid = uid();
+    // #46: «Подання звіту» в истории; на основе повернутого — ссылка на повернутый
+    p.changes = (p.changes || []).concat([{id:uid(), date:new Date().toISOString(), who:VIEWER, kind:'submit', ref:{type:'report', id:rid},
+      reason:base ? `Новий звіт на основі повернутого від ${fmt(D(base.date))} · ${title}` : title, diffs:[{f:'apStatus', from:base ? AP_RET : '', to:AP_PEND}]}]);
+    p.reports = (p.reports || []).concat([{id:rid, date:dstr, rag, sched:dims.sched, budget:dims.budget, res:dims.res,
+      progress, status:g('f-st').value, type:radioVal(form, 'f-type') || p.type, start:g('f-start').value, golive:g('f-golive').value, plan:g('f-plan').value, fc:g('f-fc').value, ae:arch ? ae : '',
       cost, keyReason:keyChanged() ? kr : '', period:g('f-per').value, title, done:g('f-done').value.trim() || '—', next:g('f-next').value.trim() || '—', issues:g('f-iss').value.trim(),
       author:VIEWER, decision:dec, decisionText:dec ? g('f-dect').value.trim() : '', approval:AP_PEND, apBy:'', apAt:'', apNote:''}]);
     rerenderMain(); projectPanel(p.id, false); persist(p); toast(t('savedReportPending'));
@@ -2060,7 +2134,7 @@ function applyReport(p, r, when){
   Object.assign(p, vals);
   if (r.cost != null) p.actual = r.cost;
   if (newer) Object.assign(p, {lastUpdate:r.date, lastReport:r.title});
-  if (complete) p.archivedAt = r.date;
+  if (complete){ p.archivedAt = r.date; if (r.ae) p.ae = r.ae; }
   if (diffs.length) p.changes = (p.changes || []).concat([{id:uid(), date:when || new Date().toISOString(), who:r.author, kind:'report', reason: r.keyReason ? r.keyReason + ' · ' + r.title : r.title, diffs}]);
   return complete;
 }
@@ -2086,11 +2160,11 @@ function reportView(pid, rid, keep){
   const r = (p.reports || []).find(x => String(x.id) === String(rid)); if (!r) return projectPanel(pid, false);
   state.panel = {kind:'report', id:p.id, rid:String(r.id)};
   const d = D(r.date), pend = r.approval === AP_PEND, applied = isApproved(r);
-  const IND = [['status','status'],['type','type'],['progress','progress'],['start','start'],['golive','golive'],['plan','plan'],['fc','fc'],['cost','rCost']];
+  const IND = [['status','status'],['type','type'],['progress','progress'],['start','start'],['golive','golive'],['plan','plan'],['fc','fc'],['ae','ae'],['cost','rCost']];
   const show = (k, v) => v === '' || v == null ? '<span class="muted">—</span>' : k === 'progress' ? v + '%' : k === 'cost' ? money(+v)
-    : ['start','golive','plan','fc'].includes(k) ? fmt(D(v)) : esc(tv(v === 'Завершено' ? 'Архівний' : v));
+    : ['start','golive','plan','fc','ae'].includes(k) ? fmt(D(v)) : esc(tv(v === 'Завершено' ? 'Архівний' : v));
   const cardK = k => k === 'cost' ? 'actual' : k;
-  const ind = IND.filter(([k]) => r[k] != null).map(([k, l]) => {
+  const ind = IND.filter(([k]) => r[k] != null && !(k === 'ae' && !r[k])).map(([k, l]) => {
     const cur = p[cardK(k)], nv = k === 'status' && ['Завершено','Скасовано'].includes(r[k]) ? 'Архівний' : r[k];
     const ch = !applied && String(cur ?? '') !== String(nv ?? '');
     return `<div class="kv"><span class="k">${fl(l)}</span><span class="v">${ch ? `<span class="dv"><s>${show(k, cur)}</s><span class="arr">→</span>${show(k, r[k])}</span>` : show(k, r[k])}</span></div>`;
@@ -2164,6 +2238,7 @@ document.addEventListener('click', e => {
   else if (a === 'riskopen') riskForm(id, el.dataset.rid, el.dataset.src === 'list');
   else if (a === 'newproj') projectForm(null);
   else if (a === 'editproj') projectForm(pById(id));
+  else if (a === 'assign') assignForm(pById(id));
   else if (a === 'backp') { if (id) projectPanel(id, false); else closePanel(); }
   else if (a === 'close') closePanel();
   else if (a === 'seed'){ el.disabled = true; el.textContent = t('seeding'); seed().catch(err => { console.error(err); toast(t('saveErr')); }); }

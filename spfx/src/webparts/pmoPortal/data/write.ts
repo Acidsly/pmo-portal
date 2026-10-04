@@ -1,7 +1,7 @@
 import { Project, TeamMember } from './types';
 import { roundAway } from '../logic/overlay';
 import { TeamRow } from '../logic/team';
-import { ReportDraft, ProjectDraft, RiskDraft } from '../logic/forms';
+import { ReportDraft, ProjectDraft, RiskDraft, archiveStatus } from '../logic/forms';
 
 type Body = Record<string, unknown>;
 
@@ -21,6 +21,10 @@ export function reportBody(d: ReportDraft, p: Project): Body {
   if (d.actualCost !== p.actualCost) b.srActualCost = Math.max(0, roundAway(d.actualCost));
   const dates: [keyof ReportDraft & keyof Project, string][] = [['start', 'srStart'], ['goLive', 'srGoLive'], ['planEnd', 'srPlanEnd'], ['forecastEnd', 'srForecastEnd']];
   dates.forEach(([k, f]) => { if ((d[k] || '') !== (p[k] || '')) b[f] = spDate(String(d[k] || '')); });
+  // #54: фактическая дата — только при «Завершено» / «Скасовано»
+  if (archiveStatus(d.status) && d.actualEnd) b.srActualEnd = spDate(d.actualEnd);
+  // #46: на основе повернутого — номер повернутого (история: «Новий звіт на основі повернутого»)
+  if (d.basedOn) b.srBasedOn = d.basedOn;
   return b;
 }
 
@@ -34,9 +38,10 @@ export function projectBody(d: ProjectDraft, code: string): Body {
     pmDescription: d.description, pmLinks: JSON.stringify(d.links), pmProgress: 0 };
 }
 
-/** Правка карточки: без ключевых показателей; изменения дописываются в pmEditLog — синхронизация перенесёт их в журнал. */
+/** Правка карточки: без ключевых показателей и без PM / власника (#43: меняет только PMO через «Призначення»);
+ *  изменения дописываются в pmEditLog — синхронизация перенесёт их в журнал. */
 export function projectEditBody(d: ProjectDraft, diffs: { f: string; from: string; to: string }[], who: string, reason: string, prevLog: string): Body {
-  const b: Body = { Title: d.title.trim(), pmCode: d.code, pmPriority: d.priority, pmDepartment: d.department, ...people(d),
+  const b: Body = { Title: d.title.trim(), pmCode: d.code, pmPriority: d.priority, pmDepartment: d.department,
     pmBudget: roundAway(d.budget || 0), pmDescription: d.description, pmLinks: JSON.stringify(d.links) };
   if (diffs.length) {
     let entries: unknown[] = [];

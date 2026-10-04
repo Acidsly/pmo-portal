@@ -7,6 +7,8 @@ export interface Project {
   manager: Person | null; owner: Person | null; stakeholders: Person[]; department: string;
   status: string; rag: Rag; progress: number; start: string; goLive: string; planEnd: string; forecastEnd: string;
   archivedAt: string; budget: number; actualCost: number; lastUpdate: string; lastReport: string; lastComment: string;
+  /** Дата завершення (факт), #54: из погодженого отчёта «Завершено» / «Скасовано»; у прежних архивных — пусто. */
+  actualEnd?: string;
   /** «Посилання» (pmLinks) и «Команда проєкту»; stakeholders — люди команды. */
   links: Link[]; team: TeamMember[]; description: string;
   /** Пользователь может редактировать элемент (права выдала синхронизация). */
@@ -25,7 +27,13 @@ export interface Project {
   pendingEvents?: ChangeEvent[];
   /** Дата-время создания (ISO) — базовая сортировка «новые сверху». */
   created?: string;
+  /** Есть «Призначення» PMO, ещё не перенесённое синхронизацией (#43): новое не подаётся. */
+  assignPending?: boolean;
 }
+
+/** «Призначення» (#43): решение PMO о смене PM / власника; пусто — без изменений. Переносит синхронизация (paApplied). */
+export interface Assignment { id: number; projectId: number; manager: Person | null; owner: Person | null; note: string; applied: boolean;
+  author: Person | null; created: string; }
 
 /** Строка списка «Команда проєкту»: человек, роль, по каким вопросам обращаться. */
 export interface TeamMember { id: number; projectId: number; user: Person | null; role: string; topics: string;
@@ -37,6 +45,8 @@ export interface StatusReport {
   id: number; projectId: number; date: string; period: string; schedule: Rag; budget: Rag; resources: Rag;
   status: string; type: string; progress: number | null; start: string; goLive: string; planEnd: string; forecastEnd: string;
   actualCost: number | null; keyReason: string; title: string; done: string; next: string; issues: string;
+  /** #54: фактическая дата завершения / отмены (только «Завершено» / «Скасовано»). */
+  actualEnd?: string;
   decision: boolean; decisionText: string; applied: boolean; author: Person | null;
   created?: string;
   /** Погодження PMO: На погодженні / Погоджено / Повернуто; кто, когда, комментарий. approvalFresh — решение ещё не перенесено синхронизацией. */
@@ -56,8 +66,12 @@ export interface Risk {
 }
 
 export interface Comment { id: number; projectId: number; text: string; author: Person | null; created: string; }  // created — ISO дата-время
-export interface ChangeEntry { id: number; projectId: number; date: string; who: Person | null; kind: string; field: string; from: string; to: string; reason: string; }
-export interface ChangeEvent { id: number; date: string; who: Person | null; kind: 'create' | 'key' | 'edit' | 'report' | 'approval'; reason: string; diffs: { f: string; from: string; to: string }[]; }
+export interface ChangeEntry { id: number; projectId: number; date: string; who: Person | null; kind: string; field: string; from: string; to: string; reason: string;
+  /** #46 / #48: номер отчёта или риска события (kcItem). */
+  item?: number; }
+export interface ChangeEvent { id: number; date: string; who: Person | null; kind: 'create' | 'key' | 'edit' | 'report' | 'approval' | 'assign' | 'submit' | 'risk'; reason: string; diffs: { f: string; from: string; to: string }[];
+  /** #46 / #48: событие отчёта или риска — открыть запись из истории. */
+  ref?: { type: 'report' | 'risk'; id: number }; }
 
 /** Отзыв фокус-группы: из «Відгуки — загальні» (видят все) + свои / все для администратора (со скриншотами) из «Відгуки». */
 export interface FeedbackRow {

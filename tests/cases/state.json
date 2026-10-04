@@ -176,6 +176,78 @@
       "diff": [
         "pmCode"
       ]
+    },
+    {
+      "name": "#54 эталон без pmActualEnd (до обновления) и пустое поле карточки — не расхождение",
+      "card": {
+        "pmStatus": "Реалізація",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "40",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2026-12-01",
+        "pmForecastEnd": "2027-01-15",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-005",
+        "pmActualEnd": ""
+      },
+      "state": {
+        "pmStatus": "Реалізація",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "40",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2026-12-01",
+        "pmForecastEnd": "2027-01-15",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-005"
+      },
+      "diff": []
+    },
+    {
+      "name": "#54 фактическая дата в карточке в обход отчёта — расхождение",
+      "card": {
+        "pmStatus": "Реалізація",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "40",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2026-12-01",
+        "pmForecastEnd": "2027-01-15",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-005",
+        "pmActualEnd": "2026-09-01"
+      },
+      "state": {
+        "pmStatus": "Реалізація",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "40",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2026-12-01",
+        "pmForecastEnd": "2027-01-15",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-005"
+      },
+      "diff": [
+        "pmActualEnd"
+      ]
     }
   ],
   "write": [
@@ -202,6 +274,12 @@
       "f": "pmLastReport",
       "v": "",
       "out": null
+    },
+    {
+      "name": "#54 фактическая дата — полдень UTC",
+      "f": "pmActualEnd",
+      "v": "2026-09-28",
+      "out": "2026-09-28T12:00:00Z"
     }
   ],
   "apply": [
@@ -595,6 +673,139 @@
         "pmStatus",
         "pmActualCost"
       ]
+    },
+    {
+      "name": "#43 эталон до PM / власника: новые ключи — из карточки, без отката",
+      "card": {
+        "pmStatus": "Реалізація",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "40",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2026-12-01",
+        "pmForecastEnd": "",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-005",
+        "pmActualEnd": "",
+        "pmManager": "pm@x",
+        "pmOwner": "own2@x"
+      },
+      "stateJson": "{\"pmStatus\": \"Реалізація\", \"pmRAG\": \"Жовтий\", \"pmType\": \"Звичайний\", \"pmProgress\": \"40\", \"pmStart\": \"2026-06-01\", \"pmGoLive\": \"\", \"pmPlanEnd\": \"2026-12-01\", \"pmForecastEnd\": \"\", \"pmActualCost\": \"100\", \"pmArchivedAt\": \"\", \"pmLastUpdate\": \"2026-09-20\", \"pmLastReport\": \"Звіт\", \"pmCode\": \"PRJ-005\"}",
+      "record": true,
+      "editor": "pm@x",
+      "owners": [
+        "own@x"
+      ],
+      "out": "none",
+      "extended": [
+        "pmActualEnd",
+        "pmManager",
+        "pmOwner"
+      ]
+    },
+    {
+      "name": "#43 эталон до PM / власника и правка статуса в обход — откат только статуса",
+      "card": {
+        "pmStatus": "Призупинено",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "40",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2026-12-01",
+        "pmForecastEnd": "",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-005",
+        "pmActualEnd": "",
+        "pmManager": "pm@x",
+        "pmOwner": "own2@x"
+      },
+      "stateJson": "{\"pmStatus\": \"Реалізація\", \"pmRAG\": \"Жовтий\", \"pmType\": \"Звичайний\", \"pmProgress\": \"40\", \"pmStart\": \"2026-06-01\", \"pmGoLive\": \"\", \"pmPlanEnd\": \"2026-12-01\", \"pmForecastEnd\": \"\", \"pmActualCost\": \"100\", \"pmArchivedAt\": \"\", \"pmLastUpdate\": \"2026-09-20\", \"pmLastReport\": \"Звіт\", \"pmCode\": \"PRJ-005\"}",
+      "record": true,
+      "editor": "pm@x",
+      "owners": [
+        "own@x"
+      ],
+      "out": "rollback",
+      "fields": [
+        "pmStatus"
+      ],
+      "extended": [
+        "pmActualEnd",
+        "pmManager",
+        "pmOwner"
+      ]
+    },
+    {
+      "name": "#43 PM сменили в обход «Призначення» — откат",
+      "card": {
+        "pmStatus": "Реалізація",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "40",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2026-12-01",
+        "pmForecastEnd": "",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-005",
+        "pmActualEnd": "",
+        "pmManager": "new@x",
+        "pmOwner": "own2@x"
+      },
+      "stateJson": "{\"pmStatus\": \"Реалізація\", \"pmRAG\": \"Жовтий\", \"pmType\": \"Звичайний\", \"pmProgress\": \"40\", \"pmStart\": \"2026-06-01\", \"pmGoLive\": \"\", \"pmPlanEnd\": \"2026-12-01\", \"pmForecastEnd\": \"\", \"pmActualCost\": \"100\", \"pmArchivedAt\": \"\", \"pmLastUpdate\": \"2026-09-20\", \"pmLastReport\": \"Звіт\", \"pmCode\": \"PRJ-005\", \"pmActualEnd\": \"\", \"pmManager\": \"pm@x\", \"pmOwner\": \"own2@x\"}",
+      "record": true,
+      "editor": "pm@x",
+      "owners": [
+        "own@x"
+      ],
+      "out": "rollback",
+      "fields": [
+        "pmManager"
+      ],
+      "extended": []
+    },
+    {
+      "name": "#43 власника сменил владелец сайта — принять",
+      "card": {
+        "pmStatus": "Реалізація",
+        "pmRAG": "Жовтий",
+        "pmType": "Звичайний",
+        "pmProgress": "40",
+        "pmStart": "2026-06-01",
+        "pmGoLive": "",
+        "pmPlanEnd": "2026-12-01",
+        "pmForecastEnd": "",
+        "pmActualCost": "100",
+        "pmArchivedAt": "",
+        "pmLastUpdate": "2026-09-20",
+        "pmLastReport": "Звіт",
+        "pmCode": "PRJ-005",
+        "pmActualEnd": "",
+        "pmManager": "pm@x",
+        "pmOwner": "o3@x"
+      },
+      "stateJson": "{\"pmStatus\": \"Реалізація\", \"pmRAG\": \"Жовтий\", \"pmType\": \"Звичайний\", \"pmProgress\": \"40\", \"pmStart\": \"2026-06-01\", \"pmGoLive\": \"\", \"pmPlanEnd\": \"2026-12-01\", \"pmForecastEnd\": \"\", \"pmActualCost\": \"100\", \"pmArchivedAt\": \"\", \"pmLastUpdate\": \"2026-09-20\", \"pmLastReport\": \"Звіт\", \"pmCode\": \"PRJ-005\", \"pmActualEnd\": \"\", \"pmManager\": \"pm@x\", \"pmOwner\": \"own2@x\"}",
+      "record": true,
+      "editor": "own@x",
+      "owners": [
+        "own@x"
+      ],
+      "out": "accept",
+      "fields": [
+        "pmOwner"
+      ],
+      "extended": []
     }
   ]
 }
