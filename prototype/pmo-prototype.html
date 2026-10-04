@@ -1037,6 +1037,8 @@ const visArch = () => visAll().filter(isArch);
 const repsOf = p => (p.reports || []).map(r => Object.assign({}, r, {pid:p.id, d:D(r.date), rag:calcRag(r)})).sort((a, b) => a.d - b.d);
 const visR = () => visAll().flatMap(repsOf);
 const visK = () => visP().flatMap(p => (p.risks || []).map(k => Object.assign({}, k, {pid:p.id})));
+// риски всех видимых проектов, включая архив — для вкладки «Ризики» (вид «Ризики архівних проєктів», #32)
+const visKAll = () => visAll().flatMap(p => (p.risks || []).map(k => Object.assign({}, k, {pid:p.id})));
 const lastUpd = p => D(p.lastUpdate);
 // «Немає свіжого звіту» (#3): сначала без отчётов, дальше — от самого давнего; списки — новые сверху (как logic/status.ts)
 const staleFirst = (a, b) => { const x = a.lastUpdate || '', y = b.lastUpdate || ''; return x === y ? a.id - b.id : !x ? -1 : !y ? 1 : x < y ? -1 : 1; };
@@ -1547,7 +1549,7 @@ function pageReports(){
 function pageRisks(){
   const s = stateScreen(); if (s) return s.replace(t('dash'), t('navRisks'));
   // #32: риски проектов в архиве — отдельным представлением (только просмотр); остальные представления — без архива
-  const v = KV[state.kv], rows = visK().filter(k => v.f(k) && (v.arch ? isArch(pById(k.pid)) : !isArch(pById(k.pid)))).sort((a, b) => b.p * b.i - a.p * a.i);
+  const v = KV[state.kv], rows = visKAll().filter(k => v.f(k) && (v.arch ? isArch(pById(k.pid)) : !isArch(pById(k.pid)))).sort((a, b) => b.p * b.i - a.p * a.i);
   return `${hero(t('navRisks'))}
   <div class="listcard"><div class="cmdbar">${visP().some(p => isActive(p) && canEditP(p)) ? `<button class="cmd primary" data-act="newrisk">${iconPlus}${t('newRisk')}</button>` : ''}<span class="spacer"></span>${viewSel(KV, state.kv, 'kv')}${gearBtn('risks')}</div>${dataTable('risks', rows)}</div>
   <p class="hint">${t('hintRisks')}</p>`;
