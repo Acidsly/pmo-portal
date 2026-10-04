@@ -16,7 +16,8 @@ function ToSpDate([string]$d) { if ($d) { return "$($d)T12:00:00Z" } return $nul
 function Norm($v) {
     if ($null -eq $v) { return "" }
     if ($v -is [datetime]) { return DateOnly $v }
-    if ($v -is [double] -or $v -is [int] -or $v -is [decimal]) { return [string][math]::Round([double]$v) }
+    # суммы и проценты — целые; x,5 — вверх (обычное округление, как в приложении), а не к чётному
+    if ($v -is [double] -or $v -is [int] -or $v -is [decimal]) { return [string][math]::Round([double]$v, 0, [MidpointRounding]::AwayFromZero) }
     return [string]$v
 }
 

@@ -291,6 +291,28 @@ function Get-EffectiveApproval($rep, $aps) {
     }
     return $null
 }
+# Что погоджений отчёт переносит в карточку (векторы tests/cases/apply.json, те же — reportTarget приложения):
+# заполненные показатели (% и затраты — целые, x,5 — вверх); «Завершено» / «Скасовано» -> «Архівний» и дата архивации;
+# отчёт не старше последнего (по дате) задаёт ещё стан (худшая из трёх оценок), дату и резюме. Пустые поля карточку не трогают.
+# $rep: status, type, progress, start, goLive, planEnd, forecastEnd, actualCost, date, schedule, budget, resources, title.
+function Get-ReportTarget($rep, [string]$lastUpdate) {
+    $t = [ordered]@{}
+    foreach ($k in @("status", "type", "progress", "start", "goLive", "planEnd", "forecastEnd", "actualCost")) {
+        $v = $rep.$k
+        if ($null -eq $v -or [string]$v -eq "") { continue }
+        $t[$k] = if ($k -in @("progress", "actualCost")) { [string][math]::Round([double]$v, 0, [MidpointRounding]::AwayFromZero) } else { [string]$v }
+    }
+    if ($t["status"] -in @("Завершено", "Скасовано")) { $t["status"] = "Архівний"; $t["archivedAt"] = [string]$rep.date }
+    if (-not $lastUpdate -or [string]$rep.date -ge $lastUpdate) {
+        $rag = CalcRag $rep.schedule $rep.budget $rep.resources
+        if ($rag) { $t["rag"] = $rag }
+        $t["lastUpdate"] = [string]$rep.date; $t["lastReport"] = [string]$rep.title
+    }
+    return $t
+}
+# поле цели переноса -> поле карточки
+$TARGET_FIELD = [ordered]@{ status = "pmStatus"; type = "pmType"; progress = "pmProgress"; start = "pmStart"; goLive = "pmGoLive"; planEnd = "pmPlanEnd"
+    forecastEnd = "pmForecastEnd"; actualCost = "pmActualCost"; archivedAt = "pmArchivedAt"; rag = "pmRAG"; lastUpdate = "pmLastUpdate"; lastReport = "pmLastReport" }
 function Get-ApplyAction($rep, [string]$pm, [string[]]$ownerList, [bool]$archived, [string]$last, [string]$lastUpdate) {
     if ($archived) { return "notApplied:arch" }
     if ($rep.author -ne $pm -and -not (Test-Trusted $rep.author $ownerList)) { return "notApplied:pm" }
@@ -322,11 +344,6 @@ function Get-ApprovalResult($rep, $ap) {
 $DISPLAY = [ordered]@{
     pmStatus = "Статус проєкту"; pmRAG = "Загальний стан"; pmType = "Тип проєкту"; pmProgress = "% виконання"
     pmStart = "Дата старту"; pmGoLive = "Дата запуску (продакшн)"; pmPlanEnd = "Дата завершення (план)"; pmForecastEnd = "Прогноз завершення"
-}
-# поле отчёта -> поле проекта
-$MAP = [ordered]@{
-    srStatus = "pmStatus"; srType = "pmType"; srProgress = "pmProgress"; srStart = "pmStart"; srGoLive = "pmGoLive"
-    srPlanEnd = "pmPlanEnd"; srForecastEnd = "pmForecastEnd"; srActualCost = "pmActualCost"
 }
 $DATE_FIELDS = @("pmStart","pmGoLive","pmPlanEnd","pmForecastEnd","pmLastUpdate","pmArchivedAt")
 
@@ -683,8 +700,6 @@ foreach ($r in $pending) {
     $p = $PROJ[$lk.LookupId]; if (-not $p) { Warn "Отчёт $($r.Id): проект $($lk.LookupId) не найден"; continue }
     $stats.reports++
     $repDate = DateOnly $r["srDate"]
-    $rag     = CalcRag $r["srSchedule"] $r["srBudget"] $r["srResources"]
-    $newer   = (-not $p.Values.pmLastUpdate) -or ($repDate -ge $p.Values.pmLastUpdate)
     $authorT = Who $r["Author"]; $author = WhoMail $authorT
     # правила применения (векторы tests/cases/reports.json): архив / автор не PM — не применять (отметка один раз, без вечных
     # предупреждений); есть более новый применённый отчёт — только отметить, показатели не откатываются
@@ -702,17 +717,11 @@ foreach ($r in $pending) {
     $reason  = @($r["srKeyReason"], $title) | Where-Object { $_ } | Join-String -Separator " · "
     Log "  звіт #$($r.Id) ($repDate) -> «$($p.Item["Title"])»"
 
-    $target = [ordered]@{}
-    foreach ($src in $MAP.Keys) {
-        $v = Norm $r[$src]
-        if ($v -ne "") { $target[$MAP[$src]] = $v }
-    }
-    if ($target.pmStatus -in @("Завершено", "Скасовано")) { $target.pmStatus = "Архівний"; $target.pmArchivedAt = $repDate }
-    if ($newer) {
-        if ($rag) { $target.pmRAG = $rag }
-        $target.pmLastUpdate = $repDate
-        $target.pmLastReport = $title
-    }
+    # что переносится — общим правилом Get-ReportTarget (векторы tests/cases/apply.json, те же — у приложения)
+    $tg = Get-ReportTarget ([ordered]@{ status = (Norm $r["srStatus"]); type = (Norm $r["srType"]); progress = $r["srProgress"]; start = (Norm $r["srStart"])
+        goLive = (Norm $r["srGoLive"]); planEnd = (Norm $r["srPlanEnd"]); forecastEnd = (Norm $r["srForecastEnd"]); actualCost = $r["srActualCost"]
+        date = $repDate; schedule = (Norm $r["srSchedule"]); budget = (Norm $r["srBudget"]); resources = (Norm $r["srResources"]); title = $title }) $p.Values.pmLastUpdate
+    $target = [ordered]@{}; foreach ($k in $tg.Keys) { $target[$TARGET_FIELD[$k]] = $tg[$k] }
 
     $changed = [ordered]@{}
     foreach ($k in $target.Keys) { if ($p.Values[$k] -ne $target[$k]) { $changed[$k] = $target[$k] } }

@@ -35,7 +35,7 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/report-form.json", "config/focus-group.example.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/report-form.json", "tests/cases/apply.json", "config/focus-group.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
@@ -142,7 +142,7 @@ if (-not (Compare-State $rt (& $toHash $sc.compare[0].card)).Count) { Ok "эта
 foreach ($bad in @("", "{oops", "{}", "[1,2]", '{"pmCode":"PRJ-1"}')) { if ($null -eq (ConvertFrom-StateJson $bad)) { Ok "повреждённый эталон «$bad» — нет эталона" } else { Bad "повреждённый эталон «$bad» читается как значения" } }
 
 Write-Host "3e. Правила отчётов: авто-возврат и применение (tests/cases/reports.json)"
-foreach ($n in @("Test-Trusted", "Get-PendingReturns", "Get-ApplyAction", "CalcRag", "Get-ApprovalResult", "Get-EffectiveApproval")) {
+foreach ($n in @("Test-Trusted", "Get-PendingReturns", "Get-ApplyAction", "CalcRag", "Get-ApprovalResult", "Get-EffectiveApproval", "Get-ReportTarget")) {
     $fn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $n }, $true) | Select-Object -First 1
     if ($fn) { Invoke-Expression $fn.Extent.Text } else { Bad "нет функции $n" }
 }
@@ -160,8 +160,17 @@ foreach ($c in $rc.effective) {
     $got = if ($e) { "$($e.id):$($e.decision)" } else { "-" }; $exp = if ($c.out) { "$($c.out.id):$($c.out.decision)" } else { "-" }
     if ($got -eq $exp) { Ok "действующее решение: $($c.name)" } else { Bad "действующее решение: $($c.name): $got, ожидалось $exp" }
 }
-# подтверждение «Погоджено» в синхронизации — именно этим правилом (а не «любое Погоджено от PMO»: ошибка сверки №1)
 $syncSrc = Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")
+# перенос отчёта в карточку (tests/cases/apply.json — те же векторы у reportTarget приложения)
+foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/apply.json") | ConvertFrom-Json -DateKind String).cases) {
+    $rep = @{}; foreach ($pp in $c.rep.PSObject.Properties) { $rep[$pp.Name] = $pp.Value }
+    $t = Get-ReportTarget $rep $c.lastUpdate
+    $got = ($t.Keys | Sort-Object | ForEach-Object { "$_=$($t[$_])" }) -join "; "
+    $exp = ($c.out.PSObject.Properties | Sort-Object Name | ForEach-Object { "$($_.Name)=$($_.Value)" }) -join "; "
+    if ($got -eq $exp) { Ok "перенос в карточку: $($c.name)" } else { Bad "перенос в карточку: $($c.name): [$got], ожидалось [$exp]" }
+}
+if ($syncSrc -match '\$tg = Get-ReportTarget') { Ok "раздел 1 переносит отчёт общим правилом Get-ReportTarget" } else { Bad "Invoke-PMOSync.ps1: раздел 1 не использует Get-ReportTarget" }
+# подтверждение «Погоджено» в синхронизации — именно этим правилом (а не «любое Погоджено от PMO»: ошибка сверки №1)
 if ($syncSrc -match '\$eff = Get-EffectiveApproval' -and $syncSrc -match 'if \(\$eff -and \$eff\.decision -eq "Погоджено"\) \{ \$APPROVED\[\$rid\] = \$true \}' -and ([regex]::Matches($syncSrc, '\$APPROVED\[[^\]]+\] = \$true')).Count -eq 1) {
     Ok "«Погоджено» подтверждается только действующим решением (Get-EffectiveApproval)" } else { Bad 'Invoke-PMOSync.ps1: $APPROVED заполняется не через Get-EffectiveApproval' }
 

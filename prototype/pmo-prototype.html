@@ -1974,7 +1974,7 @@ function reportForm(pid, base){
     if (req) return err(t('errReqAll'));
     if (first) return err(first);
     const rag = calcRag(dims);
-    const progress = g('f-pr').disabled ? 100 : +prv, cost = Math.max(0, +g('f-c').value || 0), dec = g('f-dec').checked;
+    const progress = g('f-pr').disabled ? 100 : +prv, cost = Math.max(0, Math.round(+g('f-c').value || 0)), dec = g('f-dec').checked;
     // звіт зберігається «На погодженні»; картку оновить applyReport після погодження PMO
     p.reports = (p.reports || []).concat([{id:uid(), date:dstr, rag, sched:dims.sched, budget:dims.budget, res:dims.res,
       progress, status:g('f-st').value, type:radioVal(form, 'f-type') || p.type, start:g('f-start').value, golive:g('f-golive').value, plan:g('f-plan').value, fc:g('f-fc').value,

@@ -34,7 +34,7 @@ test('отчёт → значения формы: lookup без «Id», даты
     title: 'Резюме «тест» & <b>', actualCost: 12.5, decision: true, decisionText: 'Рішення\nрядок 2' };
   const fv = toFormValues('StatusReports', reportBody(d, p), uk);
   expect(get(fv, 'srProject')).toBe('7'); expect(get(fv, 'srProjectId')).toBeUndefined();
-  expect(get(fv, 'srDate')).toBe('30.09.2026'); expect(get(fv, 'srActualCost')).toBe('12,5'); expect(get(fv, 'srProgress')).toBe('40');
+  expect(get(fv, 'srDate')).toBe('30.09.2026'); expect(get(fv, 'srActualCost')).toBe('13');   // затраты — целые доллары (12,5 → 13); разделитель дроби — в тесте formNumber expect(get(fv, 'srProgress')).toBe('40');
   expect(get(fv, 'srDecision')).toBe('1'); expect(get(fv, 'srApplied')).toBe('0');
   expect(get(fv, 'Title')).toBe('Резюме «тест» & <b>'); expect(get(fv, 'srDecisionText')).toBe('Рішення\nрядок 2');
 });
