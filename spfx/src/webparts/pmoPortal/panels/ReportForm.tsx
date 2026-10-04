@@ -4,7 +4,8 @@ import { PortalData } from '../data/SpRepo';
 import { Project } from '../data/types';
 import { isActive, byOrder } from '../logic/status';
 import { calcRag, Rag } from '../logic/rag';
-import { ReportDraft, reportFromProject, reportFromReturned, keyChanged, reportErrors, formErrorText, parseProgress, progressLocked, FieldErr } from '../logic/forms';
+import { ReportDraft, reportFromProject, reportFromReturned, keyChanged, reportErrors, formErrorText, parseProgress, progressLocked, FieldErr,
+  initialReport, switchStatus, switchProject, reportToSave, reportProjectChoice } from '../logic/forms';
 import { reportBody } from '../data/write';
 import { Frow, RagPick, SegPick, DateIn, Err, Opts, errText, guardText, FieldErrText } from '../components/fields';
 import { fmtDate } from '../components/Bits';
@@ -20,13 +21,11 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
   const c = React.useContext(AppCtx); const { t, fl } = c;
   const act = data.projects.filter(p => isActive(p.status) && p.canEdit).sort(byOrder);
   // #37: из карточки проекта — проект зафиксирован; из «Статус-звіти» — первый проект без отчёта на погодженні (#51)
-  const fixed = act.filter(p => p.id === projectId)[0];
-  const first = fixed || act.filter(p => !p.pendingDate)[0] || act[0];
+  const { fixed, first } = reportProjectChoice(act, projectId);
   // «Новий звіт на основі повернутого» — черновик из повернутого PMO отчёта этого проекта
   const from = fromId ? data.reports.filter(r => r.id === fromId && r.projectId === (first && first.id))[0] : undefined;
-  const init = first ? (from ? reportFromReturned(from, first, c.today) : reportFromProject(first, c.today)) : undefined;
   // «Завершено» в повернутом звіті — 100 % сразу (#52)
-  const [d, setD] = React.useState<ReportDraft | undefined>(init && progressLocked(init.status) ? { ...init, progress: 100 } : init);
+  const [d, setD] = React.useState<ReportDraft | undefined>(first ? initialReport(from ? reportFromReturned(from, first, c.today) : reportFromProject(first, c.today)) : undefined);
   const [err, setErr] = React.useState('');
   const [errs, setErrs] = React.useState<FieldErr[]>([]);
   // «% виконання» — текст поля (#53: ошибка вне 0–100 вместо молчаливой замены); prevPr — значение до «Завершено» (#52)
@@ -41,9 +40,9 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
   const fErr = (f: string): string => { const e = errs.filter(x => x.f === f && x.k !== 'errReq')[0]; return e ? t(e.k) : ''; };
   // #52: «Завершено» — 100 % и поле закрыто; другой статус — прежнее значение
   const setStatus = (st: string): void => {
-    if (progressLocked(st) && !progressLocked(d.status)) { setPrevPr(d.progress); setPrTxt('100'); set({ status: st, progress: 100 }); }
-    else if (!progressLocked(st) && progressLocked(d.status) && prevPr !== null) { setPrTxt(String(prevPr)); set({ status: st, progress: prevPr }); setPrevPr(null); }
-    else set({ status: st });
+    const r = switchStatus(d, prevPr, st);
+    setD(r.d); setPrevPr(r.prev); setErrs([]);
+    if (r.d.progress !== d.progress || progressLocked(st)) setPrTxt(String(r.d.progress));
   };
   // #51: по проекту уже есть отчёт на погодженні — новый подать нельзя (сохранение заблокировано)
   const pendingBlock = p.pendingDate ? guardText(t, 'gPending', { date: fmtDate(p.pendingDate) }) : '';
@@ -62,7 +61,7 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
       const f = await c.repo.fresh(p.id);
       const g = guard('report', c.me, f, { reportDate: d.date });
       if (!g.ok) { setErr(guardText(t, g.key, g.args)); setBusy(false); await c.reload(); return; }
-      await c.repo.createIn('StatusReports', p.id, reportBody(progressLocked(d.status) ? { ...d, progress: 100 } : d, f.project));
+      await c.repo.createIn('StatusReports', p.id, reportBody(reportToSave(d), f.project));
       await c.reload();
       c.toast(t('savedReportPending'));
       c.openProject(p.id);
@@ -75,7 +74,7 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
     <form onSubmit={save} noValidate={true}>
       {fixed ? <Frow label={fl('rProj')}><div className="fixedval">{fixed.title}</div></Frow>
         : <Frow label={fl('rProj')} htmlFor="f-p" req={true}>
-          <select id="f-p" value={d.projectId} onChange={e => { const np = act.filter(x => x.id === Number(e.target.value))[0]; if (np) { setD({ ...reportFromProject(np, d.date), schedule: d.schedule, budget: d.budget, resources: d.resources, title: d.title, done: d.done, next: d.next, issues: d.issues, decision: d.decision, decisionText: d.decisionText }); setPrTxt(String(np.progress)); setPrevPr(null); setErrs([]); setErr(''); } }}>
+          <select id="f-p" value={d.projectId} onChange={e => { const np = act.filter(x => x.id === Number(e.target.value))[0]; if (np) { const nd = switchProject(d, np); setD(nd); setPrTxt(String(nd.progress)); setPrevPr(null); setErrs([]); setErr(''); } }}>
             {act.map(x => <option key={x.id} value={x.id} disabled={!!x.pendingDate && x.id !== d.projectId}>{x.title}{x.pendingDate ? ' — ' + t('repPendingOpt').replace('{date}', fmtDate(x.pendingDate)) : ''}</option>)}</select></Frow>}
       {pendingBlock ? <p className="note lock">🔒 {pendingBlock}</p> : null}
       <div className="fgrid frow">

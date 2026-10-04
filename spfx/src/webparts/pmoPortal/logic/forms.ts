@@ -63,6 +63,28 @@ export function parseProgress(txt: string): number | null {
 /** Статус «Завершено» — % виконання 100 и поле закрыто (#52); «Скасовано» — без изменений. */
 export const progressLocked = (status: string): boolean => status === 'Завершено';
 
+/** Состояние формы отчёта (векторы tests/cases/report-form.json, они же проверяют прототип):
+ *  черновик при открытии — «Завершено» сразу 100 % (#52, «на основе повернутого»). */
+export const initialReport = (d: ReportDraft): ReportDraft => (progressLocked(d.status) ? { ...d, progress: 100 } : d);
+/** Смена статуса (#52): «Завершено» — 100 % и запоминается прежнее значение; уход с «Завершено» — прежнее значение. */
+export function switchStatus(d: ReportDraft, prev: number | null, status: string): { d: ReportDraft; prev: number | null } {
+  if (progressLocked(status) && !progressLocked(d.status)) return { d: { ...d, status, progress: 100 }, prev: d.progress };
+  if (!progressLocked(status) && progressLocked(d.status)) return { d: { ...d, status, progress: prev === null ? d.progress : prev }, prev: null };
+  return { d: { ...d, status }, prev };
+}
+/** Смена проекта в общей форме: показатели — нового проекта (статус, %, даты; поле % снова открыто), оценки и тексты — введённые. */
+export const switchProject = (d: ReportDraft, np: Project): ReportDraft => initialReport({ ...reportFromProject(np, d.date), schedule: d.schedule, budget: d.budget, resources: d.resources,
+  title: d.title, done: d.done, next: d.next, issues: d.issues, decision: d.decision, decisionText: d.decisionText });
+/** Что записывается: при «Завершено» — всегда 100 %. */
+export const reportToSave = (d: ReportDraft): ReportDraft => (progressLocked(d.status) ? { ...d, progress: 100 } : d);
+/** Выбор проекта (#37, #51): из карточки (projectId) — проект зафиксирован; иначе — первый без отчёта на погодженні;
+ *  недоступны проекты с отчётом на погодженні (кроме выбранного — для него форма покажет плашку и не даст сохранить). */
+export function reportProjectChoice(act: Project[], projectId: number): { fixed?: Project; first?: Project; disabled: number[] } {
+  const fixed = act.filter(p => p.id === projectId)[0];
+  const first = fixed || act.filter(p => !p.pendingDate)[0] || act[0];
+  return { fixed, first, disabled: act.filter(p => !!p.pendingDate && (!first || p.id !== first.id)).map(p => p.id) };
+}
+
 /** Ошибка поля формы: f — поле (для подсветки), k — ключ текста. */
 export interface FieldErr { f: string; k: string }
 /** Все ошибки формы отчёта сразу (#40): незаполненные обязательные поля, % вне 0–100, даты раньше старта.
