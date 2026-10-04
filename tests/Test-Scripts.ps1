@@ -216,6 +216,10 @@ if (-not $pmItem) { Ok "PM и власник читаются из памяти 
 # эталон: «Призначення» пишет эталон до карточки (иначе следующий запуск откатит)
 $sec = $syncSrc.Substring($i0c, $i0b - $i0c)
 if ($sec.IndexOf("Save-ProjectState") -ge 0 -and $sec.IndexOf("Save-ProjectState") -lt $sec.IndexOf('Set-PnPListItem -List $L_PROJ')) { Ok "«Призначення»: эталон пишется раньше карточки" } else { Bad "«Призначення»: эталон должен писаться раньше карточки" }
+if ($sec.IndexOf('Add-Change $p.Item.Id $c.f') -gt $sec.IndexOf('Set-PnPListItem -List $L_PROJ') -and $sec -match 'catch \{[^}]*\$ok = \$false[\s\S]*Save-ProjectState \$p\.Item\.Id \$prevState') { Ok "«Призначення»: журнал — после записи карточки; сбой карточки возвращает эталон" } else { Bad "«Призначення»: журнал должен писаться после карточки, сбой — возвращать эталон" }
+if ($sec -match '\$write\[\$c\.f\] = \[int\]\$src\[\$c\.f\]\.LookupId') { Ok "«Призначення»: пользователь пишется по LookupId" } else { Bad "«Призначення»: пользователь должен писаться по LookupId" }
+$i0aS = $syncSrc.IndexOf("# 0a. Эталон"); $sec0a = $syncSrc.Substring($i0aS, $i0c - $i0aS)
+if ($sec0a -match 'try \{ Set-PnPListItem -List \$L_PROJ[^\n]*\}\s*catch \{[\s\S]*Save-ProjectState \$p\.Item\.Id \$card \$STATES') { Ok "откат эталона: сбой записи — эталон принимает карточку (без зацикливания)" } else { Bad "раздел 0a: сбой отката должен принимать карточку" }
 Write-Host "3i. История отчётов и рисков (tests/cases/history.json)"
 $fnh = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Get-HistoryPlan" }, $true) | Select-Object -First 1
 if ($fnh) { Invoke-Expression $fnh.Extent.Text } else { Bad "нет функции Get-HistoryPlan" }

@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:2a59b8a5ffd1 — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:c2ff5e714c1c — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -889,7 +889,16 @@ if ($HAS_PS) {
             Add-Change $p.Item.Id $d.f (Human $d.f $d.card) (Human $d.f $d.state) "Редагування картки" $editor "Змінено в обхід порталу — повернуто значення з еталону" $when
             $p.Values[$d.f] = $d.state
         }
-        if (-not $DryRun) { Set-PnPListItem -List $L_PROJ -Identity $p.Item.Id -Values $write -UpdateType SystemUpdate | Out-Null }
+        if (-not $DryRun) {
+            try { Set-PnPListItem -List $L_PROJ -Identity $p.Item.Id -Values $write -UpdateType SystemUpdate | Out-Null }
+            catch {
+                # значение эталона не записывается (например, человек больше не разрешается по e-mail) — принять карточку,
+                # иначе каждый следующий запуск падал бы на том же откате
+                Warn "Картку «$($p.Item["Title"])» не вдалося повернути до еталону ($($_.Exception.Message)) — еталон прийнято за карткою"
+                Save-ProjectState $p.Item.Id $card $STATES
+                foreach ($d in $diff) { $p.Values[$d.f] = $d.card }
+            }
+        }
     }
 }
 
@@ -914,18 +923,34 @@ if ($HAS_PA) {
             else {
                 $stats.assigns++
                 $when = $a["Created"].ToUniversalTime().ToString("o"); $note = ([string]$a["paNote"]).Trim()
-                $newName = @{ pmManager = [string]$a["paManager"].LookupValue; pmOwner = [string]$a["paOwner"].LookupValue }
-                $write = @{}
-                foreach ($c in $plan.changes) {
-                    $from = if ($p.Names[$c.f]) { $p.Names[$c.f] } else { Human $c.f $c.from }
-                    $to = if ($newName[$c.f]) { $newName[$c.f] } else { $c.to }
-                    Add-Change $p.Item.Id $c.f $from $to "Призначення" $who $note $when
-                    $write[$c.f] = $c.to; $p.Values[$c.f] = $c.to; $p.Names[$c.f] = $newName[$c.f]
-                }
+                $src = @{ pmManager = $a["paManager"]; pmOwner = $a["paOwner"] }
+                # пользователь — по LookupId записи «Призначення» (человек уже есть на сайте), а не по e-mail
+                $write = @{}; foreach ($c in $plan.changes) { $write[$c.f] = [int]$src[$c.f].LookupId }
                 Log "  призначення #$($a.Id) «$($p.Item["Title"])»: $(@($plan.changes | ForEach-Object { "$($_.f) $($_.from) -> $($_.to)" }) -join '; ')"
+                $prevState = if ($HAS_PS -and $STATES[$p.Item.Id]) { $STATES[$p.Item.Id].state } else { $null }
                 $next = [ordered]@{}; foreach ($k in Get-StateKeys) { $next[$k] = [string]$p.Values[$k] }
-                if ($HAS_PS -and -not $DryRun) { Save-ProjectState $p.Item.Id $next $STATES }
-                if (-not $DryRun) { Set-PnPListItem -List $L_PROJ -Identity $p.Item.Id -Values $write -UpdateType SystemUpdate | Out-Null }
+                foreach ($c in $plan.changes) { $next[$c.f] = $c.to }
+                $ok = $true
+                if (-not $DryRun) {
+                    # сначала эталон (иначе следующий запуск откатит карточку); сбой записи карточки — эталон назад, без журнала,
+                    # запись отмечена обработанной (не зацикливается): PMO подаст новое «Призначення»
+                    if ($HAS_PS) { Save-ProjectState $p.Item.Id $next $STATES }
+                    try { Set-PnPListItem -List $L_PROJ -Identity $p.Item.Id -Values $write -UpdateType SystemUpdate | Out-Null }
+                    catch {
+                        $ok = $false
+                        Warn "Призначення #$($a.Id) «$($p.Item["Title"])» не застосовано: картку не записано ($($_.Exception.Message))"
+                        if ($HAS_PS -and $prevState) { Save-ProjectState $p.Item.Id $prevState $STATES }
+                    }
+                }
+                if ($ok) {
+                    # журнал — после успешной записи карточки: повтор не задваивает строки
+                    foreach ($c in $plan.changes) {
+                        $nm = [string]$src[$c.f].LookupValue
+                        $from = if ($p.Names[$c.f]) { $p.Names[$c.f] } else { Human $c.f $c.from }
+                        Add-Change $p.Item.Id $c.f $from $(if ($nm) { $nm } else { $c.to }) "Призначення" $who $note $when
+                        $p.Values[$c.f] = $c.to; $p.Names[$c.f] = $nm
+                    }
+                }
             }
         }
         if (-not $DryRun) { Set-PnPListItem -List $L_PA -Identity $a.Id -Values @{ paApplied = $true } -UpdateType SystemUpdate | Out-Null }
