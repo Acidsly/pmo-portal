@@ -47,7 +47,8 @@ test('#3: «Немає свіжого статус-звіту» на главн�
   const iso = (t: string): string => { const m = /(\d{2})\.(\d{2})\.(\d{4})/.exec(t); return m ? `${m[3]}-${m[2]}-${m[1]}` : ''; };
   const keys = rows.map(iso);
   const firstDated = keys.findIndex(k => !!k);
-  if (firstDated > 0) expect(keys.slice(0, firstDated).every(k => !k)).toBe(true);           // без отчётов — первыми
+  expect(firstDated).toBeGreaterThan(0);                                                      // в демо-данных есть проект без отчётов
+  expect(keys.slice(0, firstDated).every(k => !k)).toBe(true);                               // без отчётов — первыми
   const dated = keys.filter(k => !!k);
   expect(dated).toEqual(dated.slice().sort());                                                // дальше — от самого давнего
 });

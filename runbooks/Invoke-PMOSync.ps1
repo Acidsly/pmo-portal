@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:780807579c48 — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:aabd75ff79d0 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -145,7 +145,8 @@ function Read-ManagerCache([string]$text, [datetime]$nowUtc, [double]$hours) {
     if (-not ($c -is [System.Collections.IDictionary]) -or -not $c.Contains("saved")) { return $null }
     try { $saved = [datetimeoffset]::Parse([string]$c["saved"], [cultureinfo]::InvariantCulture).UtcDateTime } catch { return $null }
     $age = ($nowUtc.ToUniversalTime() - $saved).TotalHours
-    if ($age -lt 0 -or $age -ge $hours) { return $null }
+    # небольшой сдвиг часов между машинами (Mac, Azure) — до часа — не делает кэш недействительным
+    if ($age -lt -1 -or $age -ge $hours) { return $null }
     $mgr = @{}; if ($c["mgr"] -is [System.Collections.IDictionary]) { foreach ($k in $c["mgr"].Keys) { $mgr[$k] = [string]$c["mgr"][$k] } }
     $ppl = @{}; if ($c["people"] -is [System.Collections.IDictionary]) { foreach ($k in $c["people"].Keys) { $x = $c["people"][$k]; $ppl[$k] = @{ n = [string]$x["n"]; j = [string]$x["j"] } } }
     return @{ saved = $saved.ToString("o"); mgr = $mgr; people = $ppl; age = $age }
