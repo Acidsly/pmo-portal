@@ -28,7 +28,9 @@ export interface Project {
 }
 
 /** Строка списка «Команда проєкту»: человек, роль, по каким вопросам обращаться. */
-export interface TeamMember { id: number; projectId: number; user: Person | null; role: string; topics: string; }
+export interface TeamMember { id: number; projectId: number; user: Person | null; role: string; topics: string;
+  /** папка записи (корень списка или P<ID>) и автор — для правила R7 (logic/team.ts teamRowAccepted) */
+  dir?: string; author?: Person | null; }
 export interface Link { t: string; u: string; }
 
 export interface StatusReport {

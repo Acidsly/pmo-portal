@@ -67,9 +67,10 @@ export function mapRisk(r: any): Risk {
     owner: mapPerson(r.riOwner), status: s(r.riStatus), due: dateOnly(r.riDue), mitigation: s(r.riMitigation), strategy: s(r.riStrategy), contingency: s(r.riContingency), created: s(r.Created) };
 }
 
-export const TEAM_SELECT = ['Id', 'tmProjectId', 'tmRole', 'tmTopics', ...people('tmUser')].join(',');
-export const TEAM_EXPAND = 'tmUser';
-export const mapTeam = (r: any): TeamMember => ({ id: r.Id, projectId: r.tmProjectId, user: mapPerson(r.tmUser), role: s(r.tmRole), topics: s(r.tmTopics) });
+export const TEAM_SELECT = ['Id', 'tmProjectId', 'tmRole', 'tmTopics', 'FileDirRef', ...people('tmUser', 'Author')].join(',');
+export const TEAM_EXPAND = 'tmUser,Author';
+export const mapTeam = (r: any): TeamMember => ({ id: r.Id, projectId: r.tmProjectId, user: mapPerson(r.tmUser), role: s(r.tmRole), topics: s(r.tmTopics),
+  dir: s(r.FileDirRef), author: mapPerson(r.Author) });
 
 export const APPROVAL_SELECT = ['Id', 'apReportId', 'apProjectId', 'apDecision', 'apSchedule', 'apBudget', 'apResources', 'apNote', 'apApplied', 'Created', ...people('Author')].join(',');
 export const APPROVAL_EXPAND = 'Author';

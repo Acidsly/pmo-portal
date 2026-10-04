@@ -37,3 +37,22 @@ test('teamText, teamPeople и журнал правки карточки', () =>
   const d = { title: 'P', code: '', department: 'ІТ', priority: '', manager: null, owner: null, budget: 0, links: [], team: [{ id: 1, user: A, role: 'Замовник', topics: '' }, { user: B, role: 'Архітектор', topics: '' }] } as unknown as ProjectDraft;
   expect(cardDiff(before, d)).toEqual([{ f: 'links', from: 'Loop', to: '' }, { f: 'team', from: 'Анна — Замовник', to: 'Анна — Замовник; Борис — Архітектор' }]);
 });
+
+// R7: строки команды — те же векторы, что у Test-TeamRowAccepted синхронизации (folders.json -> team)
+import folderCases from '../../tests/cases/folders.json';
+import { teamRowAccepted, teamVisible } from '../src/webparts/pmoPortal/logic/team';
+describe('строка команды учитывается (общие векторы с синхронизацией)', () => {
+  for (const c of (folderCases as any).team) test(c.name, () => { expect(teamRowAccepted(c.inRoot, c.ready, c.author, c.pm, ['own@x'])).toBe(c.out); });
+});
+test('приложение: строка в корне у проекта с правами не от PM не показывается; автор без e-mail — приложение', () => {
+  const root = '/sites/pmo-test/Lists/ProjectTeam';
+  expect(teamVisible({ dir: root, author: { email: 'pmo@x' } }, root, true, 'pm@x')).toBe(false);
+  expect(teamVisible({ dir: root + '/', author: { email: 'PM@x' } }, root, true, 'pm@x')).toBe(true);
+  expect(teamVisible({ dir: root, author: { email: '' } }, root, true, 'pm@x')).toBe(true);
+  expect(teamVisible({ dir: root + '/P12', author: { email: 'pmo@x' } }, root, true, 'pm@x')).toBe(true);
+  expect(teamVisible({ dir: root, author: { email: 'pmo@x' } }, root, false, 'pm@x')).toBe(true);
+});
+test('SpRepo показывает команду только через teamVisible', () => {
+  const src = require('fs').readFileSync(require('path').join(__dirname, '../src/webparts/pmoPortal/data/SpRepo.ts'), 'utf8');
+  expect(src).toMatch(/team\.filter\(m => m\.projectId === x\.id && teamVisible\(m, teamRoot, !!x\.access/);
+});

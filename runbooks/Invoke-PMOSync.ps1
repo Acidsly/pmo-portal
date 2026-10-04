@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:041d23a5e49f — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:aabd75ff79d0 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -128,6 +128,36 @@ function Test-LockPlan([string]$text, [datetime]$nowUtc) {
     try { $until = [datetimeoffset]::Parse([string]$j.until, [cultureinfo]::InvariantCulture).UtcDateTime } catch { return "expired" }
     if ($until -le $nowUtc.ToUniversalTime()) { return "expired" }
     return "busy"
+}
+
+# Чья блокировка (векторы tests/cases/lock.json -> owner): своя — только если запись разбирается и run совпадает.
+function Test-LockOwner([string]$text, [string]$run) {
+    if (-not $text -or -not $run) { return $false }
+    try { $j = ConvertFrom-JsonText $text } catch { return $false }
+    return [bool]$j -and ($j -is [System.Collections.IDictionary]) -and [string]$j["run"] -eq $run
+}
+
+# Кэш оргструктуры (векторы tests/cases/cache.json): $text — JSON {saved, mgr, people}; срок — $hours от saved.
+# $null — нет, повреждён или устарел (читать Entra ID заново); иначе @{ saved (ISO UTC); mgr; people; age (часов) }.
+function Read-ManagerCache([string]$text, [datetime]$nowUtc, [double]$hours) {
+    if (-not $text) { return $null }
+    try { $c = ConvertFrom-JsonText $text } catch { return $null }
+    if (-not ($c -is [System.Collections.IDictionary]) -or -not $c.Contains("saved")) { return $null }
+    try { $saved = [datetimeoffset]::Parse([string]$c["saved"], [cultureinfo]::InvariantCulture).UtcDateTime } catch { return $null }
+    $age = ($nowUtc.ToUniversalTime() - $saved).TotalHours
+    # небольшой сдвиг часов между машинами (Mac, Azure) — до часа — не делает кэш недействительным
+    if ($age -lt -1 -or $age -ge $hours) { return $null }
+    $mgr = @{}; if ($c["mgr"] -is [System.Collections.IDictionary]) { foreach ($k in $c["mgr"].Keys) { $mgr[$k] = [string]$c["mgr"][$k] } }
+    $ppl = @{}; if ($c["people"] -is [System.Collections.IDictionary]) { foreach ($k in $c["people"].Keys) { $x = $c["people"][$k]; $ppl[$k] = @{ n = [string]$x["n"]; j = [string]$x["j"] } } }
+    return @{ saved = $saved.ToString("o"); mgr = $mgr; people = $ppl; age = $age }
+}
+# Что сохранить в кэш: руководители без сбоев чтения ($fail), люди; срок — от первого чтения Entra ID ($cacheSaved),
+# новые люди дописываются, но срок не продлевают.
+function Get-ManagerCacheJson($mgr, $people, $fail, [string]$cacheSaved, [datetime]$nowUtc) {
+    $mgrOut = [ordered]@{}; foreach ($k in @($mgr.Keys | Sort-Object)) { if (-not $fail.ContainsKey($k)) { $mgrOut[$k] = $mgr[$k] } }
+    $pplOut = [ordered]@{}; foreach ($k in @($people.Keys | Sort-Object)) { $pplOut[$k] = [ordered]@{ n = $people[$k].n; j = $people[$k].j } }
+    $saved = if ($cacheSaved) { $cacheSaved } else { $nowUtc.ToUniversalTime().ToString("o") }
+    return [ordered]@{ saved = $saved; mgr = $mgrOut; people = $pplOut } | ConvertTo-Json -Depth 4 -Compress
 }
 
 # Время по Киеву: Azure Automation работает в UTC, Mac — в поясе пользователя; даты для людей — всегда по Киеву.
@@ -325,7 +355,7 @@ function Update-SyncLock {
     if (-not $LOCK_HELD) { return }
     $row = Get-LockRow
     $j = if ($row -and $row.text) { try { ConvertFrom-JsonText $row.text } catch { $null } } else { $null }
-    if (-not $j -or $j.run -ne $LOCK_RUN) { throw "Блокування синхронізації перехопив інший запуск ($(if ($row) { $row.text })) — запуск зупинено" }
+    if (-not (Test-LockOwner ([string]$row.text) $LOCK_RUN)) { throw "Блокування синхронізації перехопив інший запуск ($(if ($row) { $row.text })) — запуск зупинено" }
     $now = (Get-Date).ToUniversalTime()
     $text = [ordered]@{ run = $LOCK_RUN; by = [string]$j.by; at = [string]$j.at; until = $now.AddMinutes($LOCK_MINUTES).ToString("o") } | ConvertTo-Json -Compress
     if (-not (Set-LockText $row $text)) { throw "Блокування синхронізації перехопив інший запуск — запуск зупинено" }
@@ -333,7 +363,7 @@ function Update-SyncLock {
 function Exit-SyncLock {
     try {
         $row = Get-LockRow
-        if ($row -and $row.text -and ((ConvertFrom-JsonText $row.text).run -eq $LOCK_RUN)) { [void](Set-LockText $row "") }
+        if ($row -and (Test-LockOwner ([string]$row.text) $LOCK_RUN)) { [void](Set-LockText $row "") }
     } catch { Write-Warning "Блокировка не снята ($($_.Exception.Message)) — освободится через $LOCK_MINUTES мин" }
 }
 if ($DryRun) {
@@ -1024,16 +1054,13 @@ function Read-CacheText {
 }
 if (($USE_CACHE_VAR -or $ManagerCache) -and -not $RebuildPermissions) {
     try {
-        $cacheText = Read-CacheText
-        $c = if ($cacheText) { $cacheText | ConvertFrom-Json -AsHashtable } else { $null }
+        # чтение и срок — Read-ManagerCache (векторы tests/cases/cache.json)
+        $c = Read-ManagerCache (Read-CacheText) (Get-Date).ToUniversalTime() $ManagerCacheHours
         if ($c) {
-        $age = (Get-Date).ToUniversalTime() - ([datetime]$c.saved).ToUniversalTime()
-        if ($age.TotalHours -lt $ManagerCacheHours) {
-            $cacheSaved = ([datetime]$c.saved).ToUniversalTime().ToString("o")
-            foreach ($k in $c.mgr.Keys) { $MGR[$k] = [string]$c.mgr[$k] }
-            foreach ($k in $c.people.Keys) { $PEOPLE[$k] = @{ n = [string]$c.people[$k].n; j = [string]$c.people[$k].j } }
-            Log ("Оргструктура из кэша ({0:n0} ч назад): {1} человек" -f $age.TotalHours, $MGR.Count)
-        }
+            $cacheSaved = $c.saved
+            foreach ($k in $c.mgr.Keys) { $MGR[$k] = $c.mgr[$k] }
+            foreach ($k in $c.people.Keys) { $PEOPLE[$k] = $c.people[$k] }
+            Log ("Оргструктура из кэша ({0:n0} ч назад): {1} человек" -f $c.age, $MGR.Count)
         }
     } catch { Warn "Кэш оргструктуры не прочитан, читаю Entra ID: $($_.Exception.Message)" }
 }
@@ -1282,11 +1309,8 @@ Log ("Готово. Звітів: {0}, записів у журнал: {1}, но
     $stats.reports, $stats.changes, $stats.created, $stats.comments, $stats.types, $stats.acl, $stats.reminders, $stats.warnings, $stats.errors) $(if ($stats.errors) { "Red" } else { "Green" })
 if (($USE_CACHE_VAR -or $ManagerCache) -and -not $DryRun) {
     try {
-        $mgrOut = [ordered]@{}; foreach ($k in $MGR.Keys) { if (-not $MGRFAIL.ContainsKey($k)) { $mgrOut[$k] = $MGR[$k] } }
-        $pplOut = [ordered]@{}; foreach ($k in $PEOPLE.Keys) { $pplOut[$k] = [ordered]@{ n = $PEOPLE[$k].n; j = $PEOPLE[$k].j } }
-        # срок кэша — от первого чтения Entra ID: новые люди дописываются, но не продлевают его
-        $saved = if ($cacheSaved) { $cacheSaved } else { (Get-Date).ToUniversalTime().ToString("o") }
-        $cacheJson = [ordered]@{ saved = $saved; mgr = $mgrOut; people = $pplOut } | ConvertTo-Json -Depth 4 -Compress
+        # что сохранить — Get-ManagerCacheJson (векторы tests/cases/cache.json): без сбоев чтения, срок не продлевается
+        $cacheJson = Get-ManagerCacheJson $MGR $PEOPLE $MGRFAIL $cacheSaved (Get-Date).ToUniversalTime()
         if ($USE_CACHE_VAR) { Set-AutomationVariable -Name $ManagerCacheVariable -Value $cacheJson }
         else {
             New-Item -ItemType Directory -Force -Path (Split-Path -Parent $ManagerCache) | Out-Null

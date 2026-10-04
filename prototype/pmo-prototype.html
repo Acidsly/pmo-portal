@@ -761,6 +761,12 @@ const T = {
 };
 // значения выбора хранятся на украинском, показываются на языке интерфейса (как i18n/values.ts приложения)
 const VAL = {
+ // статусы разбора отзывов («Відгуки»)
+ 'Новий':['Новий','New','Новый'],
+ 'Прийнято':['Прийнято','Accepted','Принят'],
+ 'Зроблено':['Зроблено','Done','Сделано'],
+ 'Прокоментовано':['Прокоментовано','Commented','Прокомментирован'],
+ 'Відхилено':['Відхилено','Rejected','Отклонён'],
  'Ініціація':['Ініціація','Initiation','Инициация'],
  'Планування':['Планування','Planning','Планирование'],
  'Реалізація':['Реалізація','Execution','Реализация'],
@@ -1031,7 +1037,12 @@ const visArch = () => visAll().filter(isArch);
 const repsOf = p => (p.reports || []).map(r => Object.assign({}, r, {pid:p.id, d:D(r.date), rag:calcRag(r)})).sort((a, b) => a.d - b.d);
 const visR = () => visAll().flatMap(repsOf);
 const visK = () => visP().flatMap(p => (p.risks || []).map(k => Object.assign({}, k, {pid:p.id})));
+// риски всех видимых проектов, включая архив — для вкладки «Ризики» (вид «Ризики архівних проєктів», #32)
+const visKAll = () => visAll().flatMap(p => (p.risks || []).map(k => Object.assign({}, k, {pid:p.id})));
 const lastUpd = p => D(p.lastUpdate);
+// «Немає свіжого звіту» (#3): сначала без отчётов, дальше — от самого давнего; списки — новые сверху (как logic/status.ts)
+const staleFirst = (a, b) => { const x = a.lastUpdate || '', y = b.lastUpdate || ''; return x === y ? a.id - b.id : !x ? -1 : !y ? 1 : x < y ? -1 : 1; };
+const newestFirst = (a, b) => b.id - a.id;
 const byOrder = (a, b) => (a.type === b.type ? 0 : a.type === 'Стратегічний' ? -1 : 1) || a.prio.localeCompare(b.prio) || a.title.localeCompare(b.title);
 
 /* ================= Renderers ================= */
@@ -1485,7 +1496,7 @@ function pageHome(){
   const vis = visP();
   if (!vis.length) return `${hero(t('dash'), t('visible') + '0', true)}<div class="wp empty-state"><p>${t('noVisible')}</p></div>`;
   const prob = vis.filter(PV.problem.f).sort((a, b) => (a.rag === 'Червоний' ? 0 : 1) - (b.rag === 'Червоний' ? 0 : 1));
-  const stale = vis.filter(PV.stale.f);
+  const stale = vis.filter(PV.stale.f).sort(staleFirst);
   const dec = visR().filter(r => r.decision && !isArch(pById(r.pid))).sort((a, b) => b.d - a.d);
   const openAll = visK().filter(k => KV.open.f(k) && !isArch(pById(k.pid))).sort((a, b) => b.p * b.i - a.p * a.i), open = openAll.slice(0, 6);
   const C = (l, r, cls) => ({l:() => l, r, cls});
@@ -1514,7 +1525,7 @@ const viewSel = (views, cur, key) => `<label class="viewsel" title="${t('viewsNo
   <select data-act="view" data-key="${key}">${Object.entries(views).map(([k, v]) => `<option value="${k}"${k === cur ? ' selected' : ''}>${esc(tv(v.t))}</option>`).join('')}</select></label>`;
 function pageProjects(){
   const s = stateScreen(); if (s) return s.replace(t('dash'), t('navProjects'));
-  const v = PV[state.pv], rows = visP().filter(v.f).sort(byOrder);
+  const v = PV[state.pv], rows = visP().filter(v.f).sort(state.pv === 'stale' ? staleFirst : newestFirst);
   const inner = state.projMode === 'tiles' ? tiles(rows) : dataTable('projects', rows);
   return `${hero(t('navProjects'), t('visible') + visP().length, true)}
   <div class="listcard"><div class="cmdbar">${modeSwitch('projMode')}<span class="spacer"></span>${viewSel(PV, state.pv, 'pv')}${state.projMode === 'list' ? gearBtn('projects') : ''}</div>${inner}</div>
@@ -1538,7 +1549,7 @@ function pageReports(){
 function pageRisks(){
   const s = stateScreen(); if (s) return s.replace(t('dash'), t('navRisks'));
   // #32: риски проектов в архиве — отдельным представлением (только просмотр); остальные представления — без архива
-  const v = KV[state.kv], rows = visK().filter(k => v.f(k) && (v.arch ? isArch(pById(k.pid)) : !isArch(pById(k.pid)))).sort((a, b) => b.p * b.i - a.p * a.i);
+  const v = KV[state.kv], rows = visKAll().filter(k => v.f(k) && (v.arch ? isArch(pById(k.pid)) : !isArch(pById(k.pid)))).sort((a, b) => b.p * b.i - a.p * a.i);
   return `${hero(t('navRisks'))}
   <div class="listcard"><div class="cmdbar">${visP().some(p => isActive(p) && canEditP(p)) ? `<button class="cmd primary" data-act="newrisk">${iconPlus}${t('newRisk')}</button>` : ''}<span class="spacer"></span>${viewSel(KV, state.kv, 'kv')}${gearBtn('risks')}</div>${dataTable('risks', rows)}</div>
   <p class="hint">${t('hintRisks')}</p>`;

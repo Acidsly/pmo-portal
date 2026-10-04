@@ -35,7 +35,7 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/report-form.json", "tests/cases/apply.json", "config/focus-group.example.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "config/focus-group.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
@@ -87,17 +87,37 @@ $raw = @([regex]::Matches((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMO
 if ($raw) { Bad "Get-PnPListItem без отбрасывания папок: $($raw -join ', ')" } else { Ok "дочерние списки — без папок" }
 
 Write-Host "3c1. Блокировка запусков и время по Киеву (PMO.Common.ps1: Test-LockPlan, ConvertTo-Kyiv; tests/cases/lock.json)"
-foreach ($n in @("ConvertFrom-JsonElement", "ConvertFrom-JsonText", "Test-LockPlan", "Get-KyivZone", "ConvertTo-Kyiv")) {
+foreach ($n in @("ConvertFrom-JsonElement", "ConvertFrom-JsonText", "Test-LockPlan", "Test-LockOwner", "Read-ManagerCache", "Get-ManagerCacheJson", "Get-KyivZone", "ConvertTo-Kyiv")) {
     $fn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $n }, $true) | Select-Object -First 1
     if ($fn) { Invoke-Expression $fn.Extent.Text } else { Bad "нет функции $n" }
 }
 $lc = Get-Content -Raw (Join-Path $root "tests/cases/lock.json") | ConvertFrom-Json -DateKind String
 $lockNow = [datetimeoffset]::Parse($lc.now, [cultureinfo]::InvariantCulture).UtcDateTime
+foreach ($c in $lc.owner) { $r = Test-LockOwner $c.text $c.run; if ($r -eq [bool]$c.out) { Ok "владелец блокировки: $($c.name)" } else { Bad "владелец блокировки: $($c.name): $r" } }
+if ((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")) -match '(?s)function Update-SyncLock.*Test-LockOwner.*function Exit-SyncLock.*Test-LockOwner') { Ok "продление и снятие блокировки — через Test-LockOwner" } else { Bad "Update-SyncLock / Exit-SyncLock не проверяют владельца через Test-LockOwner" }
+$cc = Get-Content -Raw (Join-Path $root "tests/cases/cache.json") | ConvertFrom-Json -DateKind String
+$ccNow = [datetimeoffset]::Parse($cc.now, [cultureinfo]::InvariantCulture).UtcDateTime
+foreach ($c in $cc.read) {
+    $r = Read-ManagerCache $c.text $ccNow $cc.hours
+    $got = if ($r) { "mgr=" + (($r.mgr.Keys | Sort-Object | ForEach-Object { "$_>$($r.mgr[$_])" }) -join ",") + ";people=" + (($r.people.Keys | Sort-Object | ForEach-Object { "$_>$($r.people[$_].n)|$($r.people[$_].j)" }) -join ",") + ";age=" + [int][math]::Round($r.age) } else { "-" }
+    $exp = if ($c.out) { "mgr=" + (($c.out.mgr.PSObject.Properties | Sort-Object Name | ForEach-Object { "$($_.Name)>$($_.Value)" }) -join ",") + ";people=" + (($c.out.people.PSObject.Properties | Sort-Object Name | ForEach-Object { "$($_.Name)>$($_.Value)" }) -join ",") + ";age=" + $c.out.age } else { "-" }
+    if ($got -eq $exp) { Ok "кэш: $($c.name)" } else { Bad "кэш: $($c.name): $got, ожидалось $exp" }
+}
+foreach ($c in $cc.write) {
+    $mg = @{}; foreach ($pp in $c.mgr.PSObject.Properties) { $mg[$pp.Name] = [string]$pp.Value }
+    $pe = @{}; foreach ($pp in $c.people.PSObject.Properties) { $pe[$pp.Name] = @{ n = $pp.Value.n; j = $pp.Value.j } }
+    $fl = @{}; foreach ($x in @($c.fail)) { if ($x) { $fl[$x] = $true } }
+    $r = Get-ManagerCacheJson $mg $pe $fl $c.cacheSaved $ccNow
+    if ($r -eq $c.out) { Ok "кэш, запись: $($c.name)" } else { Bad "кэш, запись: $($c.name): $r" }
+}
 foreach ($c in $lc.plan) { $r = Test-LockPlan $c.text $lockNow; if ($r -eq $c.out) { Ok $c.name } else { Bad "$($c.name): $r, ожидалось $($c.out)" } }
 foreach ($c in $lc.kyiv) {
     $r = (ConvertTo-Kyiv ([datetimeoffset]::Parse($c.utc, [cultureinfo]::InvariantCulture).UtcDateTime)).ToString("yyyy-MM-dd HH:mm")
     if ($r -eq $c.out) { Ok "Киев: $($c.name)" } else { Bad "Киев: $($c.name): $r, ожидалось $($c.out)" }
 }
+# время, пришедшее как местное (Kind = Local), переводится так же, как то же мгновение в UTC
+$utcT = [datetime]::SpecifyKind([datetime]'2026-07-01T21:30:00', [DateTimeKind]::Utc)
+if ((ConvertTo-Kyiv $utcT.ToLocalTime()).ToString("yyyy-MM-dd HH:mm") -eq "2026-07-02 00:30") { Ok "Киев: местное время машины переводится через UTC" } else { Bad "Киев: местное время машины переведено неверно" }
 # блокировка снимается в finally; сбой записи завершает запуск ошибкой (оповещение Azure Automation)
 $syncRaw = Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")
 if ($syncRaw -match '(?s)\ntry \{.*\} finally \{\s*if \(\$LOCK_HELD\) \{ Exit-SyncLock \}') { Ok "блокировка снимается в finally" } else { Bad "Invoke-PMOSync.ps1: нет try/finally вокруг тела с Exit-SyncLock" }
@@ -112,6 +132,17 @@ foreach ($c in @(
     @{ l = "SHAREPOINT\system"; out = $false; n = "системная учётная запись — не приложение" })) {
     if ((Test-AppLogin $c.l) -eq $c.out) { Ok $c.n } else { Bad "Test-AppLogin $($c.l)" }
 }
+
+# журнал синхронизации — только через Log (в Azure Automation Write-Host не сохраняется, Write-Output портит возвраты функций)
+$syncAst2 = [System.Management.Automation.Language.Parser]::ParseInput((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")), [ref]$null, [ref]$null)
+$outCmds = $syncAst2.FindAll({ $args[0] -is [System.Management.Automation.Language.CommandAst] -and $args[0].GetCommandName() -in @("Write-Host", "Write-Output", "echo") }, $true)
+$outside = @($outCmds | Where-Object { $fn = $_.Parent; while ($fn -and -not ($fn -is [System.Management.Automation.Language.FunctionDefinitionAst])) { $fn = $fn.Parent }; -not $fn -or $fn.Name -ne "Log" })
+if (-not $outside.Count) { Ok "синхронизация пишет журнал только через Log" } else { Bad "Write-Host / Write-Output вне Log: строки $(@($outside | ForEach-Object { $_.Extent.StartLineNumber }) -join ', ')" }
+# #9 расписание: каждые 15 минут круглые сутки (Mac -AllDay: 96 слотов без 3:00 — пересчёт прав; Azure — 4 часовых со сдвигом + воскресенье)
+$mac = Get-Content -Raw (Join-Path $root "scripts/Set-MacSchedule.ps1")
+if ($mac -match 'foreach \(\$h in 0\.\.23\) \{ foreach \(\$m in 0, 15, 30, 45\)') { Ok "Mac: -AllDay — каждые 15 минут круглые сутки" } else { Bad "Set-MacSchedule.ps1: -AllDay не каждые 15 минут" }
+$az = Get-Content -Raw (Join-Path $root "scripts/Set-AzureSchedule.ps1")
+if ($az -match 'foreach \(\$m in 0, 15, 30, 45\)' -and $az -match '-HourInterval 1' -and $az -match '-WeekInterval 1 -DaysOfWeek Sunday') { Ok "Azure: 4 часовых расписания со сдвигом 15 минут и воскресный пересчёт" } else { Bad "Set-AzureSchedule.ps1: расписание не каждые 15 минут" }
 
 Write-Host "3c2. Runbook Azure Automation (scripts/Build-Runbook.ps1 -> runbooks/Invoke-PMOSync.ps1)"
 $rbPath = Join-Path $root "runbooks/Invoke-PMOSync.ps1"

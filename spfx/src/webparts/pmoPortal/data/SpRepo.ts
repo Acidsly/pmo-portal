@@ -5,7 +5,7 @@ import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, 
   COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, TEAM_SELECT, TEAM_EXPAND, mapTeam, APPROVAL_SELECT, APPROVAL_EXPAND, mapApproval, canAdd, canManage,
   withoutFolders, CHANGES_ON_LOAD, changesOf } from './map';
 import { withApproval, approvedIds as approvedOf, pendingReports } from '../logic/approval';
-import { teamPeople } from '../logic/team';
+import { teamPeople, teamVisible } from '../logic/team';
 import { applyPending } from '../logic/overlay';
 import { Regional, regionalFrom, toFormValues } from './formValues';
 import { applyState, parseState, StateJson } from '../logic/state';
@@ -82,7 +82,9 @@ export class SpRepo {
     const byProj: Record<number, StatusReport[]> = {};
     for (const x of reports) (byProj[x.projectId] = byProj[x.projectId] || []).push(x);
     // стейкхолдеры — люди «Команда проєкту» (синхронизация повторяет их в pmStakeholders)
-    const withTeam = (x: Project): Project => { const own = team.filter(m => m.projectId === x.id); return { ...x, team: own, stakeholders: teamPeople(own) }; };
+    // R7: строка в корне у проекта с выданными правами не от PM — синхронизация её не учитывает, приложение тоже не показывает
+    const teamRoot = `${this.webRelUrl.replace(/\/$/, '')}/Lists/ProjectTeam`;
+    const withTeam = (x: Project): Project => { const own = team.filter(m => m.projectId === x.id && teamVisible(m, teamRoot, !!x.access, x.manager ? x.manager.email : '')); return { ...x, team: own, stakeholders: teamPeople(own) }; };
     return { projects: p.map(mapProject).map(x => ({ ...applyState(x, states[x.id]), lastApplied: lastApplied[x.id] || '' })).map(withTeam)
       .map(x => applyPending(x, byProj[x.id] || [], ap ? approvedIds : undefined))
       .map(x => { const pr = pendingReports(byProj[x.id] || [])[0]; return pr ? { ...x, pendingDate: pr.date } : x; }), reports, risks: k.map(mapRisk),
