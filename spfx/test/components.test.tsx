@@ -403,3 +403,25 @@ describe('#71 «Мета та опис»: 10 строк, дальше — «По
     expect(root.querySelector('#card-desc')!.className).not.toContain('clamp'); expect((root.querySelector('#desc-more') as HTMLElement).textContent).toBe('Згорнути');
   });
 });
+
+describe('#62 / #69 сохранение отчёта: дата подання — день сохранения, период — от последнего погодженого', () => {
+  test('в запись уходят srDate = сегодня и srPeriodFrom = дата последнего погодженого (повернутий не считается)', async () => {
+    const pr = { id: 5, title: 'Проєкт П', status: 'Реалізація', type: 'Звичайний', progress: 40, actualCost: 0, start: '2026-03-02', goLive: '', planEnd: '2026-12-01', forecastEnd: '',
+      canEdit: true, manager: { email: 'pm@x', name: 'PM' } };
+    const R = (id: number, date: string, approval: string): any => ({ id, projectId: 5, date, approval, applied: approval === 'Погоджено' });
+    const data = { projects: [pr], reports: [R(1, '2026-09-01', 'Погоджено'), R(2, '2026-09-20', 'Повернуто'), R(9, '2026-09-25', 'Погоджено')].map(r => r.id === 9 ? { ...r, projectId: 7 } : r),
+      risks: [], comments: [], team: [] } as any;
+    const bodies: any[] = [];
+    const c2 = { ...ctx, me: 'pm@x', reload: async () => undefined, openProject() { /* */ },
+      repo: { fresh: async () => ({ project: pr, etag: '"1"', owner: false, pending: [], lastApprovedDate: '2026-09-01' }), createIn: async (_l: string, _id: number, b: any) => { bodies.push(b); } } };
+    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><ReportForm data={data} projectId={5} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    for (const n of ['sched', 'budget', 'res']) act(() => { Simulate.change(root.querySelector(`input[name="${n}"][value="Зелений"]`) as HTMLInputElement); });
+    act(() => { Simulate.change(root.querySelector('#f-t') as HTMLInputElement, { target: { value: 'Резюме' } } as any); });
+    await act(async () => { Simulate.submit(root.querySelector('form') as HTMLFormElement); await new Promise(r => setTimeout(r, 0)); });
+    const now = new Date(), today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    expect(bodies.length).toBe(1);
+    expect(bodies[0].srDate).toBe(`${today}T12:00:00Z`);
+    expect(bodies[0].srPeriodFrom).toBe('2026-09-01T12:00:00Z');   // отчёт другого проекта (25.09) и повернутий (20.09) — не граница
+    expect(bodies[0].srPeriod).toBeUndefined();
+  });
+});

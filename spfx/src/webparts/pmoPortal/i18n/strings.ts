@@ -581,11 +581,6 @@ export const T: Record<string, L3> = {
   "Cannot be earlier than the start date.",
   "Не может быть раньше даты старта."
  ],
- "errAfterReport": [
-  "Не може бути пізніше дати звіту.",
-  "Cannot be later than the report date.",
-  "Не может быть позже даты отчёта."
- ],
  "aeHint": [
   "Коли проєкт фактично завершено або скасовано.",
   "When the project was actually completed or cancelled.",
@@ -2171,9 +2166,9 @@ export const EXTRA: Record<string, L3> = {
   "По проекту уже есть отчёт на согласовании от {date} — новый можно подать после решения PMO."
  ],
  "gOldDate": [
-  "Дата звіту раніша за останній погоджений звіт ({date}). Вкажіть пізнішу дату.",
-  "The report date is earlier than the last approved report ({date}). Enter a later date.",
-  "Дата отчёта раньше последнего согласованного отчёта ({date}). Укажите более позднюю дату."
+  "Останній погоджений звіт датований {date} — пізніше за сьогодні. Новий звіт не застосується, поки не настане ця дата; зверніться до PMO.",
+  "The last approved report is dated {date}, later than today. A new report will not apply until that date; contact the PMO.",
+  "Последний согласованный отчёт датирован {date} — позже сегодняшнего дня. Новый отчёт не применится, пока не наступит эта дата; обратитесь к PMO."
  ],
  "gDecided": [
   "Звіт уже вирішено ({state}) — можливо, іншим PMO. Дані оновлено.",

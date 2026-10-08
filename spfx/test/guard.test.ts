@@ -28,6 +28,8 @@ describe('guard: устаревшая страница не может запи�
   });
   test('дата отчёта раньше последнего погодженого — нельзя', () => {
     expect(guard('report', 'pm@x', F({ lastApprovedDate: '2026-09-25' }), { reportDate: '2026-09-20' })).toEqual({ ok: false, key: 'gOldDate', args: { date: '25.09.2026' } });
+    // #62: дата не вводится — PM сам не исправит, текст объясняет, к кому обратиться
+    const S = require('../src/webparts/pmoPortal/i18n/strings'); expect((S.T.gOldDate || S.EXTRA.gOldDate)[0]).toContain('зверніться до PMO');
     expect(guard('report', 'pm@x', F({ lastApprovedDate: '2026-09-25' }), { reportDate: '2026-09-25' }).ok).toBe(true);
   });
   test('S6: отчёт уже вирішено (другой PMO / вкладка) — повторно нельзя', () => {
