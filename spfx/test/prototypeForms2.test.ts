@@ -282,13 +282,15 @@ test('меню прототипа: значок и название у кажд�
   bs.forEach(b => { expect(b.querySelector('.ni svg')).not.toBeNull(); expect(b.querySelector('.nl').textContent).toBe(b.title); });
   const css = Array.from(w.document.querySelectorAll('style')).map((x: W) => x.textContent).join('\n');
   for (const k of ['home', 'projects', 'reports', 'risks', 'archive', 'feedback']) expect((css.match(new RegExp(`--nv-${k}:`, 'g')) || []).length).toBe(3);   // светлая и две тёмные
-  expect(css).toMatch(/@media \(max-width:720px\)\{\.nav button\{[^}]*\}\.nav \.nl\{display:none\}/);
+  expect(css).toMatch(/@media \(max-width:720px\)\{[^\n]*\.nav button\{[^}]*\}\.nav \.nl\{display:none\}/);
 });
 
-test('шапка: меню — второй строкой на всю ширину, название не сжимается (перекрытие на 1440 px)', () => {
+test('шапка: название — своей строкой, ниже меню и кнопки; на телефоне меню отдельной строкой (перекрытие на 1440 px)', () => {
   const css = Array.from(w.document.querySelectorAll('style')).map((x: W) => x.textContent).join('\n');
-  expect(css).toMatch(/\.nav\{[^}]*order:3;width:100%\}/);
+  expect(css).toMatch(/\.brand\{[^}]*flex:1 0 100%\}/);
+  expect(css).toMatch(/\.nav\{[^}]*flex:1 1 0;min-width:0\}/);   // меню занимает место до кнопок и прокручивается внутри, кнопки не уходят ниже
+  expect(css).toMatch(/@media \(max-width:1279px\)\{\.nav\{order:3;flex:1 0 100%\}\}/);
   const ov = fs.readFileSync(path.join(__dirname, '../src/webparts/pmoPortal/theme/overrides.scss'), 'utf8');
-  expect(ov).toMatch(/\.pmo-app \.brand \{ flex: none; \}/);
-  expect(ov).not.toMatch(/\.top-in \{ flex-wrap: nowrap/);   // одна строка с меню — не помещается
+  expect(ov).not.toMatch(/\.pmo-app \.brand \{ flex:/);   // приложение не меняет строку названия
+  expect(ov).not.toMatch(/\.top-in \{ flex-wrap: nowrap/);  // название и меню в одну строку — не помещается
 });
