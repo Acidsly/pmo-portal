@@ -2,6 +2,7 @@ import { Project, StatusReport, ChangeEvent } from '../data/types';
 import { calcRag } from './rag';
 import { AP_OK } from './approval';
 import { applyAction } from './reportRules';
+import { isArch } from './status';
 
 const byDateThenId = (a: StatusReport, b: StatusReport): number => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id);
 
@@ -9,7 +10,7 @@ const SHOWN: [keyof Project, string][] = [['status', 'status'], ['rag', 'rag'], 
   ['start', 'start'], ['goLive', 'golive'], ['planEnd', 'plan'], ['forecastEnd', 'fc'], ['actualEnd', 'ae']];
 
 /** Что погоджений отчёт переносит в карточку — как Get-ReportTarget синхронизации (общие векторы tests/cases/apply.json):
- *  заполненные показатели (% и затраты — целые, x,5 — вверх); «Завершено» / «Скасовано» -> «Архівний», дата архивации и фактическая дата (#54);
+ *  заполненные показатели (% и затраты — целые, x,5 — вверх); «Завершено» / «Скасовано» — тот же статус (архив), дата архивации и фактическая дата (#54);
  *  отчёт не старше последнего (по дате) задаёт стан, дату и резюме. Значения — строки (как поля журнала). */
 export type TargetKey = 'status' | 'type' | 'progress' | 'start' | 'goLive' | 'planEnd' | 'forecastEnd' | 'actualCost' | 'actualEnd' | 'archivedAt' | 'rag' | 'lastUpdate' | 'lastReport';
 export interface TargetIn { status?: string; type?: string; progress?: number | null; start?: string; goLive?: string; planEnd?: string; forecastEnd?: string;
@@ -24,7 +25,7 @@ export function reportTarget(r: TargetIn, lastUpdate: string): Partial<Record<Ta
     t[k] = k === 'progress' || k === 'actualCost' ? String(roundAway(Number(v))) : String(v);
   }
   // #54: фактическая дата — только вместе с «Завершено» / «Скасовано»
-  if (t.status === 'Завершено' || t.status === 'Скасовано') { t.status = 'Архівний'; t.archivedAt = r.date; } else delete t.actualEnd;
+  if (t.status === 'Завершено' || t.status === 'Скасовано') t.archivedAt = r.date; else delete t.actualEnd;
   if (!lastUpdate || r.date >= lastUpdate) {
     const rag = calcRag((r.schedule || '') as never, (r.budget || '') as never, (r.resources || '') as never);
     if (rag) t.rag = rag;
@@ -44,7 +45,7 @@ export function applyPending(project: Project, reports: StatusReport[], approved
   let last = project.lastApplied || '';
   for (const r of pending) {
     const author = r.author ? r.author.email.toLowerCase() : '';
-    if (applyAction({ id: r.id, date: r.date, author }, pm, [], p.status === 'Архівний', last, p.lastUpdate) !== 'apply') continue;
+    if (applyAction({ id: r.id, date: r.date, author }, pm, [], isArch(p.status), last, p.lastUpdate) !== 'apply') continue;
     p.pending = true; last = `${r.date}#${r.id}`;
     const before = { ...p };
     // что переносится — общим правилом reportTarget (те же векторы, что у синхронизации)

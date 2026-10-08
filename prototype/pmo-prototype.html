@@ -775,7 +775,7 @@ const T = {
  archiveSub:['Завершені та скасовані проєкти. Лише перегляд.','Completed and cancelled projects. View only.','Завершённые и отменённые проекты. Только просмотр.'],
  archivedNote:['Проєкт в архіві: лише перегляд.','This project is archived: view only.','Проект в архиве: только просмотр.'],
  onePending:['Звіт від {date} на погодженні PMO — новий можна подати після рішення.','The report from {date} is awaiting PMO approval — a new one can be submitted after the decision.','Отчёт от {date} на согласовании PMO — новый можно подать после решения.'], archNoComments:['Проєкт в архіві: лише перегляд.','The project is archived: view only.','Проект в архиве: только просмотр.'],
- archivedAt:['Дата архівації','Archived on','Дата архивации'],
+ archivedAt:['Дата завершення / скасування','Completed / cancelled on','Дата завершения / отмены'],
  cols:['Поля та порядок','Columns and order','Поля и порядок'], colsReset:['Як за замовчуванням','Reset to default','Как по умолчанию'],
  colWidthsReset:['Скинути ширини колонок','Reset column widths','Сбросить ширины колонок'], colResize:['Перетягніть, щоб змінити ширину колонки','Drag to resize the column','Потяните, чтобы изменить ширину колонки'],
  filter:['Фільтр','Filter','Фильтр'], clear:['Очистити','Clear','Очистить'], search:['Пошук','Search','Поиск'],
@@ -789,7 +789,7 @@ const T = {
  errKeyReason:['Ви змінили статус, тип або дати — вкажіть причину.','You changed status, type or dates — enter a reason.','Вы изменили статус, тип или даты — укажите причину.'],
  completeArch:['Завершено — перенести в архів','Completed — move to archive','Завершено — перенести в архив'],
  cancelArch:['Скасовано — перенести в архів','Cancelled — move to archive','Отменено — перенести в архив'],
- completeHint:['Після погодження звіту PMO проєкт отримає статус «Архівний» і перейде у вкладку «Архів».','After PMO approves the report, the project gets the “Архівний” status and moves to the Archive tab.','После согласования отчёта PMO проект получит статус «Архівний» и перейдёт во вкладку «Архів».'],
+ completeHint:['Після погодження звіту PMO проєкт отримає цей статус і перейде у вкладку «Архів».','After PMO approves the report, the project gets this status and moves to the Archive tab.','После согласования отчёта PMO проект получит этот статус и перейдёт во вкладку «Архив».'],
  savedArch:['Статус-звіт збережено, проєкт перенесено в архів.','Status report saved, project moved to archive.','Статус-отчёт сохранён, проект перенесён в архив.'],
  cStake:['Власник / Product','Owner / Product','Собственник / Product'], cStart:['Старт / запуск','Start / go-live','Старт / запуск'],
  cFinish:['Завершення: план / прогноз','Completion: plan / forecast','Завершение: план / прогноз'], cBudget:['Бюджет / факт','Budget / actual','Бюджет / факт'],
@@ -877,6 +877,7 @@ const VAL = {
  'Стратегічні':['Стратегічні','Strategic','Стратегические'],
  'Проблемні':['Проблемні','At risk','Проблемные'],
  'Мої проєкти (усі)':['Мої проєкти (усі)','My projects (all)','Мои проекты (все)'],
+ 'Завершені':['Завершені','Completed','Завершённые'], 'Скасовані':['Скасовані','Cancelled','Отменённые'],
  'Я PM':['Я PM','I am PM','Я PM'],
  'Немає свіжого звіту':['Немає свіжого звіту','No recent report','Нет свежего отчёта'],
  'Усі звіти':['Усі звіти','All reports','Все отчёты'],
@@ -929,7 +930,7 @@ const calcRag = r => { const v = [r.sched, r.budget, r.res]; if (v.some(x => !x)
 // погодження статус-звіту PMO: у картку потрапляє лише погоджений звіт
 const AP_PEND = 'На погодженні', AP_OK = 'Погоджено', AP_RET = 'Повернуто';
 const isApproved = r => (r.approval || AP_OK) === AP_OK;
-const STATUSES = ['Ініціація','Планування','Реалізація','Призупинено','Скасовано','Архівний'];
+const STATUSES = ['Ініціація','Планування','Реалізація','Призупинено','Завершено','Скасовано'];
 const REPORT_STATUSES = ['Ініціація','Планування','Реалізація','Призупинено'];
 const TYPES = ['Стратегічний','Звичайний'];
 const PRIOS = ['1 — Високий','2 — Середній','3 — Низький'];
@@ -989,9 +990,9 @@ function buildSeed(){
  {id:7,code:'PRJ-007',title:'Портал самообслуговування працівників',type:'Звичайний',pm:'Марина Ткаченко',owner:'Тетяна Кравець',product:'Анна Лисенко',dept:'HR та кадрове адміністрування',status:'Призупинено',prio:'3 — Низький',progress:25,start:'2026-01-12',golive:'2026-09-01',plan:'2026-10-01',fc:'2027-04-30',budget:700000,actual:184000,ago:34,hist:'YRR',decision:'Вирішити: відновлювати проєкт чи закрити',note:'Призупинено до завершення впровадження CRM',
   cm:[[34,'Марина Ткаченко','Призупинено рішенням власника до запуску CRM']],
   ch:[[34,'Тетяна Кравець','Пріоритет — впровадження CRM',[['status','Реалізація','Призупинено'],['fc','2026-10-01','2027-04-30']]]]},
- {id:8,code:'PRJ-008',title:'Електронний кадровий документообіг',type:'Звичайний',pm:'Марина Ткаченко',owner:'Тетяна Кравець',product:'Анна Лисенко',dept:'HR та кадрове адміністрування',status:'Архівний',prio:'2 — Середній',progress:100,start:'2025-11-03',golive:'2026-07-01',plan:'2026-08-31',fc:'2026-08-28',budget:500000,actual:478000,ago:27,hist:'GGGGGG',note:'Проєкт закрито, систему передано в експлуатацію',
+ {id:8,code:'PRJ-008',title:'Електронний кадровий документообіг',type:'Звичайний',pm:'Марина Ткаченко',owner:'Тетяна Кравець',product:'Анна Лисенко',dept:'HR та кадрове адміністрування',status:'Завершено',prio:'2 — Середній',progress:100,start:'2025-11-03',golive:'2026-07-01',plan:'2026-08-31',fc:'2026-08-28',budget:500000,actual:478000,ago:27,hist:'GGGGGG',note:'Проєкт закрито, систему передано в експлуатацію',
   cm:[[27,'Марина Ткаченко','Акт приймання підписано']],
-  ch:[[27,'Марина Ткаченко','Приймання підписано',[['status','Реалізація','Архівний'],['progress','95','100']]]], arch:27}
+  ch:[[27,'Марина Ткаченко','Приймання підписано',[['status','Реалізація','Завершено'],['progress','95','100']]]], arch:27}
  ];
  const POOL = {G:['Роботи йдуть за планом','Контрольну точку пройдено вчасно','Етап прийнято замовником'],
   Y:['Відставання з інтеграції на 1–2 тижні','Затримка погодження вимог','Бракує ресурсу розробника 1С'],
@@ -1094,15 +1095,18 @@ async function initData(){
   db.collection('projects').onSnapshot(snap => {
     if (snap.empty){ if (snap.metadata.fromCache) return; MODE = 'empty'; PROJ = []; }
     else { MODE = 'db'; PROJ = snap.docs.map(d => parse(Object.assign({}, d.data(), {id:d.id})));
-      PROJ.filter(p => ['Завершено','Скасовано'].includes(p.status)).forEach(p => { p.status = 'Архівний'; p.archivedAt = p.archivedAt || p.lastUpdate || iso(TODAY); persist(p); }); }
+      // прежнее «Архівний» в сохранённых данных — исход по последнему итоговому отчёту (как миграция Deploy-PMO.ps1), иначе «Завершено»
+      PROJ.filter(p => p.status === 'Архівний').forEach(p => { const r = (p.reports || []).filter(x => ['Завершено','Скасовано'].includes(x.status)).sort((a, b) => String(a.date).localeCompare(String(b.date))).pop();
+        p.status = r ? r.status : 'Завершено'; p.archivedAt = p.archivedAt || p.lastUpdate || iso(TODAY); persist(p); }); }
     render();
   }, err => { console.error(err); if (MODE === 'loading'){ db = null; MODE = 'local'; PROJ = buildSeed().map(parse); render(); } });
 }
 
 /* ================= Derived ================= */
 const pById = id => PROJ.find(p => p.id === id);
-const isArch = p => p.status === 'Архівний' || p.status === 'Завершено';
-const isActive = p => !isArch(p) && p.status !== 'Скасовано';
+// проект в архиве: «Завершено» или «Скасовано» (tests/cases/archive.json; «Архівний» — прежнее значение)
+const isArch = p => ['Завершено','Скасовано','Архівний'].includes(p.status);
+const isActive = p => !isArch(p);
 const visAll = () => PROJ.filter(canSee);
 const visP = () => visAll().filter(p => !isArch(p));
 const visArch = () => visAll().filter(isArch);
@@ -1122,7 +1126,7 @@ const byOrder = (a, b) => (a.type === b.type ? 0 : a.type === 'Стратегі�
 /* ================= Renderers ================= */
 const ragHtml = v => v ? `<span class="pill" style="--c:${RC[v]}"><span class="dot sm"></span>${tv(v)}</span>`
   : `<span class="pill" style="--c:var(--na)"><span class="dot sm"></span>${t('notRated')}</span>`;
-const STC = {'Ініціація':'#5856d6','Планування':'var(--theme)','Реалізація':'var(--g)','Призупинено':'var(--y)','Скасовано':'var(--r)','Архівний':'var(--na)','Завершено':'var(--na)','Відкрито':'var(--y)','В роботі':'var(--theme)','Закрито':'var(--g)'};
+const STC = {'Ініціація':'#5856d6','Планування':'var(--theme)','Реалізація':'var(--g)','Призупинено':'var(--y)','Скасовано':'var(--na)','Архівний':'var(--na)','Завершено':'var(--g)','Відкрито':'var(--y)','В роботі':'var(--theme)','Закрито':'var(--g)'};
 // статус проєкту чи ризику — кольорова пілюля без крапки (крапка — у стану RAG)
 const statusPill = v => v ? `<span class="pill st" style="--c:${STC[v] || 'var(--na)'}">${esc(tv(v))}</span>` : '<span class="muted">—</span>';
 const apBadge = v => { v = v || AP_OK; return `<span class="pill ap" style="--c:${v === AP_OK ? 'var(--g)' : v === AP_RET ? 'var(--r)' : 'var(--y)'}"><span class="dot sm"></span>${esc(tv(v))}</span>`; };
@@ -1213,7 +1217,7 @@ const PV = {
   late:{t:'Прострочені', f:p => isActive(p) && !!D(p.plan) && D(p.plan) < TODAY}
 };
 // вигляди архіву: без умов активності
-const AV = {all:{t:'Усі проєкти', f:() => true}, strat:{t:'Стратегічні', f:p => p.type === 'Стратегічний'}, mine:{t:'Мої проєкти (усі)', f:p => participants(p).includes(VIEWER)}, pm:{t:'Я PM', f:p => p.pm === VIEWER}};
+const AV = {all:{t:'Усі проєкти', f:() => true}, done:{t:'Завершені', f:p => p.status === 'Завершено'}, cancelled:{t:'Скасовані', f:p => p.status === 'Скасовано'}, strat:{t:'Стратегічні', f:p => p.type === 'Стратегічний'}, mine:{t:'Мої проєкти (усі)', f:p => participants(p).includes(VIEWER)}, pm:{t:'Я PM', f:p => p.pm === VIEWER}};
 const RV = {all:{t:'Усі звіти', f:() => true}, decision:{t:'Потребують рішення', f:r => r.decision}, awaiting:{t:'Очікують погодження', f:r => r.approval === AP_PEND}};
 const KV = {open:{t:'Відкриті', f:k => k.status !== 'Закрито'}, high:{t:'Високі ризики', f:k => k.status !== 'Закрито' && k.p * k.i >= 15}, all:{t:'Усі елементи', f:() => true}, archived:{t:'Ризики архівних проєктів', f:() => true, arch:true}};
 const state = {rmCell:null, page:'home', pv:'all', rv:'all', kv:'open', av:'all', homeMode:'tiles', projMode:'tiles', archmode:'tiles', panel:null};
@@ -1262,9 +1266,10 @@ function dynamics(){
   for (let k = 6; k >= 0; k--){
     const tt = daysAgo(k * 14), c = {'Зелений':0,'Жовтий':0,'Червоний':0,'':0};
     // кожен проєкт, що вже існував на дату зрізу (і ще не в архіві): стан останнього погодженого звіту; немає звіту — сірий
-    visAll().forEach(p => { if (p.status === 'Скасовано') return;
+    visAll().forEach(p => {
       const cr = (p.changes || []).find(x => x.kind === 'create'); if (cr && new Date(cr.date) > tt) return;
-      if (isArch(p) && tt >= lastUpd(p)) return;   // в день архивации проект уже в архиве — как в кольце
+      // завершённые и отменённые — до даты архивации (иначе фактической, иначе последнего отчёта); даты нет — в архиве всегда (как кольцо)
+      const on = D(p.archivedAt) || D(p.ae) || lastUpd(p); if (isArch(p) && (!on || tt >= on)) return;
       const rs = repsOf(p).filter(r => r.d <= tt && isApproved(r)); c[rs.length ? rs[rs.length - 1].rag : '']++; });
     pts.push({tt, c});
   }
@@ -1389,7 +1394,7 @@ const RDEF = {
   next:{l:() => t('cNextP'), main:r => `<span class="clamp2">${esc(r.next)}</span>`, sort:r => r.next, cls:'w-wide'},
   issues:{l:() => t('cIssues'), main:r => `<span class="clamp2">${esc(r.issues) || '<span class="muted">—</span>'}</span>`, sort:r => r.issues || '', cls:'w-wide'},
   progress:{l:() => fl('progress'), main:r => barHtml(r.progress), sort:r => r.progress},
-  status:{l:() => t('cStatusR'), main:r => r.status ? esc(tv(r.status === 'Завершено' ? 'Архівний' : r.status)) : '<span class="muted">—</span>', sort:r => r.status || '', filter:r => r.status || ''},
+  status:{l:() => t('cStatusR'), main:r => r.status ? esc(tv(r.status)) : '<span class="muted">—</span>', sort:r => r.status || '', filter:r => r.status || ''},
   author:{l:() => fl('rAuthor'), main:r => person(r.author), sort:r => r.author, filter:r => r.author},
   decision:{l:() => t('cDecFlag'), main:r => r.decision ? `<span class="flag">${t('yes')}</span>` : '<span class="muted">—</span>', sort:r => r.decision ? 0 : 1, filter:r => r.decision ? 'yes' : 'no', flabel:v => v === 'yes' ? t('yes') : t('no')},
   decText:{l:() => t('cDecText'), main:r => r.decisionText ? `<span class="clamp2">${esc(r.decisionText)}</span>` : '<span class="muted">—</span>', sort:r => r.decisionText || '', cls:'w-wide'}
@@ -1411,7 +1416,7 @@ const KDEF = {
   due:{l:() => fl('kDue'), main:k => { const d = D(k.due); return d < TODAY && k.status !== 'Закрито' ? `<span class="late">${fmt(d)}</span>` : fmt(d); }, sort:k => k.due}
 };
 TDEFS.projects = PDEF; TDEFAULTS.projects = ['strat','prio','title','pm','status','rag','repDate','progress','plan','update'];
-TDEFS.archive = PDEF; TDEFAULTS.archive = ['strat','prio','title','pm','owner','archived','ae','plan','budget','actual'];
+TDEFS.archive = PDEF; TDEFAULTS.archive = ['strat','prio','title','status','pm','owner','archived','ae','plan','budget','actual'];
 TDEFS.reports = RDEF; TDEFAULTS.reports = ['strat','prio','proj','date','rag','sched','budget','res','title','approval','author','decision'];
 TDEFS.risks = KDEF; TDEFAULTS.risks = ['strat','prio','proj','title','type','score','owner','status','due'];
 
@@ -1754,11 +1759,11 @@ const NOTIF_LOADED = new Date().toISOString(), NOTIF_READ = {};
 let NOTIF_RET = null;   // переход из «Сповіщень»: {onlyNew} — вернуться к списку
 const notifRead = () => NOTIF_READ[VIEWER] || NOTIF_LOADED;
 const notifKind = c => ({create:'created', assign:'assigned', submit:'submitted', approval:'decided', risk:'risk', edit:'cardEdit'})[c.kind]
-  || ((c.diffs || []).some(d => d.f === 'status' && d.to === 'Архівний') ? 'archived' : 'applied');
+  || ((c.diffs || []).some(d => d.f === 'status' && isArch({status:d.to})) ? 'archived' : 'applied');
 function notifFor(kind, author, diffs, p, risk){
   const me = VIEWER;
   if (!me || author === me) return false;
-  if (p.status === 'Архівний' && kind !== 'archived') return false;
+  if (isArch(p) && kind !== 'archived') return false;
   const pm = p.pm === me, owner = p.owner === me, team = (p.team || []).some(m => m.n === me) || (p.stakeholders || []).includes(me);
   if (kind === 'submitted') return isPMO();
   if (kind === 'archived') return pm || owner || team || isPMO();
@@ -2219,7 +2224,7 @@ function reportForm(pid, base){
 // показники картки, які змінює звіт (поля, яких у звіті немає, не змінюються)
 function reportVals(p, r){
   const vals = {};
-  if (r.status) vals.status = ['Завершено','Скасовано'].includes(r.status) ? 'Архівний' : r.status;
+  if (r.status) vals.status = r.status;   // «Завершено» / «Скасовано» — тот же статус (архив)
   ['type','start','golive','plan','fc'].forEach(k => { if (r[k] != null) vals[k] = r[k]; });
   if (r.progress != null) vals.progress = r.progress;
   if (!p.lastUpdate || D(r.date) >= D(p.lastUpdate)) vals.rag = calcRag(r);
@@ -2260,10 +2265,10 @@ function reportView(pid, rid, keep){
   const d = D(r.date), pend = r.approval === AP_PEND, applied = isApproved(r);
   const IND = [['status','status'],['type','type'],['progress','progress'],['start','start'],['golive','golive'],['plan','plan'],['fc','fc'],['ae','ae'],['cost','rCost']];
   const show = (k, v) => v === '' || v == null ? '<span class="muted">—</span>' : k === 'progress' ? v + '%' : k === 'cost' ? money(+v)
-    : ['start','golive','plan','fc','ae'].includes(k) ? fmt(D(v)) : esc(tv(v === 'Завершено' ? 'Архівний' : v));
+    : ['start','golive','plan','fc','ae'].includes(k) ? fmt(D(v)) : esc(tv(v));
   const cardK = k => k === 'cost' ? 'actual' : k;
   const ind = IND.filter(([k]) => r[k] != null && !(k === 'ae' && !r[k])).map(([k, l]) => {
-    const cur = p[cardK(k)], nv = k === 'status' && ['Завершено','Скасовано'].includes(r[k]) ? 'Архівний' : r[k];
+    const cur = p[cardK(k)], nv = r[k];
     const ch = !applied && String(cur ?? '') !== String(nv ?? '');
     return `<div class="kv"><span class="k">${fl(l)}</span><span class="v">${ch ? `<span class="dv"><s>${show(k, cur)}</s><span class="arr">→</span>${show(k, r[k])}</span>` : show(k, r[k])}</span></div>`;
   }).join('');

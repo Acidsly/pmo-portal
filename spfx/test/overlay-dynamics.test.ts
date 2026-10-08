@@ -27,13 +27,13 @@ describe('applyPending — как шаг 1 Invoke-PMOSync.ps1', () => {
     const p = applyPending(P({ progress: 30, planEnd: '2026-11-01' }), [R({})]);
     expect(p.progress).toBe(30); expect(p.planEnd).toBe('2026-11-01');
   });
-  test('«Завершено» -> «Архівний» и дата архивации', () => {
+  test('«Завершено» -> проект «Завершено» (архив) и дата архивации', () => {
     const p = applyPending(P({}), [R({ status: 'Завершено', date: '2026-09-22' })]);
-    expect(p.status).toBe('Архівний'); expect(p.archivedAt).toBe('2026-09-22');
+    expect(p.status).toBe('Завершено'); expect(p.archivedAt).toBe('2026-09-22');
   });
-  test('«Скасовано» -> «Архівний» и дата архивации, как завершённый', () => {
+  test('«Скасовано» -> проект «Скасовано» (архив) и дата архивации, как завершённый', () => {
     const p = applyPending(P({}), [R({ status: 'Скасовано', date: '2026-09-23' })]);
-    expect(p.status).toBe('Архівний'); expect(p.archivedAt).toBe('2026-09-23');
+    expect(p.status).toBe('Скасовано'); expect(p.archivedAt).toBe('2026-09-23');
   });
   test('отчёт старше последнего применённого показатели не меняет (правило R4, как синхронизация)', () => {
     const p = applyPending(P({ lastUpdate: '2026-09-21', rag: 'Зелений', lastReport: 'Новый' }), [R({ date: '2026-09-15', budget: 'Червоний', progress: 10 })]);
@@ -46,7 +46,7 @@ describe('applyPending — как шаг 1 Invoke-PMOSync.ps1', () => {
   });
   test('проект в архиве: следующий погоджений отчёт не накладывается (правило R5)', () => {
     const p = applyPending(P({}), [R({ id: 1, date: '2026-09-20', status: 'Завершено' }), R({ id: 2, date: '2026-09-22', status: 'Реалізація', progress: 50 })]);
-    expect(p.status).toBe('Архівний'); expect(p.progress).toBe(0);
+    expect(p.status).toBe('Завершено'); expect(p.progress).toBe(0);
   });
   test('применённые и чужие отчёты игнорируются', () => {
     const p0 = P({ progress: 5 });
@@ -65,7 +65,7 @@ describe('кольцо и динамика — как в прототипе', ()
   });
   test('snapshots: 7 точек через 14 дней, последний отчёт на дату среза, архив — до даты архивации', () => {
     const today = '2026-09-24';
-    const ps = [P({ id: 1 }), P({ id: 2, status: 'Архівний', archivedAt: '2026-09-01' })];
+    const ps = [P({ id: 1 }), P({ id: 2, status: 'Завершено', archivedAt: '2026-09-01' })];
     const rs = [R({ projectId: 1, date: '2026-08-01', budget: 'Жовтий' }), R({ id: 2, projectId: 1, date: '2026-09-20', budget: 'Зелений' }),
                 R({ id: 3, projectId: 2, date: '2026-08-20', budget: 'Червоний' })];
     const s = snapshots(ps, rs, today);
@@ -88,7 +88,7 @@ describe('кольцо и динамика — как в прототипе', ()
   test('последний срез «Динаміки» совпадает с кольцом «Портфель за станом»', () => {
     const today = '2026-09-24';
     const ps = [P({ id: 1, rag: 'Жовтий', lastUpdate: '2026-09-01', created: '2026-06-01T10:00:00Z' }), P({ id: 2, rag: 'Зелений', lastUpdate: '2026-09-20', created: '2026-06-01T10:00:00Z' }),
-      P({ id: 3, rag: '', created: '2026-09-22T10:00:00Z' }), P({ id: 4, status: 'Архівний', rag: 'Зелений', archivedAt: '2026-08-01', created: '2026-06-01T10:00:00Z' }),
+      P({ id: 3, rag: '', created: '2026-09-22T10:00:00Z' }), P({ id: 4, status: 'Завершено', rag: 'Зелений', archivedAt: '2026-08-01', created: '2026-06-01T10:00:00Z' }),
       P({ id: 5, status: 'Скасовано', rag: '', created: '2026-06-01T10:00:00Z' })];
     const rs = [R({ projectId: 1, date: '2026-09-01', budget: 'Жовтий' }), R({ id: 2, projectId: 2, date: '2026-09-20' }), R({ id: 3, projectId: 4, date: '2026-07-20' })];
     const last = snapshots(ps, rs, today)[6]; const d = donutCounts(ps);
@@ -97,7 +97,7 @@ describe('кольцо и динамика — как в прототипе', ()
   });
   test('проект, ушедший в архив сегодня (завершён или отменён), в сегодняшний срез не входит', () => {
     const today = '2026-09-24';
-    const ps = [P({ id: 1, rag: 'Жовтий' }), P({ id: 2, status: 'Архівний', rag: 'Жовтий', archivedAt: today })];
+    const ps = [P({ id: 1, rag: 'Жовтий' }), P({ id: 2, status: 'Скасовано', rag: 'Жовтий', archivedAt: today })];
     const rs = [R({ projectId: 1, date: '2026-09-01', budget: 'Жовтий' }), R({ id: 2, projectId: 2, date: '2026-09-10', budget: 'Жовтий' })];
     const s = snapshots(ps, rs, today);
     expect(s[6]).toEqual({ date: today, g: 0, y: 1, r: 0, na: 0 });
@@ -124,3 +124,14 @@ test('отчёт не от PM проекта карточку не меняет 
   const p = applyPending(P({ progress: 10 }), [R({ progress: 90, author: { id: 2, name: 'Z', email: 'z@x' } })]);
   expect(p.progress).toBe(10); expect(p.pending).toBeFalsy();
 });
+
+describe('архив «Завершено» / «Скасовано» в динамике', () => {
+  test('отменённый с датой архивации — учитывается до неё, как завершённый; прежнее «Архівний» — так же', () => {
+    const today = '2026-10-01';
+    const ps = [P({ id: 1, status: 'Скасовано', archivedAt: '2026-09-20', created: '2026-06-01T10:00:00Z' }), P({ id: 2, status: 'Архівний', archivedAt: '2026-09-20', created: '2026-06-01T10:00:00Z' })];
+    const s = snapshots(ps, [], today);
+    expect(s[5].na).toBe(2);   // 2026-09-17 — ещё не в архиве
+    expect(s[6].na).toBe(0);   // 2026-10-01 — уже в архиве
+  });
+});
+

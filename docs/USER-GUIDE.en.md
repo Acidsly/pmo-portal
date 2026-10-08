@@ -49,7 +49,7 @@ Everything is counted only over the projects you can see (excluding the archive)
 - **In the list:** click a column header to sort; the funnel ▽ filters by value; the gear ⚙ chooses and orders columns (↑ / ↓); on a computer, drag a column header's edge to change its width — it is remembered for each list, "Reset column widths" is in the gear menu; **CSV** exports the table as shown (the file opens in Excel). New records are on top. On a phone, status reports and risks are shown as cards (sorting and filters set on a computer apply there too).
 - **Filters** (funnel and "Show") apply while you stay on the page: switching to another tab resets them to the defaults (column choice and sorting are remembered). Column widths do not change with filters.
 - **"Report" column** — the date of the last approved report; if a report is waiting for the PMO — "awaiting approval · date" or "new report awaiting approval".
-- **Status** is a coloured label: Initiation — purple, Planning — blue, Execution — green, On hold — orange, Archived — grey. The dot next to it is the project health (green, yellow, red, grey — not rated).
+- **Status** is a coloured label: Initiation — purple, Planning — blue, Execution — green, On hold — orange, Completed — green, Cancelled — grey. The dot next to it is the project health (green, yellow, red, grey — not rated).
 - **Colours:** a red completion date means the deadline has passed and the project is still open. The dot in the "Report" column is the freshness of the last approved report: green — up to 8 days, yellow — 9–14, red — over 14, grey — no approved reports yet (hover over the dot to see how many days old the report is). Below the date is the **approval of the newest report**: "Approved", "Awaiting approval" or "Returned for rework" (for the last two — the report date).
 
 ## Project card
@@ -103,7 +103,7 @@ The status (Initiation, Planning, Execution, On hold, Cancelled, Completed) chan
 3. Fills in **Reason for changing indicators** — why the status changes; the reason goes to the history.
 4. Rates schedule, budget, resources, writes the summary → **Save**. The report goes for approval.
 5. **The PMO** approves the report — the status in the card changes, and "Report approval" and "Updated by status report" rows appear in the history ("old → new", the reason). If the PMO returns the report, the status does not change and the PM submits a new report.
-6. **"Completed — move to archive"** or **"Cancelled — move to archive"** — after approval the project gets the "Archived" status, an archive date and the "Actual completion date" and moves to the "Archive" tab; after that it is view-only. That the project was cancelled is shown in its last status report and in the "Change history".
+6. **"Completed — move to archive"** or **"Cancelled — move to archive"** — after approval the project gets the "Completed" or "Cancelled" status, the "Completed / cancelled on" date and the "Actual completion date" and moves to the "Archive" tab; after that it is view-only.
 
 ## Risks and issues
 
@@ -141,7 +141,7 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
 
 ## Archive
 
-The "Archive" tab lists completed and cancelled projects with their archive date, view-only (no new comments). Their risks — "Risks and issues" → "Show: Risks of archived projects". Navigation is the same as in "Projects": **List** or **Tiles**, "Show" (All projects, Strategic, My projects), CSV and column choice; tiles show the archive date.
+The "Archive" tab lists projects with the **Completed** or **Cancelled** status (the "Status" column) and their completion / cancellation date, view-only (no new comments). Their risks — "Risks and issues" → "Show: Risks of archived projects". Navigation is the same as in "Projects": **List** or **Tiles**, "Show" (All projects, **Completed**, **Cancelled**, Strategic, My projects, I am PM), CSV and column choice; tiles show the completion / cancellation date.
 
 ## Language and theme
 

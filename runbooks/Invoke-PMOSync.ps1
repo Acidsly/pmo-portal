@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:02c32e5f161b — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:f219fbad8af5 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -12,7 +12,7 @@
       1. Статус-отчёты -> карточка проекта. Каждый новый отчёт (srApplied = нет) переносит в проект
          ключевые показатели: статус, тип, % выполнения, даты, затраты; если отчёт самый свежий —
          ещё общее состояние (худшая из трёх оценок), дату отчёта и «Останній апдейт».
-         Статус «Завершено» в отчёте -> проект получает статус «Архівний» и дату архивации.
+         Статус «Завершено» / «Скасовано» в отчёте -> проект получает этот статус (архив) и дату завершення / скасування.
       2. Журнал «Зміни показників»: строка на каждое изменённое поле (было / стало / кто / причина)
          и строка «Створення» для новых проектов.
       3. «Останній коментар» в карточке — из списка «Коментарі».
@@ -174,6 +174,19 @@ function ConvertTo-Kyiv([datetime]$d) {
     return [TimeZoneInfo]::ConvertTimeFromUtc($u, (Get-KyivZone))
 }
 $STATE_DATES = @("pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd", "pmArchivedAt", "pmLastUpdate", "pmActualEnd")
+# Проект в архиве: «Завершено» или «Скасовано» (векторы tests/cases/archive.json, те же — isArch приложения);
+# «Архівний» — прежнее значение, понимается до миграции (Deploy-PMO.ps1, раздел миграции архива)
+function Test-ArchivedStatus([string]$status) { return $status -in @("Завершено", "Скасовано", "Архівний") }
+# Исход прежнего «Архівний» при миграции (Deploy-PMO.ps1, раздел 6a3; векторы tests/cases/archive-migration.json):
+# (1) статус отчёта из эталона (psLastApplied), если итоговый; (2) новейший применённый итоговый отчёт (дата, затем номер);
+# (3) строка журнала прежней миграции «Скасовано -> Архівний» — «Скасовано»; (4) иначе «Завершено» и предупреждение. # archive-migration
+function Get-ArchiveOutcome([string]$lastAppliedStatus, $finals, [bool]$cancelledJournal) {
+    if ($lastAppliedStatus -in @("Завершено", "Скасовано")) { return @{ status = $lastAppliedStatus; warn = $false } }
+    $f = @($finals | Where-Object { $_ } | Sort-Object { [string]$_.date }, { [int]$_.id } | Select-Object -Last 1)
+    if ($f.Count) { return @{ status = [string]$f[0].status; warn = $false } }
+    if ($cancelledJournal) { return @{ status = "Скасовано"; warn = $false } }
+    return @{ status = "Завершено"; warn = $true }
+}
 function Get-StateKeys { return @("pmStatus", "pmRAG", "pmType", "pmProgress", "pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd",
                                   "pmActualCost", "pmArchivedAt", "pmLastUpdate", "pmLastReport", "pmCode", "pmActualEnd",
                                   "pmManager", "pmOwner") }
@@ -291,6 +304,9 @@ for ($try = 1; $try -le 2; $try++) {
     }
 }
 Log "Подключено: $SiteUrl" "Cyan"
+# переход архива на «Завершено» / «Скасовано»: пока в выборе статуса проекта нет «Завершено» (Deploy ещё не обновлён) — пишем прежнее «Архівний»
+$LEGACY_ARCHIVE = -not (@((Get-PnPField -List $L_PROJ -Identity "pmStatus").Choices) -contains "Завершено")
+if ($LEGACY_ARCHIVE) { Log "Статус проєкту: «Завершено» ще не в списку вибору — архів пишеться як «Архівний» (до міграції)" "Yellow" }
 if ($DryRun) { Log "Режим DryRun: изменения не записываются" "Yellow" }
 
 # ---------------------------------------------------------------------------
@@ -480,17 +496,18 @@ function Get-EffectiveApproval($rep, $aps) {
     return $null
 }
 # Что погоджений отчёт переносит в карточку (векторы tests/cases/apply.json, те же — reportTarget приложения):
-# заполненные показатели (% и затраты — целые, x,5 — вверх); «Завершено» / «Скасовано» -> «Архівний», дата архивации и
+# заполненные показатели (% и затраты — целые, x,5 — вверх); «Завершено» / «Скасовано» -> тот же статус (архив), дата архивации и
 # фактическая дата завершения (#54; при другом статусе не переносится); отчёт не старше последнего (по дате) задаёт ещё стан (худшая из трёх оценок), дату и резюме. Пустые поля карточку не трогают.
 # $rep: status, type, progress, start, goLive, planEnd, forecastEnd, actualCost, actualEnd, date, schedule, budget, resources, title.
-function Get-ReportTarget($rep, [string]$lastUpdate) {
+# $legacy — на сайте ещё нет «Завершено» в выборе статуса проекта (до миграции архива): пишется прежнее «Архівний».
+function Get-ReportTarget($rep, [string]$lastUpdate, [bool]$legacy = $false) {
     $t = [ordered]@{}
     foreach ($k in @("status", "type", "progress", "start", "goLive", "planEnd", "forecastEnd", "actualCost", "actualEnd")) {
         $v = $rep.$k
         if ($null -eq $v -or [string]$v -eq "") { continue }
         $t[$k] = if ($k -in @("progress", "actualCost")) { [string][math]::Round([double]$v, 0, [MidpointRounding]::AwayFromZero) } else { [string]$v }
     }
-    if ($t["status"] -in @("Завершено", "Скасовано")) { $t["status"] = "Архівний"; $t["archivedAt"] = [string]$rep.date }
+    if ($t["status"] -in @("Завершено", "Скасовано")) { if ($legacy) { $t["status"] = "Архівний" }; $t["archivedAt"] = [string]$rep.date }
     elseif ($t.Contains("actualEnd")) { $t.Remove("actualEnd") }
     if (-not $lastUpdate -or [string]$rep.date -ge $lastUpdate) {
         $rag = CalcRag $rep.schedule $rep.budget $rep.resources
@@ -749,7 +766,7 @@ function Get-ArchPrefix([bool]$v2 = $true) { if ($v2) { return "arch2:" } return
 # Архивный проект не пересчитывается обычным запуском, если права архива уже выданы проекту и всем его папкам.
 # Еженедельный -RebuildPermissions пересчитывает и архив (смена руководителей в Entra ID).
 function Test-ArchiveFrozen([string]$status, [string]$pmoAcl, [bool]$foldersReady, [bool]$rebuild, [string]$prefix = "arch2:") {
-    return ($status -eq "Архівний") -and $pmoAcl.StartsWith($prefix) -and $foldersReady -and -not $rebuild
+    return (Test-ArchivedStatus $status) -and $pmoAcl.StartsWith($prefix) -and $foldersReady -and -not $rebuild
 }
 # Что сделать с записью дочернего списка: «move» — не в папке своего проекта (перенос + сброс личных прав); «reset» — в своей папке,
 # но с личными правами (непустой pmoAcl — его писала прежняя выдача прав записи); пусто — ничего.
@@ -944,7 +961,7 @@ if ($HAS_PA) {
         else {
             # решение — общим правилом Get-AssignmentPlan (векторы tests/cases/assignments.json, те же — assignmentPlan приложения)
             $plan = Get-AssignmentPlan @{ author = $whoT; manager = (Email $a["paManager"]); owner = (Email $a["paOwner"]); note = [string]$a["paNote"] } `
-                $p.Values.pmManager $p.Values.pmOwner ($p.Values.pmStatus -eq "Архівний") $PMO_EMAILS $OWNER_EMAILS
+                $p.Values.pmManager $p.Values.pmOwner (Test-ArchivedStatus $p.Values.pmStatus) $PMO_EMAILS $OWNER_EMAILS
             if (-not $plan.valid) { Warn "Призначення #$($a.Id) «$($p.Item["Title"])» не застосовано: $($ASSIGN_WHY[$plan.reason])" }
             else {
                 $stats.assigns++
@@ -996,7 +1013,7 @@ if ($HAS_AP) {
     }
     foreach ($projId in $byProj.Keys) {
         $p = $PROJ[$projId]; if (-not $p) { continue }
-        $ret = Get-PendingReturns $byProj[$projId] $p.Values.pmManager $OWNER_EMAILS ($p.Values.pmStatus -eq "Архівний")
+        $ret = Get-PendingReturns $byProj[$projId] $p.Values.pmManager $OWNER_EMAILS (Test-ArchivedStatus $p.Values.pmStatus)
         foreach ($x in $ret) {
             $r = ($byProj[$projId] | Where-Object { $_.id -eq $x.id } | Select-Object -First 1).item
             $stats.returned++
@@ -1022,7 +1039,7 @@ foreach ($a in (@($approvals) | Where-Object { $_ } | Where-Object { $_["apAppli
     if (-not $r) { Warn "Погодження #$($a.Id): звіт не знайдено" }
     elseif ($whoT -ne "app" -and ($PMO_EMAILS -notcontains $who -or -not $who) -and -not (Test-Trusted $whoT $OWNER_EMAILS)) { Warn "Погодження #$($a.Id) від $who — не PMO: не застосовано" }
     elseif (-not $a["apProject"] -or -not $r["srProject"] -or $a["apProject"].LookupId -ne $r["srProject"].LookupId) { Warn "Погодження #$($a.Id): проєкт не збігається з проєктом звіту #$($r.Id) — не застосовано" }
-    elseif ($PROJ[$r["srProject"].LookupId] -and $PROJ[$r["srProject"].LookupId].Values.pmStatus -eq "Архівний") { Warn "Погодження #$($a.Id): проєкт в архіві — не застосовано" }
+    elseif ($PROJ[$r["srProject"].LookupId] -and (Test-ArchivedStatus $PROJ[$r["srProject"].LookupId].Values.pmStatus)) { Warn "Погодження #$($a.Id): проєкт в архіві — не застосовано" }
     else {
         $res = Get-ApprovalResult @{ s = (Norm $r["srSchedule"]); b = (Norm $r["srBudget"]); r = (Norm $r["srResources"]); approval = (Norm $r["srApproval"]) } `
                                   @{ decision = (Norm $a["apDecision"]); s = (Norm $a["apSchedule"]); b = (Norm $a["apBudget"]); r = (Norm $a["apResources"]); note = [string]$a["apNote"] }
@@ -1098,7 +1115,7 @@ foreach ($r in $pending) {
     # правила применения (векторы tests/cases/reports.json): архив / автор не PM — не применять (отметка один раз, без вечных
     # предупреждений); есть более новый применённый отчёт — только отметить, показатели не откатываются
     $stObj  = if ($HAS_PS) { $STATES[$p.Item.Id] } else { $null }
-    $action = Get-ApplyAction ([ordered]@{ id = $r.Id; date = $repDate; author = $authorT }) $p.Values.pmManager $OWNER_EMAILS ($p.Values.pmStatus -eq "Архівний") $(if ($stObj) { $stObj.last } else { "" }) $p.Values.pmLastUpdate
+    $action = Get-ApplyAction ([ordered]@{ id = $r.Id; date = $repDate; author = $authorT }) $p.Values.pmManager $OWNER_EMAILS (Test-ArchivedStatus $p.Values.pmStatus) $(if ($stObj) { $stObj.last } else { "" }) $p.Values.pmLastUpdate
     if ($action -ne "apply") {
         $stats.reports--
         $note = switch ($action) { "notApplied:arch" { "Погоджено, але не застосовано: проєкт в архіві" } "notApplied:pm" { "Погоджено, але не застосовано: автор звіту вже не PM проєкту" } default { "Погоджено, показники не змінено: є новіший застосований звіт" } }
@@ -1114,7 +1131,7 @@ foreach ($r in $pending) {
     # что переносится — общим правилом Get-ReportTarget (векторы tests/cases/apply.json, те же — у приложения)
     $tg = Get-ReportTarget ([ordered]@{ status = (Norm $r["srStatus"]); type = (Norm $r["srType"]); progress = $r["srProgress"]; start = (Norm $r["srStart"])
         goLive = (Norm $r["srGoLive"]); planEnd = (Norm $r["srPlanEnd"]); forecastEnd = (Norm $r["srForecastEnd"]); actualCost = $r["srActualCost"]; actualEnd = (Norm $r["srActualEnd"])
-        date = $repDate; schedule = (Norm $r["srSchedule"]); budget = (Norm $r["srBudget"]); resources = (Norm $r["srResources"]); title = $title }) $p.Values.pmLastUpdate
+        date = $repDate; schedule = (Norm $r["srSchedule"]); budget = (Norm $r["srBudget"]); resources = (Norm $r["srResources"]); title = $title }) $p.Values.pmLastUpdate $LEGACY_ARCHIVE
     $target = [ordered]@{}; foreach ($k in $tg.Keys) { $target[$TARGET_FIELD[$k]] = $tg[$k] }
 
     $changed = [ordered]@{}
@@ -1392,7 +1409,7 @@ foreach ($p in $PROJ.Values) {
             catch { Fail "Стейкхолдери «$($p.Item["Title"])»: $($_.Exception.Message)" }
         }
     }
-    $archived = $p.Values.pmStatus -eq "Архівний"
+    $archived = Test-ArchivedStatus $p.Values.pmStatus
     $name = Get-FolderName $p.Item.Id
     $ready = -not @($CHILD.Keys | Where-Object { -not $FOLDERS[$_].ContainsKey($name) -or $FOLDERS[$_][$name].mark -ne $p.Values.pmoAcl }).Count
     # архив, права которого уже выданы проекту и папкам: без Entra ID, без «Доступ до картки», без прав (пересчёт — воскресный rebuild)
@@ -1535,7 +1552,7 @@ if ($SendReminders) {
     $limit = (ConvertTo-Kyiv (Get-Date).ToUniversalTime()).Date.AddDays(-$ReminderDays).ToString("yyyy-MM-dd")
     $byPm = @{}
     foreach ($p in $PROJ.Values) {
-        if ($p.Values.pmStatus -in @("Скасовано","Архівний","Завершено")) { continue }
+        if (Test-ArchivedStatus $p.Values.pmStatus) { continue }
         if ($p.Values.pmLastUpdate -and $p.Values.pmLastUpdate -ge $limit) { continue }
         $pm = $p.Values.pmManager; if (-not $pm) { continue }
         if (-not $byPm[$pm]) { $byPm[$pm] = @() }

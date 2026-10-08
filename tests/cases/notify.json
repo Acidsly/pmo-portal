@@ -49,7 +49,7 @@
       "out": "applied"
     },
     {
-      "name": "Статус-звіт → Архівний",
+      "name": "Статус-звіт → Архівний (прежнее значение в истории)",
       "kind": "report",
       "diffs": [
         {
@@ -62,6 +62,43 @@
         }
       ],
       "out": "archived"
+    },
+    {
+      "name": "Статус-звіт → Завершено",
+      "kind": "report",
+      "diffs": [
+        {
+          "f": "progress",
+          "to": "100"
+        },
+        {
+          "f": "status",
+          "to": "Завершено"
+        }
+      ],
+      "out": "archived"
+    },
+    {
+      "name": "Статус-звіт → Скасовано",
+      "kind": "report",
+      "diffs": [
+        {
+          "f": "status",
+          "to": "Скасовано"
+        }
+      ],
+      "out": "archived"
+    },
+    {
+      "name": "Статус-звіт → Призупинено — не архів",
+      "kind": "report",
+      "diffs": [
+        {
+          "f": "status",
+          "to": "Призупинено"
+        }
+      ],
+      "out": "applied"
     },
     {
       "name": "Правка в обхід, відкочена",
@@ -527,7 +564,7 @@
       "author": "au@x",
       "diffs": [],
       "project": {
-        "status": "Архівний",
+        "status": "Завершено",
         "pm": "pm@x",
         "owner": "own@x",
         "team": [
@@ -545,7 +582,7 @@
       "author": "au@x",
       "diffs": [],
       "project": {
-        "status": "Архівний",
+        "status": "Завершено",
         "pm": "pm@x",
         "owner": "own@x",
         "team": [
@@ -563,7 +600,7 @@
       "author": "au@x",
       "diffs": [],
       "project": {
-        "status": "Архівний",
+        "status": "Скасовано",
         "pm": "pm@x",
         "owner": "own@x",
         "team": [
@@ -581,7 +618,7 @@
       "author": "au@x",
       "diffs": [],
       "project": {
-        "status": "Архівний",
+        "status": "Завершено",
         "pm": "pm@x",
         "owner": "own@x",
         "team": [
@@ -599,7 +636,7 @@
       "author": "au@x",
       "diffs": [],
       "project": {
-        "status": "Архівний",
+        "status": "Скасовано",
         "pm": "pm@x",
         "owner": "own@x",
         "team": [
@@ -1110,7 +1147,7 @@
       "author": "au@x",
       "diffs": [],
       "project": {
-        "status": "Архівний",
+        "status": "Завершено",
         "pm": "pm@x",
         "owner": "own@x",
         "team": [
@@ -1157,6 +1194,24 @@
       "isPmo": false,
       "risk": null,
       "out": true
+    },
+    {
+      "name": "проєкт «Архівний» (до міграції) — коментар не показується",
+      "kind": "comment",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Архівний",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": false
     }
   ]
 }

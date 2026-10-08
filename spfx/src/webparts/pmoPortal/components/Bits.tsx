@@ -67,7 +67,7 @@ export const RepMark: React.FC<{ r: { approval: string; date: string } | null | 
 
 /** Статус проекта или риска — цветная пилюля без точки (точка — у стану RAG). */
 const SC: Record<string, string> = { 'Ініціація': '#5856d6', 'Планування': 'var(--theme)', 'Реалізація': 'var(--g)', 'Призупинено': 'var(--y)',
-  'Скасовано': 'var(--r)', 'Архівний': 'var(--na)', 'Завершено': 'var(--na)', 'Відкрито': 'var(--y)', 'В роботі': 'var(--theme)', 'Закрито': 'var(--g)' };
+  'Скасовано': 'var(--na)', 'Архівний': 'var(--na)', 'Завершено': 'var(--g)', 'Відкрито': 'var(--y)', 'В роботі': 'var(--theme)', 'Закрито': 'var(--g)' };
 export const StatusPill: React.FC<{ v: string }> = ({ v }) => (v
   ? <span className="pill st" style={{ ['--c' as string]: SC[v] || 'var(--na)' } as React.CSSProperties}>{tv(v)}</span> : <span className="muted">—</span>);
 

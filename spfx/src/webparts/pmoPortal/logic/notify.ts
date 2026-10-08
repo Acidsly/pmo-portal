@@ -1,5 +1,6 @@
 import { ChangeEntry, ChangeEvent, Comment, Person, Project, Risk } from '../data/types';
 import { toEvents } from './changes';
+import { isArch } from './status';
 
 /** Сповіщення в приложении (колокольчик): какие события журнала и комментарии — мои и какие из них новые.
  *  Правило «кто что видит» — общие векторы tests/cases/notify.json (их же возьмёт синхронизация для писем, часть 2). */
@@ -8,7 +9,7 @@ export const NOTIFY_DAYS = 14;
 
 export type NotifyKind = 'created' | 'assigned' | 'submitted' | 'decided' | 'applied' | 'archived' | 'risk' | 'cardEdit' | 'comment';
 
-/** Вид события истории: «Статус → Архівний» в событии отчёта — архив; правка в обход, откаченная синхронизацией, — как отчёт. */
+/** Вид события истории: «Статус → Завершено / Скасовано» (прежнее «→ Архівний») в событии отчёта — архив; правка в обход, откаченная синхронизацией, — как отчёт. */
 export function notifyKind(ev: { kind: ChangeEvent['kind']; diffs: { f: string; to: string }[] }): NotifyKind {
   switch (ev.kind) {
     case 'create': return 'created';
@@ -17,7 +18,7 @@ export function notifyKind(ev: { kind: ChangeEvent['kind']; diffs: { f: string; 
     case 'approval': return 'decided';
     case 'risk': return 'risk';
     case 'edit': return 'cardEdit';
-    default: return ev.diffs.some(d => d.f === 'status' && d.to === 'Архівний') ? 'archived' : 'applied';
+    default: return ev.diffs.some(d => d.f === 'status' && isArch(d.to)) ? 'archived' : 'applied';
   }
 }
 
@@ -35,7 +36,7 @@ const low = (s: string | undefined | null): string => (s || '').trim().toLowerCa
 export function notifyFor(kind: NotifyKind, author: string, diffs: { f: string; to: string }[], p: NotifyProject, ctx: NotifyCtx): boolean {
   const me = low(ctx.me);
   if (!me || low(author) === me) return false;
-  if (p.status === 'Архівний' && kind !== 'archived') return false;
+  if (isArch(p.status) && kind !== 'archived') return false;
   const pm = low(p.pm) === me, owner = low(p.owner) === me, team = p.team.some(x => low(x) === me);
   switch (kind) {
     case 'submitted': return ctx.isPmo;

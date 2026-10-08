@@ -23,7 +23,7 @@
 
 ## Классификация и получатели (чистые функции, векторы `tests/cases/notify.json`)
 
-**`Get-NotifyKind` / `notifyKind`** — вид события из строк: `created`, `assigned`, `submitted`, `decided` (Погоджено / Повернуто / авто-повернення), `applied` (статус, стан, %, дати, витрати), `archived` (строка `pmStatus` → «Архівний»; в том же событии — и содержимое отчёта), `risk`, `cardEdit`, `comment`.
+**`Get-NotifyKind` / `notifyKind`** — вид события из строк: `created`, `assigned`, `submitted`, `decided` (Погоджено / Повернуто / авто-повернення), `applied` (статус, стан, %, дати, витрати), `archived` (строка `pmStatus` → «Завершено» / «Скасовано», прежнее «Архівний»; в том же событии — и содержимое отчёта), `risk`, `cardEdit`, `comment`.
 
 **`Get-NotifyRecipients` / `notifyRecipients`** — вход: вид и строки события; проект **сейчас** (PM, власник, команда, статус, `pmAccess`); риск по `kcItem` сейчас (оценка, власник; удалён — оценка из строк события, иначе — как < 15); автор (`kcChangedBy`, у комментария — Author; пусто — автор никто).
 

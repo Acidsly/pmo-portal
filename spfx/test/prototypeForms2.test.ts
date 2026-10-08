@@ -103,6 +103,14 @@ test('#54: «Скасовано» с фактической датой → по�
   q(`[data-act="openp"][data-id="${pid}"]`).click();
   const kv = Array.from(w.document.querySelectorAll('#panel .kv, .kv')).map((x: W) => x.textContent).filter((x: string) => x.indexOf('Дата завершення (факт)') === 0);
   expect(kv[0]).toContain(`${d}.${m}.${y}`);
+  // архив — по статусу: проект «Скасовано» (не «Архівний»), в представлении «Скасовані», не в «Завершені»
+  expect(q('#panel').textContent).toContain('Скасовано'); expect(q('#panel').textContent).not.toContain('Архівний');
+  q(`[data-act="nav"][data-page="archive"]`).click();
+  const sel = q('select[data-act="view"]');
+  sel.value = 'cancelled'; ev(sel, 'change'); expect(q(`#main [data-act="openp"][data-id="${pid}"]`)).not.toBeNull();
+  const s2 = q('select[data-act="view"]'); s2.value = 'done'; ev(s2, 'change'); expect(q(`#main [data-act="openp"][data-id="${pid}"]`)).toBeNull();
+  // в «Проєкти» его нет
+  q('[data-act="nav"][data-page="projects"]').click(); expect(q(`#main [data-act="openp"][data-id="${pid}"]`)).toBeNull();
 });
 
 describe('#43 смена PM / власника — только PMO', () => {

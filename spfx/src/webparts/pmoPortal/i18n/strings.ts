@@ -1007,9 +1007,9 @@ export const T: Record<string, L3> = {
   "Проект в архиве: только просмотр."
  ],
  "archivedAt": [
-  "Дата архівації",
-  "Archived on",
-  "Дата архивации"
+  "Дата завершення / скасування",
+  "Completed / cancelled on",
+  "Дата завершения / отмены"
  ],
  "cols": [
   "Поля та порядок",
@@ -1112,9 +1112,9 @@ export const T: Record<string, L3> = {
   "Отменено — перенести в архив"
  ],
  "completeHint": [
-  "Після погодження звіту PMO проєкт отримає статус «Архівний» і перейде у вкладку «Архів».",
-  "After PMO approves the report, the project gets the “Архівний” status and moves to the Archive tab.",
-  "После согласования отчёта PMO проект получит статус «Архівний» и перейдёт во вкладку «Архів»."
+  "Після погодження звіту PMO проєкт отримає цей статус і перейде у вкладку «Архів».",
+  "After PMO approves the report, the project gets this status and moves to the Archive tab.",
+  "После согласования отчёта PMO проект получит этот статус и перейдёт во вкладку «Архив»."
  ],
  "savedArch": [
   "Статус-звіт збережено, проєкт перенесено в архів.",

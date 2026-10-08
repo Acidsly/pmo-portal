@@ -31,7 +31,7 @@ describe('наложение «Призначення» на карточку (�
     expect(p.manager!.email).toBe('pm@x'); expect(p.pendingEvents).toEqual([]); expect(p.assignPending).toBe(true);
   });
   test('архив — не меняется; по порядку записей: второе меняет власника', () => {
-    expect(applyAssignments(proj({ status: 'Архівний' }), [row()]).manager!.email).toBe('pm@x');
+    for (const st of ['Завершено', 'Скасовано']) expect(applyAssignments(proj({ status: st }), [row()]).manager!.email).toBe('pm@x');
     const p = applyAssignments(proj(), [row({ id: 2, manager: null, owner: person('o2@x', 'Новий власник') }), row({ id: 1 })]);
     expect([p.manager!.email, p.owner!.email]).toEqual(['new@x', 'o2@x']);
     expect(p.pendingEvents!.map(e => e.diffs[0].f)).toEqual(['pm', 'owner']);
@@ -46,7 +46,7 @@ test('guard: «Призначення» — одно необработанно�
   const f = (x: Partial<Fresh>): Fresh => ({ project: proj(), etag: '', owner: false, pending: [], lastApprovedDate: '', ...x });
   expect(guard('assign', 'pmo@x', f({}))).toEqual({ ok: true });
   expect(guard('assign', 'pmo@x', f({ assigns: 1 }))).toEqual({ ok: false, key: 'gAssignPending' });
-  expect(guard('assign', 'pmo@x', f({ project: proj({ status: 'Архівний' }) }))).toEqual({ ok: false, key: 'gArchived' });
+  expect(guard('assign', 'pmo@x', f({ project: proj({ status: 'Скасовано' }) }))).toEqual({ ok: false, key: 'gArchived' });
 });
 
 test('правка карточки PM не пишет PM и власника (#43: только «Призначення»)', () => {

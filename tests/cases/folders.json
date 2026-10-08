@@ -233,6 +233,33 @@
       "prefix": "arch2:",
       "out": false,
       "name": "v2: стара відмітка arch: — перерахувати (нові ролі)"
+    },
+    {
+      "status": "Завершено",
+      "mark": "arch2:A1B2C3",
+      "ready": true,
+      "rebuild": false,
+      "out": true,
+      "name": "«Завершено» з відміткою arch2: і готовими папками — пропустити",
+      "prefix": "arch2:"
+    },
+    {
+      "status": "Скасовано",
+      "mark": "arch2:A1B2C3",
+      "ready": true,
+      "rebuild": false,
+      "out": true,
+      "name": "«Скасовано» з відміткою arch2: і готовими папками — пропустити",
+      "prefix": "arch2:"
+    },
+    {
+      "status": "Призупинено",
+      "mark": "arch2:A1B2C3",
+      "ready": true,
+      "rebuild": false,
+      "out": false,
+      "name": "«Призупинено» — не архів, перерахувати",
+      "prefix": "arch2:"
     }
   ],
   "row": [

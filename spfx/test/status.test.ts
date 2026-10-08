@@ -1,4 +1,9 @@
 import * as S from '../src/webparts/pmoPortal/logic/status';
+import archive from '../../tests/cases/archive.json';
+
+describe('архив: общие векторы с Test-ArchivedStatus', () => {
+  archive.cases.forEach(c => test(`«${c.status}» -> ${c.archived}`, () => { expect(S.isArch(c.status)).toBe(c.archived); expect(S.isActive(c.status)).toBe(!c.archived); }));
+});
 
 test('isArch / isActive', () => {
   expect(S.isArch('Архівний')).toBe(true); expect(S.isArch('Завершено')).toBe(true); expect(S.isArch('Реалізація')).toBe(false);
@@ -37,4 +42,16 @@ import { staleFirst } from '../src/webparts/pmoPortal/logic/status';
 test('«Немає свіжого звіту»: без отчётов сверху, дальше от самого давнего', () => {
   const rows = [{ id: 1, lastUpdate: '2026-09-10' }, { id: 2, lastUpdate: '' }, { id: 3, lastUpdate: '2026-08-20' }, { id: 4, lastUpdate: '' }];
   expect(rows.sort(staleFirst).map(r => r.id)).toEqual([2, 4, 3, 1]);
+});
+
+describe('«Архів»: представления «Завершені» / «Скасовані»', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { archiveView, AV } = require('../src/webparts/pmoPortal/logic/views');
+  const p = (status: string): any => ({ status, type: 'Звичайний', manager: null, owner: null, stakeholders: [] });
+  test('по статусу; «Усі» — оба', () => {
+    expect(Object.keys(AV).slice(0, 3)).toEqual(['all', 'done', 'cancelled']);
+    expect(archiveView('done', p('Завершено'), 'x')).toBe(true); expect(archiveView('done', p('Скасовано'), 'x')).toBe(false);
+    expect(archiveView('cancelled', p('Скасовано'), 'x')).toBe(true); expect(archiveView('cancelled', p('Завершено'), 'x')).toBe(false);
+    expect(archiveView('all', p('Скасовано'), 'x')).toBe(true);
+  });
 });

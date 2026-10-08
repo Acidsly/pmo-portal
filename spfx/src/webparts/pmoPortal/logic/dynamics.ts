@@ -23,9 +23,10 @@ export function snapshots(projects: Project[], reports: StatusReport[], today: s
     const tt = addDays(today, -14 * k);
     const c = { g: 0, y: 0, r: 0, na: 0 };
     for (const p of projects) {
-      if (p.status === 'Скасовано') continue;
-      const archivedOn = p.archivedAt || p.lastUpdate;
-      if (isArch(p.status) && archivedOn && tt >= archivedOn) continue;   // в день архивации проект уже в архиве — как в кольце
+      // завершённые и отменённые — до даты архивации учитываются, с неё — нет; дата — архивации, иначе фактическая, иначе последнего отчёта;
+      // даты нет совсем — в архиве на любую дату (как кольцо)
+      const archivedOn = p.archivedAt || p.actualEnd || p.lastUpdate;
+      if (isArch(p.status) && (!archivedOn || tt >= archivedOn)) continue;   // в день архивации проект уже в архиве — как в кольце
       if (p.created && p.created.slice(0, 10) > tt) continue;   // проекта на дату среза ещё не было
       const rs = reports.filter(r => r.projectId === p.id && r.date <= tt).sort(byDateThenId);
       if (!rs.length) { c.na++; continue; }

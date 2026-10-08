@@ -218,7 +218,8 @@ foreach ($x in $pmoRoles) { if ($x -ne $ROLE_READ) { Set-PnPGroupPermissions -Id
 if ($pmoRoles -notcontains $ROLE_READ) { Set-PnPGroupPermissions -Identity $PMO_GROUP -AddRole $ROLE_READ | Out-Null; Write-Host "  $PMO_GROUP : чтение сайта" }
 
 $rag       = @("Зелений", "Жовтий", "Червоний")
-$status    = @("Ініціація", "Планування", "Реалізація", "Призупинено", "Скасовано", "Архівний")
+# архив — «Завершено» / «Скасовано» (прежнее «Архівний» переводит миграция 6a3 и затем убирает из выбора)
+$status    = @("Ініціація", "Планування", "Реалізація", "Призупинено", "Завершено", "Скасовано")
 $repStatus = @("Ініціація", "Планування", "Реалізація", "Призупинено", "Скасовано", "Завершено")
 $types     = @("Стратегічний", "Звичайний")
 
@@ -236,6 +237,12 @@ F $P pmOwner       User     "Власник"            "Owner"               "�
 F $P pmStakeholders UserMulti "Стейкхолдери"     "Stakeholders"        "Стейкхолдеры"         "UserSelectionMode='PeopleOnly' Mult='TRUE'"
 F $P pmDepartment  Choice   "Напрям"             "Area"                "Направление"          "Format='Dropdown'" (Choices @("ІТ","HR та кадрове адміністрування","Розрахунок зарплати","Продажі","Фінанси","Операції","Юридичний"))
 F $P pmStatus      Choice   "Статус проєкту"     "Project status"      "Статус проекта"       "Format='Dropdown' Required='TRUE'" (Choices $status "Ініціація")
+# F не меняет выбор у существующего поля: недостающие значения — явно; прежнее «Архівний» остаётся до миграции 6a3 # archive-migration
+$curSt = @((Get-PnPField -List $P -Identity pmStatus).Choices)
+if (@($status | Where-Object { $curSt -notcontains $_ }).Count) {
+    $keepOld = @($curSt | Where-Object { $_ -eq "Архівний" })   # archive-migration
+    Set-PnPField -List $P -Identity pmStatus -Values @{ Choices = [string[]]($status + $keepOld) } | Out-Null; Write-Host "    статуси проєкту: $(($status + $keepOld) -join ', ')"
+}
 F $P pmPriority    Choice   "Пріоритет"          "Priority"            "Приоритет"            "Format='Dropdown'" (Choices @("1 — Високий","2 — Середній","3 — Низький") "2 — Середній")
 F $P pmRAG         Choice   "Загальний стан"     "Overall health"      "Общее состояние"      "Format='Dropdown'" (Choices $rag)
 F $P pmProgress    Number   "% виконання"        "% complete"          "% выполнения"         "Min='0' Max='100' Decimals='0'" "<Default>0</Default>"
@@ -244,7 +251,7 @@ F $P pmGoLive      DateTime "Дата запуску (продакшн)" "Go-liv
 F $P pmPlanEnd     DateTime "Дата завершення (план)"  "Planned completion"        "Дата завершения (план)"  "Format='DateOnly'"
 F $P pmForecastEnd DateTime "Прогноз завершення" "Forecast completion" "Прогноз завершения"   "Format='DateOnly'"
 F $P pmActualEnd   DateTime "Дата завершення (факт)" "Actual completion date" "Дата завершения (факт)" "Format='DateOnly'"
-F $P pmArchivedAt  DateTime "Дата архівації"     "Archived on"         "Дата архивации"       "Format='DateOnly'"
+F $P pmArchivedAt  DateTime "Дата завершення / скасування" "Completed / cancelled on" "Дата завершения / отмены" "Format='DateOnly'"
 F $P pmBudget      Currency "Бюджет (план)"      "Budget (plan)"       "Бюджет (план)"        "LCID='1058' Decimals='0'"
 F $P pmActualCost  Currency "Витрати (факт)"     "Actual cost"         "Затраты (факт)"       "LCID='1058' Decimals='0'"
 F $P pmLastUpdate  DateTime "Останній статус-звіт" "Last status report" "Последний статус-отчёт" "Format='DateOnly'"
@@ -475,7 +482,6 @@ $script:Loc += , @($TM, "Title", "Коротко", "Summary", "Кратко")
 Set-PnPField -List $TM -Identity "Title" -Values @{ Required = $false } | Out-Null
 
 # Миграция (один раз на проект, по отметке pmMigrated): стейкхолдеры → строки команды с ролью «Стейкхолдер»; pmLoop → pmLinks;
-# отменённый проект → архив (как завершённый): «Архівний», дата архивации = дата последнего отчёта, строка журнала
 $teamOf = @{}
 foreach ($x in (Get-PnPListItem -List "Lists/ProjectTeam" -PageSize 500 -Fields "tmProject" | Where-Object { [string]$_.FileSystemObjectType -ne "Folder" })) { if ($x["tmProject"]) { $teamOf[$x["tmProject"].LookupId] = $true } }
 foreach ($it in (Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "Title","pmStakeholders","pmLoop","pmLinks","pmMigrated","pmStatus","pmLastUpdate","pmArchivedAt")) {
@@ -493,20 +499,11 @@ foreach ($it in (Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "T
         if ($loop -and $loop.Url -and -not [string]$it["pmLinks"]) { $vals.pmLinks = (ConvertTo-Json -InputObject @([ordered]@{ t = "Loop"; u = $loop.Url }) -Compress) }
         $marks += "links"
     }
-    if ($it["pmStatus"] -eq "Скасовано") {
-        $last = $it["pmLastUpdate"]
-        $day = if ($last) { [TimeZoneInfo]::ConvertTimeBySystemTimeZoneId(([datetime]$last).ToUniversalTime(), "Europe/Kyiv").ToString("yyyy-MM-dd") } else { (Get-Date).ToString("yyyy-MM-dd") }
-        $vals.pmStatus = "Архівний"
-        if (-not $it["pmArchivedAt"]) { $vals.pmArchivedAt = "$($day)T12:00:00Z" }
-        Add-PnPListItem -List "Lists/KeyChanges" -Values @{ Title = "Статус"; kcProject = $it.Id; kcDate = (Get-Date).ToUniversalTime().ToString("o")
-            kcKind = "Редагування картки"; kcField = "pmStatus"; kcFrom = "Скасовано"; kcTo = "Архівний"; kcReason = "Скасований проєкт переведено в архів" } | Out-Null
-        Write-Host "    миграция «$($it["Title"])»: Скасовано -> Архівний"
-    }
+    # «Скасовано» — архивный статус (прежняя миграция «Скасовано -> Архівний» убрана: архив по статусу «Завершено» / «Скасовано»)
     $newMarks = ($marks | Select-Object -Unique) -join ","
-    if ($newMarks -ne [string]$it["pmMigrated"] -or $vals.pmStatus) {
+    if ($newMarks -ne [string]$it["pmMigrated"]) {
         $vals.pmMigrated = $newMarks
         Set-PnPListItem -List "Lists/Projects" -Identity $it.Id -Values $vals -UpdateType SystemUpdate | Out-Null
-        if ($vals.pmStatus) { Sync-ProjectStateFromCard $it.Id }   # статус — ключевое поле: эталон = результат миграции
         Write-Host "    миграция «$($it["Title"])»: $newMarks"
     }
 }
@@ -521,6 +518,44 @@ F $PS psEditDone    Note     "Перенесені правки"  "Journaled edi
 F $PS psLastApplied Text     "Останній застосований звіт" "Last applied report" "Последний применённый отчёт" "MaxLength='40'"
 # #46 / #48: снимок учтённых отчётов и рисков для истории (пишет только синхронизация)
 F $PS psHistory     Note     "Історія: знімок"    "History snapshot"    "История: снимок"      "NumLines='3' RichText='FALSE'"
+
+# 6a3. Архив по статусу: прежнее «Архівний» -> «Завершено» / «Скасовано» (Get-ArchiveOutcome). Без записи в журнал: это смена
+# названия значения, а не событие (запись дала бы участникам ложные сповіщення). Карточка и эталон — вместе, права не меняются. # archive-migration
+Write-Host "6a3. Архів: статуси «Завершено» / «Скасовано»" -ForegroundColor Cyan
+$oldArch = @(Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "Title","pmStatus" | Where-Object { [string]$_["pmStatus"] -eq "Архівний" })   # archive-migration
+$archWarn = 0
+if ($oldArch.Count) {
+    $stMap = Read-ProjectStates
+    $repSt = @{}; $finals = @{}
+    foreach ($sr in (Get-PnPListItem -List "Lists/StatusReports" -PageSize 500 -Fields "srProject","srStatus","srDate","srApplied" | Where-Object { [string]$_.FileSystemObjectType -ne "Folder" })) {
+        $repSt[$sr.Id] = [string]$sr["srStatus"]
+        if ($sr["srProject"] -and $sr["srApplied"] -and [string]$sr["srStatus"] -in @("Завершено", "Скасовано")) {
+            $pk = [int]$sr["srProject"].LookupId; if (-not $finals[$pk]) { $finals[$pk] = @() }
+            $finals[$pk] += , @{ id = $sr.Id; date = (DateOnly $sr["srDate"]); status = [string]$sr["srStatus"] }
+        }
+    }
+    $cancelJ = @{}
+    foreach ($jc in (Get-PnPListItem -List "Lists/KeyChanges" -PageSize 500 -Fields "kcProject","kcField","kcFrom","kcTo" | Where-Object { [string]$_.FileSystemObjectType -ne "Folder" -and [string]$_["kcField"] -eq "pmStatus" -and [string]$_["kcFrom"] -eq "Скасовано" -and [string]$_["kcTo"] -eq "Архівний" })) {   # archive-migration
+        if ($jc["kcProject"]) { $cancelJ[[int]$jc["kcProject"].LookupId] = $true }
+    }
+    foreach ($it in $oldArch) {
+        $la = if ($stMap[$it.Id]) { [string]$stMap[$it.Id].last } else { "" }
+        $laSt = if ($la -match '#(\d+)$') { [string]$repSt[[int]$Matches[1]] } else { "" }
+        $o = Get-ArchiveOutcome $laSt @($finals[$it.Id]) ([bool]$cancelJ[$it.Id])
+        # исход не найден — не угадываем: проект остаётся «Архівний» (архив по признаку), предупреждение на каждом deploy, значение не убирается из выбора
+        if ($o.warn) { $archWarn++; Write-Warning "«$($it["Title"])» (#$($it.Id)): результат не знайдено ні у звітах, ні в журналі — залишається «Архівний»; вкажіть статус вручну (Завершено / Скасовано)"; continue }
+        Set-PnPListItem -List "Lists/Projects" -Identity $it.Id -Values @{ pmStatus = $o.status } -UpdateType SystemUpdate | Out-Null
+        Sync-ProjectStateFromCard $it.Id   # статус — ключевое поле: эталон = результат миграции
+        Write-Host "    «$($it["Title"])»: Архівний -> $($o.status)"
+    }
+}
+# «Архівний» убираем из выбора, только когда ни одного проекта с ним не осталось и исход везде найден (данные не теряются)
+$curSt = @((Get-PnPField -List $P -Identity pmStatus).Choices)
+if ($curSt -contains "Архівний") {   # archive-migration
+    $left = @(Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "pmStatus" | Where-Object { [string]$_["pmStatus"] -eq "Архівний" }).Count   # archive-migration
+    if (-not $left -and -not $archWarn) { Set-PnPField -List $P -Identity pmStatus -Values @{ Choices = [string[]]$status } | Out-Null; Write-Host "    «Архівний» прибрано зі списку статусів" }
+    else { Write-Warning "«Архівний» залишається у списку статусів: проєктів з ним $left, без знайденого результату $archWarn" }
+}
 
 # 6b. Відгуки — замечания фокус-группы из приложения (текст, экран, устройство, скриншоты-вложения)
 if ($Feedback) {
@@ -684,10 +719,14 @@ if ($Feedback) {
 # 8. Представления (группировок по статусам нет; названия представлений SharePoint не переводит)
 # ===========================================================================
 Write-Host "8. Представления" -ForegroundColor Cyan
+# архив — «Завершено» / «Скасовано» (и прежнее «Архівний» до миграции 6a3); активные — все остальные # archive-migration
 $active = "<And><And><Neq><FieldRef Name='pmStatus'/><Value Type='Choice'>Скасовано</Value></Neq>" +
           "<Neq><FieldRef Name='pmStatus'/><Value Type='Choice'>Архівний</Value></Neq></And>" +
           "<Neq><FieldRef Name='pmStatus'/><Value Type='Choice'>Завершено</Value></Neq></And>"
-$notArchived = "<Neq><FieldRef Name='pmStatus'/><Value Type='Choice'>Архівний</Value></Neq>"
+$notArchived = $active
+$archived = "<Or><Or><Eq><FieldRef Name='pmStatus'/><Value Type='Choice'>Завершено</Value></Eq>" +
+            "<Eq><FieldRef Name='pmStatus'/><Value Type='Choice'>Скасовано</Value></Eq></Or>" +
+            "<Eq><FieldRef Name='pmStatus'/><Value Type='Choice'>Архівний</Value></Eq></Or>"
 $order = "<OrderBy><FieldRef Name='pmType' Ascending='FALSE'/><FieldRef Name='pmPriority'/></OrderBy>"
 
 # Порядок колонок во всех представлениях: стратегический, приоритет, название, затем остальные
@@ -704,8 +743,8 @@ $null     = Ensure-View $P "Мої проєкти" $pFields `
 $null     = Ensure-View $P "Немає свіжого звіту" @("pmType","pmPriority","LinkTitle","pmManager","pmLastUpdate","pmStatus") `
     ("<Where><And>$active<Or><IsNull><FieldRef Name='pmLastUpdate'/></IsNull>" +
      "<Lt><FieldRef Name='pmLastUpdate'/><Value Type='DateTime'><Today OffsetDays='-14'/></Value></Lt></Or></And></Where>")
-$vArchive = Ensure-View $P "Архів" @("pmType","pmPriority","LinkTitle","pmManager","pmOwner","pmArchivedAt","pmPlanEnd","pmBudget","pmActualCost") `
-    "<OrderBy><FieldRef Name='pmArchivedAt' Ascending='FALSE'/></OrderBy><Where><Eq><FieldRef Name='pmStatus'/><Value Type='Choice'>Архівний</Value></Eq></Where>"
+$vArchive = Ensure-View $P "Архів" @("pmType","pmPriority","LinkTitle","pmStatus","pmManager","pmOwner","pmArchivedAt","pmPlanEnd","pmBudget","pmActualCost") `
+    "<OrderBy><FieldRef Name='pmArchivedAt' Ascending='FALSE'/></OrderBy><Where>$archived</Where>"
 
 $rFields = @("srProjectType","srProjectPriority","srProject","srDate","srRAG","srSchedule","srBudget","srResources","LinkTitle","Author","srDecision","srApproval")
 $null      = Set-BaseView $R "Усі звіти" $rFields "<OrderBy><FieldRef Name='srDate' Ascending='FALSE'/></OrderBy>"

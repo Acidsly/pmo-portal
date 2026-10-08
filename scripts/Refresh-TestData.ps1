@@ -29,6 +29,7 @@ param(
 )
 $ErrorActionPreference = "Stop"
 if ($SiteUrl -notmatch '-test/?$') { throw "Refresh-TestData.ps1 работает только с тестовым сайтом (…/sites/*-test), получено: $SiteUrl" }
+. (Join-Path $PSScriptRoot "PMO.Common.ps1")   # Test-ArchivedStatus
 if ($Thumbprint)          { Connect-PnPOnline -Url $SiteUrl -ClientId $ClientId -Tenant $Tenant -Thumbprint $Thumbprint }
 elseif ($CertificatePath) { Connect-PnPOnline -Url $SiteUrl -ClientId $ClientId -Tenant $Tenant -CertificatePath $CertificatePath -CertificatePassword $CertificatePassword }
 else                      { Connect-PnPOnline -Url $SiteUrl -ClientId $ClientId -Interactive }
@@ -37,7 +38,7 @@ $today = (Get-Date).Date
 function SpDate([datetime]$d) { $d.ToString("yyyy-MM-dd") + "T12:00:00Z" }
 function DateOnly($v) { if ($v) { return ([datetime]$v).ToUniversalTime().AddHours(12).Date } return $null }
 
-$items = @(Get-PnPListItem -List "Lists/Projects" -PageSize 500 | Where-Object { $Demo -contains [string]$_["pmCode"] -and $_["pmStatus"] -ne "Архівний" } |
+$items = @(Get-PnPListItem -List "Lists/Projects" -PageSize 500 | Where-Object { $Demo -contains [string]$_["pmCode"] -and -not (Test-ArchivedStatus ([string]$_["pmStatus"])) } |
     Sort-Object { [string]$_["pmCode"] })
 # самый свежий отчёт проекта — по списку отчётов (в том числе ещё не перенесённых синхронизацией), а не по карточке
 $lastRep = @{}

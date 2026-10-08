@@ -198,9 +198,16 @@ describe('#43 «Змінити PM / власника» — только PMO', ()
     expect(calls[0][3]).toEqual({ paManagerId: 'new@x', paOwnerId: '' });
   });
   test('не PMO, архив, уже ожидает — формы нет', () => {
-    for (const d of [{ ...data(), canApprove: false }, data({ status: 'Архівний' }), data({ assignPending: true })]) {
+    for (const d of [{ ...data(), canApprove: false }, data({ status: 'Завершено' }), data({ status: 'Скасовано' }), data({ assignPending: true })]) {
       mount(<AssignForm data={d} projectId={5} onCancel={() => undefined} />);
       expect(root.querySelector('form')).toBeNull();
+      ReactDOM.unmountComponentAtNode(root);
+    }
+  });
+  test('архив «Скасовано» / «Завершено»: форма карточки по прямой ссылке — только просмотр', () => {
+    for (const st of ['Скасовано', 'Завершено']) {
+      mount(<ProjectForm data={data({ canEdit: true, status: st })} project={{ ...pr, canEdit: true, status: st } as any} onCancel={() => undefined} />);
+      expect(root.querySelector('form')).toBeNull(); expect(root.textContent).toContain('Проєкт в архіві: лише перегляд.');
       ReactDOM.unmountComponentAtNode(root);
     }
   });
