@@ -3,6 +3,7 @@ import { tv } from '../i18n/values';
 import { Rag } from '../logic/rag';
 import { Fresh } from '../logic/status';
 import { Person } from '../data/types';
+import { daysBetween } from '../logic/dates';
 
 const RC: Record<string, string> = { 'Зелений': 'var(--g)', 'Жовтий': 'var(--y)', 'Червоний': 'var(--r)' };
 const FC: Record<Fresh, string> = { g: 'var(--g)', y: 'var(--y)', r: 'var(--r)', na: 'var(--na)' };
@@ -17,8 +18,12 @@ export const fmtDT = (iso: string): string => { const d = new Date(iso); return 
 export const RagDot: React.FC<{ v: Rag; notRated: string }> = ({ v, notRated }) =>
   <span className="ragdot" title={tv(v) || notRated} aria-label={tv(v) || notRated} style={{ background: v ? RC[v] : 'var(--na)' }} />;
 
-export const FreshDate: React.FC<{ iso: string; fresh: Fresh; none: string }> = ({ iso, fresh, none }) =>
-  <span className="rag"><span className="dot sm" style={{ background: FC[fresh] }} />{iso ? fmtDate(iso) : <span className="muted">{none}</span>}</span>;
+/** Подсказка к точке свежести (freshTip прототипа): сколько дней последнему погодженому отчёту и что значат цвета. */
+export const freshTip = (t: (k: string) => string, iso: string, today: string): string =>
+  (iso ? t('freshTip').replace('{n}', String(daysBetween(iso, today))) : t('freshNone'));
+
+export const FreshDate: React.FC<{ iso: string; fresh: Fresh; none: string; tip?: string }> = ({ iso, fresh, none, tip }) =>
+  <span className="rag" title={tip}><span className="dot sm" style={{ background: FC[fresh] }} />{iso ? fmtDate(iso) : <span className="muted">{none}</span>}</span>;
 
 export const Avatar: React.FC<{ name: string }> = ({ name }) => {
   const c = COLORS[Array.from(name).reduce((a, ch) => a + ch.charCodeAt(0), 0) % COLORS.length];

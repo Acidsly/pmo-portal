@@ -15,7 +15,7 @@ import { ProjectForm } from '../src/webparts/pmoPortal/panels/ProjectForm';
 import { RefLink } from '../src/webparts/pmoPortal/panels/ProjectCard';
 import { NotifyPanel } from '../src/webparts/pmoPortal/panels/NotifyPanel';
 import { Header } from '../src/webparts/pmoPortal/components/Header';
-import { RepMark } from '../src/webparts/pmoPortal/components/Bits';
+import { RepMark, FreshDate, freshTip } from '../src/webparts/pmoPortal/components/Bits';
 import { FeedbackView } from '../src/webparts/pmoPortal/panels/FeedbackView';
 import { neighbors } from '../src/webparts/pmoPortal/logic/ui';
 
@@ -302,5 +302,14 @@ describe('метка погодження в колонке «Звіт»', () =>
     expect(root.textContent).toContain('Повернуто'); expect(root.querySelector('.rep-ap .muted')!.textContent).toBe(new Date('2026-10-01T12:00:00Z').toLocaleDateString('uk-UA'));
     ReactDOM.unmountComponentAtNode(root);
     mount(<RepMark r={null} />); expect(root.querySelector('.rep-ap')).toBeNull();
+  });
+});
+
+describe('подсказка к точке свежести в колонке «Звіт»', () => {
+  test('дни с последнего погодженого отчёта и значение цветов; без отчётов — «ще немає»', () => {
+    expect(freshTip(tt.t, '2026-09-25', '2026-10-08')).toBe('Останній погоджений звіт — 13 дн. тому. Зелений — до 8 днів, жовтий — 9–14, червоний — понад 14.');
+    expect(freshTip(tt.t, '', '2026-10-08')).toBe('Погоджених звітів ще немає.');
+    mount(<FreshDate iso="2026-09-25" fresh="y" none="—" tip={freshTip(tt.t, '2026-09-25', '2026-10-08')} />);
+    expect(root.querySelector('.rag')!.getAttribute('title')).toContain('13 дн. тому');
   });
 });

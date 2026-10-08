@@ -242,5 +242,9 @@ describe('прототип: метка погодження в колонке «
     expect(txt).toContain('Погоджено');
     const pend = marks.filter(m => m.textContent.indexOf('На погодженні') >= 0);
     pend.forEach(m => expect(m.querySelector('.muted')).not.toBeNull());
+    // подсказка к точке свежести — у каждой ячейки «Звіт»
+    const rags = Array.from(w.document.querySelectorAll('#main table .rag[title]')) as any[];
+    expect(rags.length).toBeGreaterThanOrEqual(marks.length);   // и без отчётов — подсказка «ще немає»
+    expect(rags.some(r => /дн\. тому/.test(r.getAttribute('title')))).toBe(true);
   });
 });

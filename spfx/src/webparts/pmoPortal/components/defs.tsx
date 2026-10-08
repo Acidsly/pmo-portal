@@ -6,7 +6,7 @@ import { Rag } from '../logic/rag';
 import { freshness, isPlanLate, forecastDelta, budgetUse, budgetLevel, riskScore } from '../logic/status';
 import { daysBetween } from '../logic/dates';
 import { freshBucket, scoreBucket } from '../logic/views';
-import { RagDot, PersonCell, People, Score, Progress, Muted, ApBadge, StatusPill, fmtDate, money, freshColor, RepMark } from './Bits';
+import { RagDot, PersonCell, People, Score, Progress, Muted, ApBadge, StatusPill, fmtDate, money, freshColor, RepMark, freshTip } from './Bits';
 import { Strat, Prio, Compass, Flag } from './Icons';
 
 /** Колонка = данные для движка таблицы + отрисовка (PDEF / RDEF / KDEF прототипа, строки 997–1072). */
@@ -55,7 +55,7 @@ export function projectDefs(x: DefsCtx, archive: boolean): TableDefs<Project> {
     rag: { label: t('cHealth'), cell: p => <RagDot v={p.rag} notRated={t('notRated')} />, sort: p => ragOrder(p.rag), filter: p => p.rag, flabel: S.ragLabel, cls: 'w-ico w-min' },
     // #29: отчёт на погодженні виден в колонке — и без погодженых отчётов («на погодженні · дата»), и рядом с последним погодженим
     // точка — свежесть последнего погодженого отчёта; ниже — погодження самого нового отчёта (#29: и отчёт на погодженні)
-    repDate: { label: t('cRepDate'), cell: p => <><span className="rag"><span className="dot sm" style={{ background: freshColor(freshness(p.lastUpdate, today)) }} />{p.lastUpdate ? fmtDate(p.lastUpdate) : t('noReports')}</span>
+    repDate: { label: t('cRepDate'), cell: p => <><span className="rag" title={freshTip(t, p.lastUpdate, today)}><span className="dot sm" style={{ background: freshColor(freshness(p.lastUpdate, today)) }} />{p.lastUpdate ? fmtDate(p.lastUpdate) : t('noReports')}</span>
         <RepMark r={p.lastRep} /></>,
       sort: p => p.lastUpdate, filter: p => freshBucket(p.lastUpdate, today),
       flabel: v => <span className="ilabel"><span className="dot sm" style={{ background: ['var(--g)', 'var(--y)', 'var(--r)', 'var(--na)'][Number(v)] }} />{t('fr' + v)}</span> },
