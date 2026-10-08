@@ -356,11 +356,6 @@ export const T: Record<string, L3> = {
   "Fill in the one-line summary.",
   "Заполните резюме одной строкой."
  ],
- "errDate": [
-  "Вкажіть дату звіту.",
-  "Enter the report date.",
-  "Укажите дату отчёта."
- ],
  "errCmt": [
   "Введіть текст коментаря.",
   "Enter the comment text.",

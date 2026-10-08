@@ -116,7 +116,7 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
             <MoneyIn id="f-c" value={d.actualCost} onChange={v => set({ actualCost: v })} /></div>
         </div>
         {archiveStatus(d.status) ? <><p className="note" style={{ margin: '-4px 0 14px' }}>{t('completeHint')}</p>
-          {/* #54: когда проект фактически завершён или отменён — обязательно, не раньше старта, не позже даты отчёта */}
+          {/* #54: когда проект фактически завершён или отменён — обязательно, не раньше старта, не позже даты подання (#64) */}
           <div className="frow" id="f-ae-wrap"><label className="t" htmlFor="f-ae">{fl('ae')} *</label>
             <DateIn id="f-ae" value={d.actualEnd} invalid={bad('actualEnd') || !!aeLive} onChange={v => set({ actualEnd: v })} /><FieldErrText msg={fErr('actualEnd') || (aeLive ? errMsg(aeLive) : '')} />
             <p className="hint">{t('aeHint')}</p></div></> : null}

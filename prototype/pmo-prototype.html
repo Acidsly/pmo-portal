@@ -717,7 +717,7 @@ const T = {
  keyHint:['Кожна зміна потрапляє в історію: що було, що стало, хто і коли змінив, причина.','Every change is logged: old value, new value, who, when and why.','Каждое изменение попадает в историю: что было, что стало, кто и когда изменил, причина.'],
  errRag:['Оберіть загальний стан проєкту.','Choose the project’s overall health.','Выберите общее состояние проекта.'],
  errSum:['Заповніть резюме одним рядком.','Fill in the one-line summary.','Заполните резюме одной строкой.'],
- errDate:['Вкажіть дату звіту.','Enter the report date.','Укажите дату отчёта.'],
+
  errCmt:['Введіть текст коментаря.','Enter the comment text.','Введите текст комментария.'],
  errTitle:['Вкажіть назву проєкту.','Enter the project name.','Укажите название проекта.'],
  errPM:['Оберіть відповідального PM.','Choose the responsible PM.','Выберите ответственного PM.'],
@@ -2295,7 +2295,7 @@ function reportForm(pid, base){
     if (!prOk){ mark(g('f-pr')); g('e-pr').textContent = t('errProgress'); g('e-pr').hidden = false; first = first || t('errProgress'); }
     const st = g('f-start').value;
     ['golive','plan','fc'].forEach(k => { const v = g('f-' + k).value; if (st && v && v < st){ mark(g('f-' + k)); g('e-' + k).textContent = t('errBeforeStart'); g('e-' + k).hidden = false; first = first || t('errBeforeStart'); } });
-    // #54: фактическая дата — при «Завершено» / «Скасовано»: обязательна, не раньше старта, не позже даты отчёта
+    // #54 / #64: фактическая дата — при «Завершено» / «Скасовано»: обязательна, не раньше старта, не позже даты подання
     // #64 / #67: не раньше старта и не позже даты подання; в сообщении — дата, с которой сравнили
     const arch = ['Завершено','Скасовано'].includes(g('f-st').value), ae = g('f-ae').value, aeMsg = aeErr(ae, st, dstr);
     if (arch){ if (!ae){ req = true; mark(g('f-ae')); } else if (aeMsg){ mark(g('f-ae')); g('e-ae').textContent = aeMsg; g('e-ae').hidden = false; first = first || aeMsg; } }

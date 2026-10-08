@@ -319,6 +319,8 @@ $tl = Get-ReportTarget @{ status = "Скасовано"; date = "2026-10-01"; sc
 if ($tl["status"] -eq "Архівний" -and $tl["archivedAt"] -eq "2026-10-01") { Ok "перенос в карточку: переходный режим — «Архівний»" } else { Bad "перенос в карточку: переходный режим — $($tl["status"])" }
 if ($syncSrc -match 'Get-ReportTarget \(\[ordered\][^\n]*\n[^\n]*\n[^\n]*\$p\.Values\.pmLastUpdate \$LEGACY_ARCHIVE') { Ok "раздел 1 передаёт переходный режим архива" } else { Bad "раздел 1: Get-ReportTarget без `$LEGACY_ARCHIVE" }
 if ($syncSrc -match '\$plan = Get-StatePlan \$card') { Ok "раздел 0a решает по эталону общим правилом Get-StatePlan" } else { Bad "Invoke-PMOSync.ps1: раздел 0a не использует Get-StatePlan" }
+# #77: фаза и тип пишутся в каждый отчёт — раздел 1 меняет карточку и пишет журнал только по отличающимся полям ($changed)
+if ($syncSrc -match 'foreach \(\$k in \$target\.Keys\) \{ if \(\$p\.Values\[\$k\] -ne \$target\[\$k\]\) \{ \$changed\[\$k\] = \$target\[\$k\] \} \}' -and $syncSrc -match 'foreach \(\$k in \$changed\.Keys\) \{\s*\n\s*if \(\$DISPLAY\.Contains\(\$k\)\) \{ Add-Change') { Ok "раздел 1: журнал и запись — только по отличающимся от карточки полям" } else { Bad "раздел 1: журнал не по `$changed" }
 if ($syncSrc -match '\$tg = Get-ReportTarget') { Ok "раздел 1 переносит отчёт общим правилом Get-ReportTarget" } else { Bad "Invoke-PMOSync.ps1: раздел 1 не использует Get-ReportTarget" }
 # подтверждение «Погоджено» в синхронизации — именно этим правилом (а не «любое Погоджено от PMO»: ошибка сверки №1)
 if ($syncSrc -match '\$eff = Get-EffectiveApproval' -and $syncSrc -match 'if \(\$eff -and \$eff\.decision -eq "Погоджено"\) \{ \$APPROVED\[\$rid\] = \$true \}' -and ([regex]::Matches($syncSrc, '\$APPROVED\[[^\]]+\] = \$true')).Count -eq 1) {

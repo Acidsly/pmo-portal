@@ -60,6 +60,7 @@ foreach ($it in $items) {
     # #69: период — с предыдущего отчёта проекта (нет — за день)
     $v = @{ Title = "Роботи за планом: етап продовжується"; srProject = $it.Id; srDate = (SpDate $date); srPeriodFrom = (SpDate $(if ($last -and $last -le $date) { $last } else { $date }))
             srSchedule = $sched; srBudget = "Зелений"; srResources = "Зелений"; srProgress = $prog
+            srStatus = [string]$it["pmStatus"]; srType = [string]$it["pmType"]   # #77: фаза и тип — в каждом отчёте
             srDone = "Виконано заплановані роботи періоду."; srNext = "Продовжити роботи за планом."; srIssues = ""
             srDecision = $false; srApplied = $false; srApproval = "Погоджено"; srApprovalNote = "Демонстраційні дані" }
     $r = Add-PnPListItem -List "Lists/StatusReports" -Values $v
