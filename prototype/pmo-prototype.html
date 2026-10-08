@@ -203,6 +203,10 @@ svg text{font-family:inherit}
 .kv .k{color:var(--text-2);font-size:14px}
 .kv .v{text-align:right;font-weight:500}
 .k{font-size:12px;color:var(--text-2)}
+/* метка сущности бокового окна: что открыто — проект, отчёт, риск… (одинаково, откуда бы ни открыли) */
+.ph .k{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ent{display:inline-flex;align-items:center;gap:5px;padding:3px 10px 3px 8px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--c);background:color-mix(in srgb,var(--c) 15%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 35%,transparent)}
+.ent svg{width:13px;height:13px;flex:none}
 .pmcard{display:flex;gap:14px;align-items:center;background:var(--bg-alt);border-radius:16px;padding:14px 16px}
 .pmcard .pn b{font-size:16px}
 .pmcard .role{margin-left:auto;font-size:12px;font-weight:600;color:var(--theme);background:var(--theme-soft);padding:3px 10px;border-radius:999px;white-space:nowrap}
@@ -743,7 +747,9 @@ const T = {
  kCreate:['Проєкт створено','Project created','Проект создан'], kKey:['Зміна ключових показників','Key indicators changed','Изменение ключевых показателей'],
  kEdit:['Редагування картки','Card edited','Редактирование карточки'], kAssign:['Призначення','Assignment','Назначение'],
  kSubmit:['Подання звіту','Report submitted','Подача отчёта'],
- notifTitle:['Сповіщення','Notifications','Уведомления'], notifNewOnes:['Є нові події','There are new events','Есть новые события'],
+ notifTitle:['Сповіщення','Notifications','Уведомления'],
+ entProject:['Проєкт','Project','Проект'], entReport:['Статус-звіт','Status report','Статус-отчёт'], entRisk:['Ризик','Risk','Риск'], entIssue:['Проблема','Issue','Проблема'],
+ entAssign:['Призначення','Assignment','Назначение'], entNotif:['Сповіщення','Notifications','Уведомления'], entFeedback:['Відгук','Feedback','Отзыв'], entHelp:['Довідка','Help','Справка'], notifNewOnes:['Є нові події','There are new events','Есть новые события'],
  notifEmpty:['За останні 14 днів подій для вас немає.','No events for you in the last 14 days.','За последние 14 дней событий для вас нет.'],
  notifOnlyNew:['Лише нові','Only new','Только новые'], notifNew:['Нове','New','Новое'],
  notifSoon:['Сповіщення з\'являться протягом 15 хвилин.','Notifications will appear within 15 minutes.','Уведомления появятся в течение 15 минут.'],
@@ -1241,6 +1247,16 @@ const iconList = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" st
 const iconTiles = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.5"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1.5"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1.5"/><rect x="9" y="9" width="5.5" height="5.5" rx="1.5"/></svg>';
 const iconPlus = '<svg width="14" height="14" viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 2.5v11M2.5 8h11"/></svg>';
 const iconEdit = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10.5 2.5l3 3L6 13H3v-3z"/></svg>';
+// метка сущности бокового окна (EntTag приложения): цвет и значок по виду
+const ENT = {
+  project:{c:'var(--theme)', d:'M2 4.5h4l1.5 1.5H14v6.5H2z'},
+  report:{c:'var(--g)', d:'M4 2h6l3 3v9H4zM10 2v3h3M6 8h5M6 11h5'},
+  risk:{c:'var(--y)', d:'M8 2l6.5 11.5h-13zM8 6.5v3M8 11.5v.01'},
+  issue:{c:'var(--r)', d:'M8 1.5a6.5 6.5 0 1 0 0 13a6.5 6.5 0 1 0 0-13zM8 5v4M8 11v.01'},
+  assign:{c:'#8764b8', d:'M8 8a2.5 2.5 0 1 0 0-5a2.5 2.5 0 0 0 0 5zM3 14c0-2.8 2.2-4.5 5-4.5s5 1.7 5 4.5'},
+  notif:{c:'#5856d6', d:'M4 6.5a4 4 0 0 1 8 0c0 3 1.2 4.2 1.5 4.5h-11C2.8 10.7 4 9.5 4 6.5zM6.5 13a1.6 1.6 0 0 0 3 0'}};
+const ENT_L = {project:'entProject', report:'entReport', risk:'entRisk', issue:'entIssue', assign:'entAssign', notif:'entNotif'};
+const entTag = kind => { const e = ENT[kind]; return `<span class="ent ent-${kind}" style="--c:${e.c}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${e.d}"/></svg>${t(ENT_L[kind])}</span>`; };
 const iconBell = '<svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5a4 4 0 0 1 8 0c0 3 1.2 4.2 1.5 4.5h-11C2.8 10.7 4 9.5 4 6.5Z"/><path d="M6.5 13a1.6 1.6 0 0 0 3 0"/></svg>';
 const iconKey = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 12.5h12M4 10V7M8 10V4M12 10V6"/></svg>';
 const modeSwitch = key => `<span class="seg" role="group">
@@ -1805,7 +1821,7 @@ function notifPanel(onlyNew){
       : `${x.c.diffs && x.c.diffs.length ? `<div class="diffs">${x.c.diffs.map(d => `<div class="diff"><span class="df">${fl(d.f)}</span><span class="dv"><s>${valFmt(d.f, d.from)}</s><span class="arr">→</span>${valFmt(d.f, d.to)}</span></div>`).join('')}</div>` : ''}${x.c.reason ? `<div class="ntf-t">${esc(x.c.reason)}</div>` : ''}`;
     return `<button class="ntf-i ${x.unread ? 'new' : 'old'}" data-k="${esc(x.k)}" ${act}><div class="ntf-h"><span class="ntf-p">${esc(x.p.code)} · ${esc(x.p.title)}</span><span class="chg-k">${t(NK[x.kind])}</span>${x.unread ? `<span class="pill ap" style="--c:var(--theme)">${t('notifNew')}</span>` : ''}<span class="muted">${esc(x.who || '')} · ${fmtDT(new Date(x.date))}</span></div>${body}</button>`;
   };
-  openPanel(`<div class="ph"><div><div class="k">PPM</div><h2>${t('notifTitle')}</h2></div>${closeBtn()}</div>
+  openPanel(`<div class="ph"><div><div class="k">${entTag('notif')}</div><h2>${t('notifTitle')}</h2></div>${closeBtn()}</div>
     <p class="note">${t('notifHint')}</p>
     <div class="ntf-bar"><label class="check"><input type="checkbox" id="ntf-new"${onlyNew ? ' checked' : ''}> ${t('notifOnlyNew')}</label>${all.some(x => x.unread) ? `<button type="button" class="btn" id="ntf-all" data-act="notifreadall" data-new="${onlyNew ? 1 : ''}">${t('notifReadAll')}</button>` : ''}</div>
     <div id="ntf-list">${list.length ? list.map(item).join('') : `<p class="empty">${t('notifEmpty')}</p>`}</div>`);
@@ -1860,7 +1876,7 @@ function projectPanel(id, showCm, keep, showCh){
     + (lastR && lastR.approval === AP_RET ? `<div class="apnote ret">${esc(t('returnedNote').replace('{date}', fmt(lastR.d)).replace('{comment}', lastR.apNote || '—'))}
        <button class="link" data-act="repopen" data-id="${p.id}" data-rid="${esc(lastR.id)}">${t('openReport')} →</button>
        ${edit ? `<div><button class="btn" data-act="newfromret" data-id="${p.id}" data-rid="${esc(lastR.id)}">${iconPlus}${t('newFromReturned')}</button></div>` : ''}</div>` : '');
-  openPanel(`<div class="ph"><div><div class="k">${esc(p.code)} · ${t('listLabel')} «${t('navProjects')}»</div><h2>${esc(p.title)}</h2></div>${closeBtn()}</div>
+  openPanel(`<div class="ph"><div><div class="k">${entTag('project')}<span>${esc(p.code)} · ${t('listLabel')} «${t('navProjects')}»</span></div><h2>${esc(p.title)}</h2></div>${closeBtn()}</div>
     <div class="badges">${typeHtml(p.type)}${ragHtml(p.rag)}${statusPill(p.status)}<span class="badge">${esc(tv(p.prio))}</span></div>
     ${(p.links || []).length ? `<div class="lnk-sec"><div class="k">${fl('links')}</div>${linksHtml(p)}</div>` : ''}
     ${actions}${onePend}${isPMO() && !isArch(p) ? `<div class="actbar"><button class="btn" data-act="assign" data-id="${p.id}">${t('assignBtn')}</button></div>` : ''}
@@ -1902,7 +1918,7 @@ const opt = (v, cur, label) => `<option value="${esc(v)}"${v === cur ? ' selecte
 const peopleSelect = (id, cur, req) => `<select id="${id}">${req ? '' : `<option value="">${t('notSet')}</option>`}${Object.keys(ORG).map(n => opt(n, cur, `${n} — ${roleOf(n)} · ${email(n)}`)).join('')}</select>`;
 const segPick = (name, values, cur, colors) => `<div class="opts">${values.map((v, i) => `<input type="radio" id="${name}${i}" name="${name}" value="${esc(v)}"${v === cur ? ' checked' : ''}><label for="${name}${i}">${colors ? `<span class="dot sm" style="background:${RC[v]}"></span>` : ''}${esc(tv(v))}</label>`).join('')}</div>`;
 const ragPick = (name, label, req, cur) => `<fieldset class="ragpick"><legend>${label}${req ? ' *' : ''}</legend>${segPick(name, RAGS, cur, true)}</fieldset>`;
-const formHead = (title, sub) => `<div class="ph"><div><div class="k">${sub}</div><h2>${title}</h2></div>${closeBtn()}</div>`;
+const formHead = (title, sub, kind) => `<div class="ph"><div><div class="k">${kind ? entTag(kind) : ''}<span>${sub}</span></div><h2>${title}</h2></div>${closeBtn()}</div>`;
 const fErr = form => msg => { const e = form.querySelector('.err'); e.textContent = msg; e.hidden = false; e.scrollIntoView && e.scrollIntoView({block:'nearest'}); };
 const radioVal = (form, n) => (form.querySelector(`input[name="${n}"]:checked`) || {}).value || '';
 
@@ -1915,7 +1931,7 @@ const lnRow = l => `<div class="ed-row ln-row"><input type="text" class="ln-t" a
 function projectForm(p){
   const isNew = !p; p = p || {pm:'', type:'Звичайний', status:'Ініціація', prio:'2 — Середній', dept:'ІТ', start:iso(TODAY)};
   state.panel = {kind:'form'};
-  openPanel(`${formHead(isNew ? t('newProject') : t('editProject') + ': ' + esc(p.title), `${t('listLabel')} «${t('navProjects')}»`)}
+  openPanel(`${formHead(isNew ? t('newProject') : t('editProject') + ': ' + esc(p.title), `${isNew ? '' : esc(p.code) + ' · '}${t('listLabel')} «${t('navProjects')}»`, 'project')}
   <form id="pform" novalidate>
     <h3 class="fsec">${t('fGeneral')}</h3>
     <div class="frow"><label class="t" for="p-title">${fl('title')} *</label><input type="text" id="p-title" value="${esc(p.title || '')}"></div>
@@ -2018,7 +2034,7 @@ function projectForm(p){
 function assignForm(p){
   if (!p || !isPMO() || isArch(p)) return;
   state.panel = {kind:'form'};
-  openPanel(`${formHead(t('assignTitle'), `${esc(p.code)} · ${t('listLabel')} «${t('navProjects')}»`)}
+  openPanel(`${formHead(t('assignTitle'), `${esc(p.code)} · ${t('listLabel')} «${t('navProjects')}»`, 'assign')}
   <p class="note">${t('assignHint')}</p>
   <form id="aform" novalidate>
     <div class="fgrid2 frow"><div><label class="t">${fl('pm')}</label><div class="fixedval">${esc(p.pm || '—')}</div></div>
@@ -2058,7 +2074,7 @@ function riskForm(pid, rid, fromList){
   const scale = (name, val, pre) => `<div class="opts scale">${[1,2,3,4,5].map(n => `<input type="radio" id="${name}${n}" name="${name}" value="${n}"${+val === n ? ' checked' : ''}${dis}><label for="${name}${n}">${n}</label>`).join('')}</div><p class="scale-d" id="${name}-d">${t(pre + val)}</p>`;
   // #47 / #55: заголовок новой записи — по типу (меняется при выборе типа)
   const newTitle = ty => ty === 'Проблема' ? t('newIssueT') : t('newRiskT');
-  openPanel(`${formHead(k ? t('riskCard') : newTitle(cur.type), `${t('listLabel')} «${t('navRisks')}»`)}
+  openPanel(`${formHead(k ? t('riskCard') : newTitle(cur.type), `${k || (pid && !fromList) ? esc(p.code) + ' · ' : ''}${t('listLabel')} «${t('navRisks')}»`, cur.type === 'Проблема' ? 'issue' : 'risk')}
   ${edit ? '' : `<p class="note lock">🔒 ${t('readOnly')}</p>`}
   <form id="kform" novalidate>
     <div class="frow"><label class="t" for="k-p">${fl('rProj')} *</label>
@@ -2088,7 +2104,8 @@ function riskForm(pid, rid, fromList){
     g('k-score').innerHTML = `${scoreHtml(sc)} <b>${t('sc' + scoreBucket(sc))}</b> <span class="muted">= ${pr} × ${im}</span>`;
     g('k-pr-d').textContent = t('p' + pr); g('k-im-d').textContent = t('i' + im); };
   form.addEventListener('change', sync); sync();
-  if (!k) form.addEventListener('change', e => { if (e.target.name === 'k-type') { const h = panel.querySelector('.ph h2'); if (h) h.textContent = newTitle(e.target.value); } });
+  if (!k) form.addEventListener('change', e => { if (e.target.name === 'k-type') { const h = panel.querySelector('.ph h2'); if (h) h.textContent = newTitle(e.target.value);
+    const en = panel.querySelector('.ph .ent'); if (en) en.outerHTML = entTag(e.target.value === 'Проблема' ? 'issue' : 'risk'); } });
   form.addEventListener('submit', e => {
     e.preventDefault(); if (!edit) return;
     if (g('k-p')) p = pById(+g('k-p').value);
@@ -2121,7 +2138,7 @@ function reportForm(pid, base){
   const b = base || {}, bv = (k, d) => b[k] != null && b[k] !== '' ? b[k] : d, bt = k => b[k] && b[k] !== '—' ? b[k] : '';
   const sel = base ? Object.assign({}, p0, {status:bv('status', p0.status), progress:bv('progress', p0.progress), type:bv('type', p0.type),
     start:bv('start', p0.start), golive:bv('golive', p0.golive), plan:bv('plan', p0.plan), fc:bv('fc', p0.fc), actual:bv('cost', p0.actual)}) : p0;
-  openPanel(`${formHead(t('newReport'), `${t('listLabel')} «${t('navReports')}»`)}
+  openPanel(`${formHead(t('newReport'), `${t('listLabel')} «${t('navReports')}»`, 'report')}
   <form id="repform" novalidate>
     ${fixedP ? `<div class="frow"><label class="t">${fl('rProj')}</label><div class="fixedval">${esc(fixedP.title)}</div><input type="hidden" id="f-p" value="${fixedP.id}"></div>`
       : `<div class="frow"><label class="t" for="f-p">${fl('rProj')} *</label><select id="f-p">${act.map(p => `<option value="${p.id}"${p.id === sel.id ? ' selected' : ''}${pendDate(p) && p.id !== sel.id ? ' disabled' : ''}>${esc(p.title)}${pendDate(p) ? ' — ' + esc(t('repPendingOpt').replace('{date}', fmt(pendDate(p)))) : ''}</option>`).join('')}</select></div>`}
@@ -2290,7 +2307,7 @@ function reportView(pid, rid, keep){
       <p class="err" hidden></p>
       <div class="actions"><button type="submit" class="btn primary" id="ap-ok">${t('approve')}</button><button type="button" class="btn" id="ap-ret">${t('returnRep')}</button></div>
     </form></div></div>` : '';
-  openPanel(`<div class="ph"><div><div class="k">${esc(p.code)} · ${t('listLabel')} «${t('navReports')}»</div><h2>${esc(r.title)}</h2></div>${closeBtn()}</div>
+  openPanel(`<div class="ph"><div><div class="k">${entTag('report')}<span>${esc(p.code)} · ${t('listLabel')} «${t('navReports')}»</span></div><h2>${esc(r.title)}</h2></div>${closeBtn()}</div>
     <div class="rv-meta"><button class="link" data-act="openp" data-id="${p.id}">${esc(p.title)}</button><span>${fl('rDate')}: <b>${fmt(d)}</b></span>${r.period ? `<span>${fl('rPeriod')}: <b>${esc(tv(r.period))}</b></span>` : ''}${apBadge(r.approval)}</div>
     ${apForm}
     <div class="sec"><div class="group">${kv('rag', ragHtml(r.rag))}${DIMS.map(([k, l]) => kv(l, ragHtml(r[k]))).join('')}</div></div>

@@ -197,6 +197,10 @@ svg text{font-family:inherit}
 .kv .k{color:var(--text-2);font-size:14px}
 .kv .v{text-align:right;font-weight:500}
 .k{font-size:12px;color:var(--text-2)}
+/* метка сущности бокового окна: что открыто — проект, отчёт, риск… (одинаково, откуда бы ни открыли) */
+.ph .k{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ent{display:inline-flex;align-items:center;gap:5px;padding:3px 10px 3px 8px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--c);background:color-mix(in srgb,var(--c) 15%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 35%,transparent)}
+.ent svg{width:13px;height:13px;flex:none}
 .pmcard{display:flex;gap:14px;align-items:center;background:var(--bg-alt);border-radius:16px;padding:14px 16px}
 .pmcard .pn b{font-size:16px}
 .pmcard .role{margin-left:auto;font-size:12px;font-weight:600;color:var(--theme);background:var(--theme-soft);padding:3px 10px;border-radius:999px;white-space:nowrap}

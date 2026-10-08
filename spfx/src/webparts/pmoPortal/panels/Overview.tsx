@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { EntTag } from '../components/EntTag';
 import { AppCtx } from '../components/ctx';
 import { OVERVIEW_CSS, OVERVIEW_HTML } from '../help/overview';
 
@@ -11,7 +12,7 @@ export const Overview: React.FC<{ onBack(): void; onCancel(): void }> = ({ onBac
   const base = `${webUrl}/${OVERVIEW_DIR}`;
   const html = React.useMemo(() => OVERVIEW_HTML.split('{{BASE}}').join(base), [base]);
   return <>
-    <div className="ph"><div><div className="k">{t('help')}</div><h2>{t('overview')}</h2></div>
+    <div className="ph"><div><div className="k"><EntTag kind="help" /></div><h2>{t('overview')}</h2></div>
       <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     <div className="actions top">
       <button className="btn" onClick={onBack}>{t('overviewBack')}</button>

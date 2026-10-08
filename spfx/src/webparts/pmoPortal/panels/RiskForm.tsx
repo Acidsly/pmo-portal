@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { EntTag } from '../components/EntTag';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
 import { Person } from '../data/types';
@@ -64,7 +65,7 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
   if (!p) return <><div className="ph"><div><h2>{t('newRisk')}</h2></div><button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     <p className="note lock">🔒 {t('noEdit')}</p></>;
   return <>
-    <div className="ph"><div><div className="k">{t('listLabel')} «{t('navRisks')}»</div><h2>{k ? t('riskCard') : d.type === 'Проблема' ? t('newIssueT') : t('newRiskT')}</h2></div>
+    <div className="ph"><div><div className="k"><EntTag kind={d.type === 'Проблема' ? 'issue' : 'risk'} /><span>{t('listLabel')} «{t('navRisks')}»</span></div><h2>{k ? t('riskCard') : d.type === 'Проблема' ? t('newIssueT') : t('newRiskT')}</h2></div>
       <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     {edit ? null : <p className="note lock">🔒 {t('readOnly')}</p>}
     <form onSubmit={save} noValidate={true}>

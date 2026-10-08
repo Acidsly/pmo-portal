@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { EntTag } from '../components/EntTag';
 import { isArch } from '../logic/status';
 import { createWithCode } from '../logic/ui';
 import { AppCtx } from '../components/ctx';
@@ -91,7 +92,7 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
   if (isNew && !data.canCreate) return <><div className="ph"><div><h2>{t('newProject')}</h2></div><button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     <p className="note lock">🔒 {t('noCreate')}</p></>;
   return <>
-    <div className="ph"><div><div className="k">{isNew ? `${t('listLabel')} «${t('navProjects')}»` : `${project!.code} · ${t('listLabel')} «${t('navProjects')}»`}</div>
+    <div className="ph"><div><div className="k"><EntTag kind="project" /><span>{isNew ? `${t('listLabel')} «${t('navProjects')}»` : `${project!.code} · ${t('listLabel')} «${t('navProjects')}»`}</span></div>
       <h2>{isNew ? t('newProject') : project!.title}</h2></div><button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     <form onSubmit={save} noValidate={true}>
       <h3 className="fsec">{t('fGeneral')}</h3>

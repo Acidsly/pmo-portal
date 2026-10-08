@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { EntTag } from '../components/EntTag';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
 import { StatusReport, Project } from '../data/types';
@@ -26,7 +27,7 @@ export const ReportView: React.FC<{ data: PortalData; report: StatusReport | und
   const [err, setErr] = React.useState('');
   const [busy, setBusy] = React.useState(false);
   const p: Project | undefined = r ? data.projects.filter(x => x.id === r.projectId)[0] : undefined;
-  const head = <div className="ph"><div><div className="k">{p ? p.code + ' · ' : ''}{t('listLabel')} «{t('navReports')}»</div><h2>{r ? r.title : t('navReports')}</h2></div>
+  const head = <div className="ph"><div><div className="k"><EntTag kind="report" /><span>{p ? p.code + ' · ' : ''}{t('listLabel')} «{t('navReports')}»</span></div><h2>{r ? r.title : t('navReports')}</h2></div>
     <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>;
   if (!r || !p) return <>{head}<p className="empty">{t('noReportsYet')}</p></>;
 

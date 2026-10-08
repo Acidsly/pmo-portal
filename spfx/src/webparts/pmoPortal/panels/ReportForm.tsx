@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { EntTag } from '../components/EntTag';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
 import { Project } from '../data/types';
@@ -69,7 +70,7 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
   };
 
   return <>
-    <div className="ph"><div><div className="k">{t('listLabel')} «{t('navReports')}»</div><h2>{t('newReport')}</h2></div>
+    <div className="ph"><div><div className="k"><EntTag kind="report" /><span>{t('listLabel')} «{t('navReports')}»</span></div><h2>{t('newReport')}</h2></div>
       <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     <form onSubmit={save} noValidate={true}>
       {fixed ? <Frow label={fl('rProj')}><div className="fixedval">{fixed.title}</div></Frow>

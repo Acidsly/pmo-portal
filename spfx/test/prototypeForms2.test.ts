@@ -71,6 +71,18 @@ test('#47 / #55: форма риска — тип перед «Опис», за�
   expect(q('#panel .ph h2, .ph h2').textContent).toBe('Новий ризик');
   const r = f.querySelector('input[name="k-type"][value="Проблема"]'); r.checked = true; ev(r, 'change');
   expect(q('.ph h2').textContent).toBe('Нова проблема');
+  // метка сущности окна меняется вместе с типом
+  expect(q('.ph .ent').textContent).toBe('Проблема');
+});
+
+test('метка сущности бокового окна: проект, статус-звіт, ризик — откуда бы ни открыли', () => {
+  q('[data-act="nav"][data-page="projects"]').click(); q('[data-act="openp"][data-id="1"]').click();
+  expect(q('#panel .ph .ent').textContent).toBe('Проєкт');
+  q('[data-act="nav"][data-page="reports"]').click(); const rep = q('#main [data-act="repopen"]'); rep.click();
+  expect(q('#panel .ph .ent').textContent).toBe('Статус-звіт');
+  q('[data-act="nav"][data-page="risks"]').click(); const rk = q('#main [data-act="riskopen"]'); rk.click();
+  expect(['Ризик', 'Проблема']).toContain(q('#panel .ph .ent').textContent);
+  q('#bell').click(); expect(q('#panel .ph .ent').textContent).toBe('Сповіщення');
 });
 
 test('#54: «Скасовано» с фактической датой → погодження PMO → дата в карточке и в архиве', () => {

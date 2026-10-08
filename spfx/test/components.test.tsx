@@ -139,8 +139,10 @@ describe('#47 / #55 форма риска', () => {
     expect(ty.compareDocumentPosition(ta) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect((root.querySelector('label[for="k-title"]') as HTMLElement).textContent).toContain('Опис');
     expect((root.querySelector('.ph h2') as HTMLElement).textContent).toBe('Новий ризик');
+    expect((root.querySelector('.ph .ent') as HTMLElement).textContent).toBe('Ризик');   // метка сущности окна
     act(() => { Simulate.change(root.querySelector('input[name="k-type"][value="Проблема"]') as HTMLInputElement); });
     expect((root.querySelector('.ph h2') as HTMLElement).textContent).toBe('Нова проблема');
+    expect((root.querySelector('.ph .ent') as HTMLElement).className).toContain('ent-issue'); expect((root.querySelector('.ph .ent') as HTMLElement).textContent).toBe('Проблема');
     expect(T.newRisk[0]).toBe('Новий ризик / проблема'); expect(T.addRisk[0]).toBe('Додати ризик / проблему');
   });
 });
@@ -321,5 +323,27 @@ describe('подсказка к точке свежести в колонке «
     expect(freshTip(tt.t, '', '2026-10-08')).toBe('Погоджених звітів ще немає.');
     mount(<FreshDate iso="2026-09-25" fresh="y" none="—" tip={freshTip(tt.t, '2026-09-25', '2026-10-08')} />);
     expect(root.querySelector('.rag')!.getAttribute('title')).toContain('13 дн. тому');
+  });
+});
+
+describe('метка сущности бокового окна', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { EntTag } = require('../src/webparts/pmoPortal/components/EntTag');
+  test('каждый вид — свой текст и цвет', () => {
+    const want: [string, string][] = [['project', 'Проєкт'], ['report', 'Статус-звіт'], ['risk', 'Ризик'], ['issue', 'Проблема'], ['assign', 'Призначення'], ['notif', 'Сповіщення'], ['feedback', 'Відгук'], ['help', 'Довідка']];
+    const colors = new Set<string>();
+    for (const [k, l] of want) {
+      mount(<EntTag kind={k} />);
+      const e = root.querySelector('.ent') as HTMLElement;
+      expect(e.textContent).toBe(l); expect(e.className).toContain('ent-' + k); colors.add(e.style.getPropertyValue('--c'));
+      ReactDOM.unmountComponentAtNode(root);
+    }
+    expect(colors.size).toBe(want.length);
+  });
+  test('окна: отчёт и сповіщення', async () => {
+    const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async () => undefined }, reload: async () => undefined };
+    const d = { projects: [{ id: 1, code: 'PRJ-001', title: 'П1', status: 'Реалізація', manager: { email: 'pm@x', name: 'PM' }, owner: null, team: [], stakeholders: [] }], risks: [], reports: [], comments: [], recent: [], canApprove: false, notify: null } as any;
+    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={d} onOpen={() => undefined} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    expect((root.querySelector('.ph .ent') as HTMLElement).textContent).toBe('Сповіщення');
   });
 });

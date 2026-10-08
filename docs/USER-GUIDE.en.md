@@ -54,7 +54,7 @@ Everything is counted only over the projects you can see (excluding the archive)
 
 ## Project card
 
-Click a project and its card opens on the right (full screen on a phone):
+Click a project and its card opens on the right (full screen on a phone). Every side panel has a **coloured label** at the top showing what is open: Project, Status report, Risk, Issue, Assignment, Notifications, Feedback, Help — the same wherever you opened it from.
 - at the top — type, health, status, priority and **Links** (Loop, documents, etc.); **Add status report** and **Edit project** buttons (PM only);
 - approval notes: "Status report of … is awaiting PMO approval" or "Report of … returned for rework" with the PMO's comment;
 - **Stakeholders**: PM, owner and **Project team** — a table: member, role, what to contact them about;

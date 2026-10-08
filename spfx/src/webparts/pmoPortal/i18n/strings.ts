@@ -766,6 +766,46 @@ export const T: Record<string, L3> = {
   "Notifications",
   "Уведомления"
  ],
+ "entProject": [
+  "Проєкт",
+  "Project",
+  "Проект"
+ ],
+ "entReport": [
+  "Статус-звіт",
+  "Status report",
+  "Статус-отчёт"
+ ],
+ "entRisk": [
+  "Ризик",
+  "Risk",
+  "Риск"
+ ],
+ "entIssue": [
+  "Проблема",
+  "Issue",
+  "Проблема"
+ ],
+ "entAssign": [
+  "Призначення",
+  "Assignment",
+  "Назначение"
+ ],
+ "entNotif": [
+  "Сповіщення",
+  "Notifications",
+  "Уведомления"
+ ],
+ "entFeedback": [
+  "Відгук",
+  "Feedback",
+  "Отзыв"
+ ],
+ "entHelp": [
+  "Довідка",
+  "Help",
+  "Справка"
+ ],
  "notifNewOnes": [
   "Є нові події",
   "There are new events",

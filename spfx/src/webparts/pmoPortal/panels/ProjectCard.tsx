@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { EntTag } from '../components/EntTag';
 import { tv } from '../i18n/values';
 import { AppCtx } from '../components/ctx';
 import { PortalData, SpRepo } from '../data/SpRepo';
@@ -112,7 +113,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
     [fl('progress'), r => <span className="muted">{r.progress === null ? '—' : r.progress}</span>]];
 
   return <>
-    <div className="ph"><div><div className="k">{p.code} · {t('listLabel')} «{t('navProjects')}»</div><h2>{p.title}</h2></div>
+    <div className="ph"><div><div className="k"><EntTag kind="project" /><span>{p.code} · {t('listLabel')} «{t('navProjects')}»</span></div><h2>{p.title}</h2></div>
       <button className="x" aria-label={t('close')} onClick={onClose}>×</button></div>
     <div className="badges">
       {p.type === 'Стратегічний' ? <span className="strat">{tv(p.type)}</span> : <span className="badge">{tv(p.type)}</span>}

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { EntTag } from '../components/EntTag';
 import { screenLabel } from '../logic/screen';
 import { tv } from '../i18n/values';
 import { AppCtx } from '../components/ctx';
@@ -23,11 +24,11 @@ export const FeedbackView: React.FC<{ row: FeedbackRow | undefined; admin: boole
     catch (x) { setErr(String((x as Error).message || x)); setBusy(false); }
   };
   return <>
-    <div className="ph"><div><div className="k">{t('navFeedback')} · {(() => {
+    <div className="ph"><div><div className="k"><EntTag kind="feedback" /><span>{t('navFeedback')} · {(() => {
       const nb = neighbors(order, row.id);
       return <span className="fb-nav"><button type="button" id="fb-prev" title={t('fbPrev')} aria-label={t('fbPrev')} disabled={!nb.prev} onClick={() => onGo(nb.prev)}><ChevL /></button>
         <span>№{row.id}</span><button type="button" id="fb-next" title={t('fbNext')} aria-label={t('fbNext')} disabled={!nb.next} onClick={() => onGo(nb.next)}><ChevR /></button></span>;
-    })()}</div><h2>{row.author || t('navFeedback')}</h2></div>
+    })()}</span></div><h2>{row.author || t('navFeedback')}</h2></div>
       <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     <div className="badges"><FbStatus v={row.status} />{row.screen ? <span className="badge" title={row.screen}>{screenLabel(row.screen, t, tv)}</span> : null}</div>
     <p className="fb-text">{row.text}</p>
