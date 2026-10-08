@@ -116,6 +116,9 @@ tr.grp.collapsed .chev{transform:rotate(-90deg)}
 .dot.sm{width:8px;height:8px}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:999px;font-size:12px;font-weight:600;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--text);white-space:nowrap}
 .pill .dot{background:var(--c)}
+.rep-ap{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px}
+.rep-ap .pill{font-size:11.5px;padding:1px 8px 1px 6px}
+.tile-upd .ul .rep-ap{display:inline-flex;margin:0 0 0 6px}
 .pill.st{padding:3px 10px;background:color-mix(in srgb,var(--c) 18%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 35%,transparent)}
 .prog{display:inline-flex;align-items:center;gap:10px;min-width:130px}
 .prog .track{flex:1;height:6px;border-radius:3px;background:var(--track);overflow:hidden;min-width:70px}
@@ -1126,6 +1129,9 @@ const barHtml = v => `<span class="prog" role="img" aria-label="${v}%"><span cla
 const freshColor = d => !d ? 'var(--na)' : age(d) > 14 ? 'var(--r)' : age(d) > 8 ? 'var(--y)' : 'var(--g)';
 // #29: дата отчёта «на погодженні» по проекту (если есть)
 const pendDate = p => { const r = (p.reports || []).find(x => x.approval === AP_PEND); return r ? D(r.date) : null; };
+// метка погодження самого нового отчёта (по дате, затем по порядку подачи) — колонка «Звіт», главная, плитки (latestReport приложения)
+const lastRep = p => (p.reports || []).reduce((r, x) => (!r || x.date >= r.date ? x : r), null);
+const apMark = p => { const r = lastRep(p); if (!r) return ''; const v = r.approval || AP_OK; return `<span class="rep-ap">${apBadge(v)}${v !== AP_OK ? `<span class="muted">${fmt(D(r.date))}</span>` : ''}</span>`; };
 const freshHtml = p => { const d = lastUpd(p); return `<span class="rag"><span class="dot sm" style="background:${freshColor(d)}"></span>${d ? fmt(d) : `<span class="muted">${t('noReports')}</span>`}</span>`; };
 const planHtml = p => { const d = D(p.plan); if (!d) return ''; return d < TODAY && isActive(p) ? `<span class="late">${fmt(d)}</span>` : fmt(d); };
 const useHtml = p => { const u = p.budget ? Math.round(p.actual / p.budget * 100) : 0; return `<span class="${u > 100 ? 'over' : u > 90 ? 'warn' : ''}">${u}%</span>`; };
@@ -1216,7 +1222,7 @@ function tile(p){
     <div class="tile-t">${esc(p.title)}</div>
     <div class="tile-prog"><div class="pl">${statusPill(p.status)}<b>${p.progress}%</b></div><div class="track"><i style="width:${Math.min(p.progress,100)}%;background:${pc}"></i></div></div>
     ${isArch(p) ? `<div class="tile-upd"><div class="ul">${t('archivedAt')}: ${p.archivedAt ? fmt(D(p.archivedAt)) : '—'}</div></div>`
-      : `<div class="tile-upd"><div class="ul"><span class="dot sm" style="background:${freshColor(d)}"></span>${t('latestUpd')} · ${d ? fmt(d) : pendDate(p) ? esc(t('repPending').replace('{date}', fmt(pendDate(p)))) : t('noReports')}${d && pendDate(p) ? ` · <span class="muted">${t('repPendingNew')}</span>` : ''}</div>
+      : `<div class="tile-upd"><div class="ul"><span class="dot sm" style="background:${freshColor(d)}"></span>${t('latestUpd')} · ${d ? fmt(d) : t('noReports')}${apMark(p)}</div>
       <div class="tx">${esc(p.lastReport) || '<span class="muted">—</span>'}</div></div>`}
     <div class="tile-f">${(p.links || []).length ? `<span class="tile-l">${linkA(p.links[0])}${p.links.length > 1 ? ` <span class="muted">+${p.links.length - 1}</span>` : ''}</span>` : '<span></span>'}
       <span class="tile-pm" title="${t('pmRole')}: ${esc(p.pm)} · ${esc(email(p.pm))}">${avatar(p.pm)}<b>${esc(p.pm)}</b></span></div>
@@ -1341,9 +1347,9 @@ const PDEF = {
   status:{l:() => t('cStatusOnly'), main:p => statusPill(p.status), sort:p => STATUSES.indexOf(p.status), filter:p => p.status, cls:'w-min'},
   prio:{l:() => t('cPrio'), h:prioHead, main:p => prioIcon(p.prio), sort:p => p.prio, filter:p => p.prio, flabel:prioLabel, cls:'w-ico'},
   rag:{l:() => t('cHealth'), main:p => ragDot(p.rag), sort:p => ragOrder(p.rag), filter:p => p.rag || '', flabel:ragLabel, cls:'w-ico w-min'},
-  repDate:{l:() => t('cRepDate'), main:p => { const d = lastUpd(p), pd = pendDate(p);
-    if (!d && pd) return `<span class="rag"><span class="dot sm" style="background:var(--y)"></span>${esc(t('repPending').replace('{date}', fmt(pd)))}</span>`;
-    return `<span class="rag"><span class="dot sm" style="background:${freshColor(d)}"></span>${d ? fmt(d) : t('noReports')}</span>${pd ? `<div class="muted" style="font-size:12px;margin-top:2px">${t('repPendingNew')}</div>` : ''}`; }, sort:p => p.lastUpdate || '', filter:p => freshBucket(lastUpd(p)), flabel:freshLabel},
+  // точка — свежесть последнего погодженого отчёта; ниже — погодження самого нового отчёта
+  repDate:{l:() => t('cRepDate'), main:p => { const d = lastUpd(p);
+    return `<span class="rag"><span class="dot sm" style="background:${freshColor(d)}"></span>${d ? fmt(d) : t('noReports')}</span>${apMark(p)}`; }, sort:p => p.lastUpdate || '', filter:p => freshBucket(lastUpd(p)), flabel:freshLabel},
   repAge:{l:() => t('cRepAge'), main:p => lastUpd(p) ? String(age(lastUpd(p))) : '<span class="muted">—</span>', sort:p => lastUpd(p) ? age(lastUpd(p)) : '', cls:'num'},
   progress:{l:() => fl('progress'), main:p => barHtml(p.progress), sort:p => p.progress},
   start:{l:() => t('cStart2'), main:p => dateCell(p.start), sort:p => p.start || ''},
@@ -1598,11 +1604,9 @@ function pageHome(){
   const C = (l, r, cls) => ({l:() => l, r, cls});
   const S = {l:stratHead, r:p => stratCell(p.type), cls:'c-ico'}, PR = {l:prioHead, r:p => prioIcon(p.prio), cls:'c-ico'};
   const SR = {l:stratHead, r:x => stratCell(pById(x.pid).type), cls:'c-ico'}, PRR = {l:prioHead, r:x => prioIcon(PP(x.pid)), cls:'c-ico'};
-  // отчёт на погодженні — как в колонке «Звіт» списка проектов (#29)
-  const pendNew = p => pendDate(p) ? `<div class="muted" style="font-size:12px;margin-top:2px">${t('repPendingNew')}</div>` : '';
-  const pendOnly = p => `<span class="rag"><span class="dot sm" style="background:var(--y)"></span>${esc(t('repPending').replace('{date}', fmt(pendDate(p))))}</span>`;
-  const probCols = [S, PR, C(fl('title'), pLink), C(t('cHealth'), p => ragDot(p.rag), 'c-ico'), C(fl('pm'), p => person(p.pm)), C(fl('lastReport'), p => `<span title="${esc(p.lastReport)}">${esc(p.lastReport)}</span>`, 'wide'), C(t('cRepDate'), p => !lastUpd(p) && pendDate(p) ? pendOnly(p) : fmt(lastUpd(p)) + pendNew(p))];
-  const staleCols = [S, PR, C(fl('title'), pLink), C(fl('pm'), p => person(p.pm)), C(fl('last'), p => !lastUpd(p) && pendDate(p) ? pendOnly(p) : freshHtml(p) + pendNew(p)), C(t('cStatusOnly'), p => statusPill(p.status))];
+  // погодження самого нового отчёта — как в колонке «Звіт» списка проектов (#29)
+  const probCols = [S, PR, C(fl('title'), pLink), C(t('cHealth'), p => ragDot(p.rag), 'c-ico'), C(fl('pm'), p => person(p.pm)), C(fl('lastReport'), p => `<span title="${esc(p.lastReport)}">${esc(p.lastReport)}</span>`, 'wide'), C(t('cRepDate'), p => (lastUpd(p) ? fmt(lastUpd(p)) : `<span class="muted">${t('noReports')}</span>`) + apMark(p))];
+  const staleCols = [S, PR, C(fl('title'), pLink), C(fl('pm'), p => person(p.pm)), C(fl('last'), p => freshHtml(p) + apMark(p)), C(t('cStatusOnly'), p => statusPill(p.status))];
   const decCols = [SR, PRR, C(fl('rProj'), r => pLink(pById(r.pid))), C(fl('rDate'), r => fmt(r.d)), C(fl('rDecText'), r => esc(r.decisionText), 'wide'), C(fl('rAuthor'), r => person(r.author))];
   const riskCols = [SR, PRR, C(fl('rProj'), k => pLink(pById(k.pid))), C(fl('kTitle'), k => esc(k.title), 'wide'), C(fl('kType'), k => esc(k.type)), C(fl('kScore'), k => scoreHtml(k.p * k.i)), C(fl('kOwner'), k => person(k.owner)), KC.due];
   return `${hero(t('dash'), t('visible') + vis.length, true)}

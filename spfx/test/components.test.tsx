@@ -15,6 +15,7 @@ import { ProjectForm } from '../src/webparts/pmoPortal/panels/ProjectForm';
 import { RefLink } from '../src/webparts/pmoPortal/panels/ProjectCard';
 import { NotifyPanel } from '../src/webparts/pmoPortal/panels/NotifyPanel';
 import { Header } from '../src/webparts/pmoPortal/components/Header';
+import { RepMark } from '../src/webparts/pmoPortal/components/Bits';
 import { FeedbackView } from '../src/webparts/pmoPortal/panels/FeedbackView';
 import { neighbors } from '../src/webparts/pmoPortal/logic/ui';
 
@@ -289,5 +290,17 @@ describe('отзыв: «попередній / наступний» по пор�
     act(() => { (root.querySelector('.sortb') as HTMLElement).click(); });
     expect(before).toEqual([2, 1, 3]);
     expect(shown).toEqual([1, 2, 3]);
+  });
+});
+
+describe('метка погодження в колонке «Звіт»', () => {
+  test('«Погоджено» — без даты; «Повернуто» и «На погодженні» — с датой отчёта; нет отчётов — пусто', () => {
+    mount(<RepMark r={{ approval: 'Погоджено', date: '2026-09-25' }} />);
+    expect(root.querySelector('.rep-ap .pill')!.textContent).toBe('Погоджено'); expect(root.querySelector('.rep-ap .muted')).toBeNull();
+    ReactDOM.unmountComponentAtNode(root);
+    mount(<RepMark r={{ approval: 'Повернуто', date: '2026-10-01' }} />);
+    expect(root.textContent).toContain('Повернуто'); expect(root.querySelector('.rep-ap .muted')!.textContent).toBe(new Date('2026-10-01T12:00:00Z').toLocaleDateString('uk-UA'));
+    ReactDOM.unmountComponentAtNode(root);
+    mount(<RepMark r={null} />); expect(root.querySelector('.rep-ap')).toBeNull();
   });
 });

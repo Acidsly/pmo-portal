@@ -4,7 +4,7 @@ import { Project, StatusReport, Risk, Comment, ChangeEntry, Person, FeedbackRow,
 import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, REPORT_SELECT, REPORT_EXPAND, RISK_SELECT, RISK_EXPAND,
   COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, TEAM_SELECT, TEAM_EXPAND, mapTeam, APPROVAL_SELECT, APPROVAL_EXPAND, mapApproval, ASSIGN_SELECT, ASSIGN_EXPAND, mapAssign, canAdd, canManage,
   withoutFolders, CHANGES_ON_LOAD, changesOf, changesSince, NOTIFY_SELECT, mapNotify } from './map';
-import { withApproval, approvedIds as approvedOf, pendingReports } from '../logic/approval';
+import { withApproval, approvedIds as approvedOf, pendingReports, latestReport } from '../logic/approval';
 import { applyAssignments } from '../logic/assign';
 import { NOTIFY_DAYS } from '../logic/notify';
 import { teamPeople, teamVisible } from '../logic/team';
@@ -98,7 +98,7 @@ export class SpRepo {
     const withTeam = (x: Project): Project => { const own = team.filter(m => m.projectId === x.id && teamVisible(m, teamRoot, !!x.access, x.manager ? x.manager.email : '')); return { ...x, team: own, stakeholders: teamPeople(own) }; };
     return { projects: p.map(mapProject).map(x => ({ ...applyState(x, states[x.id]), lastApplied: lastApplied[x.id] || '' })).map(withTeam)
       .map(x => applyPending(x, byProj[x.id] || [], ap ? approvedIds : undefined)).map(x => applyAssignments(x, assigns))
-      .map(x => { const pr = pendingReports(byProj[x.id] || [])[0]; return pr ? { ...x, pendingDate: pr.date } : x; }), reports, risks: k.map(mapRisk),
+      .map(x => { const pr = pendingReports(byProj[x.id] || [])[0]; return { ...x, pendingDate: pr ? pr.date : undefined, lastRep: latestReport(byProj[x.id] || []) }; }), reports, risks: k.map(mapRisk),
       comments: c.map(mapComment), changes: h.map(mapChange), canCreate: canAdd(perm), canApprove: canAdd(perm), approvals, feedback: canAdd(fbPerm), feedbackAdmin: canManage(fbPerm), feedbackRows,
       recent: rc.map(mapChange), notify: ns[0] ? mapNotify(ns[0]) : null };
   }

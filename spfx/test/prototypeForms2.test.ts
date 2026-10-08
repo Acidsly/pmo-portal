@@ -229,3 +229,18 @@ describe('сповіщення: колокольчик в прототипе', (
     asUser('Юрій'); expect(dot()).toBe(true);
   });
 });
+
+describe('прототип: метка погодження в колонке «Звіт»', () => {
+  test('у каждого проекта с отчётами — метка самого нового отчёта; на погодженні — с датой', () => {
+    q('[data-act="nav"][data-page="projects"]').click();
+    const tiles = Array.from(w.document.querySelectorAll('#main .tile .rep-ap'));
+    q('[data-act="mode"][data-key="projMode"][data-mode="list"]').click();
+    const marks = Array.from(w.document.querySelectorAll('#main table .rep-ap')) as any[];
+    expect(tiles.length + marks.length).toBeGreaterThan(marks.length);   // и на плитках, и в таблице
+    expect(marks.length).toBeGreaterThan(0);
+    const txt = marks.map(m => m.textContent).join('|');
+    expect(txt).toContain('Погоджено');
+    const pend = marks.filter(m => m.textContent.indexOf('На погодженні') >= 0);
+    pend.forEach(m => expect(m.querySelector('.muted')).not.toBeNull());
+  });
+});
