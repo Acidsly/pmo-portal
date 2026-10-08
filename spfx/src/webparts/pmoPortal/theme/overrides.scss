@@ -161,7 +161,7 @@
 // «Відгуками» и значками всё в одну строку шириной 1280 px не помещается — название не сжимается и не перекрывается
 :global {
   .pmo-app .brand-name, .pmo-app .brand-sub { white-space: nowrap; }
-  .pmo-app .controls { flex-wrap: nowrap; }
+  @media (min-width: 1280px) { .pmo-app .controls { flex-wrap: nowrap; } }   // уже — переносятся (телефон: языки, тема, колокольчик, «?», «Відгук»)
   // «Статус-звіти»: базовый набор колонок помещается без прокрутки вбок
   .pmo-app .dt td.w-rep { min-width: 140px; }
   .pmo-app .dt td .pill.ap { font-size: 11px; padding: 3px 7px; }

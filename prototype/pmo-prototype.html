@@ -1797,10 +1797,10 @@ function accessList(p){
 // ===== Сповіщення (колокольчик) — те же правила, что logic/notify.ts приложения: кто что видит, что новое =====
 // «прочитано до» — время последнего открытия панели (в приложении — номер записи журнала); при загрузке страницы — сейчас
 const NOTIF_LOADED = new Date().toISOString(), NOTIF_READ = {};
-let NOTIF_RET = null;
+let NOTIF_RET = null;   // переход из «Сповіщень»: {onlyNew} — вернуться к списку
 // открытые события поверх «прочитано до» (в приложении — nsReadSet): открыл — прочитано именно оно
 const NOTIF_SEEN = {};
-const notifSeen = () => NOTIF_SEEN[VIEWER] || (NOTIF_SEEN[VIEWER] = new Set());   // переход из «Сповіщень»: {onlyNew} — вернуться к списку
+const notifSeen = () => NOTIF_SEEN[VIEWER] || (NOTIF_SEEN[VIEWER] = new Set());
 const notifRead = () => NOTIF_READ[VIEWER] || NOTIF_LOADED;
 const notifKind = c => ({create:'created', assign:'assigned', submit:'submitted', approval:'decided', risk:'risk', edit:'cardEdit'})[c.kind]
   || ((c.diffs || []).some(d => d.f === 'status' && isArch({status:d.to})) ? 'archived' : 'applied');
@@ -1847,7 +1847,7 @@ function notifPanel(onlyNew){
     return `<button class="ntf-i ${x.unread ? 'new' : 'old'}" data-k="${esc(x.k)}" ${act}><div class="ntf-h"><span class="ntf-p">${esc(x.p.code)} · ${esc(x.p.title)}</span><span class="chg-k">${t(NK[x.kind])}</span>${x.unread ? `<span class="pill ap" style="--c:var(--theme)">${t('notifNew')}</span>` : ''}<span class="muted">${esc(x.who || '')} · ${fmtDT(new Date(x.date))}</span></div>${body}</button>`;
   };
   openPanel(`<div class="ph"><div><div class="k">${entTag('notif')}</div><h2>${t('notifTitle')}</h2></div>${closeBtn()}</div>
-    <p class="note">${t('notifHint')}</p>${all.some(x => x.unread) ? `<p class="ntf-n" id="ntf-n">${t('notifCount').replace('{n}', all.filter(x => x.unread).length)}</p>` : ''}
+    <p class="note">${t('notifHint')}</p>${all.some(x => x.unread) ? `<p class="ntf-n" id="ntf-n" role="status">${t('notifCount').replace('{n}', all.filter(x => x.unread).length)}</p>` : ''}
     <div class="ntf-bar"><label class="check"><input type="checkbox" id="ntf-new"${onlyNew ? ' checked' : ''}> ${t('notifOnlyNew')}</label>${all.some(x => x.unread) ? `<button type="button" class="btn" id="ntf-all" data-act="notifreadall" data-new="${onlyNew ? 1 : ''}">${t('notifReadAll')}</button>` : ''}</div>
     <div id="ntf-list">${list.length ? list.map(item).join('') : `<p class="empty">${t('notifEmpty')}</p>`}</div>`);
   panel.querySelector('#ntf-new').addEventListener('change', e => notifPanel(e.target.checked));

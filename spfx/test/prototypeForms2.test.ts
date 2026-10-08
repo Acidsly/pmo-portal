@@ -239,10 +239,11 @@ describe('сповіщення: колокольчик в прототипе', (
     comment(1, 'Перше'); comment(1, 'Друге');
     asUser('Сергій Литвиненко'); expect(q('#bell .dot-new').textContent).toBe('2'); expect(q('#bell').classList.contains('has')).toBe(true);
     // открыл одно — прочитано оно, второе осталось новым
-    q('#bell').click(); q('.ntf-i.new').click();
+    q('#bell').click(); expect(q('#ntf-n').textContent).toBe('Нових: 2'); q('.ntf-i.new').click();
     expect(q('#bell .dot-new').textContent).toBe('1');
     q('[data-act="notifback"]').click();
     expect(w.document.querySelectorAll('.ntf-i.new').length).toBe(1);
+    expect(q('#ntf-n').textContent).toBe('Нових: 1');
     // «Позначити все прочитаним» — всё
     q('#ntf-all').click();
     expect(q('#bell .dot-new')).toBeNull(); expect(q('.ntf-i.new')).toBeNull(); expect(q('#ntf-all')).toBeNull();

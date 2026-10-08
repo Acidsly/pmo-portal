@@ -71,7 +71,8 @@ export function pruneSeen(seen: string[], readId: number, readCmId: number): str
     if (id <= (m[1] === 'j' ? readId : readCmId) || out.some(x => x.k === k)) continue;
     out.push({ k, id });
   }
-  return out.sort((a, b) => b.id - a.id).slice(0, SEEN_MAX).map(x => x.k);
+  // устойчивый порядок (номер, затем ключ): одинаковый набор — одинаковая строка, без лишних записей
+  return out.sort((a, b) => b.id - a.id || (a.k < b.k ? -1 : a.k > b.k ? 1 : 0)).slice(0, SEEN_MAX).map(x => x.k);
 }
 
 /** Новые сверху: непрочитанное — номер больше метки. Событие, дописанное синхронизацией после прочтения, снова новое — целиком. */

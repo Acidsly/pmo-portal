@@ -268,6 +268,14 @@ describe('сповіщення: колокольчик и панель', () => {
     await act(async () => { (root.querySelector('#ntf-all') as HTMLElement).click(); await Promise.resolve(); });
     expect(marked[1]).toEqual({ readId: 20, readCmId: 7, seen: [] });
   });
+  test('открыл уже прочитанное событие — ничего не пишется, «Нових» нет', async () => {
+    const marked: any[] = []; const opened: string[] = [];
+    const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } }, reload: async () => undefined };
+    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 30, readCmId: 7 })} onOpen={(f, id) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    expect(root.querySelector('#ntf-n')).toBeNull();
+    await act(async () => { (root.querySelector('.ntf-i') as HTMLElement).click(); await Promise.resolve(); });
+    expect(opened).toEqual(['@1']); expect(marked).toEqual([]);
+  });
   test('строки «Прочитане» ещё нет — подсказка, ничего не пишется', async () => {
     const marked: any[] = [];
     const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } } };
