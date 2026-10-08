@@ -88,6 +88,10 @@ export const withoutFolders = (rows: any[]): any[] => rows.filter(r => r.FileSys
 /** Журнал при загрузке приложения — только переносы плановой даты («Зсуви термінів»); весь журнал проекта — при открытии карточки. */
 export const CHANGES_ON_LOAD = "kcField eq 'pmPlanEnd'";
 export const changesOf = (projectId: number): string => `kcProjectId eq ${Math.floor(projectId)}`;
+/** Сповіщення: журнал за последние дни (индекс kcDate). */
+export const changesSince = (iso: string): string => `kcDate ge datetime'${iso}'`;
+export const NOTIFY_SELECT = 'Id,Title,nsReadId,nsReadCmId';
+export const mapNotify = (r: any): { id: number; readId: number; readCmId: number } => ({ id: r.Id, readId: n(r.nsReadId), readCmId: n(r.nsReadCmId) });
 export const CHANGE_SELECT = ['Id', 'kcProjectId', 'kcDate', 'kcKind', 'kcField', 'kcFrom', 'kcTo', 'kcReason', 'kcItem', ...people('kcChangedBy')].join(',');
 export const CHANGE_EXPAND = 'kcChangedBy';
 export const mapComment = (r: any): Comment => ({ id: r.Id, projectId: r.cmProjectId, text: s(r.cmText), created: s(r.Created), author: mapPerson(r.Author) });

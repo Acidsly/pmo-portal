@@ -119,6 +119,14 @@ The status (Initiation, Planning, Execution, On hold, Cancelled, Completed) chan
 
 Anyone who sees the project can comment: in the card — "Comments" → "Add comment". An archived project is view-only: no new comments.
 
+## Notifications
+
+- At the top right there is a **bell**. A **red dot** on it means there are new events for you in your projects.
+- Click the bell to open **"Notifications"**: events for 14 days, new ones at the top and highlighted ("New"), already seen ones below. Clicking an event opens the card, status report or risk. "Only new" hides what you have seen.
+- Once you open "Notifications", what is shown counts as read and the dot disappears.
+- What you see depends on your role in the project: the PM, owner and team see project creation, assignments, PMO decisions on reports, indicator updates and comments; risks — the PM and the risk owner always, the owner and team only high ones (score 15 and above); card edits — the PM and the owner; the PMO sees reports submitted for approval and projects moved to the archive. Your own actions are not shown.
+- For a new participant notifications appear within ~15 minutes; earlier events are not treated as new.
+
 ## New project and editing
 
 - A **New project** is created by the PMO: the name (unique — no two projects share a name) and the PM are required (the PM is not prefilled — choose one); the project number is assigned by the system in order (PRJ-001, PRJ-002…) — it is unique and cannot be changed by hand.

@@ -761,6 +761,86 @@ export const T: Record<string, L3> = {
   "Report submitted",
   "Подача отчёта"
  ],
+ "notifTitle": [
+  "Сповіщення",
+  "Notifications",
+  "Уведомления"
+ ],
+ "notifNewOnes": [
+  "Є нові події",
+  "There are new events",
+  "Есть новые события"
+ ],
+ "notifEmpty": [
+  "За останні 14 днів подій для вас немає.",
+  "No events for you in the last 14 days.",
+  "За последние 14 дней событий для вас нет."
+ ],
+ "notifOnlyNew": [
+  "Лише нові",
+  "Only new",
+  "Только новые"
+ ],
+ "notifNew": [
+  "Нове",
+  "New",
+  "Новое"
+ ],
+ "notifSoon": [
+  "Сповіщення з'являться протягом 15 хвилин.",
+  "Notifications will appear within 15 minutes.",
+  "Уведомления появятся в течение 15 минут."
+ ],
+ "notifHint": [
+  "Події ваших проєктів за 14 днів — за вашою роллю. Відкриті тут сповіщення позначаються прочитаними.",
+  "Events of your projects for 14 days, by your role. Notifications opened here are marked as read.",
+  "События ваших проектов за 14 дней — по вашей роли. Открытые здесь уведомления отмечаются прочитанными."
+ ],
+ "nkCreated": [
+  "Новий проєкт",
+  "New project",
+  "Новый проект"
+ ],
+ "nkAssigned": [
+  "Призначення",
+  "Assignment",
+  "Назначение"
+ ],
+ "nkSubmitted": [
+  "Подання звіту",
+  "Report submitted",
+  "Подача отчёта"
+ ],
+ "nkDecided": [
+  "Погодження звіту",
+  "Report approval",
+  "Согласование отчёта"
+ ],
+ "nkApplied": [
+  "Оновлено статус-звітом",
+  "Updated by status report",
+  "Обновлено статус-отчётом"
+ ],
+ "nkArchived": [
+  "Проєкт в архіві",
+  "Project archived",
+  "Проект в архиве"
+ ],
+ "nkRisk": [
+  "Ризик / проблема",
+  "Risk / issue",
+  "Риск / проблема"
+ ],
+ "nkCardEdit": [
+  "Редагування картки",
+  "Card edited",
+  "Редактирование карточки"
+ ],
+ "nkComment": [
+  "Коментар",
+  "Comment",
+  "Комментарий"
+ ],
  "kRiskEv": [
   "Ризик / проблема",
   "Risk / issue",

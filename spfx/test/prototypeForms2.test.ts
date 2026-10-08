@@ -183,3 +183,32 @@ describe('#46 / #48 события отчётов и рисков в истор�
     expect(h).toMatch(/Оцінка\s*9\s*→\s*15/);
   });
 });
+
+describe('сповіщення: колокольчик в прототипе', () => {
+  const asUser = (n: string): void => { const b = w.document.createElement('button'); b.dataset.act = 'asuser'; b.dataset.n = n; w.document.body.appendChild(b); b.click(); b.remove(); };
+  const dot = (): boolean => !!q('#bell .dot-new');
+  const comment = (pid: number, txt: string): void => {
+    q('[data-act="nav"][data-page="projects"]').click(); q(`[data-act="openp"][data-id="${pid}"]`).click();
+    const ta = q('#panel textarea, .panel textarea, textarea'); ta.value = txt; ev(ta, 'input');
+    ta.closest('form').dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+  };
+  test('после загрузки точки нет; комментарий PM — точка у власника, не у постороннего; открытие панели гасит точку', () => {
+    expect(dot()).toBe(false);
+    comment(1, 'Перевірка сповіщень');                      // PRJ-001: PM — Юрій, власник — Сергій Литвиненко
+    expect(dot()).toBe(false);                               // своё — не новое
+    asUser('Наталія Шевчук'); expect(dot()).toBe(false);     // PM другого проекта — не участник PRJ-001
+    asUser('Сергій Литвиненко'); expect(dot()).toBe(true);
+    q('#bell').click();
+    expect(w.document.body.textContent).toContain('Перевірка сповіщень');
+    expect(q('.ntf-i.new')).not.toBeNull();
+    expect(dot()).toBe(false);
+  });
+  test('видит проект, но не по своей роли (руководитель власника) — точки нет', () => {
+    asUser('Андрій Мельник'); comment(2, 'Коментар PM');        // PRJ-002: PM — Андрій Мельник, власник — Юрій
+    asUser('Сергій Литвиненко');                                  // руководитель Юрія: видит проект, сповіщень не получает
+    q('[data-act="nav"][data-page="projects"]').click();
+    expect(q('[data-act="openp"][data-id="2"]')).not.toBeNull();
+    expect(dot()).toBe(false);
+    asUser('Юрій'); expect(dot()).toBe(true);
+  });
+});

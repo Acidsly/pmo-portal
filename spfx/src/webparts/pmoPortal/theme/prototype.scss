@@ -405,6 +405,17 @@ form .fsec:first-child{margin-top:0}
 .pop-me .pn small{display:block}
 .pop-sep{font-size:11px;font-weight:600;color:var(--text-3);padding:10px 6px 4px;border-top:1px solid var(--line)}
 .me{border:0;background:none;padding:0;border-radius:50%;cursor:pointer;display:grid;place-items:center}
+.bell{position:relative;border:0;background:none;cursor:pointer;color:var(--text-2);width:34px;height:34px;border-radius:50%;display:grid;place-items:center}
+.bell:hover{background:var(--bg-hover);color:var(--text)}
+.bell .dot-new{position:absolute;top:5px;right:6px;width:9px;height:9px;border-radius:50%;background:var(--r);box-shadow:0 0 0 2px var(--bg-page)}
+.ntf-bar{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.ntf-i{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 8px;cursor:pointer}
+.ntf-i:hover{background:var(--bg-hover)}
+.ntf-i.new{border-color:var(--theme);background:var(--theme-soft)}
+.ntf-i.old{opacity:.75}
+.ntf-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+.ntf-p{font-weight:600}
+.ntf-t{margin-top:4px;font-size:13px;color:var(--text-2)}
 .me .pav{width:34px;height:34px;font-size:12px;box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--line)}
 .keysec{background:var(--bg-alt);border-radius:16px;padding:16px 16px 4px;margin:6px 0 18px}
 .keysec input[type=date],.keysec input[type=number],.keysec select,.keysec textarea{background:var(--bg)}

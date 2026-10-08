@@ -71,7 +71,9 @@ export interface ChangeEntry { id: number; projectId: number; date: string; who:
   item?: number; }
 export interface ChangeEvent { id: number; date: string; who: Person | null; kind: 'create' | 'key' | 'edit' | 'report' | 'approval' | 'assign' | 'submit' | 'risk'; reason: string; diffs: { f: string; from: string; to: string }[];
   /** #46 / #48: событие отчёта или риска — открыть запись из истории. */
-  ref?: { type: 'report' | 'risk'; id: number }; }
+  ref?: { type: 'report' | 'risk'; id: number };
+  /** Проект и наибольший номер строк журнала события (сповіщення: новое — номер больше «прочитано до»). */
+  projectId?: number; lastId?: number; }
 
 /** Отзыв фокус-группы: из «Відгуки — загальні» (видят все) + свои / все для администратора (со скриншотами) из «Відгуки». */
 export interface FeedbackRow {

@@ -7,6 +7,7 @@ import { DEFAULT_VIEWS, Route, parse, format, goRoute } from '../logic/route';
 import { setFavicon } from '../logic/favicon';
 import { AppCtx, Ctx, Page, Views } from './ctx';
 import { Header } from './Header';
+import { NotifyPanel, notifyState } from '../panels/NotifyPanel';
 import { Panel } from './Panel';
 import { Home } from '../pages/Home';
 import { Projects } from '../pages/Projects';
@@ -85,6 +86,7 @@ export const App: React.FC<AppProps> = p => {
   else if (data && route.form.indexOf('report-from:') === 0) panelEl = <ReportForm key={route.form} data={data} projectId={route.projectId} fromId={Number(route.form.slice(12)) || 0} onCancel={project ? back : close} />;
   else if (data && route.form.indexOf('rep:') === 0) { const id = Number(route.form.slice(4)); panelEl = <ReportView key={id} data={data} report={data.reports.filter(r => r.id === id)[0]} onCancel={project ? back : close} />; }
   else if (data && (route.form === 'project' || route.form === 'edit')) panelEl = <ProjectForm data={data} project={route.form === 'edit' ? project : undefined} onCancel={project ? back : close} />;
+  else if (data && route.form === 'notifications') panelEl = <NotifyPanel data={data} onCancel={project ? back : close} />;
   else if (data && route.form === 'assign') panelEl = <AssignForm data={data} projectId={route.projectId} onCancel={project ? back : close} />;
   else if (data && route.form.indexOf('risk:') === 0) panelEl = <RiskForm data={data} projectId={route.projectId} riskId={Number(route.form.slice(5)) || 0} onCancel={project ? back : close} />;
   else if (data && project) panelEl = <ProjectCard project={project} data={data} repo={p.repo} onClose={close} />;
@@ -98,7 +100,8 @@ export const App: React.FC<AppProps> = p => {
     <div className="pmo-app pmo-sp" data-theme={theme || undefined} lang={LANG_CODES[lang]}>
       <Header page={route.page} lang={lang} theme={theme} userName={p.userName} userEmail={p.userEmail}
         onPage={pg => ctx.go(pg)} onLang={l => { setLang(l); saveLang(l); }} onTheme={v => { setTheme(v); saveTheme(v); }}
-        onFeedback={openFeedback} onHelp={() => ctx.openForm('help', route.projectId)} />
+        onFeedback={openFeedback} onHelp={() => ctx.openForm('help', route.projectId)}
+        bell={data ? { unread: notifyState(data, p.userEmail).unread, onOpen: () => ctx.openForm('notifications', route.projectId) } : undefined} />
       <main className="pmo-main">
         {err ? <p className="empty">{tt.t('loadErr')}: {err}</p> : !data ? <p className="empty">…</p> : pageEl}
       </main>

@@ -70,10 +70,12 @@ $ErrorActionPreference = "Stop"
 $PMO_GROUP = "PMO-адміністратори"
 # уровень прав «только добавление» (создаёт Deploy-PMO.ps1): отчёты, комментарии, погодження — созданную запись не правит никто, кроме синхронизации
 $ROLE_ADD_NAME = "Додавання (портал)"
+$ROLE_UPDATE_NAME = "Оновлення (портал)"
 $L_PROJ = "Lists/Projects"; $L_REP = "Lists/StatusReports"; $L_RISK = "Lists/RisksIssues"
 $L_CHG  = "Lists/KeyChanges"; $L_CMT = "Lists/ProjectComments"; $L_TEAM = "Lists/ProjectTeam"; $L_AP = "Lists/ReportApprovals"
 $L_PA   = "Lists/ProjectAssignments"
-$stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; folders = 0; moved = 0; reset = 0; access = 0; feedback = 0; approvals = 0; assigns = 0; members = 0; reminders = 0; stateNew = 0; stateFixed = 0; returned = 0; warnings = 0; errors = 0 }
+$L_NS   = "Lists/NotifyState"
+$stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; folders = 0; moved = 0; reset = 0; access = 0; feedback = 0; approvals = 0; assigns = 0; notifyRows = 0; members = 0; reminders = 0; stateNew = 0; stateFixed = 0; returned = 0; warnings = 0; errors = 0 }
 
 # внутри Azure Automation есть команды ресурсов учётной записи (переменные)
 $IN_AUTOMATION = [bool](Get-Command Get-AutomationVariable -ErrorAction SilentlyContinue)
@@ -212,6 +214,8 @@ $ROLE = @{
     read = ($roles | Where-Object RoleTypeKind -eq "Reader"        | Select-Object -First 1).Name
     # «только добавление» (отчёты, комментарии, погодження): создаёт Deploy-PMO.ps1; до развёртывания — прежняя модель прав
     add  = ($roles | Where-Object Name -eq $ROLE_ADD_NAME | Select-Object -First 1).Name
+    # «правка своей записи» (строка «Прочитане»): создаёт Deploy-PMO.ps1
+    update = ($roles | Where-Object Name -eq $ROLE_UPDATE_NAME | Select-Object -First 1).Name
 }
 # модель прав v2 (роль «додавання», запись сразу в папку проекта) — только когда роль уже есть на сайте
 $PERM_V2 = [bool]$ROLE.add
@@ -394,6 +398,28 @@ function Get-HistoryPlan([string]$json, $reps, $risks) {
     }
     $out = [ordered]@{ v = 1; r = @($logged | Sort-Object); k = $next }
     return @{ init = $init; rows = @($rows); json = ($out | ConvertTo-Json -Depth 5 -Compress) }
+}
+# Строки «Прочитане» (сповіщення в приложении; векторы tests/cases/notify-state.json): кому создать строку (метки — текущий последний
+# номер журнала / комментариев: старое не становится новым), какие метки зажать в 0…последний номер (строку правит сам человек),
+# у каких строк выдать права заново (отметка pmoAcl ≠ «u:<e-mail>»), дубли (строка с меньшим ID — рабочая, остальные — предупреждение).
+# $emails — e-mail в нижнем регистре; $rows — @{ id; email; readId; readCmId; acl }.
+function Get-NotifyRowPlan([string[]]$emails, $rows, [int]$maxJ, [int]$maxC) {
+    $byMail = [ordered]@{}; $dup = @()
+    foreach ($r in (@($rows) | Where-Object { $_ } | Sort-Object { [int]$_.id })) {
+        $e = ([string]$r.email).ToLowerInvariant()
+        if (-not $e) { $dup += , "#$($r.id) без користувача"; continue }
+        if ($byMail.Contains($e)) { $dup += , "#$($r.id) $e"; continue }
+        $byMail[$e] = $r
+    }
+    $create = @(@($emails | Where-Object { $_ } | ForEach-Object { $_.ToLowerInvariant() } | Select-Object -Unique) | Where-Object { -not $byMail.Contains($_) } | Sort-Object)
+    $fix = @(); $acl = @()
+    foreach ($e in $byMail.Keys) {
+        $r = $byMail[$e]
+        $rj = [math]::Min([math]::Max([int]$r.readId, 0), $maxJ); $rc = [math]::Min([math]::Max([int]$r.readCmId, 0), $maxC)
+        if ($rj -ne [int]$r.readId -or $rc -ne [int]$r.readCmId) { $fix += , @{ id = [int]$r.id; readId = $rj; readCmId = $rc } }
+        if ([string]$r.acl -ne "u:$e") { $acl += , @{ id = [int]$r.id; email = $e } }
+    }
+    return @{ create = $create; fix = $fix; acl = $acl; dup = $dup }
 }
 function Get-ApplyAction($rep, [string]$pm, [string[]]$ownerList, [bool]$archived, [string]$last, [string]$lastUpdate) {
     if ($archived) { return "notApplied:arch" }
@@ -1265,6 +1291,56 @@ foreach ($l in $CHILD.Keys) {
             Invoke-PnPQuery -RetryCount 10
         } catch { Fail "Запись $l #$($it.Id) не перенесена в $name : $($_.Exception.Message) — повторим в следующий запуск" }
     }
+}
+
+# ---------------------------------------------------------------------------
+# 7. Сповіщення в приложении: строки «Прочитане» — каждому, у кого есть доступ к проекту, PMO и владельцам сайта.
+#    Новая строка — сразу с метками «прочитано до» = последний номер (первый запуск и новый человек не видят старое как новое);
+#    права на строку — только этому человеку («Оновлення (портал)») и владельцам сайта. Решение — Get-NotifyRowPlan.
+# ---------------------------------------------------------------------------
+$HAS_NS = [bool](Get-PnPList -Identity $L_NS -ErrorAction SilentlyContinue) -and [bool]$ROLE.update
+if ($HAS_NS) {
+    Update-SyncLock
+    $lastId = { param($list) $q = "<View Scope='RecursiveAll'><Query><OrderBy><FieldRef Name='ID' Ascending='FALSE'/></OrderBy></Query><RowLimit>1</RowLimit></View>"
+        $it = @(Get-PnPListItem -List $list -Query $q) | Select-Object -First 1; if ($it) { [int]$it.Id } else { 0 } }
+    $maxJ = & $lastId $L_CHG; $maxC = & $lastId $L_CMT
+    $nsPeople = [System.Collections.Generic.List[string]]::new()
+    foreach ($p in $PROJ.Values) {
+        if ($ACLS.ContainsKey($p.Item.Id)) { foreach ($e in $ACLS[$p.Item.Id].Keys) { $nsPeople.Add([string]$e) } }
+        else { try { $a = ConvertFrom-JsonText ([string]$p.Item["pmAccess"]); foreach ($x in @($a["people"])) { if ($x["e"]) { $nsPeople.Add([string]$x["e"]) } } } catch { } }
+    }
+    foreach ($e in @($PMO_EMAILS) + @($OWNER_EMAILS)) { if ($e) { $nsPeople.Add([string]$e) } }
+    $nsRows = @(Get-ListRows $L_NS | ForEach-Object {
+        @{ id = $_.Id; email = $(if ($_["nsUser"]) { Email $_["nsUser"] } else { ([string]$_["Title"]).ToLowerInvariant() }); readId = $_["nsReadId"]; readCmId = $_["nsReadCmId"]; acl = [string]$_["pmoAcl"] } })
+    $nsPlan = Get-NotifyRowPlan @($nsPeople) $nsRows $maxJ $maxC
+    foreach ($d in $nsPlan.dup) { Warn "Прочитане: зайвий рядок $d — не використовується" }
+    foreach ($e in $nsPlan.create) {
+        $stats.notifyRows++
+        if ($DryRun) { Log "  прочитане: + $e (до #$maxJ / #$maxC)"; continue }
+        try {
+            $it = Add-PnPListItem -List $L_NS -Values @{ Title = $e; nsUser = $e; nsReadId = $maxJ; nsReadCmId = $maxC }
+            $nsPlan.acl += , @{ id = [int]$it.Id; email = $e }
+        } catch { Warn "Прочитане: рядок для $e не створено ($($_.Exception.Message))" }
+    }
+    foreach ($f in $nsPlan.fix) {
+        Log "  прочитане #$($f.id): мітки виправлено ($($f.readId) / $($f.readCmId))"
+        if (-not $DryRun) { Set-PnPListItem -List $L_NS -Identity $f.id -Values @{ nsReadId = $f.readId; nsReadCmId = $f.readCmId } -UpdateType SystemUpdate | Out-Null }
+    }
+    foreach ($a in $nsPlan.acl) {
+        if ($DryRun) { Log "    права: прочитане #$($a.id) -> $($a.email)"; continue }
+        $pr = Get-Principal $a.email $false; $own = Get-Principal $OWNERS $true
+        if (-not $pr -or -not $own) { continue }
+        try {
+            $item = (Get-ListObj $L_NS).GetItemById($a.id)
+            $item.ResetRoleInheritance(); $item.BreakRoleInheritance($false, $false)
+            foreach ($g in @(@{ p = $own; r = $ROLE.full }, @{ p = $pr; r = $ROLE.update })) {
+                $b = [Microsoft.SharePoint.Client.RoleDefinitionBindingCollection]::new($CTX); $b.Add((Get-Rd $g.r)); $item.RoleAssignments.Add($g.p, $b) | Out-Null
+            }
+            $item["pmoAcl"] = "u:$($a.email)"; $item.SystemUpdate()
+            Invoke-PnPQuery -RetryCount 10
+        } catch { Fail "Прочитане #$($a.id): права не видано ($($_.Exception.Message)) — повторимо наступного запуску" }
+    }
+    if ($nsPlan.create.Count) { Log "Прочитане: нових рядків $($nsPlan.create.Count)" }
 }
 
 # ---------------------------------------------------------------------------

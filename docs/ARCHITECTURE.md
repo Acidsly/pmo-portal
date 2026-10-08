@@ -37,7 +37,7 @@ flowchart LR
     end
     subgraph SPO["SharePoint Online: сайт порталу"]
         APP["Додаток SPFx pmo-portal<br/>сторінка SitePages/Portal.aspx"]
-        L["Списки порталу<br/>Projects, StatusReports, RisksIssues,<br/>KeyChanges, ProjectComments, ProjectTeam,<br/>ReportApprovals, ProjectAssignments, ProjectState"]
+        L["Списки порталу<br/>Projects, StatusReports, RisksIssues,<br/>KeyChanges, ProjectComments, ProjectTeam,<br/>ReportApprovals, ProjectAssignments, NotifyState, ProjectState"]
     end
     subgraph Sched["Розклад"]
         MAC["Mac: launchd<br/>робочі запуски"]
@@ -228,7 +228,11 @@ sequenceDiagram
 
 Розділ 2c: `Get-HistoryPlan` (вектори `tests/cases/history.json`) порівнює звіти й ризики проєкту зі знімком `psHistory` еталону і пише в журнал «Подання звіту» (один раз; «Новий звіт на основі повернутого» — лише якщо `srBasedOn` вказує на повернутий звіт цього проєкту) і «Ризик» («Додано», зміни полів, оцінка, «Закрито») з номером запису `kcItem` — історія картки відкриває звіт чи ризик. Записи ризиків синхронізація не змінює. Немає знімка або він пошкоджений — знімок заново без подій (перший запуск не заливає журнал минулим). Спочатку журнал, потім знімок: збій між ними повторить рядки, але не втратить.
 
-### 3.8. Коментар
+### 3.8. Сповіщення в додатку (дзвіночок)
+
+Додаток при завантаженні читає журнал за 14 днів (індекс `kcDate`) і свій рядок «Прочитане». `logic/notify.ts` збирає рядки журналу в події (як історія картки), визначає вид події і чи вона для мене за моєю роллю зараз (PM, власник, команда, власник ризику, PMO; вектори `tests/cases/notify.json`). Червона крапка — є мої події з номером, більшим за `nsReadId` / `nsReadCmId`. Відкриття панелі «Сповіщення» записує в свій рядок найбільший показаний номер (свіжа версія, мітки лише зростають). Рядки й права на них створює синхронізація (розділ 7, `Get-NotifyRowPlan`). Листи й стрічка активності Teams — частина 2 (`docs/superpowers/plans/2026-10-07-notifications.md`).
+
+### 3.9. Коментар
 
 ```mermaid
 sequenceDiagram
@@ -244,7 +248,7 @@ sequenceDiagram
     S->>P: pmLastComment = «текст — автор, dd.MM.yyyy» (дата за Києвом)
 ```
 
-### 3.9. Відгуки (лише тест)
+### 3.10. Відгуки (лише тест)
 
 ```mermaid
 sequenceDiagram
@@ -286,7 +290,8 @@ flowchart TD
     S2b --> S3["3. Останній коментар"]
     S3 --> S4["4. Тип і пріоритет у звітах і ризиках"]
     S4 --> S5["5. Права: стейкхолдери, pmAccess, проєкт, папки,<br/>учасники сайту, перенесення записів у папки"]
-    S5 --> S6["6. Нагадування PM (-SendReminders)"]
+    S5 --> S7["7. Прочитане: рядки й права сповіщень"]
+    S7 --> S6["6. Нагадування PM (-SendReminders)"]
     S6 --> K["Кеш оргструктури, підсумок"]
     K --> X{"Помилки запису?"}
     X -- так --> F["throw: завдання Failed → оповіщення"]

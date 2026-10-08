@@ -35,7 +35,7 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/assignments.json", "tests/cases/history.json", "config/focus-group.example.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/assignments.json", "tests/cases/history.json", "tests/cases/notify-state.json", "config/focus-group.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
@@ -242,6 +242,20 @@ $p1 = Get-HistoryPlan $c.json @() @($c.risks | ForEach-Object { & $toH $_ }); $p
 if (-not $p2.rows.Count -and $p2.json -eq $p1.json) { Ok "история: повторный запуск — без событий, снимок тот же" } else { Bad "история: повторный запуск дал события или другой снимок" }
 $i2c = $syncSrc.IndexOf("# 2c. История"); $iS = $syncSrc.IndexOf('psHistory = $plan.json'); $iA = $syncSrc.IndexOf('Add-Change $p.Item.Id $r.field $r.from $r.to $r.kind $r.who $r.reason $r.when $r.item')
 if ($i2c -ge 0 -and $iA -gt $i2c -and $iS -gt $iA) { Ok "история: сначала журнал, потом снимок" } else { Bad "Invoke-PMOSync.ps1: история должна писать журнал раньше снимка" }
+Write-Host "3j. Прочитане — строки сповіщень (tests/cases/notify-state.json)"
+$fnn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Get-NotifyRowPlan" }, $true) | Select-Object -First 1
+if ($fnn) { Invoke-Expression $fnn.Extent.Text } else { Bad "нет функции Get-NotifyRowPlan" }
+foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/notify-state.json") | ConvertFrom-Json).cases) {
+    $rws = @($c.rows | ForEach-Object { @{ id = $_.id; email = $_.email; readId = $_.readId; readCmId = $_.readCmId; acl = $_.acl } })
+    $pl = Get-NotifyRowPlan @($c.people) $rws $c.maxJ $c.maxC
+    $got = "$(@($pl.create) -join ',')|$(@($pl.fix | ForEach-Object { "$($_.id):$($_.readId)/$($_.readCmId)" }) -join ',')|$(@($pl.acl | ForEach-Object { "$($_.id):$($_.email)" }) -join ',')|$(@($pl.dup).Count)"
+    $exp = "$(@($c.out.create) -join ',')|$(@($c.out.fix) -join ',')|$(@($c.out.acl) -join ',')|$($c.out.dup)"
+    if ($got -eq $exp) { Ok "прочитане: $($c.name)" } else { Bad "прочитане: $($c.name): $got, ожидалось $exp" }
+}
+$i7 = $syncSrc.IndexOf("# 7. Сповіщення в приложении"); $sec7 = $syncSrc.Substring($i7, $syncSrc.IndexOf("# 6. Напоминания PM", $i7) - $i7)
+if ($sec7 -match 'Add-PnPListItem -List \$L_NS -Values @\{ Title = \$e; nsUser = \$e; nsReadId = \$maxJ; nsReadCmId = \$maxC \}') { Ok "прочитане: новая строка — сразу с метками (одной записью)" } else { Bad "прочитане: строка должна создаваться сразу с метками" }
+if ($sec7 -match 'if \(\$DryRun\) \{ Log "  прочитане: \+' -and $sec7 -match 'if \(\$DryRun\) \{ Log "    права: прочитане') { Ok "прочитане: пробный запуск ничего не пишет" } else { Bad "прочитане: DryRun должен только писать в журнал запуска" }
+if ($syncSrc.IndexOf("# 7. Сповіщення в приложении") -gt $syncSrc.IndexOf("# 5. Права по иерархии")) { Ok "прочитане: раздел 7 — после прав (раздел 5)" } else { Bad "раздел 7 должен идти после раздела 5" }
 # «Створення» один раз (R8): нужна ли строка — и эталон пишется раньше строки журнала (ошибка сверки №3)
 $fnc = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Test-NeedCreation" }, $true) | Select-Object -First 1
 if ($fnc) { Invoke-Expression $fnc.Extent.Text } else { Bad "нет функции Test-NeedCreation" }
