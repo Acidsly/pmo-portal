@@ -19,8 +19,8 @@ describe('guard: устаревшая страница не может запи�
     expect(guard('report', 'pm@x', F({}, { canEdit: false }))).toEqual({ ok: false, key: 'gPmSoon' });
   });
   test('S5: проект ушёл в архив (по эталону/наложению) — только просмотр, комментарии тоже нельзя', () => {
-    for (const a of ['editCard', 'report', 'risk', 'team', 'comment', 'approve', 'return'] as const) expect(guard(a, 'pm@x', F({}, { status: 'Архівний' })).ok).toBe(false);
-    expect(guard('comment', 'any@x', F({}, { status: 'Архівний' }))).toEqual({ ok: false, key: 'gArchived' });
+    for (const st of ['Завершено', 'Скасовано', 'Архівний']) for (const a of ['editCard', 'report', 'risk', 'team', 'comment', 'approve', 'return'] as const) expect(guard(a, 'pm@x', F({}, { status: st })).ok).toBe(false);
+    expect(guard('comment', 'any@x', F({}, { status: 'Скасовано' }))).toEqual({ ok: false, key: 'gArchived' });
   });
   test('S4: по проекту уже есть отчёт на погодженні — второй нельзя', () => {
     expect(guard('report', 'pm@x', F({ pending: [{ id: 5, date: '2026-09-28', author: 'pm@x' }] }))).toEqual({ ok: false, key: 'gPending', args: { date: '28.09.2026' } });

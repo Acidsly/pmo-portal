@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { EntTag } from '../components/EntTag';
 import { AppCtx } from '../components/ctx';
 import { Frow, Err } from '../components/fields';
 import { shrinkImage } from '../logic/image';
@@ -52,7 +53,7 @@ export const FeedbackForm: React.FC<{ screen: string; onCancel(): void; allUrl?:
   };
 
   return <>
-    <div className="ph"><div><div className="k">{t('listLabel')} «{t('fbList')}»</div><h2>{t('fbTitle')}</h2></div>
+    <div className="ph"><div><div className="k"><EntTag kind="feedback" /><span>{t('listLabel')} «{t('fbList')}»</span></div><h2>{t('fbTitle')}</h2></div>
       <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     <form onSubmit={save} onPaste={paste} noValidate={true}>
       <p className="note">{t('fbHint')}</p>

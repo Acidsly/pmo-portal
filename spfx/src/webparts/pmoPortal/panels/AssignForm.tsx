@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { EntTag } from '../components/EntTag';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
 import { Person } from '../data/types';
@@ -20,7 +21,7 @@ export const AssignForm: React.FC<{ data: PortalData; projectId: number; onCance
   const [err, setErr] = React.useState('');
   const [busy, setBusy] = React.useState(false);
   const allowed = !!p && data.canApprove && !isArch(p.status) && !p.assignPending;
-  const head = <div className="ph"><div><div className="k">{p ? p.code + ' · ' : ''}{t('listLabel')} «{t('navProjects')}»</div><h2>{t('assignTitle')}</h2></div>
+  const head = <div className="ph"><div><div className="k"><EntTag kind="assign" /><span>{p ? p.code + ' · ' : ''}{t('listLabel')} «{t('navProjects')}»</span></div><h2>{t('assignTitle')}</h2></div>
     <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>;
   if (!p || !allowed) return <>{head}<p className="note lock">🔒 {p && p.assignPending ? t('assignPendingNote') : p && isArch(p.status) ? t('archivedNote') : t('noEdit')}</p></>;
 

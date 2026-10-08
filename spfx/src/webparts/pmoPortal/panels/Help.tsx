@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { EntTag } from '../components/EntTag';
 import { AppCtx } from '../components/ctx';
 import { GUIDE } from '../help/guide';
 
@@ -6,7 +7,7 @@ import { GUIDE } from '../help/guide';
 export const Help: React.FC<{ onCancel(): void; onFeedback?: () => void; onOverview(): void }> = ({ onCancel, onFeedback, onOverview }) => {
   const { t, lang } = React.useContext(AppCtx);
   return <>
-    <div className="ph"><div><div className="k">{t('siteTitle')}</div><h2>{t('help')}</h2></div>
+    <div className="ph"><div><div className="k"><EntTag kind="help" /><span>{t('siteTitle')}</span></div><h2>{t('help')}</h2></div>
       <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     <div className="help" dangerouslySetInnerHTML={{ __html: GUIDE[lang] }} />
     {/* в конце короткой инструкции — переход к подробному обзору системи */}

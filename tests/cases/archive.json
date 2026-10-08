@@ -1,0 +1,37 @@
+{
+  "_doc": "Проект в архиве (права только чтение, вкладка «Архів»): статус «Завершено» или «Скасовано»; «Архівний» — переходное значение до миграции (Deploy-PMO.ps1). Проверяют Test-ArchivedStatus (PMO.Common.ps1) и isArch (logic/status.ts).",
+  "cases": [
+    {
+      "status": "Завершено",
+      "archived": true
+    },
+    {
+      "status": "Скасовано",
+      "archived": true
+    },
+    {
+      "status": "Архівний",
+      "archived": true
+    },
+    {
+      "status": "Ініціація",
+      "archived": false
+    },
+    {
+      "status": "Планування",
+      "archived": false
+    },
+    {
+      "status": "Реалізація",
+      "archived": false
+    },
+    {
+      "status": "Призупинено",
+      "archived": false
+    },
+    {
+      "status": "",
+      "archived": false
+    }
+  ]
+}

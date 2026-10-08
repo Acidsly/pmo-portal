@@ -97,11 +97,15 @@
   .pmo-app .hbtn { border: 0; background: var(--bg-alt); border-radius: 10px; padding: 6px 12px; min-height: 34px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-2); display: inline-flex; align-items: center; gap: 6px; }
   .pmo-app .hbtn:hover { color: var(--text); }
   .pmo-app .hbtn.round { width: 34px; padding: 0; justify-content: center; font-size: 15px; }
+  .pmo-app .fb-nav { display: inline-flex; align-items: center; gap: 6px; vertical-align: middle; }
+  .pmo-app .fb-nav button { border: 0; background: var(--bg-alt); color: var(--text-2); width: 24px; height: 24px; border-radius: 7px; display: inline-grid; place-items: center; cursor: pointer; padding: 0; }
+  .pmo-app .fb-nav button:hover:not(:disabled) { color: var(--text); }
+  .pmo-app .fb-nav button:disabled { opacity: .35; cursor: default; }
   .pmo-app .fb-shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; margin-bottom: 12px; }
   .pmo-app .fb-shots figure { position: relative; margin: 0; border-radius: 12px; overflow: hidden; background: var(--bg-alt); aspect-ratio: 1; }
   .pmo-app .fb-shots img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .pmo-app .fb-shots .x-sm { position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; background: var(--glass); }
-  @media (pointer: coarse) { .pmo-app .fb-paste { display: none; } .pmo-app .hbtn { min-height: 40px; } .pmo-app .hbtn.round { width: 40px; } }
+  @media (pointer: coarse) { .pmo-app .fb-paste { display: none; } .pmo-app .hbtn { min-height: 40px; } .pmo-app .hbtn.round, .pmo-app .bell { width: 40px; height: 40px; } }
   @media (max-width: 600px) { .pmo-app .hbtn .hlabel { display: none; } }
 }
 
@@ -153,15 +157,11 @@
   .pmo-app .fb-text { white-space: pre-wrap; line-height: 1.5; }
 }
 
-// Шапка в одну строку на компьютере (вкладка «Відгуки», кнопки «?» и «Відгук» — сверх прототипа)
+// Шапка (как в прототипе): название — своей строкой сверху, ниже — меню и кнопки в одну строку; с колокольчиком, «?»,
+// «Відгуками» и значками всё в одну строку шириной 1280 px не помещается — название не сжимается и не перекрывается
 :global {
-  @media (min-width: 1101px) {
-    .pmo-app .top-in { flex-wrap: nowrap; gap: 14px; }
-    .pmo-app .brand { min-width: 0; }
-    .pmo-app .nav { flex: none; }
-    .pmo-app .nav button { padding: 7px 11px; }
-    .pmo-app .controls { flex: none; flex-wrap: nowrap; gap: 8px; }
-  }
+  .pmo-app .brand-name, .pmo-app .brand-sub { white-space: nowrap; }
+  @media (min-width: 1280px) { .pmo-app .controls { flex-wrap: nowrap; } }   // уже — переносятся (телефон: языки, тема, колокольчик, «?», «Відгук»)
   // «Статус-звіти»: базовый набор колонок помещается без прокрутки вбок
   .pmo-app .dt td.w-rep { min-width: 140px; }
   .pmo-app .dt td .pill.ap { font-size: 11px; padding: 3px 7px; }

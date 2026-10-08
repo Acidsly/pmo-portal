@@ -13,6 +13,8 @@
   --line:rgba(0,0,0,.08); --track:#e5e5ea;
   --g:#34c759; --y:#ff9f0a; --r:#ff3b30; --na:#c7c7cc;
   --strat-bg:rgba(175,82,222,.12); --strat:#8e44c9;
+  /* цвет раздела меню (значки Lucide), он же — метка сущности бокового окна */
+  --nv-home:#2563eb; --nv-projects:#7c3aed; --nv-reports:#0f766e; --nv-risks:#b45309; --nv-archive:#64748b; --nv-feedback:#be185d;
   --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.06);
   --shadow-hi:0 2px 6px rgba(0,0,0,.06),0 18px 40px rgba(0,0,0,.10);
   --radius:20px;
@@ -27,6 +29,7 @@
     --line:rgba(255,255,255,.1); --track:#3a3a3c;
     --g:#30d158; --y:#ffd60a; --r:#ff453a; --na:#48484a;
     --strat-bg:rgba(191,90,242,.2); --strat:#da8fff;
+    --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-archive:#94a3b8; --nv-feedback:#f472b6;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
     --shadow-hi:0 2px 6px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.5);
   }
@@ -40,6 +43,7 @@
   --line:rgba(255,255,255,.1); --track:#3a3a3c;
   --g:#30d158; --y:#ffd60a; --r:#ff453a; --na:#48484a;
   --strat-bg:rgba(191,90,242,.2); --strat:#da8fff;
+  --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-archive:#94a3b8; --nv-feedback:#f472b6;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
   --shadow-hi:0 2px 6px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.5);
 }
@@ -54,21 +58,30 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* Frosted header */
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--glass);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--glass-line)}
 .top-in{max-width:1280px;margin:0 auto;padding:14px 32px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:12px;margin-right:auto}
+/* шапка: название — своей строкой сверху; ниже — меню и кнопки в одну строку (на телефоне меню — отдельной строкой) */
+.brand{display:flex;align-items:center;gap:12px;flex:1 0 100%}
 .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(145deg,#0a84ff,#5e5ce6);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px;letter-spacing:-.02em;flex:none}
 .brand-name{font-weight:600;font-size:17px;letter-spacing:-.01em;line-height:1.2}
 .brand-sub{font-size:12px;color:var(--text-2)}
-.nav{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:12px;overflow-x:auto;max-width:100%}
-.nav button{border:0;background:none;padding:7px 16px;border-radius:9px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text-2);white-space:nowrap;transition:background-color .2s,color .2s}
+.nav{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:12px;overflow-x:auto;max-width:100%;flex:1 1 0;min-width:0}
+.nav button{border:0;background:none;padding:4px 14px 4px 5px;border-radius:9px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text-2);white-space:nowrap;transition:background-color .2s,color .2s;display:inline-flex;align-items:center;gap:8px}
+/* значок раздела: цветной контур на мягкой подложке; на телефоне — только значки (название — в подсказке) */
+.nav .ni{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none;color:var(--nc);background:color-mix(in srgb,var(--nc) 14%,transparent)}
+.nav .ni svg{width:16px;height:16px}
+.nav [data-page=home]{--nc:var(--nv-home)}.nav [data-page=projects]{--nc:var(--nv-projects)}.nav [data-page=reports]{--nc:var(--nv-reports)}
+.nav [data-page=risks]{--nc:var(--nv-risks)}.nav [data-page=archive]{--nc:var(--nv-archive)}.nav [data-page=feedback]{--nc:var(--nv-feedback)}
+/* уже 1280 px меню и кнопки в одну строку не помещаются — меню своей строкой (с подписями; на телефоне — только значки) */
+@media (max-width:1279px){.nav{order:3;flex:1 0 100%}}
+@media (max-width:720px){.nav button{flex:1;justify-content:center;padding:5px}.nav .nl{display:none}.nav .ni{width:30px;height:30px}}
 .nav button:hover{color:var(--text)}
 .nav button[aria-current="page"]{background:var(--bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
-.controls{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap}
+.controls{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap;flex:none}
 .seg{display:inline-flex;background:var(--bg-alt);padding:3px;border-radius:10px;gap:2px}
 .seg button{border:0;background:none;padding:5px 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-2);display:inline-flex;align-items:center;gap:6px;min-height:28px}
 .seg button[aria-pressed="true"]{background:var(--bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .viewas{display:inline-flex;align-items:center;gap:8px;background:var(--bg-alt);border-radius:10px;padding:3px 4px 3px 10px;font-size:13px;color:var(--text-2)}
 .viewas select{border:0;background:var(--bg);border-radius:8px;padding:5px 8px;font-weight:600;font-size:13px;box-shadow:0 1px 3px rgba(0,0,0,.12);max-width:200px}
-@media (max-width:1100px){.top-in{gap:12px}.nav{order:3;width:100%}.controls{margin-left:0}}
+@media (max-width:1100px){.top-in{gap:12px}}
 
 .pmo-main{max-width:1280px;margin:0 auto;padding:40px 32px 96px}
 @media (max-width:720px){main,.top-in{padding-left:16px;padding-right:16px} .pmo-main{padding-top:24px}}
@@ -110,6 +123,9 @@ tr.grp.collapsed .chev{transform:rotate(-90deg)}
 .dot.sm{width:8px;height:8px}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:999px;font-size:12px;font-weight:600;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--text);white-space:nowrap}
 .pill .dot{background:var(--c)}
+.rep-ap{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px}
+.rep-ap .pill{font-size:11.5px;padding:1px 8px 1px 6px}
+.tile-upd .ul .rep-ap{display:inline-flex;margin:0 0 0 6px}
 .pill.st{padding:3px 10px;background:color-mix(in srgb,var(--c) 18%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 35%,transparent)}
 .prog{display:inline-flex;align-items:center;gap:10px;min-width:130px}
 .prog .track{flex:1;height:6px;border-radius:3px;background:var(--track);overflow:hidden;min-width:70px}
@@ -194,6 +210,10 @@ svg text{font-family:inherit}
 .kv .k{color:var(--text-2);font-size:14px}
 .kv .v{text-align:right;font-weight:500}
 .k{font-size:12px;color:var(--text-2)}
+/* метка сущности бокового окна: что открыто — проект, отчёт, риск… (одинаково, откуда бы ни открыли) */
+.ph .k{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ent{display:inline-flex;align-items:center;gap:5px;padding:3px 10px 3px 8px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--c);background:color-mix(in srgb,var(--c) 15%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 35%,transparent)}
+.ent svg{width:13px;height:13px;flex:none}
 .pmcard{display:flex;gap:14px;align-items:center;background:var(--bg-alt);border-radius:16px;padding:14px 16px}
 .pmcard .pn b{font-size:16px}
 .pmcard .role{margin-left:auto;font-size:12px;font-weight:600;color:var(--theme);background:var(--theme-soft);padding:3px 10px;border-radius:999px;white-space:nowrap}
@@ -405,6 +425,24 @@ form .fsec:first-child{margin-top:0}
 .pop-me .pn small{display:block}
 .pop-sep{font-size:11px;font-weight:600;color:var(--text-3);padding:10px 6px 4px;border-top:1px solid var(--line)}
 .me{border:0;background:none;padding:0;border-radius:50%;cursor:pointer;display:grid;place-items:center}
+.bell{position:relative;border:0;background:var(--bg-alt);cursor:pointer;color:var(--text-2);width:34px;height:34px;border-radius:10px;display:grid;place-items:center}
+.bell:hover{color:var(--text)}
+.bell .dot-new{position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:var(--r);color:#fff;font-size:10px;font-weight:700;line-height:17px;text-align:center;box-shadow:0 0 0 2px var(--bg-page)}
+/* есть непрочитанное — колокольчик покачивается (раз в несколько секунд), без анимации при «уменьшить движение» */
+.bell.has svg{transform-origin:50% 2px;animation:bell-ring 4s ease-in-out infinite}
+@keyframes bell-ring{0%,62%,100%{transform:rotate(0)}66%{transform:rotate(16deg)}72%{transform:rotate(-14deg)}78%{transform:rotate(10deg)}84%{transform:rotate(-6deg)}90%{transform:rotate(3deg)}}
+@media (prefers-reduced-motion:reduce){.bell.has svg{animation:none}}
+.ntf-back{display:inline-flex;align-items:center;gap:4px;margin:0 0 10px;font-size:13px}
+.ntf-n{font-weight:600;margin:-4px 0 10px}
+.ntf-bar{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.ntf-bar #ntf-all{margin-left:auto;padding:4px 12px;min-height:30px;font-size:13px}
+.ntf-i{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--bg-alt);border:1px solid transparent;border-radius:10px;padding:10px 12px;margin:0 0 8px;cursor:pointer}
+.ntf-i:hover{border-color:var(--line)}
+.ntf-i.new{background:var(--theme-soft);box-shadow:inset 3px 0 0 var(--theme)}
+.ntf-i.old{color:var(--text-2)}
+.ntf-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+.ntf-p{font-weight:600}
+.ntf-t{margin-top:4px;font-size:13px;color:var(--text-2)}
 .me .pav{width:34px;height:34px;font-size:12px;box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--line)}
 .keysec{background:var(--bg-alt);border-radius:16px;padding:16px 16px 4px;margin:6px 0 18px}
 .keysec input[type=date],.keysec input[type=number],.keysec select,.keysec textarea{background:var(--bg)}

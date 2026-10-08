@@ -1,7 +1,9 @@
 import { daysBetween } from './dates';
 
-export const isArch = (status: string): boolean => status === 'Архівний' || status === 'Завершено';
-export const isActive = (status: string): boolean => !isArch(status) && status !== 'Скасовано';
+/** Проект в архиве: «Завершено» или «Скасовано» (векторы tests/cases/archive.json, те же — Test-ArchivedStatus синхронизации);
+ *  «Архівний» — прежнее значение, понимается до миграции. */
+export const isArch = (status: string): boolean => status === 'Завершено' || status === 'Скасовано' || status === 'Архівний';
+export const isActive = (status: string): boolean => !isArch(status);
 
 /** Свежесть последнего отчёта: нет — na; старше 14 дней — r; старше 8 — y; иначе g (как в прототипе). */
 export type Fresh = 'g' | 'y' | 'r' | 'na';

@@ -29,7 +29,7 @@ export const Archive: React.FC<{ data: PortalData }> = ({ data }) => {
     <Hero title={t('navArchive')} sub={`${t('archiveSub')} · ${all.length}`} />
     <div className="listcard">
       {mode === 'list'
-        ? <DataTable tkey="archive" defs={projectDefs(x, true)} rows={rows} left={modeSw} right={sel} />
+        ? <DataTable tkey="archive2" defs={projectDefs(x, true)} rows={rows} left={modeSw} right={sel} />
         : <><div className="cmdbar">{modeSw}<span className="spacer" />{sel}</div><Tiles rows={rows} /></>}
     </div>
   </>;

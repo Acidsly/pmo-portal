@@ -6,7 +6,7 @@ import { Rag } from '../logic/rag';
 import { freshness, isPlanLate, forecastDelta, budgetUse, budgetLevel, riskScore } from '../logic/status';
 import { daysBetween } from '../logic/dates';
 import { freshBucket, scoreBucket } from '../logic/views';
-import { RagDot, PersonCell, People, Score, Progress, Muted, ApBadge, StatusPill, fmtDate, money, freshColor } from './Bits';
+import { RagDot, PersonCell, People, Score, Progress, Muted, ApBadge, StatusPill, fmtDate, money, freshColor, RepMark, freshTip } from './Bits';
 import { Strat, Prio, Compass, Flag } from './Icons';
 
 /** Колонка = данные для движка таблицы + отрисовка (PDEF / RDEF / KDEF прототипа, строки 997–1072). */
@@ -15,7 +15,7 @@ export interface TableDefs<R> { lock: string; defaults: string[]; cols: Record<s
 export interface DefsCtx { t(k: string): string; fl(k: string): string; today: string; byId: Record<number, Project>; comments: Comment[]; open(id: number): void; openRisk(id: number, projectId: number): void; openReport(id: number, projectId: number): void; }
 
 const RAG_ORDER: Record<string, number> = { 'Червоний': 0, 'Жовтий': 1, 'Зелений': 2 };
-const STATUSES = ['Ініціація', 'Планування', 'Реалізація', 'Призупинено', 'Скасовано', 'Архівний'];
+const STATUSES = ['Ініціація', 'Планування', 'Реалізація', 'Призупинено', 'Завершено', 'Скасовано'];
 const ragOrder = (v: string): number => (RAG_ORDER[v] === undefined ? 3 : RAG_ORDER[v]);
 const clamp = (s: string): React.ReactNode => (s ? <span className="clamp2" title={s}>{s}</span> : <Muted />);
 const dateCell = (iso: string): React.ReactNode => (iso ? fmtDate(iso) : <Muted />);
@@ -54,10 +54,9 @@ export function projectDefs(x: DefsCtx, archive: boolean): TableDefs<Project> {
     prio: { label: t('cPrio'), head: S.prioHead, cell: p => S.prioCell(p.priority), sort: p => p.priority, filter: p => p.priority, flabel: S.prioLabel, cls: 'w-ico' },
     rag: { label: t('cHealth'), cell: p => <RagDot v={p.rag} notRated={t('notRated')} />, sort: p => ragOrder(p.rag), filter: p => p.rag, flabel: S.ragLabel, cls: 'w-ico w-min' },
     // #29: отчёт на погодженні виден в колонке — и без погодженых отчётов («на погодженні · дата»), и рядом с последним погодженим
-    repDate: { label: t('cRepDate'), cell: p => !p.lastUpdate && p.pendingDate
-      ? <span className="rag"><span className="dot sm" style={{ background: 'var(--y)' }} />{t('repPending').replace('{date}', fmtDate(p.pendingDate))}</span>
-      : <><span className="rag"><span className="dot sm" style={{ background: freshColor(freshness(p.lastUpdate, today)) }} />{p.lastUpdate ? fmtDate(p.lastUpdate) : t('noReports')}</span>
-        {p.pendingDate ? <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{t('repPendingNew')}</div> : null}</>,
+    // точка — свежесть последнего погодженого отчёта; ниже — погодження самого нового отчёта (#29: и отчёт на погодженні)
+    repDate: { label: t('cRepDate'), cell: p => <><span className="rag" title={freshTip(t, p.lastUpdate, today)}><span className="dot sm" style={{ background: freshColor(freshness(p.lastUpdate, today)) }} />{p.lastUpdate ? fmtDate(p.lastUpdate) : t('noReports')}</span>
+        <RepMark r={p.lastRep} /></>,
       sort: p => p.lastUpdate, filter: p => freshBucket(p.lastUpdate, today),
       flabel: v => <span className="ilabel"><span className="dot sm" style={{ background: ['var(--g)', 'var(--y)', 'var(--r)', 'var(--na)'][Number(v)] }} />{t('fr' + v)}</span> },
     repAge: { label: t('cRepAge'), cell: p => { const a = age(p); return a === null ? <Muted /> : String(a); }, sort: p => age(p), cls: 'num' },
@@ -83,7 +82,7 @@ export function projectDefs(x: DefsCtx, archive: boolean): TableDefs<Project> {
     ae: { label: t('cAe'), cell: p => dateCell(p.actualEnd || ''), sort: p => p.actualEnd || '' }
   };
   return { lock: 'title', cols,
-    defaults: archive ? ['strat', 'prio', 'title', 'pm', 'owner', 'archived', 'ae', 'plan', 'budget', 'actual'] : ['strat', 'prio', 'title', 'pm', 'status', 'rag', 'repDate', 'progress', 'plan', 'update'] };
+    defaults: archive ? ['strat', 'prio', 'title', 'status', 'pm', 'owner', 'archived', 'ae', 'plan', 'budget', 'actual'] : ['strat', 'prio', 'title', 'pm', 'status', 'rag', 'repDate', 'progress', 'plan', 'update'] };
 }
 
 export function reportDefs(x: DefsCtx): TableDefs<StatusReport> {
@@ -106,7 +105,7 @@ export function reportDefs(x: DefsCtx): TableDefs<StatusReport> {
     next: { label: t('cNextP'), cell: r => clamp(r.next), sort: r => r.next, cls: 'w-wide' },
     issues: { label: t('cIssues'), cell: r => clamp(r.issues), sort: r => r.issues, cls: 'w-wide' },
     progress: { label: fl('progress'), cell: r => (r.progress === null ? <Muted /> : <Progress v={r.progress} />), sort: r => r.progress },
-    status: { label: t('cStatusR'), cell: r => (r.status ? tv(r.status === 'Завершено' ? 'Архівний' : r.status) : <Muted />), sort: r => r.status, filter: r => r.status },
+    status: { label: t('cStatusR'), cell: r => (r.status ? tv(r.status) : <Muted />), sort: r => r.status, filter: r => r.status },
     author: { label: fl('rAuthor'), cell: r => <PersonCell p={r.author} />, sort: r => (r.author ? r.author.name : ''), filter: r => (r.author ? r.author.name : '') },
     // флажок «Потрібне рішення керівництва»; при наведении — какое решение нужно
     decision: { label: t('needDecision'), cell: r => (r.decision ? <span className="flag" title={r.decisionText}>{t('yes')}</span> : <Muted />), sort: r => (r.decision ? 0 : 1), filter: r => (r.decision ? 'yes' : 'no'),

@@ -23,6 +23,8 @@ export interface Project {
   lastApplied?: string;
   /** Дата отчёта «на погодженні» по проекту (не применён), если есть — колонка «Звіт» и плитки (#29). */
   pendingDate?: string;
+  /** Самый новый отчёт проекта и его погодження — метка в колонке «Звіт» и на плитке (latestReport). */
+  lastRep?: { approval: string; date: string } | null;
   /** События истории из неперенесённых отчётов — видны сразу, журнал запишет синхронизация. */
   pendingEvents?: ChangeEvent[];
   /** Дата-время создания (ISO) — базовая сортировка «новые сверху». */
@@ -71,7 +73,9 @@ export interface ChangeEntry { id: number; projectId: number; date: string; who:
   item?: number; }
 export interface ChangeEvent { id: number; date: string; who: Person | null; kind: 'create' | 'key' | 'edit' | 'report' | 'approval' | 'assign' | 'submit' | 'risk'; reason: string; diffs: { f: string; from: string; to: string }[];
   /** #46 / #48: событие отчёта или риска — открыть запись из истории. */
-  ref?: { type: 'report' | 'risk'; id: number }; }
+  ref?: { type: 'report' | 'risk'; id: number };
+  /** Проект и наибольший номер строк журнала события (сповіщення: новое — номер больше «прочитано до»). */
+  projectId?: number; lastId?: number; }
 
 /** Отзыв фокус-группы: из «Відгуки — загальні» (видят все) + свои / все для администратора (со скриншотами) из «Відгуки». */
 export interface FeedbackRow {

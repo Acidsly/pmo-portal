@@ -71,6 +71,18 @@ test('#47 / #55: форма риска — тип перед «Опис», за�
   expect(q('#panel .ph h2, .ph h2').textContent).toBe('Новий ризик');
   const r = f.querySelector('input[name="k-type"][value="Проблема"]'); r.checked = true; ev(r, 'change');
   expect(q('.ph h2').textContent).toBe('Нова проблема');
+  // метка сущности окна меняется вместе с типом
+  expect(q('.ph .ent').textContent).toBe('Проблема');
+});
+
+test('метка сущности бокового окна: проект, статус-звіт, ризик — откуда бы ни открыли', () => {
+  q('[data-act="nav"][data-page="projects"]').click(); q('[data-act="openp"][data-id="1"]').click();
+  expect(q('#panel .ph .ent').textContent).toBe('Проєкт');
+  q('[data-act="nav"][data-page="reports"]').click(); const rep = q('#main [data-act="repopen"]'); rep.click();
+  expect(q('#panel .ph .ent').textContent).toBe('Статус-звіт');
+  q('[data-act="nav"][data-page="risks"]').click(); const rk = q('#main [data-act="riskopen"]'); rk.click();
+  expect(['Ризик', 'Проблема']).toContain(q('#panel .ph .ent').textContent);
+  q('#bell').click(); expect(q('#panel .ph .ent').textContent).toBe('Сповіщення');
 });
 
 test('#54: «Скасовано» с фактической датой → погодження PMO → дата в карточке и в архиве', () => {
@@ -103,6 +115,14 @@ test('#54: «Скасовано» с фактической датой → по�
   q(`[data-act="openp"][data-id="${pid}"]`).click();
   const kv = Array.from(w.document.querySelectorAll('#panel .kv, .kv')).map((x: W) => x.textContent).filter((x: string) => x.indexOf('Дата завершення (факт)') === 0);
   expect(kv[0]).toContain(`${d}.${m}.${y}`);
+  // архив — по статусу: проект «Скасовано» (не «Архівний»), в представлении «Скасовані», не в «Завершені»
+  expect(q('#panel').textContent).toContain('Скасовано'); expect(q('#panel').textContent).not.toContain('Архівний');
+  q(`[data-act="nav"][data-page="archive"]`).click();
+  const sel = q('select[data-act="view"]');
+  sel.value = 'cancelled'; ev(sel, 'change'); expect(q(`#main [data-act="openp"][data-id="${pid}"]`)).not.toBeNull();
+  const s2 = q('select[data-act="view"]'); s2.value = 'done'; ev(s2, 'change'); expect(q(`#main [data-act="openp"][data-id="${pid}"]`)).toBeNull();
+  // в «Проєкти» его нет
+  q('[data-act="nav"][data-page="projects"]').click(); expect(q(`#main [data-act="openp"][data-id="${pid}"]`)).toBeNull();
 });
 
 describe('#43 смена PM / власника — только PMO', () => {
@@ -182,4 +202,96 @@ describe('#46 / #48 события отчётов и рисков в истор�
     expect(h).toMatch(/Ймовірність\s*3\s*→\s*5/);
     expect(h).toMatch(/Оцінка\s*9\s*→\s*15/);
   });
+});
+
+describe('сповіщення: колокольчик в прототипе', () => {
+  const asUser = (n: string): void => { const b = w.document.createElement('button'); b.dataset.act = 'asuser'; b.dataset.n = n; w.document.body.appendChild(b); b.click(); b.remove(); };
+  const dot = (): boolean => !!q('#bell .dot-new');
+  const comment = (pid: number, txt: string): void => {
+    q('[data-act="nav"][data-page="projects"]').click(); q(`[data-act="openp"][data-id="${pid}"]`).click();
+    const ta = q('#panel textarea, .panel textarea, textarea'); ta.value = txt; ev(ta, 'input');
+    ta.closest('form').dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+  };
+  test('после загрузки точки нет; комментарий PM — точка у власника, не у постороннего; «Позначити все прочитаним» гасит точку', () => {
+    expect(dot()).toBe(false);
+    comment(1, 'Перевірка сповіщень');                      // PRJ-001: PM — Юрій, власник — Сергій Литвиненко
+    expect(dot()).toBe(false);                               // своё — не новое
+    asUser('Наталія Шевчук'); expect(dot()).toBe(false);     // PM другого проекта — не участник PRJ-001
+    asUser('Сергій Литвиненко'); expect(dot()).toBe(true);
+    q('#bell').click();
+    expect(w.document.body.textContent).toContain('Перевірка сповіщень');
+    expect(q('.ntf-i.new')).not.toBeNull();
+    expect(dot()).toBe(true);                                // открытие ничего не отмечает
+    // «Лише нові» — новые видны и выделены
+    const cb = q('#ntf-new'); cb.checked = true; ev(cb, 'change');
+    expect(q('.ntf-i.new')).not.toBeNull();
+    expect(w.document.body.textContent).toContain('Перевірка сповіщень');
+    // переход к событию — вверху «← Сповіщення»; открытое событие прочитано, точка гаснет
+    q('.ntf-i.new').click();
+    expect(q('[data-act="notifback"]')).not.toBeNull();
+    expect(dot()).toBe(false);
+    q('[data-act="notifback"]').click();
+    expect(q('#ntf-list')).not.toBeNull(); expect(q('.ntf-i.new')).toBeNull();
+    // открытие из шапки — без кнопки возврата
+    q('#bell').click(); expect(q('[data-act="notifback"]')).toBeNull();
+  });
+  test('число новых на колокольчике', () => {
+    comment(1, 'Перше'); comment(1, 'Друге');
+    asUser('Сергій Литвиненко'); expect(q('#bell .dot-new').textContent).toBe('2'); expect(q('#bell').classList.contains('has')).toBe(true);
+    // открыл одно — прочитано оно, второе осталось новым
+    q('#bell').click(); expect(q('#ntf-n').textContent).toBe('Нових: 2'); q('.ntf-i.new').click();
+    expect(q('#bell .dot-new').textContent).toBe('1');
+    q('[data-act="notifback"]').click();
+    expect(w.document.querySelectorAll('.ntf-i.new').length).toBe(1);
+    expect(q('#ntf-n').textContent).toBe('Нових: 1');
+    // «Позначити все прочитаним» — всё
+    q('#ntf-all').click();
+    expect(q('#bell .dot-new')).toBeNull(); expect(q('.ntf-i.new')).toBeNull(); expect(q('#ntf-all')).toBeNull();
+  });
+  test('видит проект, но не по своей роли (руководитель власника) — точки нет', () => {
+    asUser('Андрій Мельник'); comment(2, 'Коментар PM');        // PRJ-002: PM — Андрій Мельник, власник — Юрій
+    asUser('Сергій Литвиненко');                                  // руководитель Юрія: видит проект, сповіщень не получает
+    q('[data-act="nav"][data-page="projects"]').click();
+    expect(q('[data-act="openp"][data-id="2"]')).not.toBeNull();
+    expect(dot()).toBe(false);
+    asUser('Юрій'); expect(dot()).toBe(true);
+  });
+});
+
+describe('прототип: метка погодження в колонке «Звіт»', () => {
+  test('у каждого проекта с отчётами — метка самого нового отчёта; на погодженні — с датой', () => {
+    q('[data-act="nav"][data-page="projects"]').click();
+    const tiles = Array.from(w.document.querySelectorAll('#main .tile .rep-ap'));
+    q('[data-act="mode"][data-key="projMode"][data-mode="list"]').click();
+    const marks = Array.from(w.document.querySelectorAll('#main table .rep-ap')) as any[];
+    expect(tiles.length + marks.length).toBeGreaterThan(marks.length);   // и на плитках, и в таблице
+    expect(marks.length).toBeGreaterThan(0);
+    const txt = marks.map(m => m.textContent).join('|');
+    expect(txt).toContain('Погоджено');
+    const pend = marks.filter(m => m.textContent.indexOf('На погодженні') >= 0);
+    pend.forEach(m => expect(m.querySelector('.muted')).not.toBeNull());
+    // подсказка к точке свежести — у каждой ячейки «Звіт»
+    const rags = Array.from(w.document.querySelectorAll('#main table .rag[title]')) as any[];
+    expect(rags.length).toBeGreaterThanOrEqual(marks.length);   // и без отчётов — подсказка «ще немає»
+    expect(rags.some(r => /дн\. тому/.test(r.getAttribute('title')))).toBe(true);
+  });
+});
+
+test('меню прототипа: значок и название у каждой вкладки, цвета разделов в обеих темах', () => {
+  const bs = Array.from(w.document.querySelectorAll('.nav button')) as W[];
+  expect(bs.length).toBeGreaterThan(4);
+  bs.forEach(b => { expect(b.querySelector('.ni svg')).not.toBeNull(); expect(b.querySelector('.nl').textContent).toBe(b.title); });
+  const css = Array.from(w.document.querySelectorAll('style')).map((x: W) => x.textContent).join('\n');
+  for (const k of ['home', 'projects', 'reports', 'risks', 'archive', 'feedback']) expect((css.match(new RegExp(`--nv-${k}:`, 'g')) || []).length).toBe(3);   // светлая и две тёмные
+  expect(css).toMatch(/@media \(max-width:720px\)\{[^\n]*\.nav button\{[^}]*\}\.nav \.nl\{display:none\}/);
+});
+
+test('шапка: название — своей строкой, ниже меню и кнопки; на телефоне меню отдельной строкой (перекрытие на 1440 px)', () => {
+  const css = Array.from(w.document.querySelectorAll('style')).map((x: W) => x.textContent).join('\n');
+  expect(css).toMatch(/\.brand\{[^}]*flex:1 0 100%\}/);
+  expect(css).toMatch(/\.nav\{[^}]*flex:1 1 0;min-width:0\}/);   // меню занимает место до кнопок и прокручивается внутри, кнопки не уходят ниже
+  expect(css).toMatch(/@media \(max-width:1279px\)\{\.nav\{order:3;flex:1 0 100%\}\}/);
+  const ov = fs.readFileSync(path.join(__dirname, '../src/webparts/pmoPortal/theme/overrides.scss'), 'utf8');
+  expect(ov).not.toMatch(/\.pmo-app \.brand \{ flex:/);   // приложение не меняет строку названия
+  expect(ov).not.toMatch(/\.top-in \{ flex-wrap: nowrap/);  // название и меню в одну строку — не помещается
 });

@@ -20,6 +20,8 @@
   --line:rgba(0,0,0,.08); --track:#e5e5ea;
   --g:#34c759; --y:#ff9f0a; --r:#ff3b30; --na:#c7c7cc;
   --strat-bg:rgba(175,82,222,.12); --strat:#8e44c9;
+  /* цвет раздела меню (значки Lucide), он же — метка сущности бокового окна */
+  --nv-home:#2563eb; --nv-projects:#7c3aed; --nv-reports:#0f766e; --nv-risks:#b45309; --nv-archive:#64748b; --nv-feedback:#be185d;
   --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.06);
   --shadow-hi:0 2px 6px rgba(0,0,0,.06),0 18px 40px rgba(0,0,0,.10);
   --radius:20px;
@@ -34,6 +36,7 @@
     --line:rgba(255,255,255,.1); --track:#3a3a3c;
     --g:#30d158; --y:#ffd60a; --r:#ff453a; --na:#48484a;
     --strat-bg:rgba(191,90,242,.2); --strat:#da8fff;
+    --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-archive:#94a3b8; --nv-feedback:#f472b6;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
     --shadow-hi:0 2px 6px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.5);
   }
@@ -47,6 +50,7 @@
   --line:rgba(255,255,255,.1); --track:#3a3a3c;
   --g:#30d158; --y:#ffd60a; --r:#ff453a; --na:#48484a;
   --strat-bg:rgba(191,90,242,.2); --strat:#da8fff;
+  --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-archive:#94a3b8; --nv-feedback:#f472b6;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
   --shadow-hi:0 2px 6px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.5);
 }
@@ -60,21 +64,30 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* Frosted header */
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--glass);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--glass-line)}
 .top-in{max-width:1280px;margin:0 auto;padding:14px 32px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:12px;margin-right:auto}
+/* шапка: название — своей строкой сверху; ниже — меню и кнопки в одну строку (на телефоне меню — отдельной строкой) */
+.brand{display:flex;align-items:center;gap:12px;flex:1 0 100%}
 .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(145deg,#0a84ff,#5e5ce6);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px;letter-spacing:-.02em;flex:none}
 .brand-name{font-weight:600;font-size:17px;letter-spacing:-.01em;line-height:1.2}
 .brand-sub{font-size:12px;color:var(--text-2)}
-.nav{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:12px;overflow-x:auto;max-width:100%}
-.nav button{border:0;background:none;padding:7px 16px;border-radius:9px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text-2);white-space:nowrap;transition:background-color .2s,color .2s}
+.nav{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:12px;overflow-x:auto;max-width:100%;flex:1 1 0;min-width:0}
+.nav button{border:0;background:none;padding:4px 14px 4px 5px;border-radius:9px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text-2);white-space:nowrap;transition:background-color .2s,color .2s;display:inline-flex;align-items:center;gap:8px}
+/* значок раздела: цветной контур на мягкой подложке; на телефоне — только значки (название — в подсказке) */
+.nav .ni{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none;color:var(--nc);background:color-mix(in srgb,var(--nc) 14%,transparent)}
+.nav .ni svg{width:16px;height:16px}
+.nav [data-page=home]{--nc:var(--nv-home)}.nav [data-page=projects]{--nc:var(--nv-projects)}.nav [data-page=reports]{--nc:var(--nv-reports)}
+.nav [data-page=risks]{--nc:var(--nv-risks)}.nav [data-page=archive]{--nc:var(--nv-archive)}.nav [data-page=feedback]{--nc:var(--nv-feedback)}
+/* уже 1280 px меню и кнопки в одну строку не помещаются — меню своей строкой (с подписями; на телефоне — только значки) */
+@media (max-width:1279px){.nav{order:3;flex:1 0 100%}}
+@media (max-width:720px){.nav button{flex:1;justify-content:center;padding:5px}.nav .nl{display:none}.nav .ni{width:30px;height:30px}}
 .nav button:hover{color:var(--text)}
 .nav button[aria-current="page"]{background:var(--bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
-.controls{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap}
+.controls{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap;flex:none}
 .seg{display:inline-flex;background:var(--bg-alt);padding:3px;border-radius:10px;gap:2px}
 .seg button{border:0;background:none;padding:5px 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-2);display:inline-flex;align-items:center;gap:6px;min-height:28px}
 .seg button[aria-pressed="true"]{background:var(--bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .viewas{display:inline-flex;align-items:center;gap:8px;background:var(--bg-alt);border-radius:10px;padding:3px 4px 3px 10px;font-size:13px;color:var(--text-2)}
 .viewas select{border:0;background:var(--bg);border-radius:8px;padding:5px 8px;font-weight:600;font-size:13px;box-shadow:0 1px 3px rgba(0,0,0,.12);max-width:200px}
-@media (max-width:1100px){.top-in{gap:12px}.nav{order:3;width:100%}.controls{margin-left:0}}
+@media (max-width:1100px){.top-in{gap:12px}}
 
 main{max-width:1280px;margin:0 auto;padding:40px 32px 96px}
 @media (max-width:720px){main,.top-in{padding-left:16px;padding-right:16px} main{padding-top:24px}}
@@ -116,6 +129,9 @@ tr.grp.collapsed .chev{transform:rotate(-90deg)}
 .dot.sm{width:8px;height:8px}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:999px;font-size:12px;font-weight:600;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--text);white-space:nowrap}
 .pill .dot{background:var(--c)}
+.rep-ap{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px}
+.rep-ap .pill{font-size:11.5px;padding:1px 8px 1px 6px}
+.tile-upd .ul .rep-ap{display:inline-flex;margin:0 0 0 6px}
 .pill.st{padding:3px 10px;background:color-mix(in srgb,var(--c) 18%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 35%,transparent)}
 .prog{display:inline-flex;align-items:center;gap:10px;min-width:130px}
 .prog .track{flex:1;height:6px;border-radius:3px;background:var(--track);overflow:hidden;min-width:70px}
@@ -200,6 +216,10 @@ svg text{font-family:inherit}
 .kv .k{color:var(--text-2);font-size:14px}
 .kv .v{text-align:right;font-weight:500}
 .k{font-size:12px;color:var(--text-2)}
+/* метка сущности бокового окна: что открыто — проект, отчёт, риск… (одинаково, откуда бы ни открыли) */
+.ph .k{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ent{display:inline-flex;align-items:center;gap:5px;padding:3px 10px 3px 8px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--c);background:color-mix(in srgb,var(--c) 15%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 35%,transparent)}
+.ent svg{width:13px;height:13px;flex:none}
 .pmcard{display:flex;gap:14px;align-items:center;background:var(--bg-alt);border-radius:16px;padding:14px 16px}
 .pmcard .pn b{font-size:16px}
 .pmcard .role{margin-left:auto;font-size:12px;font-weight:600;color:var(--theme);background:var(--theme-soft);padding:3px 10px;border-radius:999px;white-space:nowrap}
@@ -411,6 +431,24 @@ main{padding-bottom:40px}
 .pop-me .pn small{display:block}
 .pop-sep{font-size:11px;font-weight:600;color:var(--text-3);padding:10px 6px 4px;border-top:1px solid var(--line)}
 .me{border:0;background:none;padding:0;border-radius:50%;cursor:pointer;display:grid;place-items:center}
+.bell{position:relative;border:0;background:var(--bg-alt);cursor:pointer;color:var(--text-2);width:34px;height:34px;border-radius:10px;display:grid;place-items:center}
+.bell:hover{color:var(--text)}
+.bell .dot-new{position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:var(--r);color:#fff;font-size:10px;font-weight:700;line-height:17px;text-align:center;box-shadow:0 0 0 2px var(--bg-page)}
+/* есть непрочитанное — колокольчик покачивается (раз в несколько секунд), без анимации при «уменьшить движение» */
+.bell.has svg{transform-origin:50% 2px;animation:bell-ring 4s ease-in-out infinite}
+@keyframes bell-ring{0%,62%,100%{transform:rotate(0)}66%{transform:rotate(16deg)}72%{transform:rotate(-14deg)}78%{transform:rotate(10deg)}84%{transform:rotate(-6deg)}90%{transform:rotate(3deg)}}
+@media (prefers-reduced-motion:reduce){.bell.has svg{animation:none}}
+.ntf-back{display:inline-flex;align-items:center;gap:4px;margin:0 0 10px;font-size:13px}
+.ntf-n{font-weight:600;margin:-4px 0 10px}
+.ntf-bar{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.ntf-bar #ntf-all{margin-left:auto;padding:4px 12px;min-height:30px;font-size:13px}
+.ntf-i{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--bg-alt);border:1px solid transparent;border-radius:10px;padding:10px 12px;margin:0 0 8px;cursor:pointer}
+.ntf-i:hover{border-color:var(--line)}
+.ntf-i.new{background:var(--theme-soft);box-shadow:inset 3px 0 0 var(--theme)}
+.ntf-i.old{color:var(--text-2)}
+.ntf-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+.ntf-p{font-weight:600}
+.ntf-t{margin-top:4px;font-size:13px;color:var(--text-2)}
 .me .pav{width:34px;height:34px;font-size:12px;box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--line)}
 .keysec{background:var(--bg-alt);border-radius:16px;padding:16px 16px 4px;margin:6px 0 18px}
 .keysec input[type=date],.keysec input[type=number],.keysec select,.keysec textarea{background:var(--bg)}
@@ -580,6 +618,7 @@ main{padding-bottom:40px}
       <div class="seg" role="group" aria-label="Theme">
         <button data-act="theme" data-t="light"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1"/></svg></button><button data-act="theme" data-t="dark"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M13.5 10.2A6 6 0 0 1 5.8 2.5a6 6 0 1 0 7.7 7.7Z"/></svg></button>
       </div>
+      <button class="bell" id="bell" data-act="notif"></button>
       <button class="me" id="me" data-act="me"></button>
     </div>
   </div>
@@ -721,7 +760,20 @@ const T = {
  accessRecalc:['Після зміни учасників права доступу буде перераховано.','Access will be recalculated after participants change.','После смены участников права доступа будут пересчитаны.'],
  kCreate:['Проєкт створено','Project created','Проект создан'], kKey:['Зміна ключових показників','Key indicators changed','Изменение ключевых показателей'],
  kEdit:['Редагування картки','Card edited','Редактирование карточки'], kAssign:['Призначення','Assignment','Назначение'],
- kSubmit:['Подання звіту','Report submitted','Подача отчёта'], kRiskEv:['Ризик / проблема','Risk / issue','Риск / проблема'], openRisk:['Відкрити ризик','Open risk','Открыть риск'],
+ kSubmit:['Подання звіту','Report submitted','Подача отчёта'],
+ notifTitle:['Сповіщення','Notifications','Уведомления'],
+ entProject:['Проєкт','Project','Проект'], entReport:['Статус-звіт','Status report','Статус-отчёт'], entRisk:['Ризик','Risk','Риск'], entIssue:['Проблема','Issue','Проблема'],
+ entAssign:['Призначення','Assignment','Назначение'], entNotif:['Сповіщення','Notifications','Уведомления'], entFeedback:['Відгук','Feedback','Отзыв'], entHelp:['Довідка','Help','Справка'], notifNewOnes:['Є нові події','There are new events','Есть новые события'],
+ notifEmpty:['За останні 14 днів подій для вас немає.','No events for you in the last 14 days.','За последние 14 дней событий для вас нет.'],
+ notifOnlyNew:['Лише нові','Only new','Только новые'], notifNew:['Нове','New','Новое'],
+ notifSoon:['Сповіщення з\'являться протягом 15 хвилин.','Notifications will appear within 15 minutes.','Уведомления появятся в течение 15 минут.'],
+ notifHint:['Події ваших проєктів за 14 днів — за вашою роллю.','Events of your projects for 14 days, by your role.','События ваших проектов за 14 дней — по вашей роли.'],
+ notifCount:['Нових: {n}','New: {n}','Новых: {n}'],
+ notifReadAll:['Позначити все прочитаним','Mark all as read','Отметить всё прочитанным'],
+ nkCreated:['Новий проєкт','New project','Новый проект'], nkAssigned:['Призначення','Assignment','Назначение'], nkSubmitted:['Подання звіту','Report submitted','Подача отчёта'],
+ nkDecided:['Погодження звіту','Report approval','Согласование отчёта'], nkApplied:['Оновлено статус-звітом','Updated by status report','Обновлено статус-отчётом'],
+ nkArchived:['Проєкт в архіві','Project archived','Проект в архиве'], nkRisk:['Ризик / проблема','Risk / issue','Риск / проблема'],
+ nkCardEdit:['Редагування картки','Card edited','Редактирование карточки'], nkComment:['Коментар','Comment','Комментарий'], kRiskEv:['Ризик / проблема','Risk / issue','Риск / проблема'], openRisk:['Відкрити ризик','Open risk','Открыть риск'],
  assignBtn:['Змінити PM / власника','Change PM / owner','Сменить PM / владельца'], assignTitle:['Зміна PM / власника','Change of PM / owner','Смена PM / владельца'],
  assignHint:['Після створення проєкту PM і власника змінює лише PMO. Порожнє поле — без змін.','After the project is created, only the PMO changes the PM and the owner. An empty field means no change.','После создания проекта PM и владельца меняет только PMO. Пустое поле — без изменений.'],
  assignNewPm:['Новий PM','New PM','Новый PM'], assignNewOwner:['Новий власник','New owner','Новый владелец'], assignNote:['Коментар (причина)','Comment (reason)','Комментарий (причина)'],
@@ -744,7 +796,7 @@ const T = {
  archiveSub:['Завершені та скасовані проєкти. Лише перегляд.','Completed and cancelled projects. View only.','Завершённые и отменённые проекты. Только просмотр.'],
  archivedNote:['Проєкт в архіві: лише перегляд.','This project is archived: view only.','Проект в архиве: только просмотр.'],
  onePending:['Звіт від {date} на погодженні PMO — новий можна подати після рішення.','The report from {date} is awaiting PMO approval — a new one can be submitted after the decision.','Отчёт от {date} на согласовании PMO — новый можно подать после решения.'], archNoComments:['Проєкт в архіві: лише перегляд.','The project is archived: view only.','Проект в архиве: только просмотр.'],
- archivedAt:['Дата архівації','Archived on','Дата архивации'],
+ archivedAt:['Дата завершення / скасування','Completed / cancelled on','Дата завершения / отмены'],
  cols:['Поля та порядок','Columns and order','Поля и порядок'], colsReset:['Як за замовчуванням','Reset to default','Как по умолчанию'],
  colWidthsReset:['Скинути ширини колонок','Reset column widths','Сбросить ширины колонок'], colResize:['Перетягніть, щоб змінити ширину колонки','Drag to resize the column','Потяните, чтобы изменить ширину колонки'],
  filter:['Фільтр','Filter','Фильтр'], clear:['Очистити','Clear','Очистить'], search:['Пошук','Search','Поиск'],
@@ -758,7 +810,7 @@ const T = {
  errKeyReason:['Ви змінили статус, тип або дати — вкажіть причину.','You changed status, type or dates — enter a reason.','Вы изменили статус, тип или даты — укажите причину.'],
  completeArch:['Завершено — перенести в архів','Completed — move to archive','Завершено — перенести в архив'],
  cancelArch:['Скасовано — перенести в архів','Cancelled — move to archive','Отменено — перенести в архив'],
- completeHint:['Після погодження звіту PMO проєкт отримає статус «Архівний» і перейде у вкладку «Архів».','After PMO approves the report, the project gets the “Архівний” status and moves to the Archive tab.','После согласования отчёта PMO проект получит статус «Архівний» и перейдёт во вкладку «Архів».'],
+ completeHint:['Після погодження звіту PMO проєкт отримає цей статус і перейде у вкладку «Архів».','After PMO approves the report, the project gets this status and moves to the Archive tab.','После согласования отчёта PMO проект получит этот статус и перейдёт во вкладку «Архив».'],
  savedArch:['Статус-звіт збережено, проєкт перенесено в архів.','Status report saved, project moved to archive.','Статус-отчёт сохранён, проект перенесён в архив.'],
  cStake:['Власник / Product','Owner / Product','Собственник / Product'], cStart:['Старт / запуск','Start / go-live','Старт / запуск'],
  cFinish:['Завершення: план / прогноз','Completion: plan / forecast','Завершение: план / прогноз'], cBudget:['Бюджет / факт','Budget / actual','Бюджет / факт'],
@@ -767,7 +819,9 @@ const T = {
  launchS:['запуск','go-live','запуск'], fcS:['прогноз','forecast','прогноз'], reportS:['звіт','report','отчёт'], factS:['факт','actual','факт'],
  cStrat:['Стратегічний','Strategic','Стратегический'], cPrio:['Пріоритет','Priority','Приоритет'], cStatusOnly:['Статус','Status','Статус'],
  cHealth:['Стан','Health','Состояние'], cRepDate:['Звіт','Report','Отчёт'], ago:['дн. тому','days ago','дн. назад'],
- fr0:['до 8 днів','up to 8 days','до 8 дней'], fr1:['8–14 днів','8–14 days','8–14 дней'], fr2:['понад 14 днів','over 14 days','более 14 дней'], fr3:['немає звітів','no reports','нет отчётов'],
+ fr0:['до 8 днів','up to 8 days','до 8 дней'], fr1:['9–14 днів','9–14 days','9–14 дней'],
+ freshTip:['Останній погоджений звіт — {n} дн. тому. Зелений — до 8 днів, жовтий — 9–14, червоний — понад 14.','Last approved report — {n} days ago. Green — up to 8 days, yellow — 9–14, red — over 14.','Последний согласованный отчёт — {n} дн. назад. Зелёный — до 8 дней, жёлтый — 9–14, красный — больше 14.'],
+ freshNone:['Погоджених звітів ще немає.','No approved reports yet.','Согласованных отчётов ещё нет.'], fr2:['понад 14 днів','over 14 days','более 14 дней'], fr3:['немає звітів','no reports','нет отчётов'],
  ragCalc:['Загальний стан (розраховується)','Overall health (calculated)','Общее состояние (рассчитывается)'],
  ragRule:['Найгірша з оцінок: хоча б одна червона → червоний; хоча б одна жовта → жовтий; усі зелені → зелений.','The worst rating wins: any red → red; any yellow → yellow; all green → green.','Худшая из оценок: хотя бы одна красная → красный; хотя бы одна жёлтая → жёлтый; все зелёные → зелёный.'],
  errDims:['Оцініть усі три показники: терміни, бюджет, ресурси.','Rate all three: schedule, budget, resources.','Оцените все три показателя: сроки, бюджет, ресурсы.'],
@@ -844,6 +898,7 @@ const VAL = {
  'Стратегічні':['Стратегічні','Strategic','Стратегические'],
  'Проблемні':['Проблемні','At risk','Проблемные'],
  'Мої проєкти (усі)':['Мої проєкти (усі)','My projects (all)','Мои проекты (все)'],
+ 'Завершені':['Завершені','Completed','Завершённые'], 'Скасовані':['Скасовані','Cancelled','Отменённые'],
  'Я PM':['Я PM','I am PM','Я PM'],
  'Немає свіжого звіту':['Немає свіжого звіту','No recent report','Нет свежего отчёта'],
  'Усі звіти':['Усі звіти','All reports','Все отчёты'],
@@ -896,7 +951,7 @@ const calcRag = r => { const v = [r.sched, r.budget, r.res]; if (v.some(x => !x)
 // погодження статус-звіту PMO: у картку потрапляє лише погоджений звіт
 const AP_PEND = 'На погодженні', AP_OK = 'Погоджено', AP_RET = 'Повернуто';
 const isApproved = r => (r.approval || AP_OK) === AP_OK;
-const STATUSES = ['Ініціація','Планування','Реалізація','Призупинено','Скасовано','Архівний'];
+const STATUSES = ['Ініціація','Планування','Реалізація','Призупинено','Завершено','Скасовано'];
 const REPORT_STATUSES = ['Ініціація','Планування','Реалізація','Призупинено'];
 const TYPES = ['Стратегічний','Звичайний'];
 const PRIOS = ['1 — Високий','2 — Середній','3 — Низький'];
@@ -956,9 +1011,9 @@ function buildSeed(){
  {id:7,code:'PRJ-007',title:'Портал самообслуговування працівників',type:'Звичайний',pm:'Марина Ткаченко',owner:'Тетяна Кравець',product:'Анна Лисенко',dept:'HR та кадрове адміністрування',status:'Призупинено',prio:'3 — Низький',progress:25,start:'2026-01-12',golive:'2026-09-01',plan:'2026-10-01',fc:'2027-04-30',budget:700000,actual:184000,ago:34,hist:'YRR',decision:'Вирішити: відновлювати проєкт чи закрити',note:'Призупинено до завершення впровадження CRM',
   cm:[[34,'Марина Ткаченко','Призупинено рішенням власника до запуску CRM']],
   ch:[[34,'Тетяна Кравець','Пріоритет — впровадження CRM',[['status','Реалізація','Призупинено'],['fc','2026-10-01','2027-04-30']]]]},
- {id:8,code:'PRJ-008',title:'Електронний кадровий документообіг',type:'Звичайний',pm:'Марина Ткаченко',owner:'Тетяна Кравець',product:'Анна Лисенко',dept:'HR та кадрове адміністрування',status:'Архівний',prio:'2 — Середній',progress:100,start:'2025-11-03',golive:'2026-07-01',plan:'2026-08-31',fc:'2026-08-28',budget:500000,actual:478000,ago:27,hist:'GGGGGG',note:'Проєкт закрито, систему передано в експлуатацію',
+ {id:8,code:'PRJ-008',title:'Електронний кадровий документообіг',type:'Звичайний',pm:'Марина Ткаченко',owner:'Тетяна Кравець',product:'Анна Лисенко',dept:'HR та кадрове адміністрування',status:'Завершено',prio:'2 — Середній',progress:100,start:'2025-11-03',golive:'2026-07-01',plan:'2026-08-31',fc:'2026-08-28',budget:500000,actual:478000,ago:27,hist:'GGGGGG',note:'Проєкт закрито, систему передано в експлуатацію',
   cm:[[27,'Марина Ткаченко','Акт приймання підписано']],
-  ch:[[27,'Марина Ткаченко','Приймання підписано',[['status','Реалізація','Архівний'],['progress','95','100']]]], arch:27}
+  ch:[[27,'Марина Ткаченко','Приймання підписано',[['status','Реалізація','Завершено'],['progress','95','100']]]], arch:27}
  ];
  const POOL = {G:['Роботи йдуть за планом','Контрольну точку пройдено вчасно','Етап прийнято замовником'],
   Y:['Відставання з інтеграції на 1–2 тижні','Затримка погодження вимог','Бракує ресурсу розробника 1С'],
@@ -1061,15 +1116,18 @@ async function initData(){
   db.collection('projects').onSnapshot(snap => {
     if (snap.empty){ if (snap.metadata.fromCache) return; MODE = 'empty'; PROJ = []; }
     else { MODE = 'db'; PROJ = snap.docs.map(d => parse(Object.assign({}, d.data(), {id:d.id})));
-      PROJ.filter(p => ['Завершено','Скасовано'].includes(p.status)).forEach(p => { p.status = 'Архівний'; p.archivedAt = p.archivedAt || p.lastUpdate || iso(TODAY); persist(p); }); }
+      // прежнее «Архівний» в сохранённых данных — исход по последнему итоговому отчёту (как миграция Deploy-PMO.ps1), иначе «Завершено»
+      PROJ.filter(p => p.status === 'Архівний').forEach(p => { const r = (p.reports || []).filter(x => ['Завершено','Скасовано'].includes(x.status)).sort((a, b) => String(a.date).localeCompare(String(b.date))).pop();
+        p.status = r ? r.status : 'Завершено'; p.archivedAt = p.archivedAt || p.lastUpdate || iso(TODAY); persist(p); }); }
     render();
   }, err => { console.error(err); if (MODE === 'loading'){ db = null; MODE = 'local'; PROJ = buildSeed().map(parse); render(); } });
 }
 
 /* ================= Derived ================= */
 const pById = id => PROJ.find(p => p.id === id);
-const isArch = p => p.status === 'Архівний' || p.status === 'Завершено';
-const isActive = p => !isArch(p) && p.status !== 'Скасовано';
+// проект в архиве: «Завершено» или «Скасовано» (tests/cases/archive.json; «Архівний» — прежнее значение)
+const isArch = p => ['Завершено','Скасовано','Архівний'].includes(p.status);
+const isActive = p => !isArch(p);
 const visAll = () => PROJ.filter(canSee);
 const visP = () => visAll().filter(p => !isArch(p));
 const visArch = () => visAll().filter(isArch);
@@ -1089,7 +1147,7 @@ const byOrder = (a, b) => (a.type === b.type ? 0 : a.type === 'Стратегі�
 /* ================= Renderers ================= */
 const ragHtml = v => v ? `<span class="pill" style="--c:${RC[v]}"><span class="dot sm"></span>${tv(v)}</span>`
   : `<span class="pill" style="--c:var(--na)"><span class="dot sm"></span>${t('notRated')}</span>`;
-const STC = {'Ініціація':'#5856d6','Планування':'var(--theme)','Реалізація':'var(--g)','Призупинено':'var(--y)','Скасовано':'var(--r)','Архівний':'var(--na)','Завершено':'var(--na)','Відкрито':'var(--y)','В роботі':'var(--theme)','Закрито':'var(--g)'};
+const STC = {'Ініціація':'#5856d6','Планування':'var(--theme)','Реалізація':'var(--g)','Призупинено':'var(--y)','Скасовано':'var(--na)','Архівний':'var(--na)','Завершено':'var(--g)','Відкрито':'var(--y)','В роботі':'var(--theme)','Закрито':'var(--g)'};
 // статус проєкту чи ризику — кольорова пілюля без крапки (крапка — у стану RAG)
 const statusPill = v => v ? `<span class="pill st" style="--c:${STC[v] || 'var(--na)'}">${esc(tv(v))}</span>` : '<span class="muted">—</span>';
 const apBadge = v => { v = v || AP_OK; return `<span class="pill ap" style="--c:${v === AP_OK ? 'var(--g)' : v === AP_RET ? 'var(--r)' : 'var(--y)'}"><span class="dot sm"></span>${esc(tv(v))}</span>`; };
@@ -1098,7 +1156,12 @@ const barHtml = v => `<span class="prog" role="img" aria-label="${v}%"><span cla
 const freshColor = d => !d ? 'var(--na)' : age(d) > 14 ? 'var(--r)' : age(d) > 8 ? 'var(--y)' : 'var(--g)';
 // #29: дата отчёта «на погодженні» по проекту (если есть)
 const pendDate = p => { const r = (p.reports || []).find(x => x.approval === AP_PEND); return r ? D(r.date) : null; };
-const freshHtml = p => { const d = lastUpd(p); return `<span class="rag"><span class="dot sm" style="background:${freshColor(d)}"></span>${d ? fmt(d) : `<span class="muted">${t('noReports')}</span>`}</span>`; };
+// метка погодження самого нового отчёта (по дате, затем по порядку подачи) — колонка «Звіт», главная, плитки (latestReport приложения)
+const lastRep = p => (p.reports || []).reduce((r, x) => (!r || x.date >= r.date ? x : r), null);
+const apMark = p => { const r = lastRep(p); if (!r) return ''; const v = r.approval || AP_OK; return `<span class="rep-ap">${apBadge(v)}${v !== AP_OK ? `<span class="muted">${fmt(D(r.date))}</span>` : ''}</span>`; };
+// подсказка к точке свежести: сколько дней последнему погодженому отчёту и что значат цвета
+const freshTip = d => esc(d ? t('freshTip').replace('{n}', age(d)) : t('freshNone'));
+const freshHtml = p => { const d = lastUpd(p); return `<span class="rag" title="${freshTip(d)}"><span class="dot sm" style="background:${freshColor(d)}"></span>${d ? fmt(d) : `<span class="muted">${t('noReports')}</span>`}</span>`; };
 const planHtml = p => { const d = D(p.plan); if (!d) return ''; return d < TODAY && isActive(p) ? `<span class="late">${fmt(d)}</span>` : fmt(d); };
 const useHtml = p => { const u = p.budget ? Math.round(p.actual / p.budget * 100) : 0; return `<span class="${u > 100 ? 'over' : u > 90 ? 'warn' : ''}">${u}%</span>`; };
 const scoreHtml = s => `<span class="chip" style="background:${s >= 15 ? 'var(--r)' : s >= 8 ? 'var(--y)' : 'var(--g)'}">${s}</span>`;
@@ -1175,7 +1238,7 @@ const PV = {
   late:{t:'Прострочені', f:p => isActive(p) && !!D(p.plan) && D(p.plan) < TODAY}
 };
 // вигляди архіву: без умов активності
-const AV = {all:{t:'Усі проєкти', f:() => true}, strat:{t:'Стратегічні', f:p => p.type === 'Стратегічний'}, mine:{t:'Мої проєкти (усі)', f:p => participants(p).includes(VIEWER)}, pm:{t:'Я PM', f:p => p.pm === VIEWER}};
+const AV = {all:{t:'Усі проєкти', f:() => true}, done:{t:'Завершені', f:p => p.status === 'Завершено'}, cancelled:{t:'Скасовані', f:p => p.status === 'Скасовано'}, strat:{t:'Стратегічні', f:p => p.type === 'Стратегічний'}, mine:{t:'Мої проєкти (усі)', f:p => participants(p).includes(VIEWER)}, pm:{t:'Я PM', f:p => p.pm === VIEWER}};
 const RV = {all:{t:'Усі звіти', f:() => true}, decision:{t:'Потребують рішення', f:r => r.decision}, awaiting:{t:'Очікують погодження', f:r => r.approval === AP_PEND}};
 const KV = {open:{t:'Відкриті', f:k => k.status !== 'Закрито'}, high:{t:'Високі ризики', f:k => k.status !== 'Закрито' && k.p * k.i >= 15}, all:{t:'Усі елементи', f:() => true}, archived:{t:'Ризики архівних проєктів', f:() => true, arch:true}};
 const state = {rmCell:null, page:'home', pv:'all', rv:'all', kv:'open', av:'all', homeMode:'tiles', projMode:'tiles', archmode:'tiles', panel:null};
@@ -1188,7 +1251,7 @@ function tile(p){
     <div class="tile-t">${esc(p.title)}</div>
     <div class="tile-prog"><div class="pl">${statusPill(p.status)}<b>${p.progress}%</b></div><div class="track"><i style="width:${Math.min(p.progress,100)}%;background:${pc}"></i></div></div>
     ${isArch(p) ? `<div class="tile-upd"><div class="ul">${t('archivedAt')}: ${p.archivedAt ? fmt(D(p.archivedAt)) : '—'}</div></div>`
-      : `<div class="tile-upd"><div class="ul"><span class="dot sm" style="background:${freshColor(d)}"></span>${t('latestUpd')} · ${d ? fmt(d) : pendDate(p) ? esc(t('repPending').replace('{date}', fmt(pendDate(p)))) : t('noReports')}${d && pendDate(p) ? ` · <span class="muted">${t('repPendingNew')}</span>` : ''}</div>
+      : `<div class="tile-upd"><div class="ul"><span class="dot sm" title="${freshTip(d)}" style="background:${freshColor(d)}"></span>${t('latestUpd')} · ${d ? fmt(d) : t('noReports')}${apMark(p)}</div>
       <div class="tx">${esc(p.lastReport) || '<span class="muted">—</span>'}</div></div>`}
     <div class="tile-f">${(p.links || []).length ? `<span class="tile-l">${linkA(p.links[0])}${p.links.length > 1 ? ` <span class="muted">+${p.links.length - 1}</span>` : ''}</span>` : '<span></span>'}
       <span class="tile-pm" title="${t('pmRole')}: ${esc(p.pm)} · ${esc(email(p.pm))}">${avatar(p.pm)}<b>${esc(p.pm)}</b></span></div>
@@ -1199,6 +1262,27 @@ const iconList = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" st
 const iconTiles = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.5"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1.5"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1.5"/><rect x="9" y="9" width="5.5" height="5.5" rx="1.5"/></svg>';
 const iconPlus = '<svg width="14" height="14" viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 2.5v11M2.5 8h11"/></svg>';
 const iconEdit = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10.5 2.5l3 3L6 13H3v-3z"/></svg>';
+// значки разделов — Lucide (ISC License), те же в приложении (components/LucideIcons.tsx)
+const LUC = {
+  home:'<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  projects:'<path d="M20 17a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.9a2 2 0 0 1-1.69-.9l-.81-1.2a2 2 0 0 0-1.67-.9H8a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2Z"/><path d="M2 8v11a2 2 0 0 0 2 2h14"/>',
+  reports:'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>',
+  risks:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  archive:'<rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
+  feedback:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M13 8H7"/><path d="M17 12H7"/>',
+  issue:'<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>'};
+const lucide = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LUC[k]}</svg>`;
+// метка сущности бокового окна (EntTag приложения): цвет и значок по виду; проект, отчёт, риск — как раздел меню
+const ENT = {
+  project:{c:'var(--nv-projects)', l:'projects'},
+  report:{c:'var(--nv-reports)', l:'reports'},
+  risk:{c:'var(--nv-risks)', l:'risks'},
+  issue:{c:'var(--r)', l:'issue'},
+  assign:{c:'#8764b8', d:'M8 8a2.5 2.5 0 1 0 0-5a2.5 2.5 0 0 0 0 5zM3 14c0-2.8 2.2-4.5 5-4.5s5 1.7 5 4.5'},
+  notif:{c:'#5856d6', d:'M4 6.5a4 4 0 0 1 8 0c0 3 1.2 4.2 1.5 4.5h-11C2.8 10.7 4 9.5 4 6.5zM6.5 13a1.6 1.6 0 0 0 3 0'}};
+const ENT_L = {project:'entProject', report:'entReport', risk:'entRisk', issue:'entIssue', assign:'entAssign', notif:'entNotif'};
+const entTag = kind => { const e = ENT[kind]; return `<span class="ent ent-${kind}" style="--c:${e.c}">${e.l ? lucide(e.l) : `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${e.d}"/></svg>`}${t(ENT_L[kind])}</span>`; };
+const iconBell = '<svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5a4 4 0 0 1 8 0c0 3 1.2 4.2 1.5 4.5h-11C2.8 10.7 4 9.5 4 6.5Z"/><path d="M6.5 13a1.6 1.6 0 0 0 3 0"/></svg>';
 const iconKey = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 12.5h12M4 10V7M8 10V4M12 10V6"/></svg>';
 const modeSwitch = key => `<span class="seg" role="group">
   <button data-act="mode" data-key="${key}" data-mode="list" aria-pressed="${state[key] === 'list'}">${iconList}${t('list')}</button>
@@ -1223,9 +1307,10 @@ function dynamics(){
   for (let k = 6; k >= 0; k--){
     const tt = daysAgo(k * 14), c = {'Зелений':0,'Жовтий':0,'Червоний':0,'':0};
     // кожен проєкт, що вже існував на дату зрізу (і ще не в архіві): стан останнього погодженого звіту; немає звіту — сірий
-    visAll().forEach(p => { if (p.status === 'Скасовано') return;
+    visAll().forEach(p => {
       const cr = (p.changes || []).find(x => x.kind === 'create'); if (cr && new Date(cr.date) > tt) return;
-      if (isArch(p) && tt >= lastUpd(p)) return;   // в день архивации проект уже в архиве — как в кольце
+      // завершённые и отменённые — до даты архивации (иначе фактической, иначе последнего отчёта); даты нет — в архиве всегда (как кольцо)
+      const on = D(p.archivedAt) || D(p.ae) || lastUpd(p); if (isArch(p) && (!on || tt >= on)) return;
       const rs = repsOf(p).filter(r => r.d <= tt && isApproved(r)); c[rs.length ? rs[rs.length - 1].rag : '']++; });
     pts.push({tt, c});
   }
@@ -1312,9 +1397,9 @@ const PDEF = {
   status:{l:() => t('cStatusOnly'), main:p => statusPill(p.status), sort:p => STATUSES.indexOf(p.status), filter:p => p.status, cls:'w-min'},
   prio:{l:() => t('cPrio'), h:prioHead, main:p => prioIcon(p.prio), sort:p => p.prio, filter:p => p.prio, flabel:prioLabel, cls:'w-ico'},
   rag:{l:() => t('cHealth'), main:p => ragDot(p.rag), sort:p => ragOrder(p.rag), filter:p => p.rag || '', flabel:ragLabel, cls:'w-ico w-min'},
-  repDate:{l:() => t('cRepDate'), main:p => { const d = lastUpd(p), pd = pendDate(p);
-    if (!d && pd) return `<span class="rag"><span class="dot sm" style="background:var(--y)"></span>${esc(t('repPending').replace('{date}', fmt(pd)))}</span>`;
-    return `<span class="rag"><span class="dot sm" style="background:${freshColor(d)}"></span>${d ? fmt(d) : t('noReports')}</span>${pd ? `<div class="muted" style="font-size:12px;margin-top:2px">${t('repPendingNew')}</div>` : ''}`; }, sort:p => p.lastUpdate || '', filter:p => freshBucket(lastUpd(p)), flabel:freshLabel},
+  // точка — свежесть последнего погодженого отчёта; ниже — погодження самого нового отчёта
+  repDate:{l:() => t('cRepDate'), main:p => { const d = lastUpd(p);
+    return `<span class="rag" title="${freshTip(d)}"><span class="dot sm" style="background:${freshColor(d)}"></span>${d ? fmt(d) : t('noReports')}</span>${apMark(p)}`; }, sort:p => p.lastUpdate || '', filter:p => freshBucket(lastUpd(p)), flabel:freshLabel},
   repAge:{l:() => t('cRepAge'), main:p => lastUpd(p) ? String(age(lastUpd(p))) : '<span class="muted">—</span>', sort:p => lastUpd(p) ? age(lastUpd(p)) : '', cls:'num'},
   progress:{l:() => fl('progress'), main:p => barHtml(p.progress), sort:p => p.progress},
   start:{l:() => t('cStart2'), main:p => dateCell(p.start), sort:p => p.start || ''},
@@ -1350,7 +1435,7 @@ const RDEF = {
   next:{l:() => t('cNextP'), main:r => `<span class="clamp2">${esc(r.next)}</span>`, sort:r => r.next, cls:'w-wide'},
   issues:{l:() => t('cIssues'), main:r => `<span class="clamp2">${esc(r.issues) || '<span class="muted">—</span>'}</span>`, sort:r => r.issues || '', cls:'w-wide'},
   progress:{l:() => fl('progress'), main:r => barHtml(r.progress), sort:r => r.progress},
-  status:{l:() => t('cStatusR'), main:r => r.status ? esc(tv(r.status === 'Завершено' ? 'Архівний' : r.status)) : '<span class="muted">—</span>', sort:r => r.status || '', filter:r => r.status || ''},
+  status:{l:() => t('cStatusR'), main:r => r.status ? esc(tv(r.status)) : '<span class="muted">—</span>', sort:r => r.status || '', filter:r => r.status || ''},
   author:{l:() => fl('rAuthor'), main:r => person(r.author), sort:r => r.author, filter:r => r.author},
   decision:{l:() => t('cDecFlag'), main:r => r.decision ? `<span class="flag">${t('yes')}</span>` : '<span class="muted">—</span>', sort:r => r.decision ? 0 : 1, filter:r => r.decision ? 'yes' : 'no', flabel:v => v === 'yes' ? t('yes') : t('no')},
   decText:{l:() => t('cDecText'), main:r => r.decisionText ? `<span class="clamp2">${esc(r.decisionText)}</span>` : '<span class="muted">—</span>', sort:r => r.decisionText || '', cls:'w-wide'}
@@ -1372,7 +1457,7 @@ const KDEF = {
   due:{l:() => fl('kDue'), main:k => { const d = D(k.due); return d < TODAY && k.status !== 'Закрито' ? `<span class="late">${fmt(d)}</span>` : fmt(d); }, sort:k => k.due}
 };
 TDEFS.projects = PDEF; TDEFAULTS.projects = ['strat','prio','title','pm','status','rag','repDate','progress','plan','update'];
-TDEFS.archive = PDEF; TDEFAULTS.archive = ['strat','prio','title','pm','owner','archived','ae','plan','budget','actual'];
+TDEFS.archive = PDEF; TDEFAULTS.archive = ['strat','prio','title','status','pm','owner','archived','ae','plan','budget','actual'];
 TDEFS.reports = RDEF; TDEFAULTS.reports = ['strat','prio','proj','date','rag','sched','budget','res','title','approval','author','decision'];
 TDEFS.risks = KDEF; TDEFAULTS.risks = ['strat','prio','proj','title','type','score','owner','status','due'];
 
@@ -1569,11 +1654,9 @@ function pageHome(){
   const C = (l, r, cls) => ({l:() => l, r, cls});
   const S = {l:stratHead, r:p => stratCell(p.type), cls:'c-ico'}, PR = {l:prioHead, r:p => prioIcon(p.prio), cls:'c-ico'};
   const SR = {l:stratHead, r:x => stratCell(pById(x.pid).type), cls:'c-ico'}, PRR = {l:prioHead, r:x => prioIcon(PP(x.pid)), cls:'c-ico'};
-  // отчёт на погодженні — как в колонке «Звіт» списка проектов (#29)
-  const pendNew = p => pendDate(p) ? `<div class="muted" style="font-size:12px;margin-top:2px">${t('repPendingNew')}</div>` : '';
-  const pendOnly = p => `<span class="rag"><span class="dot sm" style="background:var(--y)"></span>${esc(t('repPending').replace('{date}', fmt(pendDate(p))))}</span>`;
-  const probCols = [S, PR, C(fl('title'), pLink), C(t('cHealth'), p => ragDot(p.rag), 'c-ico'), C(fl('pm'), p => person(p.pm)), C(fl('lastReport'), p => `<span title="${esc(p.lastReport)}">${esc(p.lastReport)}</span>`, 'wide'), C(t('cRepDate'), p => !lastUpd(p) && pendDate(p) ? pendOnly(p) : fmt(lastUpd(p)) + pendNew(p))];
-  const staleCols = [S, PR, C(fl('title'), pLink), C(fl('pm'), p => person(p.pm)), C(fl('last'), p => !lastUpd(p) && pendDate(p) ? pendOnly(p) : freshHtml(p) + pendNew(p)), C(t('cStatusOnly'), p => statusPill(p.status))];
+  // погодження самого нового отчёта — как в колонке «Звіт» списка проектов (#29)
+  const probCols = [S, PR, C(fl('title'), pLink), C(t('cHealth'), p => ragDot(p.rag), 'c-ico'), C(fl('pm'), p => person(p.pm)), C(fl('lastReport'), p => `<span title="${esc(p.lastReport)}">${esc(p.lastReport)}</span>`, 'wide'), C(t('cRepDate'), p => (lastUpd(p) ? fmt(lastUpd(p)) : `<span class="muted">${t('noReports')}</span>`) + apMark(p))];
+  const staleCols = [S, PR, C(fl('title'), pLink), C(fl('pm'), p => person(p.pm)), C(fl('last'), p => freshHtml(p) + apMark(p)), C(t('cStatusOnly'), p => statusPill(p.status))];
   const decCols = [SR, PRR, C(fl('rProj'), r => pLink(pById(r.pid))), C(fl('rDate'), r => fmt(r.d)), C(fl('rDecText'), r => esc(r.decisionText), 'wide'), C(fl('rAuthor'), r => person(r.author))];
   const riskCols = [SR, PRR, C(fl('rProj'), k => pLink(pById(k.pid))), C(fl('kTitle'), k => esc(k.title), 'wide'), C(fl('kType'), k => esc(k.type)), C(fl('kScore'), k => scoreHtml(k.p * k.i)), C(fl('kOwner'), k => person(k.owner)), KC.due];
   return `${hero(t('dash'), t('visible') + vis.length, true)}
@@ -1631,9 +1714,13 @@ function renderChrome(){
   document.getElementById('siteName').textContent = t('siteTitle');
   document.getElementById('siteSub').textContent = 'SharePoint · Microsoft 365';
   const nav = {home:'navHome', projects:'navProjects', reports:'navReports', risks:'navRisks', archive:'navArchive'};
-  document.querySelectorAll('.nav button').forEach(b => { b.textContent = t(nav[b.dataset.page]); if (b.dataset.page === state.page) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  document.querySelectorAll('.nav button').forEach(b => { const l = t(nav[b.dataset.page]); b.innerHTML = `<span class="ni">${lucide(b.dataset.page)}</span><span class="nl">${esc(l)}</span>`; b.title = l; b.setAttribute('aria-label', l); if (b.dataset.page === state.page) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   document.querySelectorAll('[data-act=lang]').forEach((b, i) => b.setAttribute('aria-pressed', i === LI));
   document.querySelectorAll('[data-act=theme]').forEach(b => { b.setAttribute('aria-pressed', b.dataset.t === THEME); b.title = t(b.dataset.t === 'light' ? 'themeLight' : 'themeDark'); b.setAttribute('aria-label', b.title); });
+  // сповіщення: красная точка — есть новые для меня события (правило — notifFor, как logic/notify.ts приложения)
+  const bell = document.getElementById('bell');
+  if (bell){ const n = MODE !== 'loading' ? notifItems().filter(x => x.unread).length : 0; bell.classList.toggle('has', n > 0);
+    bell.innerHTML = iconBell + (n ? `<span class="dot-new">${n > 99 ? '99+' : n}</span>` : ''); bell.title = n ? `${t('notifTitle')} · ${t('notifNewOnes')}: ${n}` : t('notifTitle'); bell.setAttribute('aria-label', bell.title); }
   const me = document.getElementById('me');
   me.innerHTML = avatar(VIEWER); me.title = `${t('signedIn')}: ${VIEWER} · ${email(VIEWER)}`; me.setAttribute('aria-label', me.title);
   foot.innerHTML = MODE === 'loading' ? '' : `<span class="src"><span class="dot sm" style="background:${db ? 'var(--g)' : 'var(--y)'}"></span>${db ? t('srcDb') : t('srcLocal')}</span>${MODE !== 'empty' ? `<button class="more" data-act="reset">${t('reset')}</button>` : ''}`;
@@ -1658,7 +1745,8 @@ let lastFocus = null;
 function openPanel(html, keep){
   if (!keep) lastFocus = document.activeElement;
   const top = panel.scrollTop;
-  panel.innerHTML = html;
+  // открыто из «Сповіщень» — вверху «← Сповіщення» (возврат к списку с тем же выделением «Нове»)
+  panel.innerHTML = (NOTIF_RET && state.panel && state.panel.kind !== 'notif' ? `<button class="link ntf-back" data-act="notifback">← ${t('notifTitle')}</button>` : '') + html;
   panel.classList.add('open'); scrim.classList.add('open'); panel.setAttribute('aria-hidden', 'false');
   if (keep) panel.scrollTop = top; else { panel.scrollTop = 0; const x = panel.querySelector('.x'); if (x) x.focus(); }
   enhanceDates(panel);
@@ -1690,7 +1778,7 @@ function enhanceDates(root){
 }
 function closePanel(){
   panel.classList.remove('open'); scrim.classList.remove('open'); panel.setAttribute('aria-hidden', 'true');
-  state.panel = null;
+  state.panel = null; NOTIF_RET = null;
   if (lastFocus && document.body.contains(lastFocus)) lastFocus.focus();
 }
 const closeBtn = () => `<button class="x" data-act="close" aria-label="${t('close')}"><svg width="14" height="14" viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.6"><path d="M2 2l12 12M14 2 2 14"/></svg></button>`;
@@ -1706,6 +1794,68 @@ function accessList(p){
   [p.owner].concat(p.stakeholders || []).filter(Boolean).forEach(x => chain(x).forEach(m => add(m, t('lvlRead'), roleOf(m))));
   return rows.join('') + `<li><span class="pav" style="background:var(--text-3)">PMO</span><span class="pn"><b>${t('pmoGroup')}</b></span><span class="lvl">${t('lvlPmo')}</span></li>`;
 }
+// ===== Сповіщення (колокольчик) — те же правила, что logic/notify.ts приложения: кто что видит, что новое =====
+// «прочитано до» — время последнего открытия панели (в приложении — номер записи журнала); при загрузке страницы — сейчас
+const NOTIF_LOADED = new Date().toISOString(), NOTIF_READ = {};
+let NOTIF_RET = null;   // переход из «Сповіщень»: {onlyNew} — вернуться к списку
+// открытые события поверх «прочитано до» (в приложении — nsReadSet): открыл — прочитано именно оно
+const NOTIF_SEEN = {};
+const notifSeen = () => NOTIF_SEEN[VIEWER] || (NOTIF_SEEN[VIEWER] = new Set());
+const notifRead = () => NOTIF_READ[VIEWER] || NOTIF_LOADED;
+const notifKind = c => ({create:'created', assign:'assigned', submit:'submitted', approval:'decided', risk:'risk', edit:'cardEdit'})[c.kind]
+  || ((c.diffs || []).some(d => d.f === 'status' && isArch({status:d.to})) ? 'archived' : 'applied');
+function notifFor(kind, author, diffs, p, risk){
+  const me = VIEWER;
+  if (!me || author === me) return false;
+  if (isArch(p) && kind !== 'archived') return false;
+  const pm = p.pm === me, owner = p.owner === me, team = (p.team || []).some(m => m.n === me) || (p.stakeholders || []).includes(me);
+  if (kind === 'submitted') return isPMO();
+  if (kind === 'archived') return pm || owner || team || isPMO();
+  if (kind === 'cardEdit') return pm || owner;
+  if (kind === 'risk'){
+    if (pm || (risk && risk.owner === me)) return true;
+    const sc = risk ? risk.p * risk.i : +(((diffs || []).filter(d => d.f === 'kScore').pop() || {}).to || 0);
+    return (owner || team) && sc >= 15;
+  }
+  return pm || owner || team;
+}
+function notifItems(){
+  const since = Date.now() - 14 * DAY, read = notifRead(), out = [];
+  for (const p of visAll()){
+    for (const c of p.changes || []){
+      if (new Date(c.date).getTime() < since) continue;
+      const kind = notifKind(c), risk = c.ref && c.ref.type === 'risk' ? (p.risks || []).find(k => String(k.id) === String(c.ref.id)) : null;
+      const k = `${p.id}:j:${c.date}:${c.kind}`;
+      if (notifFor(kind, c.who, c.diffs, p, risk)) out.push({p, c, kind, k, date:c.date, who:c.who, unread:c.date > read && !notifSeen().has(k)});
+    }
+    for (const m of p.comments || []){
+      if (new Date(m.date).getTime() < since || !notifFor('comment', m.who, [], p, null)) continue;
+      const k = `${p.id}:c:${m.date}:${m.who}:${m.txt}`;
+      out.push({p, m, kind:'comment', k, date:m.date, who:m.who, unread:m.date > read && !notifSeen().has(k)});
+    }
+  }
+  return out.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+}
+const NK = {created:'nkCreated', assigned:'nkAssigned', submitted:'nkSubmitted', decided:'nkDecided', applied:'nkApplied', archived:'nkArchived', risk:'nkRisk', cardEdit:'nkCardEdit', comment:'nkComment'};
+function notifPanel(onlyNew){
+  const all = notifItems(), list = onlyNew ? all.filter(x => x.unread) : all;
+  state.panel = {kind:'notif'};
+  const item = x => {
+    const act = x.c && x.c.ref ? `data-act="${x.c.ref.type === 'report' ? 'repopen' : 'riskopen'}" data-id="${x.p.id}" data-rid="${esc(x.c.ref.id)}"` : `data-act="openp" data-id="${x.p.id}"`;
+    const body = x.m ? `<div class="ntf-t">${esc(x.m.txt)}</div>`
+      : `${x.c.diffs && x.c.diffs.length ? `<div class="diffs">${x.c.diffs.map(d => `<div class="diff"><span class="df">${fl(d.f)}</span><span class="dv"><s>${valFmt(d.f, d.from)}</s><span class="arr">→</span>${valFmt(d.f, d.to)}</span></div>`).join('')}</div>` : ''}${x.c.reason ? `<div class="ntf-t">${esc(x.c.reason)}</div>` : ''}`;
+    return `<button class="ntf-i ${x.unread ? 'new' : 'old'}" data-k="${esc(x.k)}" ${act}><div class="ntf-h"><span class="ntf-p">${esc(x.p.code)} · ${esc(x.p.title)}</span><span class="chg-k">${t(NK[x.kind])}</span>${x.unread ? `<span class="pill ap" style="--c:var(--theme)">${t('notifNew')}</span>` : ''}<span class="muted">${esc(x.who || '')} · ${fmtDT(new Date(x.date))}</span></div>${body}</button>`;
+  };
+  openPanel(`<div class="ph"><div><div class="k">${entTag('notif')}</div><h2>${t('notifTitle')}</h2></div>${closeBtn()}</div>
+    <p class="note">${t('notifHint')}</p>${all.some(x => x.unread) ? `<p class="ntf-n" id="ntf-n" role="status">${t('notifCount').replace('{n}', all.filter(x => x.unread).length)}</p>` : ''}
+    <div class="ntf-bar"><label class="check"><input type="checkbox" id="ntf-new"${onlyNew ? ' checked' : ''}> ${t('notifOnlyNew')}</label>${all.some(x => x.unread) ? `<button type="button" class="btn" id="ntf-all" data-act="notifreadall" data-new="${onlyNew ? 1 : ''}">${t('notifReadAll')}</button>` : ''}</div>
+    <div id="ntf-list">${list.length ? list.map(item).join('') : `<p class="empty">${t('notifEmpty')}</p>`}</div>`);
+  panel.querySelector('#ntf-new').addEventListener('change', e => notifPanel(e.target.checked));
+  NOTIF_RET = null;
+  panel.querySelector('#ntf-list').addEventListener('click', e => { const it = e.target.closest('.ntf-i'); if (!it) return;
+    NOTIF_RET = {onlyNew}; notifSeen().add(it.dataset.k); renderChrome(); }, true);
+}
+
 function changesHtml(p, showAll){
   const list = (p.changes || []).slice().sort((a, b) => D(b.date) - D(a.date));
   if (!list.length) return `<p class="empty">${t('noChanges')}</p>`;
@@ -1751,7 +1901,7 @@ function projectPanel(id, showCm, keep, showCh){
     + (lastR && lastR.approval === AP_RET ? `<div class="apnote ret">${esc(t('returnedNote').replace('{date}', fmt(lastR.d)).replace('{comment}', lastR.apNote || '—'))}
        <button class="link" data-act="repopen" data-id="${p.id}" data-rid="${esc(lastR.id)}">${t('openReport')} →</button>
        ${edit ? `<div><button class="btn" data-act="newfromret" data-id="${p.id}" data-rid="${esc(lastR.id)}">${iconPlus}${t('newFromReturned')}</button></div>` : ''}</div>` : '');
-  openPanel(`<div class="ph"><div><div class="k">${esc(p.code)} · ${t('listLabel')} «${t('navProjects')}»</div><h2>${esc(p.title)}</h2></div>${closeBtn()}</div>
+  openPanel(`<div class="ph"><div><div class="k">${entTag('project')}<span>${esc(p.code)} · ${t('listLabel')} «${t('navProjects')}»</span></div><h2>${esc(p.title)}</h2></div>${closeBtn()}</div>
     <div class="badges">${typeHtml(p.type)}${ragHtml(p.rag)}${statusPill(p.status)}<span class="badge">${esc(tv(p.prio))}</span></div>
     ${(p.links || []).length ? `<div class="lnk-sec"><div class="k">${fl('links')}</div>${linksHtml(p)}</div>` : ''}
     ${actions}${onePend}${isPMO() && !isArch(p) ? `<div class="actbar"><button class="btn" data-act="assign" data-id="${p.id}">${t('assignBtn')}</button></div>` : ''}
@@ -1793,7 +1943,7 @@ const opt = (v, cur, label) => `<option value="${esc(v)}"${v === cur ? ' selecte
 const peopleSelect = (id, cur, req) => `<select id="${id}">${req ? '' : `<option value="">${t('notSet')}</option>`}${Object.keys(ORG).map(n => opt(n, cur, `${n} — ${roleOf(n)} · ${email(n)}`)).join('')}</select>`;
 const segPick = (name, values, cur, colors) => `<div class="opts">${values.map((v, i) => `<input type="radio" id="${name}${i}" name="${name}" value="${esc(v)}"${v === cur ? ' checked' : ''}><label for="${name}${i}">${colors ? `<span class="dot sm" style="background:${RC[v]}"></span>` : ''}${esc(tv(v))}</label>`).join('')}</div>`;
 const ragPick = (name, label, req, cur) => `<fieldset class="ragpick"><legend>${label}${req ? ' *' : ''}</legend>${segPick(name, RAGS, cur, true)}</fieldset>`;
-const formHead = (title, sub) => `<div class="ph"><div><div class="k">${sub}</div><h2>${title}</h2></div>${closeBtn()}</div>`;
+const formHead = (title, sub, kind) => `<div class="ph"><div><div class="k">${kind ? entTag(kind) : ''}<span>${sub}</span></div><h2>${title}</h2></div>${closeBtn()}</div>`;
 const fErr = form => msg => { const e = form.querySelector('.err'); e.textContent = msg; e.hidden = false; e.scrollIntoView && e.scrollIntoView({block:'nearest'}); };
 const radioVal = (form, n) => (form.querySelector(`input[name="${n}"]:checked`) || {}).value || '';
 
@@ -1806,7 +1956,7 @@ const lnRow = l => `<div class="ed-row ln-row"><input type="text" class="ln-t" a
 function projectForm(p){
   const isNew = !p; p = p || {pm:'', type:'Звичайний', status:'Ініціація', prio:'2 — Середній', dept:'ІТ', start:iso(TODAY)};
   state.panel = {kind:'form'};
-  openPanel(`${formHead(isNew ? t('newProject') : t('editProject') + ': ' + esc(p.title), `${t('listLabel')} «${t('navProjects')}»`)}
+  openPanel(`${formHead(isNew ? t('newProject') : t('editProject') + ': ' + esc(p.title), `${isNew ? '' : esc(p.code) + ' · '}${t('listLabel')} «${t('navProjects')}»`, 'project')}
   <form id="pform" novalidate>
     <h3 class="fsec">${t('fGeneral')}</h3>
     <div class="frow"><label class="t" for="p-title">${fl('title')} *</label><input type="text" id="p-title" value="${esc(p.title || '')}"></div>
@@ -1909,7 +2059,7 @@ function projectForm(p){
 function assignForm(p){
   if (!p || !isPMO() || isArch(p)) return;
   state.panel = {kind:'form'};
-  openPanel(`${formHead(t('assignTitle'), `${esc(p.code)} · ${t('listLabel')} «${t('navProjects')}»`)}
+  openPanel(`${formHead(t('assignTitle'), `${esc(p.code)} · ${t('listLabel')} «${t('navProjects')}»`, 'assign')}
   <p class="note">${t('assignHint')}</p>
   <form id="aform" novalidate>
     <div class="fgrid2 frow"><div><label class="t">${fl('pm')}</label><div class="fixedval">${esc(p.pm || '—')}</div></div>
@@ -1949,7 +2099,7 @@ function riskForm(pid, rid, fromList){
   const scale = (name, val, pre) => `<div class="opts scale">${[1,2,3,4,5].map(n => `<input type="radio" id="${name}${n}" name="${name}" value="${n}"${+val === n ? ' checked' : ''}${dis}><label for="${name}${n}">${n}</label>`).join('')}</div><p class="scale-d" id="${name}-d">${t(pre + val)}</p>`;
   // #47 / #55: заголовок новой записи — по типу (меняется при выборе типа)
   const newTitle = ty => ty === 'Проблема' ? t('newIssueT') : t('newRiskT');
-  openPanel(`${formHead(k ? t('riskCard') : newTitle(cur.type), `${t('listLabel')} «${t('navRisks')}»`)}
+  openPanel(`${formHead(k ? t('riskCard') : newTitle(cur.type), `${k || (pid && !fromList) ? esc(p.code) + ' · ' : ''}${t('listLabel')} «${t('navRisks')}»`, cur.type === 'Проблема' ? 'issue' : 'risk')}
   ${edit ? '' : `<p class="note lock">🔒 ${t('readOnly')}</p>`}
   <form id="kform" novalidate>
     <div class="frow"><label class="t" for="k-p">${fl('rProj')} *</label>
@@ -1979,7 +2129,8 @@ function riskForm(pid, rid, fromList){
     g('k-score').innerHTML = `${scoreHtml(sc)} <b>${t('sc' + scoreBucket(sc))}</b> <span class="muted">= ${pr} × ${im}</span>`;
     g('k-pr-d').textContent = t('p' + pr); g('k-im-d').textContent = t('i' + im); };
   form.addEventListener('change', sync); sync();
-  if (!k) form.addEventListener('change', e => { if (e.target.name === 'k-type') { const h = panel.querySelector('.ph h2'); if (h) h.textContent = newTitle(e.target.value); } });
+  if (!k) form.addEventListener('change', e => { if (e.target.name === 'k-type') { const h = panel.querySelector('.ph h2'); if (h) h.textContent = newTitle(e.target.value);
+    const en = panel.querySelector('.ph .ent'); if (en) en.outerHTML = entTag(e.target.value === 'Проблема' ? 'issue' : 'risk'); } });
   form.addEventListener('submit', e => {
     e.preventDefault(); if (!edit) return;
     if (g('k-p')) p = pById(+g('k-p').value);
@@ -2012,7 +2163,7 @@ function reportForm(pid, base){
   const b = base || {}, bv = (k, d) => b[k] != null && b[k] !== '' ? b[k] : d, bt = k => b[k] && b[k] !== '—' ? b[k] : '';
   const sel = base ? Object.assign({}, p0, {status:bv('status', p0.status), progress:bv('progress', p0.progress), type:bv('type', p0.type),
     start:bv('start', p0.start), golive:bv('golive', p0.golive), plan:bv('plan', p0.plan), fc:bv('fc', p0.fc), actual:bv('cost', p0.actual)}) : p0;
-  openPanel(`${formHead(t('newReport'), `${t('listLabel')} «${t('navReports')}»`)}
+  openPanel(`${formHead(t('newReport'), `${t('listLabel')} «${t('navReports')}»`, 'report')}
   <form id="repform" novalidate>
     ${fixedP ? `<div class="frow"><label class="t">${fl('rProj')}</label><div class="fixedval">${esc(fixedP.title)}</div><input type="hidden" id="f-p" value="${fixedP.id}"></div>`
       : `<div class="frow"><label class="t" for="f-p">${fl('rProj')} *</label><select id="f-p">${act.map(p => `<option value="${p.id}"${p.id === sel.id ? ' selected' : ''}${pendDate(p) && p.id !== sel.id ? ' disabled' : ''}>${esc(p.title)}${pendDate(p) ? ' — ' + esc(t('repPendingOpt').replace('{date}', fmt(pendDate(p)))) : ''}</option>`).join('')}</select></div>`}
@@ -2121,7 +2272,7 @@ function reportForm(pid, base){
 // показники картки, які змінює звіт (поля, яких у звіті немає, не змінюються)
 function reportVals(p, r){
   const vals = {};
-  if (r.status) vals.status = ['Завершено','Скасовано'].includes(r.status) ? 'Архівний' : r.status;
+  if (r.status) vals.status = r.status;   // «Завершено» / «Скасовано» — тот же статус (архив)
   ['type','start','golive','plan','fc'].forEach(k => { if (r[k] != null) vals[k] = r[k]; });
   if (r.progress != null) vals.progress = r.progress;
   if (!p.lastUpdate || D(r.date) >= D(p.lastUpdate)) vals.rag = calcRag(r);
@@ -2162,10 +2313,10 @@ function reportView(pid, rid, keep){
   const d = D(r.date), pend = r.approval === AP_PEND, applied = isApproved(r);
   const IND = [['status','status'],['type','type'],['progress','progress'],['start','start'],['golive','golive'],['plan','plan'],['fc','fc'],['ae','ae'],['cost','rCost']];
   const show = (k, v) => v === '' || v == null ? '<span class="muted">—</span>' : k === 'progress' ? v + '%' : k === 'cost' ? money(+v)
-    : ['start','golive','plan','fc','ae'].includes(k) ? fmt(D(v)) : esc(tv(v === 'Завершено' ? 'Архівний' : v));
+    : ['start','golive','plan','fc','ae'].includes(k) ? fmt(D(v)) : esc(tv(v));
   const cardK = k => k === 'cost' ? 'actual' : k;
   const ind = IND.filter(([k]) => r[k] != null && !(k === 'ae' && !r[k])).map(([k, l]) => {
-    const cur = p[cardK(k)], nv = k === 'status' && ['Завершено','Скасовано'].includes(r[k]) ? 'Архівний' : r[k];
+    const cur = p[cardK(k)], nv = r[k];
     const ch = !applied && String(cur ?? '') !== String(nv ?? '');
     return `<div class="kv"><span class="k">${fl(l)}</span><span class="v">${ch ? `<span class="dv"><s>${show(k, cur)}</s><span class="arr">→</span>${show(k, r[k])}</span>` : show(k, r[k])}</span></div>`;
   }).join('');
@@ -2181,7 +2332,7 @@ function reportView(pid, rid, keep){
       <p class="err" hidden></p>
       <div class="actions"><button type="submit" class="btn primary" id="ap-ok">${t('approve')}</button><button type="button" class="btn" id="ap-ret">${t('returnRep')}</button></div>
     </form></div></div>` : '';
-  openPanel(`<div class="ph"><div><div class="k">${esc(p.code)} · ${t('listLabel')} «${t('navReports')}»</div><h2>${esc(r.title)}</h2></div>${closeBtn()}</div>
+  openPanel(`<div class="ph"><div><div class="k">${entTag('report')}<span>${esc(p.code)} · ${t('listLabel')} «${t('navReports')}»</span></div><h2>${esc(r.title)}</h2></div>${closeBtn()}</div>
     <div class="rv-meta"><button class="link" data-act="openp" data-id="${p.id}">${esc(p.title)}</button><span>${fl('rDate')}: <b>${fmt(d)}</b></span>${r.period ? `<span>${fl('rPeriod')}: <b>${esc(tv(r.period))}</b></span>` : ''}${apBadge(r.approval)}</div>
     ${apForm}
     <div class="sec"><div class="group">${kv('rag', ragHtml(r.rag))}${DIMS.map(([k, l]) => kv(l, ragHtml(r[k]))).join('')}</div></div>
@@ -2238,6 +2389,10 @@ document.addEventListener('click', e => {
   else if (a === 'riskopen') riskForm(id, el.dataset.rid, el.dataset.src === 'list');
   else if (a === 'newproj') projectForm(null);
   else if (a === 'editproj') projectForm(pById(id));
+  else if (a === 'notif') notifPanel(false);
+  else if (a === 'notifback') notifPanel(!!(NOTIF_RET && NOTIF_RET.onlyNew));
+  // «Позначити все прочитаним» — «прочитано до» = сейчас (в приложении — номер последнего показанного события)
+  else if (a === 'notifreadall') { NOTIF_READ[VIEWER] = new Date().toISOString(); notifSeen().clear(); notifPanel(!!el.dataset.new); renderChrome(); }
   else if (a === 'assign') assignForm(pById(id));
   else if (a === 'backp') { if (id) projectPanel(id, false); else closePanel(); }
   else if (a === 'close') closePanel();

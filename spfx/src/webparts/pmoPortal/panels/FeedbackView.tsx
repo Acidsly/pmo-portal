@@ -1,13 +1,17 @@
 import * as React from 'react';
+import { EntTag } from '../components/EntTag';
 import { screenLabel } from '../logic/screen';
 import { tv } from '../i18n/values';
 import { AppCtx } from '../components/ctx';
 import { FeedbackRow } from '../data/types';
 import { Frow, Err, Opts } from '../components/fields';
 import { FbStatus, FB_STATUSES } from '../pages/Feedback';
+import { neighbors } from '../logic/ui';
+import { ChevL, ChevR } from '../components/Icons';
 
-/** Отзыв: текст, статус, ответ, скриншоты (свои или все у администратора); администратор сайта ставит статус и ответ. */
-export const FeedbackView: React.FC<{ row: FeedbackRow | undefined; admin: boolean; onCancel(): void }> = ({ row, admin, onCancel }) => {
+/** Отзыв: текст, статус, ответ, скриншоты (свои или все у администратора); администратор сайта ставит статус и ответ.
+ *  order — порядок отзывов как в таблице: «‹ №N ›» переходит к соседнему (onGo). */
+export const FeedbackView: React.FC<{ row: FeedbackRow | undefined; admin: boolean; order: number[]; onGo(id: number): void; onCancel(): void }> = ({ row, admin, order, onGo, onCancel }) => {
   const c = React.useContext(AppCtx); const { t } = c;
   const [status, setStatus] = React.useState(row ? row.status : 'Новий');
   const [answer, setAnswer] = React.useState(row ? row.answer : '');
@@ -20,7 +24,11 @@ export const FeedbackView: React.FC<{ row: FeedbackRow | undefined; admin: boole
     catch (x) { setErr(String((x as Error).message || x)); setBusy(false); }
   };
   return <>
-    <div className="ph"><div><div className="k">{t('navFeedback')} · №{row.id}</div><h2>{row.author || t('navFeedback')}</h2></div>
+    <div className="ph"><div><div className="k"><EntTag kind="feedback" /><span>{t('navFeedback')} · {(() => {
+      const nb = neighbors(order, row.id);
+      return <span className="fb-nav"><button type="button" id="fb-prev" title={t('fbPrev')} aria-label={t('fbPrev')} disabled={!nb.prev} onClick={() => onGo(nb.prev)}><ChevL /></button>
+        <span>№{row.id}</span><button type="button" id="fb-next" title={t('fbNext')} aria-label={t('fbNext')} disabled={!nb.next} onClick={() => onGo(nb.next)}><ChevR /></button></span>;
+    })()}</span></div><h2>{row.author || t('navFeedback')}</h2></div>
       <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     <div className="badges"><FbStatus v={row.status} />{row.screen ? <span className="badge" title={row.screen}>{screenLabel(row.screen, t, tv)}</span> : null}</div>
     <p className="fb-text">{row.text}</p>

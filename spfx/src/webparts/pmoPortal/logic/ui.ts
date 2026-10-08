@@ -38,3 +38,10 @@ export function cellText(c: Element): string {
   const ti = c.querySelector('[title]') as HTMLElement | null;
   return ti ? ti.title : '';
 }
+
+/** «Попередній / наступний» в окне записи: соседи по порядку, как в таблице (0 — соседа нет; записи нет в порядке — переходов нет). */
+export function neighbors(order: number[], id: number): { prev: number; next: number } {
+  const i = order.indexOf(id);
+  if (i < 0) return { prev: 0, next: 0 };
+  return { prev: i > 0 ? order[i - 1] : 0, next: i < order.length - 1 ? order[i + 1] : 0 };
+}

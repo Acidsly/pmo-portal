@@ -13,6 +13,11 @@ import { ReportForm } from '../src/webparts/pmoPortal/panels/ReportForm';
 import { AssignForm } from '../src/webparts/pmoPortal/panels/AssignForm';
 import { ProjectForm } from '../src/webparts/pmoPortal/panels/ProjectForm';
 import { RefLink } from '../src/webparts/pmoPortal/panels/ProjectCard';
+import { NotifyPanel } from '../src/webparts/pmoPortal/panels/NotifyPanel';
+import { Header } from '../src/webparts/pmoPortal/components/Header';
+import { RepMark, FreshDate, freshTip } from '../src/webparts/pmoPortal/components/Bits';
+import { FeedbackView } from '../src/webparts/pmoPortal/panels/FeedbackView';
+import { neighbors } from '../src/webparts/pmoPortal/logic/ui';
 
 // Компоненты приложения в jsdom: поведение, а не только «вызывается» (блок 2 отзывов раунда 3 и правки кросс-ревью)
 const tt = makeT(0);
@@ -134,8 +139,10 @@ describe('#47 / #55 форма риска', () => {
     expect(ty.compareDocumentPosition(ta) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect((root.querySelector('label[for="k-title"]') as HTMLElement).textContent).toContain('Опис');
     expect((root.querySelector('.ph h2') as HTMLElement).textContent).toBe('Новий ризик');
+    expect((root.querySelector('.ph .ent') as HTMLElement).textContent).toBe('Ризик');   // метка сущности окна
     act(() => { Simulate.change(root.querySelector('input[name="k-type"][value="Проблема"]') as HTMLInputElement); });
     expect((root.querySelector('.ph h2') as HTMLElement).textContent).toBe('Нова проблема');
+    expect((root.querySelector('.ph .ent') as HTMLElement).className).toContain('ent-issue'); expect((root.querySelector('.ph .ent') as HTMLElement).textContent).toBe('Проблема');
     expect(T.newRisk[0]).toBe('Новий ризик / проблема'); expect(T.addRisk[0]).toBe('Додати ризик / проблему');
   });
 });
@@ -193,9 +200,16 @@ describe('#43 «Змінити PM / власника» — только PMO', ()
     expect(calls[0][3]).toEqual({ paManagerId: 'new@x', paOwnerId: '' });
   });
   test('не PMO, архив, уже ожидает — формы нет', () => {
-    for (const d of [{ ...data(), canApprove: false }, data({ status: 'Архівний' }), data({ assignPending: true })]) {
+    for (const d of [{ ...data(), canApprove: false }, data({ status: 'Завершено' }), data({ status: 'Скасовано' }), data({ assignPending: true })]) {
       mount(<AssignForm data={d} projectId={5} onCancel={() => undefined} />);
       expect(root.querySelector('form')).toBeNull();
+      ReactDOM.unmountComponentAtNode(root);
+    }
+  });
+  test('архив «Скасовано» / «Завершено»: форма карточки по прямой ссылке — только просмотр', () => {
+    for (const st of ['Скасовано', 'Завершено']) {
+      mount(<ProjectForm data={data({ canEdit: true, status: st })} project={{ ...pr, canEdit: true, status: st } as any} onCancel={() => undefined} />);
+      expect(root.querySelector('form')).toBeNull(); expect(root.textContent).toContain('Проєкт в архіві: лише перегляд.');
       ReactDOM.unmountComponentAtNode(root);
     }
   });
@@ -216,4 +230,152 @@ test('#46 / #48: ссылка из истории открывает отчёт 
   expect(Array.from(b).map(x => x.textContent)).toEqual(['Відкрити звіт →', 'Відкрити ризик →']);
   act(() => { (b[0] as HTMLElement).click(); (b[1] as HTMLElement).click(); });
   expect(opened).toEqual(['rep:12@5', 'risk:7@5']);
+});
+
+describe('сповіщення: колокольчик и панель', () => {
+  const person = (e: string, n = e): any => ({ id: 1, email: e, name: n });
+  const now = new Date().toISOString();
+  const data = (notify: any): any => ({ projects: [{ id: 1, code: 'PRJ-001', title: 'П1', status: 'Реалізація', manager: person('pm@x', 'PM'), owner: null, team: [], stakeholders: [] }],
+    risks: [], reports: [], comments: [{ id: 7, projectId: 1, text: 'Новий коментар', author: person('au@x', 'Автор'), created: now }],
+    recent: [{ id: 30, projectId: 1, date: now, who: person('au@x', 'Автор'), kind: 'Подання звіту', field: 'srApproval', from: '', to: 'На погодженні', reason: 'Звіт', item: 12 }],
+    canApprove: false, notify });
+  const head = (bell: any): void => mount(<Header page="home" lang={0} theme="light" userName="PM" userEmail="pm@x" onPage={() => undefined} onLang={() => undefined}
+    onTheme={() => undefined} onHelp={() => undefined} bell={bell} />);
+  test('шапка: число новых и покачивание только при новых; больше 99 — «99+»', () => {
+    head({ unread: 3, onOpen: () => undefined }); expect(root.querySelector('#bell .dot-new')!.textContent).toBe('3'); expect(root.querySelector('#bell')!.className).toContain('has');
+    ReactDOM.unmountComponentAtNode(root);
+    head({ unread: 12, onOpen: () => undefined }); expect(root.querySelector('#bell .dot-new')!.textContent).toBe('12');   // не «9+»: число видно, пока до 99
+    ReactDOM.unmountComponentAtNode(root);
+    head({ unread: 120, onOpen: () => undefined }); expect(root.querySelector('#bell .dot-new')!.textContent).toBe('99+');
+    ReactDOM.unmountComponentAtNode(root);
+    head({ unread: 0, onOpen: () => undefined }); expect(root.querySelector('#bell')).not.toBeNull(); expect(root.querySelector('#bell .dot-new')).toBeNull();
+    expect(root.querySelector('#bell')!.className).not.toContain('has');
+  });
+  test('панель: мои новые события выделены; открытие панели ничего не пишет; нажатие открывает событие и отмечает его; «Позначити все прочитаним» — метки растут', async () => {
+    const marked: any[] = []; const opened: string[] = [];
+    const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } }, reload: async () => undefined };
+    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 20, readCmId: 5 })} onOpen={(f, id) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    const items = Array.from(root.querySelectorAll('.ntf-i'));
+    expect(items.length).toBe(1);   // подача отчёта — только PMO; PM видит комментарий
+    expect(items[0].className).toContain('new');
+    expect(root.textContent).toContain('Новий коментар');
+    expect(marked).toEqual([]);
+    expect((root.querySelector('#ntf-n') as HTMLElement).textContent).toBe('Нових: 1');
+    // открыл событие — прочитано именно оно (метки не двигаются)
+    await act(async () => { (items[0] as HTMLElement).click(); await Promise.resolve(); });
+    expect(opened).toEqual(['@1']);
+    expect(marked).toEqual([{ readId: 20, readCmId: 5, seen: ['c7'] }]);
+    await act(async () => { (root.querySelector('#ntf-all') as HTMLElement).click(); await Promise.resolve(); });
+    expect(marked[1]).toEqual({ readId: 20, readCmId: 7, seen: [] });
+  });
+  test('открыл уже прочитанное событие — ничего не пишется, «Нових» нет', async () => {
+    const marked: any[] = []; const opened: string[] = [];
+    const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } }, reload: async () => undefined };
+    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 30, readCmId: 7 })} onOpen={(f, id) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    expect(root.querySelector('#ntf-n')).toBeNull();
+    await act(async () => { (root.querySelector('.ntf-i') as HTMLElement).click(); await Promise.resolve(); });
+    expect(opened).toEqual(['@1']); expect(marked).toEqual([]);
+  });
+  test('строки «Прочитане» ещё нет — подсказка, ничего не пишется', async () => {
+    const marked: any[] = [];
+    const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } } };
+    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data(null)} onOpen={() => undefined} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    expect(root.textContent).toContain('Сповіщення з\'являться протягом 15 хвилин.');
+    expect(root.querySelector('#ntf-all')).toBeNull();
+    expect(marked).toEqual([]);
+  });
+});
+
+describe('отзыв: «попередній / наступний» по порядку таблицы', () => {
+  const fb = (id: number): any => ({ id, created: '2026-10-01T10:00:00Z', author: 'А', screen: '', text: 'Відгук ' + id, status: 'Новий', answer: '', shots: 0, mine: true, files: [] });
+  test('neighbors: середина, края, нет в порядке', () => {
+    expect(neighbors([5, 3, 9], 3)).toEqual({ prev: 5, next: 9 });
+    expect(neighbors([5, 3, 9], 5)).toEqual({ prev: 0, next: 3 });
+    expect(neighbors([5, 3, 9], 9)).toEqual({ prev: 3, next: 0 });
+    expect(neighbors([5, 3, 9], 7)).toEqual({ prev: 0, next: 0 });
+  });
+  test('окно отзыва: стрелки у номера ведут к соседям, на краю — неактивны', () => {
+    const go: number[] = [];
+    mount(<FeedbackView row={fb(3)} admin={false} order={[5, 3, 9]} onGo={n => go.push(n)} onCancel={() => undefined} />);
+    expect(root.querySelector('.fb-nav')!.textContent).toContain('№3');
+    act(() => { (root.querySelector('#fb-prev') as HTMLElement).click(); (root.querySelector('#fb-next') as HTMLElement).click(); });
+    expect(go).toEqual([5, 9]);
+    ReactDOM.unmountComponentAtNode(root);
+    mount(<FeedbackView row={fb(5)} admin={false} order={[5, 3, 9]} onGo={n => go.push(n)} onCancel={() => undefined} />);
+    expect((root.querySelector('#fb-prev') as HTMLButtonElement).disabled).toBe(true);
+    expect((root.querySelector('#fb-next') as HTMLButtonElement).disabled).toBe(false);
+  });
+  test('таблица отдаёт строки в порядке экрана (сортировка)', () => {
+    let shown: number[] = [];
+    const defs: TableDefs<{ id: number }> = { lock: 'num', defaults: ['num'], cols: { num: { label: '№', cell: r => String(r.id), sort: r => r.id } } };
+    mount(<DataTable tkey="t-shown" defs={defs} rows={[{ id: 2 }, { id: 1 }, { id: 3 }]} onShown={rs => { shown = rs.map(r => r.id); }} />);
+    const before = shown.slice();
+    act(() => { (root.querySelector('.sortb') as HTMLElement).click(); });
+    expect(before).toEqual([2, 1, 3]);
+    expect(shown).toEqual([1, 2, 3]);
+  });
+});
+
+describe('метка погодження в колонке «Звіт»', () => {
+  test('«Погоджено» — без даты; «Повернуто» и «На погодженні» — с датой отчёта; нет отчётов — пусто', () => {
+    mount(<RepMark r={{ approval: 'Погоджено', date: '2026-09-25' }} />);
+    expect(root.querySelector('.rep-ap .pill')!.textContent).toBe('Погоджено'); expect(root.querySelector('.rep-ap .muted')).toBeNull();
+    ReactDOM.unmountComponentAtNode(root);
+    mount(<RepMark r={{ approval: 'Повернуто', date: '2026-10-01' }} />);
+    expect(root.textContent).toContain('Повернуто'); expect(root.querySelector('.rep-ap .muted')!.textContent).toBe(new Date('2026-10-01T12:00:00Z').toLocaleDateString('uk-UA'));
+    ReactDOM.unmountComponentAtNode(root);
+    mount(<RepMark r={null} />); expect(root.querySelector('.rep-ap')).toBeNull();
+  });
+});
+
+describe('подсказка к точке свежести в колонке «Звіт»', () => {
+  test('дни с последнего погодженого отчёта и значение цветов; без отчётов — «ще немає»', () => {
+    expect(freshTip(tt.t, '2026-09-25', '2026-10-08')).toBe('Останній погоджений звіт — 13 дн. тому. Зелений — до 8 днів, жовтий — 9–14, червоний — понад 14.');
+    expect(freshTip(tt.t, '', '2026-10-08')).toBe('Погоджених звітів ще немає.');
+    mount(<FreshDate iso="2026-09-25" fresh="y" none="—" tip={freshTip(tt.t, '2026-09-25', '2026-10-08')} />);
+    expect(root.querySelector('.rag')!.getAttribute('title')).toContain('13 дн. тому');
+  });
+});
+
+describe('метка сущности бокового окна', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { EntTag } = require('../src/webparts/pmoPortal/components/EntTag');
+  test('каждый вид — свой текст и цвет', () => {
+    const want: [string, string][] = [['project', 'Проєкт'], ['report', 'Статус-звіт'], ['risk', 'Ризик'], ['issue', 'Проблема'], ['assign', 'Призначення'], ['notif', 'Сповіщення'], ['feedback', 'Відгук'], ['help', 'Довідка']];
+    const colors = new Set<string>();
+    for (const [k, l] of want) {
+      mount(<EntTag kind={k} />);
+      const e = root.querySelector('.ent') as HTMLElement;
+      expect(e.textContent).toBe(l); expect(e.className).toContain('ent-' + k); colors.add(e.style.getPropertyValue('--c'));
+      ReactDOM.unmountComponentAtNode(root);
+    }
+    expect(colors.size).toBe(want.length);
+  });
+  test('окна: отчёт и сповіщення', async () => {
+    const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async () => undefined }, reload: async () => undefined };
+    const d = { projects: [{ id: 1, code: 'PRJ-001', title: 'П1', status: 'Реалізація', manager: { email: 'pm@x', name: 'PM' }, owner: null, team: [], stakeholders: [] }], risks: [], reports: [], comments: [], recent: [], canApprove: false, notify: null } as any;
+    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={d} onOpen={() => undefined} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    expect((root.querySelector('.ph .ent') as HTMLElement).textContent).toBe('Сповіщення');
+  });
+});
+
+describe('меню: значки разделов (Lucide)', () => {
+  test('у каждой вкладки — значок, название и подсказка; цвет раздела — по data-page', () => {
+    mount(<Header page="projects" lang={0} theme="light" userName="PM" userEmail="pm@x" onPage={() => undefined} onLang={() => undefined}
+      onTheme={() => undefined} onHelp={() => undefined} onFeedback={() => undefined} />);
+    const bs = Array.from(root.querySelectorAll('.nav button')) as HTMLElement[];
+    expect(bs.map(b => b.dataset.page)).toEqual(['home', 'projects', 'reports', 'risks', 'archive', 'feedback']);
+    for (const b of bs) {
+      expect(b.querySelector('.ni svg')).not.toBeNull();
+      expect(b.querySelector('.nl')!.textContent).toBe(b.getAttribute('title'));
+      expect(b.getAttribute('aria-label')).toBe(b.getAttribute('title'));
+    }
+    expect(bs[1].getAttribute('aria-current')).toBe('page');
+  });
+  test('метка окна проекта — цвет раздела «Проєкти»', () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { EntTag } = require('../src/webparts/pmoPortal/components/EntTag');
+    mount(<EntTag kind="project" />);
+    expect((root.querySelector('.ent') as HTMLElement).style.getPropertyValue('--c')).toBe('var(--nv-projects)');
+  });
 });

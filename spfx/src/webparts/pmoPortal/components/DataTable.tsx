@@ -13,7 +13,8 @@ type PopState = { kind: 'filter'; col: string; anchor: HTMLElement } | { kind: '
 /** Таблица прототипа (dataTable, строки 1090–1103): «Показано X з Y», чипы фильтров, сортировка, фильтр, шестерёнка. */
 /** left — кнопки слева в строке команд (cmdbar), right — перед шестерёнкой (выбор представления). */
 export function DataTable<R extends { id: number }>(p: { tkey: string; defs: TableDefs<R>; rows: R[]; empty?: string; left?: React.ReactNode; right?: React.ReactNode;
-  /** #58: карточка строки — на узком экране вместо таблицы (те же строки; сортировка и фильтры — заданные на широком экране) */ card?: (r: R) => React.ReactNode }): JSX.Element {
+  /** #58: карточка строки — на узком экране вместо таблицы (те же строки; сортировка и фильтры — заданные на широком экране) */ card?: (r: R) => React.ReactNode;
+  /** строки как на экране (фильтры и сортировка) — например, «попередній / наступний» в окне записи */ onShown?: (rows: R[]) => void }): JSX.Element {
   const { t } = React.useContext(AppCtx);
   const { cols: defs, lock, defaults } = p.defs;
   const known = Object.keys(defs);
@@ -23,6 +24,7 @@ export function DataTable<R extends { id: number }>(p: { tkey: string; defs: Tab
   const save = (n: TableState): void => { setSt(n); saveState(p.tkey, n); };
   const close = React.useCallback(() => { setPop(undefined); setQ(''); }, []);
   const data = applyTable(p.rows, defs, st);
+  React.useEffect(() => { if (p.onShown) p.onShown(data); });
   const shownCols = st.cols.filter(c => defs[c]);
   const fl = (d: Col<R>, v: string): React.ReactNode => (d.flabel ? d.flabel(v) : v === '' ? t('notSet') : tv(v));
 

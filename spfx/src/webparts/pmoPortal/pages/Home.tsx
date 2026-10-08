@@ -12,7 +12,7 @@ import { Wp } from '../components/Wp';
 import { SimpleTable, Col } from '../components/SimpleTable';
 import { Donut } from '../components/Donut';
 import { Dynamics } from '../components/Dynamics';
-import { RagDot, FreshDate, PersonCell, Score, StatusPill, fmtDate } from '../components/Bits';
+import { RagDot, FreshDate, PersonCell, Score, StatusPill, fmtDate, RepMark, freshTip } from '../components/Bits';
 import { Strat, Prio, Compass, Flag, Plus } from '../components/Icons';
 
 const byDateDesc = (a: StatusReport, b: StatusReport): number => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
@@ -51,15 +51,13 @@ export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
   }
 
   // отчёт на погодженні — как в колонке «Звіт» списка проектов (#29): без погодженых — «на погодженні · дата», иначе — пометка ниже
-  const pendNew = (p: Project): React.ReactNode => p.pendingDate ? <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{t('repPendingNew')}</div> : null;
-  const pendOnly = (p: Project): React.ReactNode => <span className="rag"><span className="dot sm" style={{ background: 'var(--y)' }} />{t('repPending').replace('{date}', fmtDate(p.pendingDate || ''))}</span>;
   const probCols: Col<Project>[] = [S, PR, { head: fl('title'), cell: link },
     { head: t('cHealth'), cell: p => <RagDot v={p.rag} notRated={t('notRated')} />, cls: 'c-ico' },
     { head: fl('pm'), cell: p => <PersonCell p={p.manager} /> },
     { head: fl('lastReport'), cell: p => <span title={p.lastReport}>{p.lastReport}</span>, cls: 'wide' },
-    { head: t('cRepDate'), cell: p => !p.lastUpdate && p.pendingDate ? pendOnly(p) : <>{fmtDate(p.lastUpdate)}{pendNew(p)}</> }];
+    { head: t('cRepDate'), cell: p => <>{p.lastUpdate ? fmtDate(p.lastUpdate) : <span className="muted">{t('noReports')}</span>}<RepMark r={p.lastRep} /></> }];
   const staleCols: Col<Project>[] = [S, PR, { head: fl('title'), cell: link }, { head: fl('pm'), cell: p => <PersonCell p={p.manager} /> },
-    { head: fl('last'), cell: p => !p.lastUpdate && p.pendingDate ? pendOnly(p) : <><FreshDate iso={p.lastUpdate} fresh={freshness(p.lastUpdate, today)} none={t('noReports')} />{pendNew(p)}</> },
+    { head: fl('last'), cell: p => <><FreshDate iso={p.lastUpdate} fresh={freshness(p.lastUpdate, today)} none={t('noReports')} tip={freshTip(t, p.lastUpdate, today)} /><RepMark r={p.lastRep} /></> },
     { head: t('cStatusOnly'), cell: p => <StatusPill v={p.status} /> }];
   const decCols: Col<StatusReport>[] = [...byProject<StatusReport>(), { head: fl('rProj'), cell: r => link(P(r.projectId)) },
     { head: fl('rDate'), cell: r => fmtDate(r.date) }, { head: fl('rDecText'), cell: r => r.decisionText, cls: 'wide' },

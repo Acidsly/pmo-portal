@@ -104,6 +104,19 @@ function ConvertTo-Kyiv([datetime]$d) {
     return [TimeZoneInfo]::ConvertTimeFromUtc($u, (Get-KyivZone))
 }
 $STATE_DATES = @("pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd", "pmArchivedAt", "pmLastUpdate", "pmActualEnd")
+# Проект в архиве: «Завершено» или «Скасовано» (векторы tests/cases/archive.json, те же — isArch приложения);
+# «Архівний» — прежнее значение, понимается до миграции (Deploy-PMO.ps1, раздел миграции архива)
+function Test-ArchivedStatus([string]$status) { return $status -in @("Завершено", "Скасовано", "Архівний") }
+# Исход прежнего «Архівний» при миграции (Deploy-PMO.ps1, раздел 6a3; векторы tests/cases/archive-migration.json):
+# (1) статус отчёта из эталона (psLastApplied), если итоговый; (2) новейший применённый итоговый отчёт (дата, затем номер);
+# (3) строка журнала прежней миграции «Скасовано -> Архівний» — «Скасовано»; (4) иначе «Завершено» и предупреждение. # archive-migration
+function Get-ArchiveOutcome([string]$lastAppliedStatus, $finals, [bool]$cancelledJournal) {
+    if ($lastAppliedStatus -in @("Завершено", "Скасовано")) { return @{ status = $lastAppliedStatus; warn = $false } }
+    $f = @($finals | Where-Object { $_ } | Sort-Object { [string]$_.date }, { [int]$_.id } | Select-Object -Last 1)
+    if ($f.Count) { return @{ status = [string]$f[0].status; warn = $false } }
+    if ($cancelledJournal) { return @{ status = "Скасовано"; warn = $false } }
+    return @{ status = "Завершено"; warn = $true }
+}
 function Get-StateKeys { return @("pmStatus", "pmRAG", "pmType", "pmProgress", "pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd",
                                   "pmActualCost", "pmArchivedAt", "pmLastUpdate", "pmLastReport", "pmCode", "pmActualEnd",
                                   "pmManager", "pmOwner") }

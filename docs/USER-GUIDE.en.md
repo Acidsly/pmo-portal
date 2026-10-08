@@ -17,6 +17,8 @@ Everyone sees only the projects where they or their direct reports have a role.
 - **Phone and tablet (iPhone, iPad, Android):** the same address in Safari or Chrome. To open it like an app: in Safari — Share → "Add to Home Screen", in Chrome — menu ⋮ → "Add to Home screen".
 - **The SharePoint mobile app** may not show the portal fully — use the browser in that case. The SharePoint menu above the portal is hidden: everything is done in the portal tabs.
 
+The menu tabs have icons, each section in its own colour. On a phone only the icons remain (the name is in the tooltip).
+
 This guide is always available under the **?** button at the top of the portal.
 
 ## Who sees what and can do what
@@ -49,12 +51,12 @@ Everything is counted only over the projects you can see (excluding the archive)
 - **In the list:** click a column header to sort; the funnel ▽ filters by value; the gear ⚙ chooses and orders columns (↑ / ↓); on a computer, drag a column header's edge to change its width — it is remembered for each list, "Reset column widths" is in the gear menu; **CSV** exports the table as shown (the file opens in Excel). New records are on top. On a phone, status reports and risks are shown as cards (sorting and filters set on a computer apply there too).
 - **Filters** (funnel and "Show") apply while you stay on the page: switching to another tab resets them to the defaults (column choice and sorting are remembered). Column widths do not change with filters.
 - **"Report" column** — the date of the last approved report; if a report is waiting for the PMO — "awaiting approval · date" or "new report awaiting approval".
-- **Status** is a coloured label: Initiation — purple, Planning — blue, Execution — green, On hold — orange, Archived — grey. The dot next to it is the project health (green, yellow, red, grey — not rated).
-- **Colours:** a red completion date means the deadline has passed and the project is still open. Report light: green — up to 8 days, yellow — 8–14, red — over 14.
+- **Status** is a coloured label: Initiation — purple, Planning — blue, Execution — green, On hold — orange, Completed — green, Cancelled — grey. The dot next to it is the project health (green, yellow, red, grey — not rated).
+- **Colours:** a red completion date means the deadline has passed and the project is still open. The dot in the "Report" column is the freshness of the last approved report: green — up to 8 days, yellow — 9–14, red — over 14, grey — no approved reports yet (hover over the dot to see how many days old the report is). Below the date is the **approval of the newest report**: "Approved", "Awaiting approval" or "Returned for rework" (for the last two — the report date).
 
 ## Project card
 
-Click a project and its card opens on the right (full screen on a phone):
+Click a project and its card opens on the right (full screen on a phone). Every side panel has a **coloured label** at the top showing what is open: Project, Status report, Risk, Issue, Assignment, Notifications, Feedback, Help — the same wherever you opened it from.
 - at the top — type, health, status, priority and **Links** (Loop, documents, etc.); **Add status report** and **Edit project** buttons (PM only);
 - approval notes: "Status report of … is awaiting PMO approval" or "Report of … returned for rework" with the PMO's comment;
 - **Stakeholders**: PM, owner and **Project team** — a table: member, role, what to contact them about;
@@ -103,7 +105,7 @@ The status (Initiation, Planning, Execution, On hold, Cancelled, Completed) chan
 3. Fills in **Reason for changing indicators** — why the status changes; the reason goes to the history.
 4. Rates schedule, budget, resources, writes the summary → **Save**. The report goes for approval.
 5. **The PMO** approves the report — the status in the card changes, and "Report approval" and "Updated by status report" rows appear in the history ("old → new", the reason). If the PMO returns the report, the status does not change and the PM submits a new report.
-6. **"Completed — move to archive"** or **"Cancelled — move to archive"** — after approval the project gets the "Archived" status, an archive date and the "Actual completion date" and moves to the "Archive" tab; after that it is view-only. That the project was cancelled is shown in its last status report and in the "Change history".
+6. **"Completed — move to archive"** or **"Cancelled — move to archive"** — after approval the project gets the "Completed" or "Cancelled" status, the "Completed / cancelled on" date and the "Actual completion date" and moves to the "Archive" tab; after that it is view-only.
 
 ## Risks and issues
 
@@ -119,6 +121,14 @@ The status (Initiation, Planning, Execution, On hold, Cancelled, Completed) chan
 
 Anyone who sees the project can comment: in the card — "Comments" → "Add comment". An archived project is view-only: no new comments.
 
+## Notifications
+
+- At the top right there is a **bell**. A **red number** on it shows how many new events there are for you in your projects; while there are new ones, the bell sways now and then.
+- Click the bell to open **"Notifications"**: events for 14 days, new ones at the top and highlighted ("New"), already seen ones below. Clicking an event opens the card, status report or risk; **"← Notifications"** at the top takes you back to the list. "Only new" hides what you have seen.
+- Opening an event marks it as read and the number goes down. **"Mark all as read"** marks everything shown as read and the number disappears. Just opening the list marks nothing.
+- What you see depends on your role in the project: the PM, owner and team see project creation, assignments, PMO decisions on reports, indicator updates and comments; risks — the PM and the risk owner always, the owner and team only high ones (score 15 and above); card edits — the PM and the owner; the PMO sees reports submitted for approval and projects moved to the archive. Your own actions are not shown.
+- For a new participant notifications appear within ~15 minutes; earlier events are not treated as new.
+
 ## New project and editing
 
 - A **New project** is created by the PMO: the name (unique — no two projects share a name) and the PM are required (the PM is not prefilled — choose one); the project number is assigned by the system in order (PRJ-001, PRJ-002…) — it is unique and cannot be changed by hand.
@@ -133,7 +143,7 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
 
 ## Archive
 
-The "Archive" tab lists completed and cancelled projects with their archive date, view-only (no new comments). Their risks — "Risks and issues" → "Show: Risks of archived projects". Navigation is the same as in "Projects": **List** or **Tiles**, "Show" (All projects, Strategic, My projects), CSV and column choice; tiles show the archive date.
+The "Archive" tab lists projects with the **Completed** or **Cancelled** status (the "Status" column) and their completion / cancellation date, view-only (no new comments). Their risks — "Risks and issues" → "Show: Risks of archived projects". Navigation is the same as in "Projects": **List** or **Tiles**, "Show" (All projects, **Completed**, **Cancelled**, Strategic, My projects, I am PM), CSV and column choice; tiles show the completion / cancellation date.
 
 ## Language and theme
 
@@ -153,7 +163,7 @@ The **Feedback** tab → **Leave feedback** (or the "Feedback" button in Help): 
 
 Your device is added automatically; in the text, say on which screen you noticed the problem.
 
-The **Feedback** tab lists all participants' feedback: the number (#46 — answers refer to feedback by it), the text, the author, the review status (New, Accepted, Done, Commented, Rejected) and the developers' answer. Screenshots are visible only to the author and the developers. The status and the answer are set by the solution's developers.
+The **Feedback** tab lists all participants' feedback: the number (#46 — answers refer to feedback by it), the text, the author, the review status (New, Accepted, Done, Commented, Rejected) and the developers' answer. Screenshots are visible only to the author and the developers. The status and the answer are set by the solution's developers. In the feedback window the **‹ ›** arrows next to the number go to the previous and next feedback in the table's order (with its filters and sorting).
 
 ## Tasks for the focus group
 

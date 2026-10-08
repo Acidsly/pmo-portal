@@ -1,0 +1,1217 @@
+{
+  "_about": "Сповіщення: кто что видит (logic/notify.ts notifyKind / notifyFor; часть 2 — синхронизация для писем). Матрица — docs/superpowers/plans/2026-10-08-notifications-bell.md.",
+  "kinds": [
+    {
+      "name": "Створення",
+      "kind": "create",
+      "diffs": [],
+      "out": "created"
+    },
+    {
+      "name": "Призначення",
+      "kind": "assign",
+      "diffs": [],
+      "out": "assigned"
+    },
+    {
+      "name": "Подання звіту",
+      "kind": "submit",
+      "diffs": [],
+      "out": "submitted"
+    },
+    {
+      "name": "Погодження звіту",
+      "kind": "approval",
+      "diffs": [],
+      "out": "decided"
+    },
+    {
+      "name": "Ризик",
+      "kind": "risk",
+      "diffs": [],
+      "out": "risk"
+    },
+    {
+      "name": "Редагування картки",
+      "kind": "edit",
+      "diffs": [],
+      "out": "cardEdit"
+    },
+    {
+      "name": "Статус-звіт без архіву",
+      "kind": "report",
+      "diffs": [
+        {
+          "f": "status",
+          "to": "Реалізація"
+        }
+      ],
+      "out": "applied"
+    },
+    {
+      "name": "Статус-звіт → Архівний (прежнее значение в истории)",
+      "kind": "report",
+      "diffs": [
+        {
+          "f": "rag",
+          "to": "Зелений"
+        },
+        {
+          "f": "status",
+          "to": "Архівний"
+        }
+      ],
+      "out": "archived"
+    },
+    {
+      "name": "Статус-звіт → Завершено",
+      "kind": "report",
+      "diffs": [
+        {
+          "f": "progress",
+          "to": "100"
+        },
+        {
+          "f": "status",
+          "to": "Завершено"
+        }
+      ],
+      "out": "archived"
+    },
+    {
+      "name": "Статус-звіт → Скасовано",
+      "kind": "report",
+      "diffs": [
+        {
+          "f": "status",
+          "to": "Скасовано"
+        }
+      ],
+      "out": "archived"
+    },
+    {
+      "name": "Статус-звіт → Призупинено — не архів",
+      "kind": "report",
+      "diffs": [
+        {
+          "f": "status",
+          "to": "Призупинено"
+        }
+      ],
+      "out": "applied"
+    },
+    {
+      "name": "Правка в обхід, відкочена",
+      "kind": "key",
+      "diffs": [],
+      "out": "applied"
+    }
+  ],
+  "recipients": [
+    {
+      "name": "created: PM",
+      "kind": "created",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "created: власник",
+      "kind": "created",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "own@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "created: команда",
+      "kind": "created",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "tm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "created: PMO",
+      "kind": "created",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pmo@x",
+      "isPmo": true,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "created: сторонній",
+      "kind": "created",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "zz@x",
+      "isPmo": false,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "assigned: PM",
+      "kind": "assigned",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "assigned: власник",
+      "kind": "assigned",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "own@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "assigned: команда",
+      "kind": "assigned",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "tm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "assigned: PMO",
+      "kind": "assigned",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pmo@x",
+      "isPmo": true,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "assigned: сторонній",
+      "kind": "assigned",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "zz@x",
+      "isPmo": false,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "submitted: PM",
+      "kind": "submitted",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "submitted: власник",
+      "kind": "submitted",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "own@x",
+      "isPmo": false,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "submitted: команда",
+      "kind": "submitted",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "tm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "submitted: PMO",
+      "kind": "submitted",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pmo@x",
+      "isPmo": true,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "submitted: сторонній",
+      "kind": "submitted",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "zz@x",
+      "isPmo": false,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "decided: PM",
+      "kind": "decided",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "decided: власник",
+      "kind": "decided",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "own@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "decided: команда",
+      "kind": "decided",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "tm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "decided: PMO",
+      "kind": "decided",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pmo@x",
+      "isPmo": true,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "decided: сторонній",
+      "kind": "decided",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "zz@x",
+      "isPmo": false,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "applied: PM",
+      "kind": "applied",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "applied: власник",
+      "kind": "applied",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "own@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "applied: команда",
+      "kind": "applied",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "tm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "applied: PMO",
+      "kind": "applied",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pmo@x",
+      "isPmo": true,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "applied: сторонній",
+      "kind": "applied",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "zz@x",
+      "isPmo": false,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "archived: PM",
+      "kind": "archived",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Завершено",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "archived: власник",
+      "kind": "archived",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Завершено",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "own@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "archived: команда",
+      "kind": "archived",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Скасовано",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "tm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "archived: PMO",
+      "kind": "archived",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Завершено",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pmo@x",
+      "isPmo": true,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "archived: сторонній",
+      "kind": "archived",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Скасовано",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "zz@x",
+      "isPmo": false,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "cardEdit: PM",
+      "kind": "cardEdit",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "cardEdit: власник",
+      "kind": "cardEdit",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "own@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "cardEdit: команда",
+      "kind": "cardEdit",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "tm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "cardEdit: PMO",
+      "kind": "cardEdit",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pmo@x",
+      "isPmo": true,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "cardEdit: сторонній",
+      "kind": "cardEdit",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "zz@x",
+      "isPmo": false,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "comment: PM",
+      "kind": "comment",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "comment: власник",
+      "kind": "comment",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "own@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "comment: команда",
+      "kind": "comment",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "tm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "comment: PMO",
+      "kind": "comment",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pmo@x",
+      "isPmo": true,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "comment: сторонній",
+      "kind": "comment",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "zz@x",
+      "isPmo": false,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "risk оцінка 12: PM",
+      "kind": "risk",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pm@x",
+      "isPmo": false,
+      "risk": {
+        "score": 12,
+        "owner": "pm@x"
+      },
+      "out": true
+    },
+    {
+      "name": "risk оцінка 12: власник",
+      "kind": "risk",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "own@x",
+      "isPmo": false,
+      "risk": {
+        "score": 12,
+        "owner": "pm@x"
+      },
+      "out": false
+    },
+    {
+      "name": "risk оцінка 12: команда",
+      "kind": "risk",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "tm@x",
+      "isPmo": false,
+      "risk": {
+        "score": 12,
+        "owner": "pm@x"
+      },
+      "out": false
+    },
+    {
+      "name": "risk оцінка 12: PMO",
+      "kind": "risk",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pmo@x",
+      "isPmo": true,
+      "risk": {
+        "score": 12,
+        "owner": "pm@x"
+      },
+      "out": false
+    },
+    {
+      "name": "risk оцінка 12: сторонній",
+      "kind": "risk",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "zz@x",
+      "isPmo": false,
+      "risk": {
+        "score": 12,
+        "owner": "pm@x"
+      },
+      "out": false
+    },
+    {
+      "name": "risk оцінка 16: PM",
+      "kind": "risk",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pm@x",
+      "isPmo": false,
+      "risk": {
+        "score": 16,
+        "owner": "pm@x"
+      },
+      "out": true
+    },
+    {
+      "name": "risk оцінка 16: власник",
+      "kind": "risk",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "own@x",
+      "isPmo": false,
+      "risk": {
+        "score": 16,
+        "owner": "pm@x"
+      },
+      "out": true
+    },
+    {
+      "name": "risk оцінка 16: команда",
+      "kind": "risk",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "tm@x",
+      "isPmo": false,
+      "risk": {
+        "score": 16,
+        "owner": "pm@x"
+      },
+      "out": true
+    },
+    {
+      "name": "risk оцінка 16: PMO",
+      "kind": "risk",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pmo@x",
+      "isPmo": true,
+      "risk": {
+        "score": 16,
+        "owner": "pm@x"
+      },
+      "out": false
+    },
+    {
+      "name": "risk оцінка 16: сторонній",
+      "kind": "risk",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "zz@x",
+      "isPmo": false,
+      "risk": {
+        "score": 16,
+        "owner": "pm@x"
+      },
+      "out": false
+    },
+    {
+      "name": "risk: власник ризику з оцінкою 6 — бачить",
+      "kind": "risk",
+      "author": "pm@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "zz@x",
+      "isPmo": false,
+      "risk": {
+        "score": 6,
+        "owner": "zz@x"
+      },
+      "out": true
+    },
+    {
+      "name": "risk видалено: оцінка з події (20) — команда бачить",
+      "kind": "risk",
+      "author": "pm@x",
+      "diffs": [
+        {
+          "f": "kScore",
+          "to": "20"
+        }
+      ],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "tm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "risk видалено, оцінки в події немає — команда не бачить",
+      "kind": "risk",
+      "author": "pm@x",
+      "diffs": [
+        {
+          "f": "kStatus",
+          "to": "Закрито"
+        }
+      ],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "tm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "своя подія — не показується",
+      "kind": "comment",
+      "author": "PM@X",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "порожній автор (синхронізація) — показується",
+      "kind": "decided",
+      "author": "",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "архівний проєкт — коментар не показується",
+      "kind": "comment",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Завершено",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": false
+    },
+    {
+      "name": "PMO, який у команді, — бачить коментар як команда",
+      "kind": "comment",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "pmo@x"
+        ]
+      },
+      "me": "pmo@x",
+      "isPmo": true,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "регістр e-mail не важить",
+      "kind": "comment",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Реалізація",
+        "pm": "PM@X",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": true
+    },
+    {
+      "name": "проєкт «Архівний» (до міграції) — коментар не показується",
+      "kind": "comment",
+      "author": "au@x",
+      "diffs": [],
+      "project": {
+        "status": "Архівний",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pm@x",
+      "isPmo": false,
+      "risk": null,
+      "out": false
+    }
+  ]
+}

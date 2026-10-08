@@ -35,7 +35,7 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/assignments.json", "tests/cases/history.json", "config/focus-group.example.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/assignments.json", "tests/cases/history.json", "tests/cases/notify-state.json", "tests/cases/archive.json", "tests/cases/archive-migration.json", "config/focus-group.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
@@ -64,7 +64,7 @@ foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/acl.json") | Conv
 }
 
 Write-Host "3c. Папки проектов: роли, заморозка архива, перенос записей (tests/cases/folders.json)"
-foreach ($n in @("Get-FolderName", "Test-RowPlacement", "Get-FolderRole", "Get-GroupFolderRole", "Get-AclMark", "Get-ArchPrefix", "Test-ArchiveFrozen", "Get-RowAction")) {
+foreach ($n in @("Test-ArchivedStatus", "Get-FolderName", "Test-RowPlacement", "Get-FolderRole", "Get-GroupFolderRole", "Get-AclMark", "Get-ArchPrefix", "Test-ArchiveFrozen", "Get-RowAction")) {
     $fn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $n }, $true) | Select-Object -First 1
     if ($fn) { Invoke-Expression $fn.Extent.Text } else { Bad "нет функции $n" }
 }
@@ -86,6 +86,26 @@ if ((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")) -match 'Ex
 $raw = @([regex]::Matches((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")), 'Get-PnPListItem -List (\S+)') | ForEach-Object { $_.Groups[1].Value } | Where-Object { $_ -notin @('$list', '$L_PROJ', '"Lists/FeedbackPublic"', '"Lists/Feedback"') })
 if ($raw) { Bad "Get-PnPListItem без отбрасывания папок: $($raw -join ', ')" } else { Ok "дочерние списки — без папок" }
 
+Write-Host "3c0. Архив: «Завершено» / «Скасовано» (Test-ArchivedStatus, tests/cases/archive.json)"
+foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/archive.json") | ConvertFrom-Json).cases) {
+    $r = Test-ArchivedStatus $c.status; if ($r -eq $c.archived) { Ok "архів: «$($c.status)» -> $r" } else { Bad "архів: «$($c.status)» -> $r, ожидалось $($c.archived)" }
+}
+# признак архива — только общей функцией: ни одного сравнения статуса с «Архівний» в скриптах (кроме переходного выбора в Get-ReportTarget и миграции Deploy)
+$archCmp = @(Get-ChildItem (Join-Path $root "scripts") -Filter *.ps1 | ForEach-Object { $f = $_.Name; Select-String -Path $_.FullName -Pattern '-(eq|ne|in|notin)\s+[^#\r\n]*"Архівний"|"Архівний"[^#\r\n]*-(eq|ne)\b|Status -eq "Завершено"' | Where-Object { $_.Line -notmatch 'function Test-ArchivedStatus|if \(\$legacy\)|# archive-migration' } | ForEach-Object { "$($f):$($_.LineNumber)" } })
+if ($archCmp.Count) { Bad "сравнение статуса с «Архівний» в обход Test-ArchivedStatus: $($archCmp -join ', ')" } else { Ok "признак архива — только Test-ArchivedStatus" }
+# миграция прежнего «Архівний» (Deploy-PMO.ps1, раздел 6a3)
+$ga2 = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Get-ArchiveOutcome" }, $true) | Select-Object -First 1
+if ($ga2) { Invoke-Expression $ga2.Extent.Text } else { Bad "нет функции Get-ArchiveOutcome" }
+foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/archive-migration.json") | ConvertFrom-Json -DateKind String).cases) {
+    $fin = @($c.finals | ForEach-Object { @{ id = [int]$_.id; date = [string]$_.date; status = [string]$_.status } })
+    $o = Get-ArchiveOutcome $c.lastApplied $fin ([bool]$c.journal)
+    if ($o.status -eq $c.out -and $o.warn -eq $c.warn) { Ok "миграция архива: $($c.name)" } else { Bad "миграция архива: $($c.name): $($o.status)/$($o.warn), ожидалось $($c.out)/$($c.warn)" }
+}
+$depSrc = Get-Content -Raw (Join-Path $root "scripts/Deploy-PMO.ps1")
+if ($depSrc -match 'pmStatus\s*=\s*"Архівний"') { Bad "Deploy-PMO.ps1 пишет «Архівний» (прежняя миграция «Скасовано -> Архівний» вернулась бы на каждом deploy)" } else { Ok "Deploy-PMO.ps1 не пишет «Архівний»" }
+if ($depSrc -match '6a3\.' -and $depSrc -match 'Get-ArchiveOutcome \$laSt' -and $depSrc -match 'Sync-ProjectStateFromCard \$it\.Id   # статус') { Ok "миграция архива: исход общим правилом, эталон обновляется" } else { Bad "Deploy-PMO.ps1: миграция архива без Get-ArchiveOutcome или без эталона" }
+if ($depSrc -match 'if \(\$o\.warn\) \{ \$archWarn\+\+;[^\n]*; continue \}') { Ok "исход не найден — проект не угадывается (остаётся «Архівний»)" } else { Bad "Deploy-PMO.ps1: при ненайденном исходе миграция угадывает статус" }
+if ($depSrc -match 'if \(-not \$left -and -not \$archWarn\)') { Ok "«Архівний» убирается из выбора только без остатков" } else { Bad "Deploy-PMO.ps1: «Архівний» убирается из выбора без проверки остатков" }
 Write-Host "3c1. Блокировка запусков и время по Киеву (PMO.Common.ps1: Test-LockPlan, ConvertTo-Kyiv; tests/cases/lock.json)"
 foreach ($n in @("ConvertFrom-JsonElement", "ConvertFrom-JsonText", "Test-LockPlan", "Test-LockOwner", "Read-ManagerCache", "Get-ManagerCacheJson", "Get-KyivZone", "ConvertTo-Kyiv")) {
     $fn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $n }, $true) | Select-Object -First 1
@@ -242,6 +262,23 @@ $p1 = Get-HistoryPlan $c.json @() @($c.risks | ForEach-Object { & $toH $_ }); $p
 if (-not $p2.rows.Count -and $p2.json -eq $p1.json) { Ok "история: повторный запуск — без событий, снимок тот же" } else { Bad "история: повторный запуск дал события или другой снимок" }
 $i2c = $syncSrc.IndexOf("# 2c. История"); $iS = $syncSrc.IndexOf('psHistory = $plan.json'); $iA = $syncSrc.IndexOf('Add-Change $p.Item.Id $r.field $r.from $r.to $r.kind $r.who $r.reason $r.when $r.item')
 if ($i2c -ge 0 -and $iA -gt $i2c -and $iS -gt $iA) { Ok "история: сначала журнал, потом снимок" } else { Bad "Invoke-PMOSync.ps1: история должна писать журнал раньше снимка" }
+Write-Host "3j. Прочитане — строки сповіщень (tests/cases/notify-state.json)"
+$fnn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Get-NotifyRowPlan" }, $true) | Select-Object -First 1
+if ($fnn) { Invoke-Expression $fnn.Extent.Text } else { Bad "нет функции Get-NotifyRowPlan" }
+foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/notify-state.json") | ConvertFrom-Json).cases) {
+    $rws = @($c.rows | ForEach-Object { @{ id = $_.id; email = $_.email; readId = $_.readId; readCmId = $_.readCmId; acl = $_.acl } })
+    $pl = Get-NotifyRowPlan @($c.people) $rws $c.maxJ $c.maxC
+    $got = "$(@($pl.create) -join ',')|$(@($pl.fix | ForEach-Object { "$($_.id):$($_.readId)/$($_.readCmId)" }) -join ',')|$(@($pl.acl | ForEach-Object { "$($_.id):$($_.email)" }) -join ',')|$(@($pl.dup).Count)"
+    $exp = "$(@($c.out.create) -join ',')|$(@($c.out.fix) -join ',')|$(@($c.out.acl) -join ',')|$($c.out.dup)"
+    if ($got -eq $exp) { Ok "прочитане: $($c.name)" } else { Bad "прочитане: $($c.name): $got, ожидалось $exp" }
+}
+$i7 = $syncSrc.IndexOf("# 7. Сповіщення в приложении"); $sec7 = $syncSrc.Substring($i7, $syncSrc.IndexOf("# 6. Напоминания PM", $i7) - $i7)
+if ($sec7 -match 'Add-PnPListItem -List \$L_NS -Values @\{ Title = \$e; nsUser = \$e; nsReadId = \$maxJ; nsReadCmId = \$maxC \}') { Ok "прочитане: новая строка — сразу с метками (одной записью)" } else { Bad "прочитане: строка должна создаваться сразу с метками" }
+if ($sec7 -match 'if \(\$DryRun\) \{ Log "  прочитане: \+' -and $sec7 -match 'if \(\$DryRun\) \{ Log "    права: прочитане') { Ok "прочитане: пробный запуск ничего не пишет" } else { Bad "прочитане: DryRun должен только писать в журнал запуска" }
+if ($syncSrc.IndexOf("# 7. Сповіщення в приложении") -gt $syncSrc.IndexOf("# 5. Права по иерархии")) { Ok "прочитане: раздел 7 — после прав (раздел 5)" } else { Bad "раздел 7 должен идти после раздела 5" }
+# Get-ListRows возвращает коллекцию одним объектом (return , $rows): по конвейеру пойдёт сама коллекция, а не строки
+$piped = [regex]::Matches($syncSrc, 'Get-ListRows \$\w+\s*\|').Count
+if (-not $piped) { Ok "Get-ListRows не передаётся по конвейеру (коллекция одним объектом)" } else { Bad "Invoke-PMOSync.ps1: Get-ListRows по конвейеру ($piped) — обрабатывается коллекция, а не строки; используйте foreach" }
 # «Створення» один раз (R8): нужна ли строка — и эталон пишется раньше строки журнала (ошибка сверки №3)
 $fnc = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Test-NeedCreation" }, $true) | Select-Object -First 1
 if ($fnc) { Invoke-Expression $fnc.Extent.Text } else { Bad "нет функции Test-NeedCreation" }
@@ -277,6 +314,10 @@ foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/apply.json") | Co
     $exp = ($c.out.PSObject.Properties | Sort-Object Name | ForEach-Object { "$($_.Name)=$($_.Value)" }) -join "; "
     if ($got -eq $exp) { Ok "перенос в карточку: $($c.name)" } else { Bad "перенос в карточку: $($c.name): [$got], ожидалось [$exp]" }
 }
+# переходный режим (на сайте ещё нет «Завершено» в выборе): итоговый отчёт пишет прежнее «Архівний»
+$tl = Get-ReportTarget @{ status = "Скасовано"; date = "2026-10-01"; schedule = ""; budget = ""; resources = ""; title = "" } "" $true
+if ($tl["status"] -eq "Архівний" -and $tl["archivedAt"] -eq "2026-10-01") { Ok "перенос в карточку: переходный режим — «Архівний»" } else { Bad "перенос в карточку: переходный режим — $($tl["status"])" }
+if ($syncSrc -match 'Get-ReportTarget \(\[ordered\][^\n]*\n[^\n]*\n[^\n]*\$p\.Values\.pmLastUpdate \$LEGACY_ARCHIVE') { Ok "раздел 1 передаёт переходный режим архива" } else { Bad "раздел 1: Get-ReportTarget без `$LEGACY_ARCHIVE" }
 if ($syncSrc -match '\$plan = Get-StatePlan \$card') { Ok "раздел 0a решает по эталону общим правилом Get-StatePlan" } else { Bad "Invoke-PMOSync.ps1: раздел 0a не использует Get-StatePlan" }
 if ($syncSrc -match '\$tg = Get-ReportTarget') { Ok "раздел 1 переносит отчёт общим правилом Get-ReportTarget" } else { Bad "Invoke-PMOSync.ps1: раздел 1 не использует Get-ReportTarget" }
 # подтверждение «Погоджено» в синхронизации — именно этим правилом (а не «любое Погоджено от PMO»: ошибка сверки №1)

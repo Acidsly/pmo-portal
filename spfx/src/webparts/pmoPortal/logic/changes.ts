@@ -17,10 +17,11 @@ export function toEvents(rows: ChangeEntry[]): ChangeEvent[] {
     const key = [r.projectId, r.kind, r.who ? r.who.email : '', r.reason, r.date.slice(0, 16), r.item || ''].join('|');
     let ev = map[key];
     if (!ev) {
-      ev = map[key] = { id: r.id, date: r.date, who: r.who, kind: KIND[r.kind] || 'edit', reason: r.reason, diffs: [] }; order.push(key);
+      ev = map[key] = { id: r.id, date: r.date, who: r.who, kind: KIND[r.kind] || 'edit', reason: r.reason, diffs: [], projectId: r.projectId, lastId: r.id }; order.push(key);
       // #46 / #48: событие отчёта или риска — ссылка на запись
       if (r.item && (ev.kind === 'submit' || ev.kind === 'risk')) ev.ref = { type: ev.kind === 'submit' ? 'report' : 'risk', id: r.item };
     }
+    ev.lastId = Math.max(ev.lastId || 0, r.id);
     if (ev.kind !== 'create') ev.diffs.push({ f: FIELD_KEY[r.field] || r.field, from: r.from, to: r.to });
   });
   return order.map(k => map[k]).reverse();

@@ -1,0 +1,190 @@
+{
+  "_about": "Строки «Прочитане» (Get-NotifyRowPlan, раздел 7 синхронизации): кому создать, что зажать, кому выдать права, дубли.",
+  "cases": [
+    {
+      "name": "перший запуск — рядки всім, нічого виправляти",
+      "people": [
+        "pm@x",
+        "Tm@x",
+        "pm@x"
+      ],
+      "rows": [],
+      "maxJ": 100,
+      "maxC": 20,
+      "out": {
+        "create": [
+          "pm@x",
+          "tm@x"
+        ],
+        "fix": [],
+        "acl": [],
+        "dup": 0
+      }
+    },
+    {
+      "name": "новий человек — тільки йому",
+      "people": [
+        "pm@x",
+        "new@x"
+      ],
+      "rows": [
+        {
+          "id": 1,
+          "email": "pm@x",
+          "readId": 5,
+          "readCmId": 3,
+          "acl": "u:pm@x"
+        }
+      ],
+      "maxJ": 100,
+      "maxC": 20,
+      "out": {
+        "create": [
+          "new@x"
+        ],
+        "fix": [],
+        "acl": [],
+        "dup": 0
+      }
+    },
+    {
+      "name": "мітки за межами — затиснути в 0…останній номер",
+      "people": [
+        "pm@x",
+        "a@x"
+      ],
+      "rows": [
+        {
+          "id": 1,
+          "email": "pm@x",
+          "readId": 999,
+          "readCmId": -4,
+          "acl": "u:pm@x"
+        },
+        {
+          "id": 2,
+          "email": "a@x",
+          "readId": 50,
+          "readCmId": 20,
+          "acl": "u:a@x"
+        }
+      ],
+      "maxJ": 100,
+      "maxC": 20,
+      "out": {
+        "create": [],
+        "fix": [
+          "1:100/0"
+        ],
+        "acl": [],
+        "dup": 0
+      }
+    },
+    {
+      "name": "права не видано (pmoAcl інший) — видати заново",
+      "people": [
+        "pm@x"
+      ],
+      "rows": [
+        {
+          "id": 1,
+          "email": "pm@x",
+          "readId": 5,
+          "readCmId": 3,
+          "acl": ""
+        }
+      ],
+      "maxJ": 100,
+      "maxC": 20,
+      "out": {
+        "create": [],
+        "fix": [],
+        "acl": [
+          "1:pm@x"
+        ],
+        "dup": 0
+      }
+    },
+    {
+      "name": "дубль рядка — робочий з меншим ID (регістр e-mail не важить), решта — попередження",
+      "people": [
+        "pm@x"
+      ],
+      "rows": [
+        {
+          "id": 7,
+          "email": "pm@x",
+          "readId": 5,
+          "readCmId": 3,
+          "acl": "u:pm@x"
+        },
+        {
+          "id": 3,
+          "email": "PM@X",
+          "readId": 5,
+          "readCmId": 3,
+          "acl": "u:PM@X"
+        }
+      ],
+      "maxJ": 100,
+      "maxC": 20,
+      "out": {
+        "create": [],
+        "fix": [],
+        "acl": [],
+        "dup": 1
+      }
+    },
+    {
+      "name": "рядок без користувача — попередження, нового не створює зайве",
+      "people": [
+        "pm@x"
+      ],
+      "rows": [
+        {
+          "id": 1,
+          "email": "pm@x",
+          "readId": 5,
+          "readCmId": 3,
+          "acl": "u:pm@x"
+        },
+        {
+          "id": 2,
+          "email": "",
+          "readId": 5,
+          "readCmId": 3,
+          "acl": "u:"
+        }
+      ],
+      "maxJ": 100,
+      "maxC": 20,
+      "out": {
+        "create": [],
+        "fix": [],
+        "acl": [],
+        "dup": 1
+      }
+    },
+    {
+      "name": "человек без доступу — рядок лишається, нічого не робимо",
+      "people": [],
+      "rows": [
+        {
+          "id": 1,
+          "email": "gone@x",
+          "readId": 5,
+          "readCmId": 3,
+          "acl": "u:gone@x"
+        }
+      ],
+      "maxJ": 100,
+      "maxC": 20,
+      "out": {
+        "create": [],
+        "fix": [],
+        "acl": [],
+        "dup": 0
+      }
+    }
+  ]
+}

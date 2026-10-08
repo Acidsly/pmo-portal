@@ -38,6 +38,8 @@ const EXTRA = {
   fbShotsHidden: ['Скриншоти бачать автор і розробники рішення', 'Screenshots are visible to the author and the solution team', 'Скриншоты видят автор и разработчики решения'],
   fbNoAnswer: ['Відповіді ще немає — ми її додамо після розгляду.', 'No answer yet — we will add it after review.', 'Ответа пока нет — мы добавим его после рассмотрения.'],
   fbAnswered: ['Відповідь збережено.', 'Answer saved.', 'Ответ сохранён.'],
+  fbPrev: ['Попередній відгук', 'Previous feedback', 'Предыдущий отзыв'],
+  fbNext: ['Наступний відгук', 'Next feedback', 'Следующий отзыв'],
   errCode: ['Такий код уже є в іншого проєкту. Вкажіть інший або залиште поле порожнім — код призначиться автоматично.', 'This code is already used by another project. Enter another one or leave the field empty to assign it automatically.', 'Такой код уже есть у другого проекта. Укажите другой или оставьте поле пустым — код назначится автоматически.'],
   csv: ['CSV', 'CSV', 'CSV'],
   fbAll: ['Усі відгуки учасників (для PMO)', 'All participants’ feedback (PMO)', 'Все отзывы участников (для PMO)'],

@@ -233,7 +233,7 @@ foreach ($p in $projects) {
         Set-Authored "Lists/StatusReports" $ri.Id $pm (SpDate $date)
 
         $reason = @($r.Reason, $r.Title) | Where-Object { $_ } | Join-String -Separator " · "
-        $status = if ($r.Status -eq "Завершено") { "Архівний" } else { $r.Status }
+        $status = $r.Status   # «Завершено» / «Скасовано» — проект в архиве с тем же статусом (как после синхронизации)
         if ($state.pmStatus -ne $status) { Add-Change $id "Статус проєкту" "pmStatus" $state.pmStatus $status "Статус-звіт" $pm $reason (SpDate $date); $state.pmStatus = $status }
         if ($state.pmProgress -ne [string]$r.Progress) { Add-Change $id "% виконання" "pmProgress" "$($state.pmProgress)%" "$($r.Progress)%" "Статус-звіт" $pm $reason (SpDate $date); $state.pmProgress = [string]$r.Progress }
         if ($r.Forecast -and $state.pmForecastEnd -ne $r.Forecast) { Add-Change $id "Прогноз завершення" "pmForecastEnd" (Human $state.pmForecastEnd) (Human $r.Forecast) "Статус-звіт" $pm $reason (SpDate $date); $state.pmForecastEnd = $r.Forecast }
@@ -244,7 +244,7 @@ foreach ($p in $projects) {
         $cv = @{ pmStatus = $state.pmStatus; pmProgress = $last.Progress; pmActualCost = $last.Cost
                  pmRAG = (CalcRag $RAG[$last.S] $RAG[$last.B] $RAG[$last.R]); pmLastUpdate = (SpDate (D $last.Days)); pmLastReport = $last.Title }
         if ($state.pmForecastEnd) { $cv.pmForecastEnd = SpDate $state.pmForecastEnd }
-        if ($last.Status -eq "Завершено") { $cv.pmArchivedAt = SpDate (D $last.Days) }
+        if (Test-ArchivedStatus $last.Status) { $cv.pmArchivedAt = SpDate (D $last.Days) }
         Set-PnPListItem -List "Lists/Projects" -Identity $id -Values $cv -UpdateType SystemUpdate | Out-Null
         Sync-ProjectStateFromCard $id   # ключевые поля демо-проекта — в эталон
     }

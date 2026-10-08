@@ -761,6 +761,136 @@ export const T: Record<string, L3> = {
   "Report submitted",
   "Подача отчёта"
  ],
+ "notifTitle": [
+  "Сповіщення",
+  "Notifications",
+  "Уведомления"
+ ],
+ "entProject": [
+  "Проєкт",
+  "Project",
+  "Проект"
+ ],
+ "entReport": [
+  "Статус-звіт",
+  "Status report",
+  "Статус-отчёт"
+ ],
+ "entRisk": [
+  "Ризик",
+  "Risk",
+  "Риск"
+ ],
+ "entIssue": [
+  "Проблема",
+  "Issue",
+  "Проблема"
+ ],
+ "entAssign": [
+  "Призначення",
+  "Assignment",
+  "Назначение"
+ ],
+ "entNotif": [
+  "Сповіщення",
+  "Notifications",
+  "Уведомления"
+ ],
+ "entFeedback": [
+  "Відгук",
+  "Feedback",
+  "Отзыв"
+ ],
+ "entHelp": [
+  "Довідка",
+  "Help",
+  "Справка"
+ ],
+ "notifNewOnes": [
+  "Є нові події",
+  "There are new events",
+  "Есть новые события"
+ ],
+ "notifEmpty": [
+  "За останні 14 днів подій для вас немає.",
+  "No events for you in the last 14 days.",
+  "За последние 14 дней событий для вас нет."
+ ],
+ "notifOnlyNew": [
+  "Лише нові",
+  "Only new",
+  "Только новые"
+ ],
+ "notifNew": [
+  "Нове",
+  "New",
+  "Новое"
+ ],
+ "notifSoon": [
+  "Сповіщення з'являться протягом 15 хвилин.",
+  "Notifications will appear within 15 minutes.",
+  "Уведомления появятся в течение 15 минут."
+ ],
+ "notifHint": [
+  "Події ваших проєктів за 14 днів — за вашою роллю.",
+  "Events of your projects for 14 days, by your role.",
+  "События ваших проектов за 14 дней — по вашей роли."
+ ],
+ "notifCount": [
+  "Нових: {n}",
+  "New: {n}",
+  "Новых: {n}"
+ ],
+ "notifReadAll": [
+  "Позначити все прочитаним",
+  "Mark all as read",
+  "Отметить всё прочитанным"
+ ],
+ "nkCreated": [
+  "Новий проєкт",
+  "New project",
+  "Новый проект"
+ ],
+ "nkAssigned": [
+  "Призначення",
+  "Assignment",
+  "Назначение"
+ ],
+ "nkSubmitted": [
+  "Подання звіту",
+  "Report submitted",
+  "Подача отчёта"
+ ],
+ "nkDecided": [
+  "Погодження звіту",
+  "Report approval",
+  "Согласование отчёта"
+ ],
+ "nkApplied": [
+  "Оновлено статус-звітом",
+  "Updated by status report",
+  "Обновлено статус-отчётом"
+ ],
+ "nkArchived": [
+  "Проєкт в архіві",
+  "Project archived",
+  "Проект в архиве"
+ ],
+ "nkRisk": [
+  "Ризик / проблема",
+  "Risk / issue",
+  "Риск / проблема"
+ ],
+ "nkCardEdit": [
+  "Редагування картки",
+  "Card edited",
+  "Редактирование карточки"
+ ],
+ "nkComment": [
+  "Коментар",
+  "Comment",
+  "Комментарий"
+ ],
  "kRiskEv": [
   "Ризик / проблема",
   "Risk / issue",
@@ -922,9 +1052,9 @@ export const T: Record<string, L3> = {
   "Проект в архиве: только просмотр."
  ],
  "archivedAt": [
-  "Дата архівації",
-  "Archived on",
-  "Дата архивации"
+  "Дата завершення / скасування",
+  "Completed / cancelled on",
+  "Дата завершения / отмены"
  ],
  "cols": [
   "Поля та порядок",
@@ -1027,9 +1157,9 @@ export const T: Record<string, L3> = {
   "Отменено — перенести в архив"
  ],
  "completeHint": [
-  "Після погодження звіту PMO проєкт отримає статус «Архівний» і перейде у вкладку «Архів».",
-  "After PMO approves the report, the project gets the “Архівний” status and moves to the Archive tab.",
-  "После согласования отчёта PMO проект получит статус «Архівний» и перейдёт во вкладку «Архів»."
+  "Після погодження звіту PMO проєкт отримає цей статус і перейде у вкладку «Архів».",
+  "After PMO approves the report, the project gets this status and moves to the Archive tab.",
+  "После согласования отчёта PMO проект получит этот статус и перейдёт во вкладку «Архив»."
  ],
  "savedArch": [
   "Статус-звіт збережено, проєкт перенесено в архів.",
@@ -1132,9 +1262,19 @@ export const T: Record<string, L3> = {
   "до 8 дней"
  ],
  "fr1": [
-  "8–14 днів",
-  "8–14 days",
-  "8–14 дней"
+  "9–14 днів",
+  "9–14 days",
+  "9–14 дней"
+ ],
+ "freshTip": [
+  "Останній погоджений звіт — {n} дн. тому. Зелений — до 8 днів, жовтий — 9–14, червоний — понад 14.",
+  "Last approved report — {n} days ago. Green — up to 8 days, yellow — 9–14, red — over 14.",
+  "Последний согласованный отчёт — {n} дн. назад. Зелёный — до 8 дней, жёлтый — 9–14, красный — больше 14."
+ ],
+ "freshNone": [
+  "Погоджених звітів ще немає.",
+  "No approved reports yet.",
+  "Согласованных отчётов ещё нет."
  ],
  "fr2": [
   "понад 14 днів",
@@ -1839,6 +1979,16 @@ export const EXTRA: Record<string, L3> = {
   "Відповідь збережено.",
   "Answer saved.",
   "Ответ сохранён."
+ ],
+ "fbPrev": [
+  "Попередній відгук",
+  "Previous feedback",
+  "Предыдущий отзыв"
+ ],
+ "fbNext": [
+  "Наступний відгук",
+  "Next feedback",
+  "Следующий отзыв"
  ],
  "errCode": [
   "Такий код уже є в іншого проєкту. Вкажіть інший або залиште поле порожнім — код призначиться автоматично.",

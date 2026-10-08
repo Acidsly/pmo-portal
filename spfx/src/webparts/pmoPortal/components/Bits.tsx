@@ -3,6 +3,7 @@ import { tv } from '../i18n/values';
 import { Rag } from '../logic/rag';
 import { Fresh } from '../logic/status';
 import { Person } from '../data/types';
+import { daysBetween } from '../logic/dates';
 
 const RC: Record<string, string> = { 'Зелений': 'var(--g)', 'Жовтий': 'var(--y)', 'Червоний': 'var(--r)' };
 const FC: Record<Fresh, string> = { g: 'var(--g)', y: 'var(--y)', r: 'var(--r)', na: 'var(--na)' };
@@ -17,8 +18,12 @@ export const fmtDT = (iso: string): string => { const d = new Date(iso); return 
 export const RagDot: React.FC<{ v: Rag; notRated: string }> = ({ v, notRated }) =>
   <span className="ragdot" title={tv(v) || notRated} aria-label={tv(v) || notRated} style={{ background: v ? RC[v] : 'var(--na)' }} />;
 
-export const FreshDate: React.FC<{ iso: string; fresh: Fresh; none: string }> = ({ iso, fresh, none }) =>
-  <span className="rag"><span className="dot sm" style={{ background: FC[fresh] }} />{iso ? fmtDate(iso) : <span className="muted">{none}</span>}</span>;
+/** Подсказка к точке свежести (freshTip прототипа): сколько дней последнему погодженому отчёту и что значат цвета. */
+export const freshTip = (t: (k: string) => string, iso: string, today: string): string =>
+  (iso ? t('freshTip').replace('{n}', String(daysBetween(iso, today))) : t('freshNone'));
+
+export const FreshDate: React.FC<{ iso: string; fresh: Fresh; none: string; tip?: string }> = ({ iso, fresh, none, tip }) =>
+  <span className="rag" title={tip}><span className="dot sm" style={{ background: FC[fresh] }} />{iso ? fmtDate(iso) : <span className="muted">{none}</span>}</span>;
 
 export const Avatar: React.FC<{ name: string }> = ({ name }) => {
   const c = COLORS[Array.from(name).reduce((a, ch) => a + ch.charCodeAt(0), 0) % COLORS.length];
@@ -56,9 +61,13 @@ const AC: Record<string, string> = { 'На погодженні': 'var(--y)', '�
 export const ApBadge: React.FC<{ v: string }> = ({ v }) =>
   <span className="pill ap" style={{ ['--c' as string]: AC[v || 'На погодженні'] } as React.CSSProperties}><span className="dot sm" />{tv(v || 'На погодженні')}</span>;
 
+/** Метка погодження самого нового отчёта (apMark прототипа): «Погоджено» / «На погодженні · дата» / «Повернуто · дата». */
+export const RepMark: React.FC<{ r: { approval: string; date: string } | null | undefined }> = ({ r }) => r
+  ? <span className="rep-ap"><ApBadge v={r.approval} />{r.approval !== 'Погоджено' ? <span className="muted">{fmtDate(r.date)}</span> : null}</span> : null;
+
 /** Статус проекта или риска — цветная пилюля без точки (точка — у стану RAG). */
 const SC: Record<string, string> = { 'Ініціація': '#5856d6', 'Планування': 'var(--theme)', 'Реалізація': 'var(--g)', 'Призупинено': 'var(--y)',
-  'Скасовано': 'var(--r)', 'Архівний': 'var(--na)', 'Завершено': 'var(--na)', 'Відкрито': 'var(--y)', 'В роботі': 'var(--theme)', 'Закрито': 'var(--g)' };
+  'Скасовано': 'var(--na)', 'Архівний': 'var(--na)', 'Завершено': 'var(--g)', 'Відкрито': 'var(--y)', 'В роботі': 'var(--theme)', 'Закрито': 'var(--g)' };
 export const StatusPill: React.FC<{ v: string }> = ({ v }) => (v
   ? <span className="pill st" style={{ ['--c' as string]: SC[v] || 'var(--na)' } as React.CSSProperties}>{tv(v)}</span> : <span className="muted">—</span>);
 

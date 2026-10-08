@@ -193,6 +193,15 @@ if (-not (Get-PnPRoleDefinition | Where-Object Name -eq $ROLE_ADD)) {
     Write-Host "  + уровень прав «$ROLE_ADD»" -ForegroundColor Green
 }
 
+# «только правка своей записи»: сповіщення — человек отмечает прочитанное в своей строке «Прочитане», не добавляет и не удаляет.
+# Имя — как $ROLE_UPDATE_NAME в Invoke-PMOSync.ps1.
+$ROLE_UPDATE = "Оновлення (портал)"
+if (-not (Get-PnPRoleDefinition | Where-Object Name -eq $ROLE_UPDATE)) {
+    Add-PnPRoleDefinition -RoleName $ROLE_UPDATE -Description "Портфель проєктів: переглядати й змінювати свій запис без додавання та видалення" `
+        -Include ViewListItems, EditListItems, OpenItems, ViewFormPages, ViewPages, Open, BrowseUserInfo, UseRemoteAPIs, UseClientIntegration | Out-Null
+    Write-Host "  + уровень прав «$ROLE_UPDATE»" -ForegroundColor Green
+}
+
 # PMO видит все проекты и заводит новые; править проект может только его PM (права элементов выдаёт синхронизация)
 try { $g = Get-PnPGroup -Identity $PMO_GROUP -ErrorAction Stop } catch { $g = $null }
 if (-not $g) {
@@ -209,7 +218,8 @@ foreach ($x in $pmoRoles) { if ($x -ne $ROLE_READ) { Set-PnPGroupPermissions -Id
 if ($pmoRoles -notcontains $ROLE_READ) { Set-PnPGroupPermissions -Identity $PMO_GROUP -AddRole $ROLE_READ | Out-Null; Write-Host "  $PMO_GROUP : чтение сайта" }
 
 $rag       = @("Зелений", "Жовтий", "Червоний")
-$status    = @("Ініціація", "Планування", "Реалізація", "Призупинено", "Скасовано", "Архівний")
+# архив — «Завершено» / «Скасовано» (прежнее «Архівний» переводит миграция 6a3 и затем убирает из выбора)
+$status    = @("Ініціація", "Планування", "Реалізація", "Призупинено", "Завершено", "Скасовано")
 $repStatus = @("Ініціація", "Планування", "Реалізація", "Призупинено", "Скасовано", "Завершено")
 $types     = @("Стратегічний", "Звичайний")
 
@@ -227,6 +237,12 @@ F $P pmOwner       User     "Власник"            "Owner"               "�
 F $P pmStakeholders UserMulti "Стейкхолдери"     "Stakeholders"        "Стейкхолдеры"         "UserSelectionMode='PeopleOnly' Mult='TRUE'"
 F $P pmDepartment  Choice   "Напрям"             "Area"                "Направление"          "Format='Dropdown'" (Choices @("ІТ","HR та кадрове адміністрування","Розрахунок зарплати","Продажі","Фінанси","Операції","Юридичний"))
 F $P pmStatus      Choice   "Статус проєкту"     "Project status"      "Статус проекта"       "Format='Dropdown' Required='TRUE'" (Choices $status "Ініціація")
+# F не меняет выбор у существующего поля: недостающие значения — явно; прежнее «Архівний» остаётся до миграции 6a3 # archive-migration
+$curSt = @((Get-PnPField -List $P -Identity pmStatus).Choices)
+if (@($status | Where-Object { $curSt -notcontains $_ }).Count) {
+    $keepOld = @($curSt | Where-Object { $_ -eq "Архівний" })   # archive-migration
+    Set-PnPField -List $P -Identity pmStatus -Values @{ Choices = [string[]]($status + $keepOld) } | Out-Null; Write-Host "    статуси проєкту: $(($status + $keepOld) -join ', ')"
+}
 F $P pmPriority    Choice   "Пріоритет"          "Priority"            "Приоритет"            "Format='Dropdown'" (Choices @("1 — Високий","2 — Середній","3 — Низький") "2 — Середній")
 F $P pmRAG         Choice   "Загальний стан"     "Overall health"      "Общее состояние"      "Format='Dropdown'" (Choices $rag)
 F $P pmProgress    Number   "% виконання"        "% complete"          "% выполнения"         "Min='0' Max='100' Decimals='0'" "<Default>0</Default>"
@@ -235,7 +251,7 @@ F $P pmGoLive      DateTime "Дата запуску (продакшн)" "Go-liv
 F $P pmPlanEnd     DateTime "Дата завершення (план)"  "Planned completion"        "Дата завершения (план)"  "Format='DateOnly'"
 F $P pmForecastEnd DateTime "Прогноз завершення" "Forecast completion" "Прогноз завершения"   "Format='DateOnly'"
 F $P pmActualEnd   DateTime "Дата завершення (факт)" "Actual completion date" "Дата завершения (факт)" "Format='DateOnly'"
-F $P pmArchivedAt  DateTime "Дата архівації"     "Archived on"         "Дата архивации"       "Format='DateOnly'"
+F $P pmArchivedAt  DateTime "Дата завершення / скасування" "Completed / cancelled on" "Дата завершения / отмены" "Format='DateOnly'"
 F $P pmBudget      Currency "Бюджет (план)"      "Budget (plan)"       "Бюджет (план)"        "LCID='1058' Decimals='0'"
 F $P pmActualCost  Currency "Витрати (факт)"     "Actual cost"         "Затраты (факт)"       "LCID='1058' Decimals='0'"
 F $P pmLastUpdate  DateTime "Останній статус-звіт" "Last status report" "Последний статус-отчёт" "Format='DateOnly'"
@@ -433,6 +449,18 @@ $script:Loc += , @($AP, "Title", "Коротко", "Summary", "Кратко")
 Set-PnPField -List $AP -Identity "Title" -Values @{ Required = $false } | Out-Null
 
 # 6d. Призначення (#43) — решение PMO о смене PM / власника после создания проекта; переносит синхронизация (сама карточка PM не меняется)
+# 6e. Прочитане — сповіщення в приложении: строка на человека, «прочитано до» (номер записи журнала и комментариев).
+#     Строку и права на неё (только этому человеку, «Оновлення (портал)») создаёт синхронизация, раздел 7.
+Write-Host "6e. Список «Прочитане»" -ForegroundColor Cyan
+$NS = Ensure-List "Lists/NotifyState" "Прочитане" "Read marks" "Прочитанное"
+F $NS nsUser        User     "Користувач"         "User"                "Пользователь"         "UserSelectionMode='PeopleOnly'"
+F $NS nsReadId      Number   "Прочитано до (журнал)" "Read up to (log)" "Прочитано до (журнал)" "Decimals='0'" "<Default>0</Default>"
+F $NS nsReadCmId    Number   "Прочитано до (коментарі)" "Read up to (comments)" "Прочитано до (комментарии)" "Decimals='0'" "<Default>0</Default>"
+# открытые события поверх метки (JSON-массив «j<номер>» / «c<номер>», не больше 200) — пишет приложение в свою строку
+F $NS nsReadSet     Note     "Прочитані події"    "Read events"         "Прочитанные события"  "NumLines='3' RichText='FALSE'"
+F $NS pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='255'"
+$script:Loc += , @($NS, "Title", "E-mail", "E-mail", "E-mail")
+
 Write-Host "6d. Список «Призначення»" -ForegroundColor Cyan
 $PA = Ensure-List "Lists/ProjectAssignments" "Призначення" "Assignments" "Назначения"
 F $PA paProject     Lookup   "Проєкт"             "Project"             "Проект"               $lookup
@@ -456,7 +484,6 @@ $script:Loc += , @($TM, "Title", "Коротко", "Summary", "Кратко")
 Set-PnPField -List $TM -Identity "Title" -Values @{ Required = $false } | Out-Null
 
 # Миграция (один раз на проект, по отметке pmMigrated): стейкхолдеры → строки команды с ролью «Стейкхолдер»; pmLoop → pmLinks;
-# отменённый проект → архив (как завершённый): «Архівний», дата архивации = дата последнего отчёта, строка журнала
 $teamOf = @{}
 foreach ($x in (Get-PnPListItem -List "Lists/ProjectTeam" -PageSize 500 -Fields "tmProject" | Where-Object { [string]$_.FileSystemObjectType -ne "Folder" })) { if ($x["tmProject"]) { $teamOf[$x["tmProject"].LookupId] = $true } }
 foreach ($it in (Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "Title","pmStakeholders","pmLoop","pmLinks","pmMigrated","pmStatus","pmLastUpdate","pmArchivedAt")) {
@@ -474,20 +501,11 @@ foreach ($it in (Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "T
         if ($loop -and $loop.Url -and -not [string]$it["pmLinks"]) { $vals.pmLinks = (ConvertTo-Json -InputObject @([ordered]@{ t = "Loop"; u = $loop.Url }) -Compress) }
         $marks += "links"
     }
-    if ($it["pmStatus"] -eq "Скасовано") {
-        $last = $it["pmLastUpdate"]
-        $day = if ($last) { [TimeZoneInfo]::ConvertTimeBySystemTimeZoneId(([datetime]$last).ToUniversalTime(), "Europe/Kyiv").ToString("yyyy-MM-dd") } else { (Get-Date).ToString("yyyy-MM-dd") }
-        $vals.pmStatus = "Архівний"
-        if (-not $it["pmArchivedAt"]) { $vals.pmArchivedAt = "$($day)T12:00:00Z" }
-        Add-PnPListItem -List "Lists/KeyChanges" -Values @{ Title = "Статус"; kcProject = $it.Id; kcDate = (Get-Date).ToUniversalTime().ToString("o")
-            kcKind = "Редагування картки"; kcField = "pmStatus"; kcFrom = "Скасовано"; kcTo = "Архівний"; kcReason = "Скасований проєкт переведено в архів" } | Out-Null
-        Write-Host "    миграция «$($it["Title"])»: Скасовано -> Архівний"
-    }
+    # «Скасовано» — архивный статус (прежняя миграция «Скасовано -> Архівний» убрана: архив по статусу «Завершено» / «Скасовано»)
     $newMarks = ($marks | Select-Object -Unique) -join ","
-    if ($newMarks -ne [string]$it["pmMigrated"] -or $vals.pmStatus) {
+    if ($newMarks -ne [string]$it["pmMigrated"]) {
         $vals.pmMigrated = $newMarks
         Set-PnPListItem -List "Lists/Projects" -Identity $it.Id -Values $vals -UpdateType SystemUpdate | Out-Null
-        if ($vals.pmStatus) { Sync-ProjectStateFromCard $it.Id }   # статус — ключевое поле: эталон = результат миграции
         Write-Host "    миграция «$($it["Title"])»: $newMarks"
     }
 }
@@ -502,6 +520,44 @@ F $PS psEditDone    Note     "Перенесені правки"  "Journaled edi
 F $PS psLastApplied Text     "Останній застосований звіт" "Last applied report" "Последний применённый отчёт" "MaxLength='40'"
 # #46 / #48: снимок учтённых отчётов и рисков для истории (пишет только синхронизация)
 F $PS psHistory     Note     "Історія: знімок"    "History snapshot"    "История: снимок"      "NumLines='3' RichText='FALSE'"
+
+# 6a3. Архив по статусу: прежнее «Архівний» -> «Завершено» / «Скасовано» (Get-ArchiveOutcome). Без записи в журнал: это смена
+# названия значения, а не событие (запись дала бы участникам ложные сповіщення). Карточка и эталон — вместе, права не меняются. # archive-migration
+Write-Host "6a3. Архів: статуси «Завершено» / «Скасовано»" -ForegroundColor Cyan
+$oldArch = @(Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "Title","pmStatus" | Where-Object { [string]$_["pmStatus"] -eq "Архівний" })   # archive-migration
+$archWarn = 0
+if ($oldArch.Count) {
+    $stMap = Read-ProjectStates
+    $repSt = @{}; $finals = @{}
+    foreach ($sr in (Get-PnPListItem -List "Lists/StatusReports" -PageSize 500 -Fields "srProject","srStatus","srDate","srApplied" | Where-Object { [string]$_.FileSystemObjectType -ne "Folder" })) {
+        $repSt[$sr.Id] = [string]$sr["srStatus"]
+        if ($sr["srProject"] -and $sr["srApplied"] -and [string]$sr["srStatus"] -in @("Завершено", "Скасовано")) {
+            $pk = [int]$sr["srProject"].LookupId; if (-not $finals[$pk]) { $finals[$pk] = @() }
+            $finals[$pk] += , @{ id = $sr.Id; date = (DateOnly $sr["srDate"]); status = [string]$sr["srStatus"] }
+        }
+    }
+    $cancelJ = @{}
+    foreach ($jc in (Get-PnPListItem -List "Lists/KeyChanges" -PageSize 500 -Fields "kcProject","kcField","kcFrom","kcTo" | Where-Object { [string]$_.FileSystemObjectType -ne "Folder" -and [string]$_["kcField"] -eq "pmStatus" -and [string]$_["kcFrom"] -eq "Скасовано" -and [string]$_["kcTo"] -eq "Архівний" })) {   # archive-migration
+        if ($jc["kcProject"]) { $cancelJ[[int]$jc["kcProject"].LookupId] = $true }
+    }
+    foreach ($it in $oldArch) {
+        $la = if ($stMap[$it.Id]) { [string]$stMap[$it.Id].last } else { "" }
+        $laSt = if ($la -match '#(\d+)$') { [string]$repSt[[int]$Matches[1]] } else { "" }
+        $o = Get-ArchiveOutcome $laSt @($finals[$it.Id]) ([bool]$cancelJ[$it.Id])
+        # исход не найден — не угадываем: проект остаётся «Архівний» (архив по признаку), предупреждение на каждом deploy, значение не убирается из выбора
+        if ($o.warn) { $archWarn++; Write-Warning "«$($it["Title"])» (#$($it.Id)): результат не знайдено ні у звітах, ні в журналі — залишається «Архівний»; вкажіть статус вручну (Завершено / Скасовано)"; continue }
+        Set-PnPListItem -List "Lists/Projects" -Identity $it.Id -Values @{ pmStatus = $o.status } -UpdateType SystemUpdate | Out-Null
+        Sync-ProjectStateFromCard $it.Id   # статус — ключевое поле: эталон = результат миграции
+        Write-Host "    «$($it["Title"])»: Архівний -> $($o.status)"
+    }
+}
+# «Архівний» убираем из выбора, только когда ни одного проекта с ним не осталось и исход везде найден (данные не теряются)
+$curSt = @((Get-PnPField -List $P -Identity pmStatus).Choices)
+if ($curSt -contains "Архівний") {   # archive-migration
+    $left = @(Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "pmStatus" | Where-Object { [string]$_["pmStatus"] -eq "Архівний" }).Count   # archive-migration
+    if (-not $left -and -not $archWarn) { Set-PnPField -List $P -Identity pmStatus -Values @{ Choices = [string[]]$status } | Out-Null; Write-Host "    «Архівний» прибрано зі списку статусів" }
+    else { Write-Warning "«Архівний» залишається у списку статусів: проєктів з ним $left, без знайденого результату $archWarn" }
+}
 
 # 6b. Відгуки — замечания фокус-группы из приложения (текст, экран, устройство, скриншоты-вложения)
 if ($Feedback) {
@@ -635,10 +691,23 @@ Set-ListRoles "Lists/ProjectTeam"     @{ $members.Title = $ROLE_READ; $PMO_GROUP
 Set-ListRoles "Lists/ReportApprovals" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
 # призначення — «додавання» PMO на папке активного проекта (синхронизация); PM и остальные — чтение
 Set-ListRoles "Lists/ProjectAssignments" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
+# прочитане — у каждой строки свои права (только этот человек, их выдаёт синхронизация); на уровне списка — только владельцы:
+# новая строка до выдачи ей прав никому, кроме владельцев, не видна
+$nsl = Get-PnPList -Identity "Lists/NotifyState" -Includes HasUniqueRoleAssignments
+if (-not $nsl.HasUniqueRoleAssignments) { Set-PnPList -Identity "Lists/NotifyState" -BreakRoleInheritance | Out-Null; Write-Host "  «Прочитане»: собственные права списка" }
+Set-ListRoles "Lists/NotifyState" @{ (Get-PnPGroup -AssociatedOwnerGroup).Title = (Get-RoleName "Administrator") }
+$ctxNs = Get-PnPContext; $raNs = (Get-PnPList -Identity "Lists/NotifyState").RoleAssignments; $ctxNs.Load($raNs); Invoke-PnPQuery
+foreach ($a in $raNs) { $ctxNs.Load($a.Member) }; Invoke-PnPQuery
+foreach ($grp in @($members.Title, $PMO_GROUP)) {
+    if (@($raNs | Where-Object { $_.Member.Title -eq $grp }).Count) {
+        $gObj = Get-PnPGroup -Identity $grp; (Get-PnPList -Identity "Lists/NotifyState").RoleAssignments.GetByPrincipal($gObj).DeleteObject(); Invoke-PnPQuery
+        Write-Host "  «Прочитане» $grp : права списка сняты (строки — только их людям)"
+    }
+}
 Set-ListRoles "Lists/ProjectState"    @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
 # свежие проверки приложения перед записью — фильтры по индексированным полям
 foreach ($ix in @(@("Lists/Projects", "Title"), @("Lists/StatusReports", "srProject"), @("Lists/RisksIssues", "riProject"), @("Lists/ProjectComments", "cmProject"),
-                  @("Lists/ProjectTeam", "tmProject"), @("Lists/ReportApprovals", "apReport"), @("Lists/ReportApprovals", "apProject"), @("Lists/ProjectAssignments", "paProject"))) {
+                  @("Lists/ProjectTeam", "tmProject"), @("Lists/ReportApprovals", "apReport"), @("Lists/ReportApprovals", "apProject"), @("Lists/ProjectAssignments", "paProject"), @("Lists/NotifyState", "Title"), @("Lists/KeyChanges", "kcDate"))) {
     $fx = Get-PnPField -List $ix[0] -Identity $ix[1]
     if (-not $fx.Indexed) { Set-PnPField -List $ix[0] -Identity $ix[1] -Values @{ Indexed = $true } | Out-Null; Write-Host "    индекс $($ix[0]).$($ix[1])" }
 }
@@ -652,10 +721,14 @@ if ($Feedback) {
 # 8. Представления (группировок по статусам нет; названия представлений SharePoint не переводит)
 # ===========================================================================
 Write-Host "8. Представления" -ForegroundColor Cyan
+# архив — «Завершено» / «Скасовано» (и прежнее «Архівний» до миграции 6a3); активные — все остальные # archive-migration
 $active = "<And><And><Neq><FieldRef Name='pmStatus'/><Value Type='Choice'>Скасовано</Value></Neq>" +
           "<Neq><FieldRef Name='pmStatus'/><Value Type='Choice'>Архівний</Value></Neq></And>" +
           "<Neq><FieldRef Name='pmStatus'/><Value Type='Choice'>Завершено</Value></Neq></And>"
-$notArchived = "<Neq><FieldRef Name='pmStatus'/><Value Type='Choice'>Архівний</Value></Neq>"
+$notArchived = $active
+$archived = "<Or><Or><Eq><FieldRef Name='pmStatus'/><Value Type='Choice'>Завершено</Value></Eq>" +
+            "<Eq><FieldRef Name='pmStatus'/><Value Type='Choice'>Скасовано</Value></Eq></Or>" +
+            "<Eq><FieldRef Name='pmStatus'/><Value Type='Choice'>Архівний</Value></Eq></Or>"
 $order = "<OrderBy><FieldRef Name='pmType' Ascending='FALSE'/><FieldRef Name='pmPriority'/></OrderBy>"
 
 # Порядок колонок во всех представлениях: стратегический, приоритет, название, затем остальные
@@ -672,8 +745,8 @@ $null     = Ensure-View $P "Мої проєкти" $pFields `
 $null     = Ensure-View $P "Немає свіжого звіту" @("pmType","pmPriority","LinkTitle","pmManager","pmLastUpdate","pmStatus") `
     ("<Where><And>$active<Or><IsNull><FieldRef Name='pmLastUpdate'/></IsNull>" +
      "<Lt><FieldRef Name='pmLastUpdate'/><Value Type='DateTime'><Today OffsetDays='-14'/></Value></Lt></Or></And></Where>")
-$vArchive = Ensure-View $P "Архів" @("pmType","pmPriority","LinkTitle","pmManager","pmOwner","pmArchivedAt","pmPlanEnd","pmBudget","pmActualCost") `
-    "<OrderBy><FieldRef Name='pmArchivedAt' Ascending='FALSE'/></OrderBy><Where><Eq><FieldRef Name='pmStatus'/><Value Type='Choice'>Архівний</Value></Eq></Where>"
+$vArchive = Ensure-View $P "Архів" @("pmType","pmPriority","LinkTitle","pmStatus","pmManager","pmOwner","pmArchivedAt","pmPlanEnd","pmBudget","pmActualCost") `
+    "<OrderBy><FieldRef Name='pmArchivedAt' Ascending='FALSE'/></OrderBy><Where>$archived</Where>"
 
 $rFields = @("srProjectType","srProjectPriority","srProject","srDate","srRAG","srSchedule","srBudget","srResources","LinkTitle","Author","srDecision","srApproval")
 $null      = Set-BaseView $R "Усі звіти" $rFields "<OrderBy><FieldRef Name='srDate' Ascending='FALSE'/></OrderBy>"
@@ -686,6 +759,7 @@ $vRisks = Ensure-View $K "Відкриті" $kFields `
     "<OrderBy><FieldRef Name='riScore' Ascending='FALSE'/></OrderBy><Where><Neq><FieldRef Name='riStatus'/><Value Type='Choice'>Закрито</Value></Neq></Where>"
 
 $null = Set-BaseView $C "Усі зміни" @("kcProject","kcDate","kcChangedBy","kcKind","LinkTitle","kcFrom","kcTo","kcReason") "<OrderBy><FieldRef Name='kcDate' Ascending='FALSE'/></OrderBy>"
+$null = Set-BaseView $NS "Усі" @("LinkTitle","nsUser","nsReadId","nsReadCmId","nsReadSet","Modified") "<OrderBy><FieldRef Name='Title'/></OrderBy>"
 $null = Set-BaseView $PA "Усі призначення" @("paProject","paManager","paOwner","paNote","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
 $null = Set-BaseView $AP "Усі погодження" @("apProject","apReport","apDecision","apSchedule","apBudget","apResources","apNote","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
 $null = Set-BaseView $TM "Уся команда" @("tmProject","tmUser","tmRole","tmTopics") "<OrderBy><FieldRef Name='tmProject'/></OrderBy>"
@@ -747,7 +821,7 @@ foreach ($lib in @("SitePages", "SiteAssets", "Shared Documents")) {
     if (Get-PnPList -Identity $lib -ErrorAction SilentlyContinue) { Set-ListRoles $lib @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ } }
 }
 # списки портала не видны в «Вміст сайту» и поиске по сайту; приложение и владельцы открывают их по адресу
-$portalLists = @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/KeyChanges", "Lists/ProjectComments", "Lists/ProjectTeam", "Lists/ReportApprovals", "Lists/ProjectAssignments", "Lists/ProjectState") + $(if ($Feedback) { @("Lists/Feedback", "Lists/FeedbackPublic") } else { @() })
+$portalLists = @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/KeyChanges", "Lists/ProjectComments", "Lists/ProjectTeam", "Lists/ReportApprovals", "Lists/ProjectAssignments", "Lists/NotifyState", "Lists/ProjectState") + $(if ($Feedback) { @("Lists/Feedback", "Lists/FeedbackPublic") } else { @() })
 foreach ($u in $portalLists) {
     $l = Get-PnPList -Identity $u -Includes Hidden
     if (-not $l.Hidden) { Set-PnPList -Identity $u -Hidden $true | Out-Null; Write-Host "    скрыт список $u" }

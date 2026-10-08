@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { EntTag } from '../components/EntTag';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
 import { StatusReport, Project } from '../data/types';
@@ -26,7 +27,7 @@ export const ReportView: React.FC<{ data: PortalData; report: StatusReport | und
   const [err, setErr] = React.useState('');
   const [busy, setBusy] = React.useState(false);
   const p: Project | undefined = r ? data.projects.filter(x => x.id === r.projectId)[0] : undefined;
-  const head = <div className="ph"><div><div className="k">{p ? p.code + ' · ' : ''}{t('listLabel')} «{t('navReports')}»</div><h2>{r ? r.title : t('navReports')}</h2></div>
+  const head = <div className="ph"><div><div className="k"><EntTag kind="report" /><span>{p ? p.code + ' · ' : ''}{t('listLabel')} «{t('navReports')}»</span></div><h2>{r ? r.title : t('navReports')}</h2></div>
     <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>;
   if (!r || !p) return <>{head}<p className="empty">{t('noReportsYet')}</p></>;
 
@@ -53,9 +54,9 @@ export const ReportView: React.FC<{ data: PortalData; report: StatusReport | und
 
   // ключевые показатели, которые отчёт меняет; до погодження — «було → стало» относительно карточки
   const show = (k: Ind, v: string | number | null | undefined): React.ReactNode => (v === '' || v === null || v === undefined ? <span className="muted">—</span>
-    : k === 'progress' ? v + '%' : k === 'actualCost' ? money(Number(v)) : DATES.indexOf(k) >= 0 ? fmtDate(String(v)) : tv(v === 'Завершено' ? 'Архівний' : String(v)));
+    : k === 'progress' ? v + '%' : k === 'actualCost' ? money(Number(v)) : DATES.indexOf(k) >= 0 ? fmtDate(String(v)) : tv(String(v)));
   const ind = IND.filter(([k]) => { const v = r[k]; return v !== '' && v !== null && v !== undefined; }).map(([k, l]) => {
-    const cur = p[k] as string | number; const nv = k === 'status' && (r.status === 'Завершено' || r.status === 'Скасовано') ? 'Архівний' : r[k];
+    const cur = p[k] as string | number; const nv = r[k];
     const ch = state !== AP_OK && String(cur === undefined || cur === null ? '' : cur) !== String(nv === null ? '' : nv);
     return <div key={k} className="kv"><span className="k">{fl(l)}</span><span className="v">{ch ? <span className="dv"><s>{show(k, cur)}</s><span className="arr">→</span>{show(k, r[k])}</span> : show(k, r[k])}</span></div>;
   });

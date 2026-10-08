@@ -3,7 +3,8 @@ import { AppCtx, Page } from './ctx';
 import { Lang } from '../i18n/i18n';
 import { Theme } from '../theme/theme';
 import { Avatar } from './Bits';
-import { Sun, Moon } from './Icons';
+import { Sun, Moon, Bell } from './Icons';
+import { Lucide } from './LucideIcons';
 
 const NAV: [Page, string][] = [['home', 'navHome'], ['projects', 'navProjects'], ['reports', 'navReports'], ['risks', 'navRisks'], ['archive', 'navArchive'], ['feedback', 'navFeedback']];
 
@@ -11,14 +12,18 @@ const NAV: [Page, string][] = [['home', 'navHome'], ['projects', 'navProjects'],
 export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: string; userEmail: string;
   onPage(p: Page): void; onLang(l: Lang): void; onTheme(v: 'light' | 'dark'): void;
   /** Вкладка «Відгуки» — только если на сайте есть список «Відгуки» (тест с фокус-группой); отзыв оставляют на ней. */
-  onFeedback?: () => void; onHelp(): void }> = p => {
+  onFeedback?: () => void; onHelp(): void;
+  /** Сповіщення: красная точка — есть новые для меня события. */
+  bell?: { unread: number; onOpen(): void } }> = p => {
   const { t } = React.useContext(AppCtx);
   const dark = p.theme === 'dark' || (p.theme === '' && !!window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
   return <header className="top"><div className="top-in">
     <div className="brand"><div className="logo" aria-hidden="true">PPM</div>
       <div><div className="brand-name">{t('siteTitle')}</div><div className="brand-sub">SharePoint · Microsoft 365</div></div></div>
     <nav className="nav" aria-label="Navigation">{NAV.filter(([pg]) => pg !== 'feedback' || !!p.onFeedback).map(([pg, k]) =>
-      <button key={pg} aria-current={p.page === pg ? 'page' : undefined} onClick={() => p.onPage(pg)}>{t(k)}</button>)}</nav>
+      // значок раздела (Lucide) и название; на телефоне — только значок, название — в подсказке
+      <button key={pg} data-page={pg} title={t(k)} aria-label={t(k)} aria-current={p.page === pg ? 'page' : undefined} onClick={() => p.onPage(pg)}>
+        <span className="ni"><Lucide k={pg} /></span><span className="nl">{t(k)}</span></button>)}</nav>
     <div className="controls">
       <div className="seg" role="group" aria-label="Мова / Language / Язык">{['UA', 'EN', 'RU'].map((l, i) =>
         <button key={l} lang={['uk', 'en', 'ru'][i]} aria-pressed={p.lang === i} onClick={() => p.onLang(i as Lang)}>{l}</button>)}</div>
@@ -26,6 +31,9 @@ export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: 
         <button aria-pressed={!dark} title={t('themeLight')} aria-label={t('themeLight')} onClick={() => p.onTheme('light')}><Sun /></button>
         <button aria-pressed={dark} title={t('themeDark')} aria-label={t('themeDark')} onClick={() => p.onTheme('dark')}><Moon /></button>
       </div>
+      {p.bell ? <button className={'bell' + (p.bell.unread ? ' has' : '')} id="bell" title={p.bell.unread ? `${t('notifTitle')} · ${t('notifNewOnes')}: ${p.bell.unread}` : t('notifTitle')}
+        aria-label={p.bell.unread ? `${t('notifTitle')} · ${t('notifNewOnes')}: ${p.bell.unread}` : t('notifTitle')} onClick={p.bell.onOpen}><Bell />
+        {p.bell.unread ? <span className="dot-new">{p.bell.unread > 99 ? '99+' : p.bell.unread}</span> : null}</button> : null}
       <button className="hbtn round" title={t('help')} aria-label={t('help')} onClick={p.onHelp}>?</button>
       <button className="me" title={`${t('signedIn')}: ${p.userName} · ${p.userEmail}`} aria-label={`${t('signedIn')}: ${p.userName}`}><Avatar name={p.userName} /></button>
     </div>

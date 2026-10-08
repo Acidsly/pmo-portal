@@ -31,7 +31,7 @@ $login = [uri]::EscapeDataString($user.LoginName)
 function Get-Bits([string]$url) {
     $j = Invoke-PnPSPRestMethod -Method Get -Url "$url/getusereffectivepermissions(@u)?@u='$login'"
     $low = [uint64]$j.Low
-    return [ordered]@{ add = [bool]($low -band 0x2); edit = [bool]($low -band 0x4); del = [bool]($low -band 0x8) }
+    return [ordered]@{ view = [bool]($low -band 0x1); add = [bool]($low -band 0x2); edit = [bool]($low -band 0x4); del = [bool]($low -band 0x8) }
 }
 $fmt = { param($b) "{0}{1}{2}" -f $(if ($b.add) { "A" } else { "-" }), $(if ($b.edit) { "E" } else { "-" }), $(if ($b.del) { "D" } else { "-" }) }
 $projects = @(Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "ID", "pmCode", "pmStatus", "pmManager")
@@ -51,4 +51,16 @@ foreach ($l in $lists) {
     }
     Write-Host $line
     Write-Host ("    " + ($cells -join "  "))
+}
+# сповіщення: «Прочитане» — своя строка (просмотр и правка, без удаления), чужие — не видны
+$nsList = Get-PnPList -Identity "Lists/NotifyState" -ErrorAction SilentlyContinue
+if ($nsList) {
+    $rb = Get-Bits "/_api/web/lists(guid'$($nsList.Id)')"
+    $own = ""; $others = 0
+    foreach ($it in @(Get-PnPListItem -List "Lists/NotifyState" -PageSize 500)) {
+        $b = Get-Bits "/_api/web/lists(guid'$($nsList.Id)')/items($($it.Id))"
+        if (([string]$it["Title"]).ToLowerInvariant() -eq $Email.ToLowerInvariant()) { $own = "#$($it.Id): $(if ($b.view) { 'V' } else { '-' })$(& $fmt $b)" }
+        elseif ($b.view) { $others++ }
+    }
+    Write-Host ("{0,-24} корінь: {1}  свій рядок: {2}  чужих видно: {3}" -f "NotifyState", (& $fmt $rb), $(if ($own) { $own } else { "немає" }), $others)
 }
