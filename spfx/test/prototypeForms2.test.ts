@@ -192,7 +192,7 @@ describe('сповіщення: колокольчик в прототипе', (
     const ta = q('#panel textarea, .panel textarea, textarea'); ta.value = txt; ev(ta, 'input');
     ta.closest('form').dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
   };
-  test('после загрузки точки нет; комментарий PM — точка у власника, не у постороннего; открытие панели гасит точку', () => {
+  test('после загрузки точки нет; комментарий PM — точка у власника, не у постороннего; «Позначити все прочитаним» гасит точку', () => {
     expect(dot()).toBe(false);
     comment(1, 'Перевірка сповіщень');                      // PRJ-001: PM — Юрій, власник — Сергій Литвиненко
     expect(dot()).toBe(false);                               // своё — не новое
@@ -201,8 +201,8 @@ describe('сповіщення: колокольчик в прототипе', (
     q('#bell').click();
     expect(w.document.body.textContent).toContain('Перевірка сповіщень');
     expect(q('.ntf-i.new')).not.toBeNull();
-    expect(dot()).toBe(false);
-    // кросс-ревью: «Лише нові» после открытия — новые всё ещё видны и выделены
+    expect(dot()).toBe(true);                                // открытие ничего не отмечает
+    // «Лише нові» — новые видны и выделены
     const cb = q('#ntf-new'); cb.checked = true; ev(cb, 'change');
     expect(q('.ntf-i.new')).not.toBeNull();
     expect(w.document.body.textContent).toContain('Перевірка сповіщень');
@@ -211,6 +211,8 @@ describe('сповіщення: колокольчик в прототипе', (
     expect(q('[data-act="notifback"]')).not.toBeNull();
     q('[data-act="notifback"]').click();
     expect(q('#ntf-list')).not.toBeNull(); expect(q('.ntf-i.new')).not.toBeNull();
+    q('#ntf-all').click();
+    expect(dot()).toBe(false); expect(q('.ntf-i.new')).toBeNull(); expect(q('#ntf-all')).toBeNull();
     // открытие из шапки — без кнопки возврата
     q('#bell').click(); expect(q('[data-act="notifback"]')).toBeNull();
   });

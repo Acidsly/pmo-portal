@@ -123,7 +123,7 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
 
 - At the top right there is a **bell**. A **red number** on it shows how many new events there are for you in your projects; while there are new ones, the bell sways now and then.
 - Click the bell to open **"Notifications"**: events for 14 days, new ones at the top and highlighted ("New"), already seen ones below. Clicking an event opens the card, status report or risk; **"← Notifications"** at the top takes you back to the list. "Only new" hides what you have seen.
-- Once you open "Notifications", what is shown counts as read and the number disappears.
+- **"Mark all as read"** marks what is shown as read and the number disappears. Just opening the list or an event marks nothing.
 - What you see depends on your role in the project: the PM, owner and team see project creation, assignments, PMO decisions on reports, indicator updates and comments; risks — the PM and the risk owner always, the owner and team only high ones (score 15 and above); card edits — the PM and the owner; the PMO sees reports submitted for approval and projects moved to the archive. Your own actions are not shown.
 - For a new participant notifications appear within ~15 minutes; earlier events are not treated as new.
 
@@ -161,7 +161,7 @@ The **Feedback** tab → **Leave feedback** (or the "Feedback" button in Help): 
 
 Your device is added automatically; in the text, say on which screen you noticed the problem.
 
-The **Feedback** tab lists all participants' feedback: the number (#46 — answers refer to feedback by it), the text, the author, the review status (New, Accepted, Done, Commented, Rejected) and the developers' answer. Screenshots are visible only to the author and the developers. The status and the answer are set by the solution's developers.
+The **Feedback** tab lists all participants' feedback: the number (#46 — answers refer to feedback by it), the text, the author, the review status (New, Accepted, Done, Commented, Rejected) and the developers' answer. Screenshots are visible only to the author and the developers. The status and the answer are set by the solution's developers. In the feedback window the **‹ ›** arrows next to the number go to the previous and next feedback in the table's order (with its filters and sorting).
 
 ## Tasks for the focus group
 

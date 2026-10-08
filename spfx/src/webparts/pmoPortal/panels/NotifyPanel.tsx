@@ -12,23 +12,25 @@ const NK: Record<NotifyKind, string> = { created: 'nkCreated', assigned: 'nkAssi
 export const readMarks = (data: PortalData): ReadMarks | null => (data.notify ? { readId: data.notify.readId, readCmId: data.notify.readCmId } : null);
 
 /** Строки колокольчика и есть ли новые (правило — logic/notify.ts). PMO и владельцы сайта — canApprove. */
-export function notifyState(data: PortalData, me: string, marks?: ReadMarks): { list: NotifyItem[]; unread: number } {
+export function notifyState(data: PortalData, me: string): { list: NotifyItem[]; unread: number } {
   const since = new Date(Date.now() - NOTIFY_DAYS * 864e5).toISOString();
-  const list = notifyList(notifyItems(data, me, data.canApprove, since), marks || readMarks(data));
+  const list = notifyList(notifyItems(data, me, data.canApprove, since), readMarks(data));
   return { list, unread: list.filter(x => x.unread).length };
 }
 
-/** Панель «Сповіщення» (notifPanel прототипа): события за 14 дней по моей роли; открытие отмечает показанное прочитанным.
- *  marks — метки на момент первого открытия (возврат «← Сповіщення» сохраняет выделение «Нове»); onOpen — переход к событию. */
-export const NotifyPanel: React.FC<{ data: PortalData; marks?: ReadMarks; onOpen(form: string, projectId: number): void; onCancel(): void }> = ({ data, marks, onOpen, onCancel }) => {
+/** Панель «Сповіщення» (notifPanel прототипа): события за 14 дней по моей роли; «Позначити все прочитаним» — метки до последнего показанного.
+ *  onOpen — переход к событию (открытие и переход ничего не отмечают). */
+export const NotifyPanel: React.FC<{ data: PortalData; onOpen(form: string, projectId: number): void; onCancel(): void }> = ({ data, onOpen, onCancel }) => {
   const c = React.useContext(AppCtx); const { t, fl } = c;
-  // список с отметками «Нове» — на момент открытия: выделение остаётся, пока панель открыта
-  const [list] = React.useState(() => notifyState(data, c.me, marks).list);
+  const list = notifyState(data, c.me).list;
   const [onlyNew, setOnlyNew] = React.useState(false);
-  React.useEffect(() => {
-    if (!data.notify || !list.some(x => x.unread)) return;
-    c.repo.markRead(marksAfterView(list, { readId: data.notify.readId, readCmId: data.notify.readCmId })).then(() => c.reload(), () => undefined);
-  }, []);
+  const [busy, setBusy] = React.useState(false);
+  const readAll = (): void => {
+    if (!data.notify) return;
+    setBusy(true);
+    c.repo.markRead(marksAfterView(list, { readId: data.notify.readId, readCmId: data.notify.readCmId })).then(() => c.reload())
+      .then(() => setBusy(false), (x: Error) => { setBusy(false); c.toast(String((x && x.message) || x)); });
+  };
   const open = (x: NotifyItem): void => {
     const r = x.ev && x.ev.ref;
     onOpen(r ? (r.type === 'report' ? 'rep:' : 'risk:') + r.id : '', x.projectId);
@@ -39,7 +41,8 @@ export const NotifyPanel: React.FC<{ data: PortalData; marks?: ReadMarks; onOpen
     <div className="ph"><div><div className="k">PPM</div><h2>{t('notifTitle')}</h2></div>
       <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     <p className="note">{data.notify ? t('notifHint') : t('notifSoon')}</p>
-    <div className="ntf-bar"><label className="check"><input type="checkbox" id="ntf-new" checked={onlyNew} onChange={e => setOnlyNew(e.target.checked)} /> {t('notifOnlyNew')}</label></div>
+    <div className="ntf-bar"><label className="check"><input type="checkbox" id="ntf-new" checked={onlyNew} onChange={e => setOnlyNew(e.target.checked)} /> {t('notifOnlyNew')}</label>
+      {data.notify && list.some(x => x.unread) ? <button type="button" className="btn" id="ntf-all" disabled={busy} onClick={readAll}>{t('notifReadAll')}</button> : null}</div>
     <div id="ntf-list">{shown.length ? shown.map(x =>
       <button key={x.key} className={'ntf-i ' + (x.unread ? 'new' : 'old')} onClick={() => open(x)}>
         <div className="ntf-h"><span className="ntf-p">{p(x.projectId)}</span><span className="chg-k">{t(NK[x.kind])}</span>

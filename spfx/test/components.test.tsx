@@ -15,6 +15,8 @@ import { ProjectForm } from '../src/webparts/pmoPortal/panels/ProjectForm';
 import { RefLink } from '../src/webparts/pmoPortal/panels/ProjectCard';
 import { NotifyPanel } from '../src/webparts/pmoPortal/panels/NotifyPanel';
 import { Header } from '../src/webparts/pmoPortal/components/Header';
+import { FeedbackView } from '../src/webparts/pmoPortal/panels/FeedbackView';
+import { neighbors } from '../src/webparts/pmoPortal/logic/ui';
 
 // Компоненты приложения в jsdom: поведение, а не только «вызывается» (блок 2 отзывов раунда 3 и правки кросс-ревью)
 const tt = makeT(0);
@@ -237,7 +239,7 @@ describe('сповіщення: колокольчик и панель', () => {
     head({ unread: 0, onOpen: () => undefined }); expect(root.querySelector('#bell')).not.toBeNull(); expect(root.querySelector('#bell .dot-new')).toBeNull();
     expect(root.querySelector('#bell')!.className).not.toContain('has');
   });
-  test('панель: мои новые события выделены, открытие отмечает прочитанным (метки растут); нажатие открывает отчёт', async () => {
+  test('панель: мои новые события выделены; открытие ничего не пишет, «Позначити все прочитаним» — метки растут; нажатие открывает событие', async () => {
     const marked: any[] = []; const opened: string[] = [];
     const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } }, reload: async () => undefined };
     await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 20, readCmId: 5 })} onOpen={(f, id) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
@@ -245,6 +247,8 @@ describe('сповіщення: колокольчик и панель', () => {
     expect(items.length).toBe(1);   // подача отчёта — только PMO; PM видит комментарий
     expect(items[0].className).toContain('new');
     expect(root.textContent).toContain('Новий коментар');
+    expect(marked).toEqual([]);
+    await act(async () => { (root.querySelector('#ntf-all') as HTMLElement).click(); await Promise.resolve(); });
     expect(marked).toEqual([{ readId: 20, readCmId: 7 }]);
     act(() => { (items[0] as HTMLElement).click(); }); expect(opened).toEqual(['@1']);
   });
@@ -253,14 +257,37 @@ describe('сповіщення: колокольчик и панель', () => {
     const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } } };
     await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data(null)} onOpen={() => undefined} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
     expect(root.textContent).toContain('Сповіщення з\'являться протягом 15 хвилин.');
+    expect(root.querySelector('#ntf-all')).toBeNull();
     expect(marked).toEqual([]);
   });
-  test('возврат «← Сповіщення»: выделение «Нове» — по меткам первого открытия, хотя строка уже отмечена прочитанной', async () => {
-    const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async () => undefined }, reload: async () => undefined };
-    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 30, readCmId: 7 })} marks={{ readId: 20, readCmId: 5 }} onOpen={() => undefined} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
-    expect(root.querySelector('.ntf-i')!.className).toContain('new');
+});
+
+describe('отзыв: «попередній / наступний» по порядку таблицы', () => {
+  const fb = (id: number): any => ({ id, created: '2026-10-01T10:00:00Z', author: 'А', screen: '', text: 'Відгук ' + id, status: 'Новий', answer: '', shots: 0, mine: true, files: [] });
+  test('neighbors: середина, края, нет в порядке', () => {
+    expect(neighbors([5, 3, 9], 3)).toEqual({ prev: 5, next: 9 });
+    expect(neighbors([5, 3, 9], 5)).toEqual({ prev: 0, next: 3 });
+    expect(neighbors([5, 3, 9], 9)).toEqual({ prev: 3, next: 0 });
+    expect(neighbors([5, 3, 9], 7)).toEqual({ prev: 0, next: 0 });
+  });
+  test('окно отзыва: стрелки у номера ведут к соседям, на краю — неактивны', () => {
+    const go: number[] = [];
+    mount(<FeedbackView row={fb(3)} admin={false} order={[5, 3, 9]} onGo={n => go.push(n)} onCancel={() => undefined} />);
+    expect(root.querySelector('.fb-nav')!.textContent).toContain('№3');
+    act(() => { (root.querySelector('#fb-prev') as HTMLElement).click(); (root.querySelector('#fb-next') as HTMLElement).click(); });
+    expect(go).toEqual([5, 9]);
     ReactDOM.unmountComponentAtNode(root);
-    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 30, readCmId: 7 })} onOpen={() => undefined} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
-    expect(root.querySelector('.ntf-i')!.className).toContain('old');
+    mount(<FeedbackView row={fb(5)} admin={false} order={[5, 3, 9]} onGo={n => go.push(n)} onCancel={() => undefined} />);
+    expect((root.querySelector('#fb-prev') as HTMLButtonElement).disabled).toBe(true);
+    expect((root.querySelector('#fb-next') as HTMLButtonElement).disabled).toBe(false);
+  });
+  test('таблица отдаёт строки в порядке экрана (сортировка)', () => {
+    let shown: number[] = [];
+    const defs: TableDefs<{ id: number }> = { lock: 'num', defaults: ['num'], cols: { num: { label: '№', cell: r => String(r.id), sort: r => r.id } } };
+    mount(<DataTable tkey="t-shown" defs={defs} rows={[{ id: 2 }, { id: 1 }, { id: 3 }]} onShown={rs => { shown = rs.map(r => r.id); }} />);
+    const before = shown.slice();
+    act(() => { (root.querySelector('.sortb') as HTMLElement).click(); });
+    expect(before).toEqual([2, 1, 3]);
+    expect(shown).toEqual([1, 2, 3]);
   });
 });

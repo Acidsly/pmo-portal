@@ -12,6 +12,10 @@ import { Hero } from './common';
 export const FB_STATUSES = ['Новий', 'Прийнято', 'Зроблено', 'Прокоментовано', 'Відхилено'];
 type FbView = 'all' | 'mine' | 'open';
 
+// порядок отзывов как в таблице (вид, фильтры, сортировка) — для «попередній / наступний» в окне отзыва
+let SHOWN: number[] = [];
+export const feedbackOrder = (): number[] => SHOWN;
+
 /** Цветная метка статуса разбора (как в списке «Відгуки»). */
 export const FbStatus: React.FC<{ v: string }> = ({ v }) => <span className={'fbst fbst-' + FB_STATUSES.indexOf(v)}>{tv(v)}</span>;
 
@@ -35,7 +39,7 @@ export const Feedback: React.FC<{ data: PortalData }> = ({ data }) => {
   const views: [FbView, string][] = [['all', t('fbViewAll')], ['mine', t('fbViewMine')], ['open', t('fbViewOpen')]];
   return <>
     <Hero title={t('navFeedback')} sub={t('fbPageSub')} />
-    <div className="listcard"><DataTable tkey="feedback2" defs={defs} rows={rows} empty={t('fbNoItems')}
+    <div className="listcard"><DataTable tkey="feedback2" defs={defs} rows={rows} empty={t('fbNoItems')} onShown={rs => { SHOWN = rs.map(r => r.id); }}
       left={<button className="cmd primary" onClick={() => c.openForm('feedback')}>{t('feedbackNew')}</button>}
       right={<label className="viewsel">{t('view')}<select value={view} onChange={e => setView(e.target.value as FbView)}>
         {views.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>} /></div>

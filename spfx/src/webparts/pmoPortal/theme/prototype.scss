@@ -414,6 +414,7 @@ form .fsec:first-child{margin-top:0}
 @media (prefers-reduced-motion:reduce){.bell.has svg{animation:none}}
 .ntf-back{display:inline-flex;align-items:center;gap:4px;margin:0 0 10px;font-size:13px}
 .ntf-bar{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.ntf-bar #ntf-all{margin-left:auto;padding:4px 12px;min-height:30px;font-size:13px}
 .ntf-i{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--bg-alt);border:1px solid transparent;border-radius:10px;padding:10px 12px;margin:0 0 8px;cursor:pointer}
 .ntf-i:hover{border-color:var(--line)}
 .ntf-i.new{background:var(--theme-soft);box-shadow:inset 3px 0 0 var(--theme)}

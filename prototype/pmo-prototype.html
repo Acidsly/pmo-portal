@@ -420,6 +420,7 @@ main{padding-bottom:40px}
 @media (prefers-reduced-motion:reduce){.bell.has svg{animation:none}}
 .ntf-back{display:inline-flex;align-items:center;gap:4px;margin:0 0 10px;font-size:13px}
 .ntf-bar{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.ntf-bar #ntf-all{margin-left:auto;padding:4px 12px;min-height:30px;font-size:13px}
 .ntf-i{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--bg-alt);border:1px solid transparent;border-radius:10px;padding:10px 12px;margin:0 0 8px;cursor:pointer}
 .ntf-i:hover{border-color:var(--line)}
 .ntf-i.new{background:var(--theme-soft);box-shadow:inset 3px 0 0 var(--theme)}
@@ -743,7 +744,8 @@ const T = {
  notifEmpty:['За останні 14 днів подій для вас немає.','No events for you in the last 14 days.','За последние 14 дней событий для вас нет.'],
  notifOnlyNew:['Лише нові','Only new','Только новые'], notifNew:['Нове','New','Новое'],
  notifSoon:['Сповіщення з\'являться протягом 15 хвилин.','Notifications will appear within 15 minutes.','Уведомления появятся в течение 15 минут.'],
- notifHint:['Події ваших проєктів за 14 днів — за вашою роллю. Відкриті тут сповіщення позначаються прочитаними.','Events of your projects for 14 days, by your role. Notifications opened here are marked as read.','События ваших проектов за 14 дней — по вашей роли. Открытые здесь уведомления отмечаются прочитанными.'],
+ notifHint:['Події ваших проєктів за 14 днів — за вашою роллю.','Events of your projects for 14 days, by your role.','События ваших проектов за 14 дней — по вашей роли.'],
+ notifReadAll:['Позначити все прочитаним','Mark all as read','Отметить всё прочитанным'],
  nkCreated:['Новий проєкт','New project','Новый проект'], nkAssigned:['Призначення','Assignment','Назначение'], nkSubmitted:['Подання звіту','Report submitted','Подача отчёта'],
  nkDecided:['Погодження звіту','Report approval','Согласование отчёта'], nkApplied:['Оновлено статус-звітом','Updated by status report','Обновлено статус-отчётом'],
  nkArchived:['Проєкт в архіві','Project archived','Проект в архиве'], nkRisk:['Ризик / проблема','Risk / issue','Риск / проблема'],
@@ -1741,7 +1743,7 @@ function accessList(p){
 // ===== Сповіщення (колокольчик) — те же правила, что logic/notify.ts приложения: кто что видит, что новое =====
 // «прочитано до» — время последнего открытия панели (в приложении — номер записи журнала); при загрузке страницы — сейчас
 const NOTIF_LOADED = new Date().toISOString(), NOTIF_READ = {};
-let NOTIF_RET = null;   // переход из «Сповіщень»: {at, onlyNew} — вернуться к списку
+let NOTIF_RET = null;   // переход из «Сповіщень»: {onlyNew} — вернуться к списку
 const notifRead = () => NOTIF_READ[VIEWER] || NOTIF_LOADED;
 const notifKind = c => ({create:'created', assign:'assigned', submit:'submitted', approval:'decided', risk:'risk', edit:'cardEdit'})[c.kind]
   || ((c.diffs || []).some(d => d.f === 'status' && d.to === 'Архівний') ? 'archived' : 'applied');
@@ -1760,8 +1762,8 @@ function notifFor(kind, author, diffs, p, risk){
   }
   return pm || owner || team;
 }
-function notifItems(readAt){
-  const since = Date.now() - 14 * DAY, read = readAt || notifRead(), out = [];
+function notifItems(){
+  const since = Date.now() - 14 * DAY, read = notifRead(), out = [];
   for (const p of visAll()){
     for (const c of p.changes || []){
       if (new Date(c.date).getTime() < since) continue;
@@ -1776,9 +1778,8 @@ function notifItems(readAt){
   return out.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 }
 const NK = {created:'nkCreated', assigned:'nkAssigned', submitted:'nkSubmitted', decided:'nkDecided', applied:'nkApplied', archived:'nkArchived', risk:'nkRisk', cardEdit:'nkCardEdit', comment:'nkComment'};
-function notifPanel(onlyNew, readAt){
-  // «прочитано» — на момент открытия панели: переключатель «Лише нові» не гасит выделение «Нове»
-  const at = readAt || notifRead(), all = notifItems(at), list = onlyNew ? all.filter(x => x.unread) : all;
+function notifPanel(onlyNew){
+  const all = notifItems(), list = onlyNew ? all.filter(x => x.unread) : all;
   state.panel = {kind:'notif'};
   const item = x => {
     const act = x.c && x.c.ref ? `data-act="${x.c.ref.type === 'report' ? 'repopen' : 'riskopen'}" data-id="${x.p.id}" data-rid="${esc(x.c.ref.id)}"` : `data-act="openp" data-id="${x.p.id}"`;
@@ -1788,14 +1789,11 @@ function notifPanel(onlyNew, readAt){
   };
   openPanel(`<div class="ph"><div><div class="k">PPM</div><h2>${t('notifTitle')}</h2></div>${closeBtn()}</div>
     <p class="note">${t('notifHint')}</p>
-    <div class="ntf-bar"><label class="check"><input type="checkbox" id="ntf-new"${onlyNew ? ' checked' : ''}> ${t('notifOnlyNew')}</label></div>
+    <div class="ntf-bar"><label class="check"><input type="checkbox" id="ntf-new"${onlyNew ? ' checked' : ''}> ${t('notifOnlyNew')}</label>${all.some(x => x.unread) ? `<button type="button" class="btn" id="ntf-all" data-act="notifreadall" data-new="${onlyNew ? 1 : ''}">${t('notifReadAll')}</button>` : ''}</div>
     <div id="ntf-list">${list.length ? list.map(item).join('') : `<p class="empty">${t('notifEmpty')}</p>`}</div>`);
-  panel.querySelector('#ntf-new').addEventListener('change', e => notifPanel(e.target.checked, at));
+  panel.querySelector('#ntf-new').addEventListener('change', e => notifPanel(e.target.checked));
   NOTIF_RET = null;
-  panel.querySelector('#ntf-list').addEventListener('click', e => { if (e.target.closest('.ntf-i')) NOTIF_RET = {at, onlyNew}; }, true);
-  // открыли панель — показанное прочитано; точка гаснет, выделение «Нове» остаётся, пока панель открыта
-  NOTIF_READ[VIEWER] = new Date().toISOString();
-  renderChrome();
+  panel.querySelector('#ntf-list').addEventListener('click', e => { if (e.target.closest('.ntf-i')) NOTIF_RET = {onlyNew}; }, true);
 }
 
 function changesHtml(p, showAll){
@@ -2331,7 +2329,9 @@ document.addEventListener('click', e => {
   else if (a === 'newproj') projectForm(null);
   else if (a === 'editproj') projectForm(pById(id));
   else if (a === 'notif') notifPanel(false);
-  else if (a === 'notifback') { const r = NOTIF_RET; notifPanel(r ? r.onlyNew : false, r ? r.at : null); }
+  else if (a === 'notifback') notifPanel(!!(NOTIF_RET && NOTIF_RET.onlyNew));
+  // «Позначити все прочитаним» — «прочитано до» = сейчас (в приложении — номер последнего показанного события)
+  else if (a === 'notifreadall') { NOTIF_READ[VIEWER] = new Date().toISOString(); notifPanel(!!el.dataset.new); renderChrome(); }
   else if (a === 'assign') assignForm(pById(id));
   else if (a === 'backp') { if (id) projectPanel(id, false); else closePanel(); }
   else if (a === 'close') closePanel();
