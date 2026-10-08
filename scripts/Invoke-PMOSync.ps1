@@ -1303,7 +1303,6 @@ if ($HAS_NS) {
     Update-SyncLock
     $lastId = { param($list) $q = "<View Scope='RecursiveAll'><Query><OrderBy><FieldRef Name='ID' Ascending='FALSE'/></OrderBy></Query><RowLimit>1</RowLimit></View>"
         $it = @(Get-PnPListItem -List $list -Query $q) | Select-Object -First 1; if ($it) { [int]$it.Id } else { 0 } }
-    $maxJ = & $lastId $L_CHG; $maxC = & $lastId $L_CMT
     $nsPeople = [System.Collections.Generic.List[string]]::new()
     foreach ($p in $PROJ.Values) {
         if ($ACLS.ContainsKey($p.Item.Id)) { foreach ($e in $ACLS[$p.Item.Id].Keys) { $nsPeople.Add([string]$e) } }
@@ -1312,6 +1311,8 @@ if ($HAS_NS) {
     foreach ($e in @($PMO_EMAILS) + @($OWNER_EMAILS)) { if ($e) { $nsPeople.Add([string]$e) } }
     $nsRows = @(foreach ($it in (Get-ListRows $L_NS)) {
         @{ id = $it.Id; email = $(if ($it["nsUser"]) { Email $it["nsUser"] } else { ([string]$it["Title"]).ToLowerInvariant() }); readId = $it["nsReadId"]; readCmId = $it["nsReadCmId"]; acl = [string]$it["pmoAcl"] } })
+    # максимумы — после чтения строк: метку, которую человек только что сдвинул, не зажимаем вниз
+    $maxJ = & $lastId $L_CHG; $maxC = & $lastId $L_CMT
     $nsPlan = Get-NotifyRowPlan @($nsPeople) $nsRows $maxJ $maxC
     foreach ($d in $nsPlan.dup) { Warn "Прочитане: зайвий рядок $d — не використовується" }
     foreach ($e in $nsPlan.create) {
@@ -1329,7 +1330,7 @@ if ($HAS_NS) {
     foreach ($a in $nsPlan.acl) {
         if ($DryRun) { Log "    права: прочитане #$($a.id) -> $($a.email)"; continue }
         $pr = Get-Principal $a.email $false; $own = Get-Principal $OWNERS $true
-        if (-not $pr -or -not $own) { continue }
+        if (-not $pr -or -not $own) { Warn "Прочитане #$($a.id): $($a.email) не знайдено на сайті — права рядка не видано (рядок бачать лише власники)"; continue }
         try {
             $item = (Get-ListObj $L_NS).GetItemById($a.id)
             $item.ResetRoleInheritance(); $item.BreakRoleInheritance($false, $false)

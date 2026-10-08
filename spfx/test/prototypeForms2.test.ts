@@ -202,6 +202,10 @@ describe('сповіщення: колокольчик в прототипе', (
     expect(w.document.body.textContent).toContain('Перевірка сповіщень');
     expect(q('.ntf-i.new')).not.toBeNull();
     expect(dot()).toBe(false);
+    // кросс-ревью: «Лише нові» после открытия — новые всё ещё видны и выделены
+    const cb = q('#ntf-new'); cb.checked = true; ev(cb, 'change');
+    expect(q('.ntf-i.new')).not.toBeNull();
+    expect(w.document.body.textContent).toContain('Перевірка сповіщень');
   });
   test('видит проект, но не по своей роли (руководитель власника) — точки нет', () => {
     asUser('Андрій Мельник'); comment(2, 'Коментар PM');        // PRJ-002: PM — Андрій Мельник, власник — Юрій

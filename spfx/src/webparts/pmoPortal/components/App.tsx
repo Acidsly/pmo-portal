@@ -38,6 +38,8 @@ export const App: React.FC<AppProps> = p => {
   const [theme, setTheme] = React.useState<Theme>(readTheme());
   const [route, setRoute] = React.useState<Route>(() => parse(window.location.hash, DEFAULT_VIEWS));
   const [data, setData] = React.useState<PortalData | undefined>(undefined);
+  // колокольчик: есть ли новые для меня события — пересчёт только при новых данных
+  const bellUnread = React.useMemo(() => (data ? notifyState(data, p.userEmail).unread : false), [data, p.userEmail]);
   const [err, setErr] = React.useState('');
   // отметка изменений списков на момент загрузки: при возврате на вкладку и раз в 5 минут — один лёгкий запрос,
   // данные перечитываются, только если что-то изменилось (и не во время открытой формы — там свежесть проверяет guard)
@@ -101,7 +103,7 @@ export const App: React.FC<AppProps> = p => {
       <Header page={route.page} lang={lang} theme={theme} userName={p.userName} userEmail={p.userEmail}
         onPage={pg => ctx.go(pg)} onLang={l => { setLang(l); saveLang(l); }} onTheme={v => { setTheme(v); saveTheme(v); }}
         onFeedback={openFeedback} onHelp={() => ctx.openForm('help', route.projectId)}
-        bell={data ? { unread: notifyState(data, p.userEmail).unread, onOpen: () => ctx.openForm('notifications', route.projectId) } : undefined} />
+        bell={data ? { unread: bellUnread, onOpen: () => ctx.openForm('notifications', route.projectId) } : undefined} />
       <main className="pmo-main">
         {err ? <p className="empty">{tt.t('loadErr')}: {err}</p> : !data ? <p className="empty">…</p> : pageEl}
       </main>

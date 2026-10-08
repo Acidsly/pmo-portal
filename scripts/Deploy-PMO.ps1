@@ -654,8 +654,19 @@ Set-ListRoles "Lists/ProjectTeam"     @{ $members.Title = $ROLE_READ; $PMO_GROUP
 Set-ListRoles "Lists/ReportApprovals" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
 # призначення — «додавання» PMO на папке активного проекта (синхронизация); PM и остальные — чтение
 Set-ListRoles "Lists/ProjectAssignments" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
-# прочитане — у каждой строки свои права (только этот человек); на уровне списка — чтение (строки без прав не видны)
-Set-ListRoles "Lists/NotifyState" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
+# прочитане — у каждой строки свои права (только этот человек, их выдаёт синхронизация); на уровне списка — только владельцы:
+# новая строка до выдачи ей прав никому, кроме владельцев, не видна
+$nsl = Get-PnPList -Identity "Lists/NotifyState" -Includes HasUniqueRoleAssignments
+if (-not $nsl.HasUniqueRoleAssignments) { Set-PnPList -Identity "Lists/NotifyState" -BreakRoleInheritance | Out-Null; Write-Host "  «Прочитане»: собственные права списка" }
+Set-ListRoles "Lists/NotifyState" @{ (Get-PnPGroup -AssociatedOwnerGroup).Title = (Get-RoleName "Administrator") }
+$ctxNs = Get-PnPContext; $raNs = (Get-PnPList -Identity "Lists/NotifyState").RoleAssignments; $ctxNs.Load($raNs); Invoke-PnPQuery
+foreach ($a in $raNs) { $ctxNs.Load($a.Member) }; Invoke-PnPQuery
+foreach ($grp in @($members.Title, $PMO_GROUP)) {
+    if (@($raNs | Where-Object { $_.Member.Title -eq $grp }).Count) {
+        $gObj = Get-PnPGroup -Identity $grp; (Get-PnPList -Identity "Lists/NotifyState").RoleAssignments.GetByPrincipal($gObj).DeleteObject(); Invoke-PnPQuery
+        Write-Host "  «Прочитане» $grp : права списка сняты (строки — только их людям)"
+    }
+}
 Set-ListRoles "Lists/ProjectState"    @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
 # свежие проверки приложения перед записью — фильтры по индексированным полям
 foreach ($ix in @(@("Lists/Projects", "Title"), @("Lists/StatusReports", "srProject"), @("Lists/RisksIssues", "riProject"), @("Lists/ProjectComments", "cmProject"),

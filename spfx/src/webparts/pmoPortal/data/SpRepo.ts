@@ -256,8 +256,10 @@ export class SpRepo {
   /** Отметка изменений списков портала: самое позднее изменение записей (один лёгкий запрос). */
   async stamp(): Promise<string> {
     const j = await this.getJson(`${this.webUrl}/_api/web/lists?$select=Title,LastItemModifiedDate,RootFolder/ServerRelativeUrl&$expand=RootFolder&$filter=Hidden eq true`);
-    // журнал и эталон синхронизация пишет каждый запуск — по ним не перечитываем (иначе полная перезагрузка каждые 5 минут)
-    const portal = ['/Lists/Projects', '/Lists/StatusReports', '/Lists/RisksIssues', '/Lists/ProjectComments', '/Lists/ProjectTeam', '/Lists/ReportApprovals', '/Lists/ProjectAssignments'];
+    // эталон синхронизация пишет каждый запуск — по нему не перечитываем (иначе полная перезагрузка каждые 5 минут);
+    // журнал — только при событиях: по нему перечитываем, чтобы точка колокольчика появилась без перезагрузки страницы;
+    // «Прочитане» — нет: чужие отметки «прочитано» не должны перезагружать данные у всех
+    const portal = ['/Lists/Projects', '/Lists/StatusReports', '/Lists/RisksIssues', '/Lists/ProjectComments', '/Lists/ProjectTeam', '/Lists/ReportApprovals', '/Lists/ProjectAssignments', '/Lists/KeyChanges'];
     return (j.value || []).filter((l: any) => l.RootFolder && portal.some(u => String(l.RootFolder.ServerRelativeUrl).endsWith(u)))
       .reduce((m: string, l: any) => (String(l.LastItemModifiedDate) > m ? String(l.LastItemModifiedDate) : m), '');
   }

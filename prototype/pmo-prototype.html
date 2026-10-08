@@ -1752,8 +1752,8 @@ function notifFor(kind, author, diffs, p, risk){
   }
   return pm || owner || team;
 }
-function notifItems(){
-  const since = Date.now() - 14 * DAY, read = notifRead(), out = [];
+function notifItems(readAt){
+  const since = Date.now() - 14 * DAY, read = readAt || notifRead(), out = [];
   for (const p of visAll()){
     for (const c of p.changes || []){
       if (new Date(c.date).getTime() < since) continue;
@@ -1768,8 +1768,9 @@ function notifItems(){
   return out.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 }
 const NK = {created:'nkCreated', assigned:'nkAssigned', submitted:'nkSubmitted', decided:'nkDecided', applied:'nkApplied', archived:'nkArchived', risk:'nkRisk', cardEdit:'nkCardEdit', comment:'nkComment'};
-function notifPanel(onlyNew){
-  const all = notifItems(), list = onlyNew ? all.filter(x => x.unread) : all;
+function notifPanel(onlyNew, readAt){
+  // «прочитано» — на момент открытия панели: переключатель «Лише нові» не гасит выделение «Нове»
+  const at = readAt || notifRead(), all = notifItems(at), list = onlyNew ? all.filter(x => x.unread) : all;
   state.panel = {kind:'notif'};
   const item = x => {
     const act = x.c && x.c.ref ? `data-act="${x.c.ref.type === 'report' ? 'repopen' : 'riskopen'}" data-id="${x.p.id}" data-rid="${esc(x.c.ref.id)}"` : `data-act="openp" data-id="${x.p.id}"`;
@@ -1781,7 +1782,7 @@ function notifPanel(onlyNew){
     <p class="note">${t('notifHint')}</p>
     <div class="ntf-bar"><label class="check"><input type="checkbox" id="ntf-new"${onlyNew ? ' checked' : ''}> ${t('notifOnlyNew')}</label></div>
     <div id="ntf-list">${list.length ? list.map(item).join('') : `<p class="empty">${t('notifEmpty')}</p>`}</div>`);
-  panel.querySelector('#ntf-new').addEventListener('change', e => notifPanel(e.target.checked));
+  panel.querySelector('#ntf-new').addEventListener('change', e => notifPanel(e.target.checked, at));
   // открыли панель — показанное прочитано; точка гаснет, выделение «Нове» остаётся, пока панель открыта
   NOTIF_READ[VIEWER] = new Date().toISOString();
   renderChrome();
