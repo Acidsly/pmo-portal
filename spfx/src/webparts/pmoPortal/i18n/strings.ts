@@ -836,6 +836,11 @@ export const T: Record<string, L3> = {
   "Events of your projects for 14 days, by your role.",
   "События ваших проектов за 14 дней — по вашей роли."
  ],
+ "notifCount": [
+  "Нових: {n}",
+  "New: {n}",
+  "Новых: {n}"
+ ],
  "notifReadAll": [
   "Позначити все прочитаним",
   "Mark all as read",

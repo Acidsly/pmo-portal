@@ -30,7 +30,7 @@ export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: 
       </div>
       {p.bell ? <button className={'bell' + (p.bell.unread ? ' has' : '')} id="bell" title={p.bell.unread ? `${t('notifTitle')} · ${t('notifNewOnes')}: ${p.bell.unread}` : t('notifTitle')}
         aria-label={p.bell.unread ? `${t('notifTitle')} · ${t('notifNewOnes')}: ${p.bell.unread}` : t('notifTitle')} onClick={p.bell.onOpen}><Bell />
-        {p.bell.unread ? <span className="dot-new">{p.bell.unread > 9 ? '9+' : p.bell.unread}</span> : null}</button> : null}
+        {p.bell.unread ? <span className="dot-new">{p.bell.unread > 99 ? '99+' : p.bell.unread}</span> : null}</button> : null}
       <button className="hbtn round" title={t('help')} aria-label={t('help')} onClick={p.onHelp}>?</button>
       <button className="me" title={`${t('signedIn')}: ${p.userName} · ${p.userEmail}`} aria-label={`${t('signedIn')}: ${p.userName}`}><Avatar name={p.userName} /></button>
     </div>

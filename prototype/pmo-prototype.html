@@ -426,6 +426,7 @@ main{padding-bottom:40px}
 @keyframes bell-ring{0%,62%,100%{transform:rotate(0)}66%{transform:rotate(16deg)}72%{transform:rotate(-14deg)}78%{transform:rotate(10deg)}84%{transform:rotate(-6deg)}90%{transform:rotate(3deg)}}
 @media (prefers-reduced-motion:reduce){.bell.has svg{animation:none}}
 .ntf-back{display:inline-flex;align-items:center;gap:4px;margin:0 0 10px;font-size:13px}
+.ntf-n{font-weight:600;margin:-4px 0 10px}
 .ntf-bar{display:flex;align-items:center;gap:10px;margin:0 0 12px}
 .ntf-bar #ntf-all{margin-left:auto;padding:4px 12px;min-height:30px;font-size:13px}
 .ntf-i{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--bg-alt);border:1px solid transparent;border-radius:10px;padding:10px 12px;margin:0 0 8px;cursor:pointer}
@@ -754,6 +755,7 @@ const T = {
  notifOnlyNew:['Лише нові','Only new','Только новые'], notifNew:['Нове','New','Новое'],
  notifSoon:['Сповіщення з\'являться протягом 15 хвилин.','Notifications will appear within 15 minutes.','Уведомления появятся в течение 15 минут.'],
  notifHint:['Події ваших проєктів за 14 днів — за вашою роллю.','Events of your projects for 14 days, by your role.','События ваших проектов за 14 дней — по вашей роли.'],
+ notifCount:['Нових: {n}','New: {n}','Новых: {n}'],
  notifReadAll:['Позначити все прочитаним','Mark all as read','Отметить всё прочитанным'],
  nkCreated:['Новий проєкт','New project','Новый проект'], nkAssigned:['Призначення','Assignment','Назначение'], nkSubmitted:['Подання звіту','Report submitted','Подача отчёта'],
  nkDecided:['Погодження звіту','Report approval','Согласование отчёта'], nkApplied:['Оновлено статус-звітом','Updated by status report','Обновлено статус-отчётом'],
@@ -1695,7 +1697,7 @@ function renderChrome(){
   // сповіщення: красная точка — есть новые для меня события (правило — notifFor, как logic/notify.ts приложения)
   const bell = document.getElementById('bell');
   if (bell){ const n = MODE !== 'loading' ? notifItems().filter(x => x.unread).length : 0; bell.classList.toggle('has', n > 0);
-    bell.innerHTML = iconBell + (n ? `<span class="dot-new">${n > 9 ? '9+' : n}</span>` : ''); bell.title = n ? `${t('notifTitle')} · ${t('notifNewOnes')}: ${n}` : t('notifTitle'); bell.setAttribute('aria-label', bell.title); }
+    bell.innerHTML = iconBell + (n ? `<span class="dot-new">${n > 99 ? '99+' : n}</span>` : ''); bell.title = n ? `${t('notifTitle')} · ${t('notifNewOnes')}: ${n}` : t('notifTitle'); bell.setAttribute('aria-label', bell.title); }
   const me = document.getElementById('me');
   me.innerHTML = avatar(VIEWER); me.title = `${t('signedIn')}: ${VIEWER} · ${email(VIEWER)}`; me.setAttribute('aria-label', me.title);
   foot.innerHTML = MODE === 'loading' ? '' : `<span class="src"><span class="dot sm" style="background:${db ? 'var(--g)' : 'var(--y)'}"></span>${db ? t('srcDb') : t('srcLocal')}</span>${MODE !== 'empty' ? `<button class="more" data-act="reset">${t('reset')}</button>` : ''}`;
@@ -1822,7 +1824,7 @@ function notifPanel(onlyNew){
     return `<button class="ntf-i ${x.unread ? 'new' : 'old'}" data-k="${esc(x.k)}" ${act}><div class="ntf-h"><span class="ntf-p">${esc(x.p.code)} · ${esc(x.p.title)}</span><span class="chg-k">${t(NK[x.kind])}</span>${x.unread ? `<span class="pill ap" style="--c:var(--theme)">${t('notifNew')}</span>` : ''}<span class="muted">${esc(x.who || '')} · ${fmtDT(new Date(x.date))}</span></div>${body}</button>`;
   };
   openPanel(`<div class="ph"><div><div class="k">${entTag('notif')}</div><h2>${t('notifTitle')}</h2></div>${closeBtn()}</div>
-    <p class="note">${t('notifHint')}</p>
+    <p class="note">${t('notifHint')}</p>${all.some(x => x.unread) ? `<p class="ntf-n" id="ntf-n">${t('notifCount').replace('{n}', all.filter(x => x.unread).length)}</p>` : ''}
     <div class="ntf-bar"><label class="check"><input type="checkbox" id="ntf-new"${onlyNew ? ' checked' : ''}> ${t('notifOnlyNew')}</label>${all.some(x => x.unread) ? `<button type="button" class="btn" id="ntf-all" data-act="notifreadall" data-new="${onlyNew ? 1 : ''}">${t('notifReadAll')}</button>` : ''}</div>
     <div id="ntf-list">${list.length ? list.map(item).join('') : `<p class="empty">${t('notifEmpty')}</p>`}</div>`);
   panel.querySelector('#ntf-new').addEventListener('change', e => notifPanel(e.target.checked));

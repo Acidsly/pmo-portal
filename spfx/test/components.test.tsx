@@ -241,10 +241,12 @@ describe('сповіщення: колокольчик и панель', () => {
     canApprove: false, notify });
   const head = (bell: any): void => mount(<Header page="home" lang={0} theme="light" userName="PM" userEmail="pm@x" onPage={() => undefined} onLang={() => undefined}
     onTheme={() => undefined} onHelp={() => undefined} bell={bell} />);
-  test('шапка: число новых и покачивание только при новых; больше 9 — «9+»', () => {
+  test('шапка: число новых и покачивание только при новых; больше 99 — «99+»', () => {
     head({ unread: 3, onOpen: () => undefined }); expect(root.querySelector('#bell .dot-new')!.textContent).toBe('3'); expect(root.querySelector('#bell')!.className).toContain('has');
     ReactDOM.unmountComponentAtNode(root);
-    head({ unread: 12, onOpen: () => undefined }); expect(root.querySelector('#bell .dot-new')!.textContent).toBe('9+');
+    head({ unread: 12, onOpen: () => undefined }); expect(root.querySelector('#bell .dot-new')!.textContent).toBe('12');   // не «9+»: число видно, пока до 99
+    ReactDOM.unmountComponentAtNode(root);
+    head({ unread: 120, onOpen: () => undefined }); expect(root.querySelector('#bell .dot-new')!.textContent).toBe('99+');
     ReactDOM.unmountComponentAtNode(root);
     head({ unread: 0, onOpen: () => undefined }); expect(root.querySelector('#bell')).not.toBeNull(); expect(root.querySelector('#bell .dot-new')).toBeNull();
     expect(root.querySelector('#bell')!.className).not.toContain('has');
@@ -258,6 +260,7 @@ describe('сповіщення: колокольчик и панель', () => {
     expect(items[0].className).toContain('new');
     expect(root.textContent).toContain('Новий коментар');
     expect(marked).toEqual([]);
+    expect((root.querySelector('#ntf-n') as HTMLElement).textContent).toBe('Нових: 1');
     // открыл событие — прочитано именно оно (метки не двигаются)
     await act(async () => { (items[0] as HTMLElement).click(); await Promise.resolve(); });
     expect(opened).toEqual(['@1']);

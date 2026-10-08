@@ -44,6 +44,7 @@ export const NotifyPanel: React.FC<{ data: PortalData; onOpen(form: string, proj
     <div className="ph"><div><div className="k"><EntTag kind="notif" /></div><h2>{t('notifTitle')}</h2></div>
       <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     <p className="note">{data.notify ? t('notifHint') : t('notifSoon')}</p>
+    {list.some(x => x.unread) ? <p className="ntf-n" id="ntf-n">{t('notifCount').replace('{n}', String(list.filter(x => x.unread).length))}</p> : null}
     <div className="ntf-bar"><label className="check"><input type="checkbox" id="ntf-new" checked={onlyNew} onChange={e => setOnlyNew(e.target.checked)} /> {t('notifOnlyNew')}</label>
       {data.notify && list.some(x => x.unread) ? <button type="button" className="btn" id="ntf-all" disabled={busy} onClick={readAll}>{t('notifReadAll')}</button> : null}</div>
     <div id="ntf-list">{shown.length ? shown.map(x =>
