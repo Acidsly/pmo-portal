@@ -229,15 +229,18 @@ describe('сповіщення: колокольчик и панель', () => {
     canApprove: false, notify });
   const head = (bell: any): void => mount(<Header page="home" lang={0} theme="light" userName="PM" userEmail="pm@x" onPage={() => undefined} onLang={() => undefined}
     onTheme={() => undefined} onHelp={() => undefined} bell={bell} />);
-  test('шапка: точка только при новых', () => {
-    head({ unread: true, onOpen: () => undefined }); expect(root.querySelector('#bell .dot-new')).not.toBeNull();
+  test('шапка: число новых и покачивание только при новых; больше 9 — «9+»', () => {
+    head({ unread: 3, onOpen: () => undefined }); expect(root.querySelector('#bell .dot-new')!.textContent).toBe('3'); expect(root.querySelector('#bell')!.className).toContain('has');
     ReactDOM.unmountComponentAtNode(root);
-    head({ unread: false, onOpen: () => undefined }); expect(root.querySelector('#bell')).not.toBeNull(); expect(root.querySelector('#bell .dot-new')).toBeNull();
+    head({ unread: 12, onOpen: () => undefined }); expect(root.querySelector('#bell .dot-new')!.textContent).toBe('9+');
+    ReactDOM.unmountComponentAtNode(root);
+    head({ unread: 0, onOpen: () => undefined }); expect(root.querySelector('#bell')).not.toBeNull(); expect(root.querySelector('#bell .dot-new')).toBeNull();
+    expect(root.querySelector('#bell')!.className).not.toContain('has');
   });
   test('панель: мои новые события выделены, открытие отмечает прочитанным (метки растут); нажатие открывает отчёт', async () => {
     const marked: any[] = []; const opened: string[] = [];
-    const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } }, reload: async () => undefined, openForm: (f: string, id: number) => opened.push(`${f}@${id}`) };
-    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 20, readCmId: 5 })} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } }, reload: async () => undefined };
+    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 20, readCmId: 5 })} onOpen={(f, id) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
     const items = Array.from(root.querySelectorAll('.ntf-i'));
     expect(items.length).toBe(1);   // подача отчёта — только PMO; PM видит комментарий
     expect(items[0].className).toContain('new');
@@ -248,8 +251,16 @@ describe('сповіщення: колокольчик и панель', () => {
   test('строки «Прочитане» ещё нет — подсказка, ничего не пишется', async () => {
     const marked: any[] = [];
     const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } } };
-    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data(null)} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data(null)} onOpen={() => undefined} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
     expect(root.textContent).toContain('Сповіщення з\'являться протягом 15 хвилин.');
     expect(marked).toEqual([]);
+  });
+  test('возврат «← Сповіщення»: выделение «Нове» — по меткам первого открытия, хотя строка уже отмечена прочитанной', async () => {
+    const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async () => undefined }, reload: async () => undefined };
+    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 30, readCmId: 7 })} marks={{ readId: 20, readCmId: 5 }} onOpen={() => undefined} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    expect(root.querySelector('.ntf-i')!.className).toContain('new');
+    ReactDOM.unmountComponentAtNode(root);
+    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 30, readCmId: 7 })} onOpen={() => undefined} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    expect(root.querySelector('.ntf-i')!.className).toContain('old');
   });
 });

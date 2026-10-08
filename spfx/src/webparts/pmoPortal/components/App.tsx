@@ -7,7 +7,8 @@ import { DEFAULT_VIEWS, Route, parse, format, goRoute } from '../logic/route';
 import { setFavicon } from '../logic/favicon';
 import { AppCtx, Ctx, Page, Views } from './ctx';
 import { Header } from './Header';
-import { NotifyPanel, notifyState } from '../panels/NotifyPanel';
+import { NotifyPanel, notifyState, readMarks } from '../panels/NotifyPanel';
+import { ReadMarks } from '../logic/notify';
 import { Panel } from './Panel';
 import { Home } from '../pages/Home';
 import { Projects } from '../pages/Projects';
@@ -39,7 +40,9 @@ export const App: React.FC<AppProps> = p => {
   const [route, setRoute] = React.useState<Route>(() => parse(window.location.hash, DEFAULT_VIEWS));
   const [data, setData] = React.useState<PortalData | undefined>(undefined);
   // колокольчик: есть ли новые для меня события — пересчёт только при новых данных
-  const bellUnread = React.useMemo(() => (data ? notifyState(data, p.userEmail).unread : false), [data, p.userEmail]);
+  const bellUnread = React.useMemo(() => (data ? notifyState(data, p.userEmail).unread : 0), [data, p.userEmail]);
+  // переход из «Сповіщень»: метки на момент открытия списка — «← Сповіщення» возвращает к нему с тем же выделением «Нове»
+  const [ntfRet, setNtfRet] = React.useState<{ marks: ReadMarks | undefined } | null>(null);
   const [err, setErr] = React.useState('');
   // отметка изменений списков на момент загрузки: при возврате на вкладку и раз в 5 минут — один лёгкий запрос,
   // данные перечитываются, только если что-то изменилось (и не во время открытой формы — там свежесть проверяет guard)
@@ -78,6 +81,7 @@ export const App: React.FC<AppProps> = p => {
   const close = (): void => nav({ ...route, projectId: 0, form: '' });
   const back = (): void => nav({ ...route, form: '' });
   const panelOpen = route.form === 'help' || route.form === 'overview' || (!!data && (!!route.form || !!project));
+  React.useEffect(() => { if (!panelOpen && ntfRet) setNtfRet(null); }, [panelOpen]);
   let panelEl: React.ReactNode = null;
   const openFeedback = data && data.feedback ? () => ctx.openForm('feedback', route.projectId) : undefined;
   if (data && route.form.indexOf('fb:') === 0) { const id = Number(route.form.slice(3)); panelEl = <FeedbackView key={id} row={data.feedbackRows.filter(r => r.id === id)[0]} admin={!!p.admin} onCancel={back} />; }
@@ -88,7 +92,8 @@ export const App: React.FC<AppProps> = p => {
   else if (data && route.form.indexOf('report-from:') === 0) panelEl = <ReportForm key={route.form} data={data} projectId={route.projectId} fromId={Number(route.form.slice(12)) || 0} onCancel={project ? back : close} />;
   else if (data && route.form.indexOf('rep:') === 0) { const id = Number(route.form.slice(4)); panelEl = <ReportView key={id} data={data} report={data.reports.filter(r => r.id === id)[0]} onCancel={project ? back : close} />; }
   else if (data && (route.form === 'project' || route.form === 'edit')) panelEl = <ProjectForm data={data} project={route.form === 'edit' ? project : undefined} onCancel={project ? back : close} />;
-  else if (data && route.form === 'notifications') panelEl = <NotifyPanel data={data} onCancel={project ? back : close} />;
+  else if (data && route.form === 'notifications') panelEl = <NotifyPanel key={ntfRet ? 'ret' : 'bell'} data={data} marks={ntfRet ? ntfRet.marks : undefined}
+    onOpen={(f, id) => { setNtfRet({ marks: ntfRet ? ntfRet.marks : readMarks(data) || undefined }); ctx.openForm(f, id); }} onCancel={project ? back : close} />;
   else if (data && route.form === 'assign') panelEl = <AssignForm data={data} projectId={route.projectId} onCancel={project ? back : close} />;
   else if (data && route.form.indexOf('risk:') === 0) panelEl = <RiskForm data={data} projectId={route.projectId} riskId={Number(route.form.slice(5)) || 0} onCancel={project ? back : close} />;
   else if (data && project) panelEl = <ProjectCard project={project} data={data} repo={p.repo} onClose={close} />;
@@ -103,11 +108,12 @@ export const App: React.FC<AppProps> = p => {
       <Header page={route.page} lang={lang} theme={theme} userName={p.userName} userEmail={p.userEmail}
         onPage={pg => ctx.go(pg)} onLang={l => { setLang(l); saveLang(l); }} onTheme={v => { setTheme(v); saveTheme(v); }}
         onFeedback={openFeedback} onHelp={() => ctx.openForm('help', route.projectId)}
-        bell={data ? { unread: bellUnread, onOpen: () => ctx.openForm('notifications', route.projectId) } : undefined} />
+        bell={data ? { unread: bellUnread, onOpen: () => { setNtfRet(null); ctx.openForm('notifications', route.projectId); } } : undefined} />
       <main className="pmo-main">
         {err ? <p className="empty">{tt.t('loadErr')}: {err}</p> : !data ? <p className="empty">…</p> : pageEl}
       </main>
-      <Panel open={panelOpen} view={`${route.projectId}/${route.form}`} label={project ? project.title : tt.t('siteTitle')} onClose={route.form && project ? back : close}>{panelEl}</Panel>
+      <Panel open={panelOpen} view={`${route.projectId}/${route.form}`} label={project ? project.title : tt.t('siteTitle')} onClose={route.form && project ? back : close}>
+        {ntfRet && data && route.form !== 'notifications' ? <button className="link ntf-back" onClick={() => ctx.openForm('notifications', 0)}>← {tt.t('notifTitle')}</button> : null}{panelEl}</Panel>
       <Toast msg={toastMsg} />
     </div>
   </AppCtx.Provider>;

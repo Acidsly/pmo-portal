@@ -411,14 +411,19 @@ main{padding-bottom:40px}
 .pop-me .pn small{display:block}
 .pop-sep{font-size:11px;font-weight:600;color:var(--text-3);padding:10px 6px 4px;border-top:1px solid var(--line)}
 .me{border:0;background:none;padding:0;border-radius:50%;cursor:pointer;display:grid;place-items:center}
-.bell{position:relative;border:0;background:none;cursor:pointer;color:var(--text-2);width:34px;height:34px;border-radius:50%;display:grid;place-items:center}
-.bell:hover{background:var(--bg-hover);color:var(--text)}
-.bell .dot-new{position:absolute;top:5px;right:6px;width:9px;height:9px;border-radius:50%;background:var(--r);box-shadow:0 0 0 2px var(--bg-page)}
+.bell{position:relative;border:0;background:var(--bg-alt);cursor:pointer;color:var(--text-2);width:34px;height:34px;border-radius:10px;display:grid;place-items:center}
+.bell:hover{color:var(--text)}
+.bell .dot-new{position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:var(--r);color:#fff;font-size:10px;font-weight:700;line-height:17px;text-align:center;box-shadow:0 0 0 2px var(--bg-page)}
+/* есть непрочитанное — колокольчик покачивается (раз в несколько секунд), без анимации при «уменьшить движение» */
+.bell.has svg{transform-origin:50% 2px;animation:bell-ring 4s ease-in-out infinite}
+@keyframes bell-ring{0%,62%,100%{transform:rotate(0)}66%{transform:rotate(16deg)}72%{transform:rotate(-14deg)}78%{transform:rotate(10deg)}84%{transform:rotate(-6deg)}90%{transform:rotate(3deg)}}
+@media (prefers-reduced-motion:reduce){.bell.has svg{animation:none}}
+.ntf-back{display:inline-flex;align-items:center;gap:4px;margin:0 0 10px;font-size:13px}
 .ntf-bar{display:flex;align-items:center;gap:10px;margin:0 0 12px}
-.ntf-i{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 8px;cursor:pointer}
-.ntf-i:hover{background:var(--bg-hover)}
-.ntf-i.new{border-color:var(--theme);background:var(--theme-soft)}
-.ntf-i.old{opacity:.75}
+.ntf-i{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--bg-alt);border:1px solid transparent;border-radius:10px;padding:10px 12px;margin:0 0 8px;cursor:pointer}
+.ntf-i:hover{border-color:var(--line)}
+.ntf-i.new{background:var(--theme-soft);box-shadow:inset 3px 0 0 var(--theme)}
+.ntf-i.old{color:var(--text-2)}
 .ntf-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
 .ntf-p{font-weight:600}
 .ntf-t{margin-top:4px;font-size:13px;color:var(--text-2)}
@@ -1658,7 +1663,8 @@ function renderChrome(){
   document.querySelectorAll('[data-act=theme]').forEach(b => { b.setAttribute('aria-pressed', b.dataset.t === THEME); b.title = t(b.dataset.t === 'light' ? 'themeLight' : 'themeDark'); b.setAttribute('aria-label', b.title); });
   // сповіщення: красная точка — есть новые для меня события (правило — notifFor, как logic/notify.ts приложения)
   const bell = document.getElementById('bell');
-  if (bell){ const has = MODE !== 'loading' && notifItems().some(x => x.unread); bell.innerHTML = iconBell + (has ? '<span class="dot-new"></span>' : ''); bell.title = has ? `${t('notifTitle')} · ${t('notifNewOnes')}` : t('notifTitle'); bell.setAttribute('aria-label', bell.title); }
+  if (bell){ const n = MODE !== 'loading' ? notifItems().filter(x => x.unread).length : 0; bell.classList.toggle('has', n > 0);
+    bell.innerHTML = iconBell + (n ? `<span class="dot-new">${n > 9 ? '9+' : n}</span>` : ''); bell.title = n ? `${t('notifTitle')} · ${t('notifNewOnes')}: ${n}` : t('notifTitle'); bell.setAttribute('aria-label', bell.title); }
   const me = document.getElementById('me');
   me.innerHTML = avatar(VIEWER); me.title = `${t('signedIn')}: ${VIEWER} · ${email(VIEWER)}`; me.setAttribute('aria-label', me.title);
   foot.innerHTML = MODE === 'loading' ? '' : `<span class="src"><span class="dot sm" style="background:${db ? 'var(--g)' : 'var(--y)'}"></span>${db ? t('srcDb') : t('srcLocal')}</span>${MODE !== 'empty' ? `<button class="more" data-act="reset">${t('reset')}</button>` : ''}`;
@@ -1683,7 +1689,8 @@ let lastFocus = null;
 function openPanel(html, keep){
   if (!keep) lastFocus = document.activeElement;
   const top = panel.scrollTop;
-  panel.innerHTML = html;
+  // открыто из «Сповіщень» — вверху «← Сповіщення» (возврат к списку с тем же выделением «Нове»)
+  panel.innerHTML = (NOTIF_RET && state.panel && state.panel.kind !== 'notif' ? `<button class="link ntf-back" data-act="notifback">← ${t('notifTitle')}</button>` : '') + html;
   panel.classList.add('open'); scrim.classList.add('open'); panel.setAttribute('aria-hidden', 'false');
   if (keep) panel.scrollTop = top; else { panel.scrollTop = 0; const x = panel.querySelector('.x'); if (x) x.focus(); }
   enhanceDates(panel);
@@ -1715,7 +1722,7 @@ function enhanceDates(root){
 }
 function closePanel(){
   panel.classList.remove('open'); scrim.classList.remove('open'); panel.setAttribute('aria-hidden', 'true');
-  state.panel = null;
+  state.panel = null; NOTIF_RET = null;
   if (lastFocus && document.body.contains(lastFocus)) lastFocus.focus();
 }
 const closeBtn = () => `<button class="x" data-act="close" aria-label="${t('close')}"><svg width="14" height="14" viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.6"><path d="M2 2l12 12M14 2 2 14"/></svg></button>`;
@@ -1734,6 +1741,7 @@ function accessList(p){
 // ===== Сповіщення (колокольчик) — те же правила, что logic/notify.ts приложения: кто что видит, что новое =====
 // «прочитано до» — время последнего открытия панели (в приложении — номер записи журнала); при загрузке страницы — сейчас
 const NOTIF_LOADED = new Date().toISOString(), NOTIF_READ = {};
+let NOTIF_RET = null;   // переход из «Сповіщень»: {at, onlyNew} — вернуться к списку
 const notifRead = () => NOTIF_READ[VIEWER] || NOTIF_LOADED;
 const notifKind = c => ({create:'created', assign:'assigned', submit:'submitted', approval:'decided', risk:'risk', edit:'cardEdit'})[c.kind]
   || ((c.diffs || []).some(d => d.f === 'status' && d.to === 'Архівний') ? 'archived' : 'applied');
@@ -1783,6 +1791,8 @@ function notifPanel(onlyNew, readAt){
     <div class="ntf-bar"><label class="check"><input type="checkbox" id="ntf-new"${onlyNew ? ' checked' : ''}> ${t('notifOnlyNew')}</label></div>
     <div id="ntf-list">${list.length ? list.map(item).join('') : `<p class="empty">${t('notifEmpty')}</p>`}</div>`);
   panel.querySelector('#ntf-new').addEventListener('change', e => notifPanel(e.target.checked, at));
+  NOTIF_RET = null;
+  panel.querySelector('#ntf-list').addEventListener('click', e => { if (e.target.closest('.ntf-i')) NOTIF_RET = {at, onlyNew}; }, true);
   // открыли панель — показанное прочитано; точка гаснет, выделение «Нове» остаётся, пока панель открыта
   NOTIF_READ[VIEWER] = new Date().toISOString();
   renderChrome();
@@ -2321,6 +2331,7 @@ document.addEventListener('click', e => {
   else if (a === 'newproj') projectForm(null);
   else if (a === 'editproj') projectForm(pById(id));
   else if (a === 'notif') notifPanel(false);
+  else if (a === 'notifback') { const r = NOTIF_RET; notifPanel(r ? r.onlyNew : false, r ? r.at : null); }
   else if (a === 'assign') assignForm(pById(id));
   else if (a === 'backp') { if (id) projectPanel(id, false); else closePanel(); }
   else if (a === 'close') closePanel();

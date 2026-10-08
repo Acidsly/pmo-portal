@@ -405,14 +405,19 @@ form .fsec:first-child{margin-top:0}
 .pop-me .pn small{display:block}
 .pop-sep{font-size:11px;font-weight:600;color:var(--text-3);padding:10px 6px 4px;border-top:1px solid var(--line)}
 .me{border:0;background:none;padding:0;border-radius:50%;cursor:pointer;display:grid;place-items:center}
-.bell{position:relative;border:0;background:none;cursor:pointer;color:var(--text-2);width:34px;height:34px;border-radius:50%;display:grid;place-items:center}
-.bell:hover{background:var(--bg-hover);color:var(--text)}
-.bell .dot-new{position:absolute;top:5px;right:6px;width:9px;height:9px;border-radius:50%;background:var(--r);box-shadow:0 0 0 2px var(--bg-page)}
+.bell{position:relative;border:0;background:var(--bg-alt);cursor:pointer;color:var(--text-2);width:34px;height:34px;border-radius:10px;display:grid;place-items:center}
+.bell:hover{color:var(--text)}
+.bell .dot-new{position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:var(--r);color:#fff;font-size:10px;font-weight:700;line-height:17px;text-align:center;box-shadow:0 0 0 2px var(--bg-page)}
+/* есть непрочитанное — колокольчик покачивается (раз в несколько секунд), без анимации при «уменьшить движение» */
+.bell.has svg{transform-origin:50% 2px;animation:bell-ring 4s ease-in-out infinite}
+@keyframes bell-ring{0%,62%,100%{transform:rotate(0)}66%{transform:rotate(16deg)}72%{transform:rotate(-14deg)}78%{transform:rotate(10deg)}84%{transform:rotate(-6deg)}90%{transform:rotate(3deg)}}
+@media (prefers-reduced-motion:reduce){.bell.has svg{animation:none}}
+.ntf-back{display:inline-flex;align-items:center;gap:4px;margin:0 0 10px;font-size:13px}
 .ntf-bar{display:flex;align-items:center;gap:10px;margin:0 0 12px}
-.ntf-i{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 8px;cursor:pointer}
-.ntf-i:hover{background:var(--bg-hover)}
-.ntf-i.new{border-color:var(--theme);background:var(--theme-soft)}
-.ntf-i.old{opacity:.75}
+.ntf-i{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--bg-alt);border:1px solid transparent;border-radius:10px;padding:10px 12px;margin:0 0 8px;cursor:pointer}
+.ntf-i:hover{border-color:var(--line)}
+.ntf-i.new{background:var(--theme-soft);box-shadow:inset 3px 0 0 var(--theme)}
+.ntf-i.old{color:var(--text-2)}
 .ntf-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
 .ntf-p{font-weight:600}
 .ntf-t{margin-top:4px;font-size:13px;color:var(--text-2)}

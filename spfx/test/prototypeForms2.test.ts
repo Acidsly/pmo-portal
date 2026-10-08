@@ -206,6 +206,17 @@ describe('сповіщення: колокольчик в прототипе', (
     const cb = q('#ntf-new'); cb.checked = true; ev(cb, 'change');
     expect(q('.ntf-i.new')).not.toBeNull();
     expect(w.document.body.textContent).toContain('Перевірка сповіщень');
+    // переход к событию — вверху «← Сповіщення»; возврат — список с тем же выделением «Нове»
+    q('.ntf-i.new').click();
+    expect(q('[data-act="notifback"]')).not.toBeNull();
+    q('[data-act="notifback"]').click();
+    expect(q('#ntf-list')).not.toBeNull(); expect(q('.ntf-i.new')).not.toBeNull();
+    // открытие из шапки — без кнопки возврата
+    q('#bell').click(); expect(q('[data-act="notifback"]')).toBeNull();
+  });
+  test('число новых на колокольчике', () => {
+    comment(1, 'Перше'); comment(1, 'Друге');
+    asUser('Сергій Литвиненко'); expect(q('#bell .dot-new').textContent).toBe('2'); expect(q('#bell').classList.contains('has')).toBe(true);
   });
   test('видит проект, но не по своей роли (руководитель власника) — точки нет', () => {
     asUser('Андрій Мельник'); comment(2, 'Коментар PM');        // PRJ-002: PM — Андрій Мельник, власник — Юрій

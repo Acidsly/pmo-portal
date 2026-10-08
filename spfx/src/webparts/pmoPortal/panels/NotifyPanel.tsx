@@ -1,25 +1,29 @@
 import * as React from 'react';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
-import { NOTIFY_DAYS, notifyItems, notifyList, marksAfterView, NotifyItem, NotifyKind } from '../logic/notify';
+import { NOTIFY_DAYS, notifyItems, notifyList, marksAfterView, NotifyItem, NotifyKind, ReadMarks } from '../logic/notify';
 import { fmtDT } from '../components/Bits';
 import { tv } from '../i18n/values';
 
 const NK: Record<NotifyKind, string> = { created: 'nkCreated', assigned: 'nkAssigned', submitted: 'nkSubmitted', decided: 'nkDecided', applied: 'nkApplied',
   archived: 'nkArchived', risk: 'nkRisk', cardEdit: 'nkCardEdit', comment: 'nkComment' };
 
+/** Свои метки «прочитано до» (null — строки «Прочитане» ещё нет). */
+export const readMarks = (data: PortalData): ReadMarks | null => (data.notify ? { readId: data.notify.readId, readCmId: data.notify.readCmId } : null);
+
 /** Строки колокольчика и есть ли новые (правило — logic/notify.ts). PMO и владельцы сайта — canApprove. */
-export function notifyState(data: PortalData, me: string): { list: NotifyItem[]; unread: boolean } {
+export function notifyState(data: PortalData, me: string, marks?: ReadMarks): { list: NotifyItem[]; unread: number } {
   const since = new Date(Date.now() - NOTIFY_DAYS * 864e5).toISOString();
-  const list = notifyList(notifyItems(data, me, data.canApprove, since), data.notify ? { readId: data.notify.readId, readCmId: data.notify.readCmId } : null);
-  return { list, unread: list.some(x => x.unread) };
+  const list = notifyList(notifyItems(data, me, data.canApprove, since), marks || readMarks(data));
+  return { list, unread: list.filter(x => x.unread).length };
 }
 
-/** Панель «Сповіщення» (notifPanel прототипа): события за 14 дней по моей роли; открытие отмечает показанное прочитанным. */
-export const NotifyPanel: React.FC<{ data: PortalData; onCancel(): void }> = ({ data, onCancel }) => {
+/** Панель «Сповіщення» (notifPanel прототипа): события за 14 дней по моей роли; открытие отмечает показанное прочитанным.
+ *  marks — метки на момент первого открытия (возврат «← Сповіщення» сохраняет выделение «Нове»); onOpen — переход к событию. */
+export const NotifyPanel: React.FC<{ data: PortalData; marks?: ReadMarks; onOpen(form: string, projectId: number): void; onCancel(): void }> = ({ data, marks, onOpen, onCancel }) => {
   const c = React.useContext(AppCtx); const { t, fl } = c;
   // список с отметками «Нове» — на момент открытия: выделение остаётся, пока панель открыта
-  const [list] = React.useState(() => notifyState(data, c.me).list);
+  const [list] = React.useState(() => notifyState(data, c.me, marks).list);
   const [onlyNew, setOnlyNew] = React.useState(false);
   React.useEffect(() => {
     if (!data.notify || !list.some(x => x.unread)) return;
@@ -27,7 +31,7 @@ export const NotifyPanel: React.FC<{ data: PortalData; onCancel(): void }> = ({ 
   }, []);
   const open = (x: NotifyItem): void => {
     const r = x.ev && x.ev.ref;
-    c.openForm(r ? (r.type === 'report' ? 'rep:' : 'risk:') + r.id : '', x.projectId);
+    onOpen(r ? (r.type === 'report' ? 'rep:' : 'risk:') + r.id : '', x.projectId);
   };
   const shown = onlyNew ? list.filter(x => x.unread) : list;
   const p = (id: number): string => { const pr = data.projects.filter(x => x.id === id)[0]; return pr ? `${pr.code} · ${pr.title}` : ''; };

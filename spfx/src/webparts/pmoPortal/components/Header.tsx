@@ -13,7 +13,7 @@ export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: 
   /** Вкладка «Відгуки» — только если на сайте есть список «Відгуки» (тест с фокус-группой); отзыв оставляют на ней. */
   onFeedback?: () => void; onHelp(): void;
   /** Сповіщення: красная точка — есть новые для меня события. */
-  bell?: { unread: boolean; onOpen(): void } }> = p => {
+  bell?: { unread: number; onOpen(): void } }> = p => {
   const { t } = React.useContext(AppCtx);
   const dark = p.theme === 'dark' || (p.theme === '' && !!window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
   return <header className="top"><div className="top-in">
@@ -28,8 +28,9 @@ export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: 
         <button aria-pressed={!dark} title={t('themeLight')} aria-label={t('themeLight')} onClick={() => p.onTheme('light')}><Sun /></button>
         <button aria-pressed={dark} title={t('themeDark')} aria-label={t('themeDark')} onClick={() => p.onTheme('dark')}><Moon /></button>
       </div>
-      {p.bell ? <button className="bell" id="bell" title={p.bell.unread ? `${t('notifTitle')} · ${t('notifNewOnes')}` : t('notifTitle')}
-        aria-label={p.bell.unread ? `${t('notifTitle')} · ${t('notifNewOnes')}` : t('notifTitle')} onClick={p.bell.onOpen}><Bell />{p.bell.unread ? <span className="dot-new" /> : null}</button> : null}
+      {p.bell ? <button className={'bell' + (p.bell.unread ? ' has' : '')} id="bell" title={p.bell.unread ? `${t('notifTitle')} · ${t('notifNewOnes')}: ${p.bell.unread}` : t('notifTitle')}
+        aria-label={p.bell.unread ? `${t('notifTitle')} · ${t('notifNewOnes')}: ${p.bell.unread}` : t('notifTitle')} onClick={p.bell.onOpen}><Bell />
+        {p.bell.unread ? <span className="dot-new">{p.bell.unread > 9 ? '9+' : p.bell.unread}</span> : null}</button> : null}
       <button className="hbtn round" title={t('help')} aria-label={t('help')} onClick={p.onHelp}>?</button>
       <button className="me" title={`${t('signedIn')}: ${p.userName} · ${p.userEmail}`} aria-label={`${t('signedIn')}: ${p.userName}`}><Avatar name={p.userName} /></button>
     </div>
