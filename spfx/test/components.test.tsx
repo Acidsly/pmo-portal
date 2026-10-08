@@ -350,3 +350,24 @@ describe('метка сущности бокового окна', () => {
     expect((root.querySelector('.ph .ent') as HTMLElement).textContent).toBe('Сповіщення');
   });
 });
+
+describe('меню: значки разделов (Lucide)', () => {
+  test('у каждой вкладки — значок, название и подсказка; цвет раздела — по data-page', () => {
+    mount(<Header page="projects" lang={0} theme="light" userName="PM" userEmail="pm@x" onPage={() => undefined} onLang={() => undefined}
+      onTheme={() => undefined} onHelp={() => undefined} onFeedback={() => undefined} />);
+    const bs = Array.from(root.querySelectorAll('.nav button')) as HTMLElement[];
+    expect(bs.map(b => b.dataset.page)).toEqual(['home', 'projects', 'reports', 'risks', 'archive', 'feedback']);
+    for (const b of bs) {
+      expect(b.querySelector('.ni svg')).not.toBeNull();
+      expect(b.querySelector('.nl')!.textContent).toBe(b.getAttribute('title'));
+      expect(b.getAttribute('aria-label')).toBe(b.getAttribute('title'));
+    }
+    expect(bs[1].getAttribute('aria-current')).toBe('page');
+  });
+  test('метка окна проекта — цвет раздела «Проєкти»', () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { EntTag } = require('../src/webparts/pmoPortal/components/EntTag');
+    mount(<EntTag kind="project" />);
+    expect((root.querySelector('.ent') as HTMLElement).style.getPropertyValue('--c')).toBe('var(--nv-projects)');
+  });
+});

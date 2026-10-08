@@ -20,6 +20,8 @@
   --line:rgba(0,0,0,.08); --track:#e5e5ea;
   --g:#34c759; --y:#ff9f0a; --r:#ff3b30; --na:#c7c7cc;
   --strat-bg:rgba(175,82,222,.12); --strat:#8e44c9;
+  /* цвет раздела меню (значки Lucide), он же — метка сущности бокового окна */
+  --nv-home:#2563eb; --nv-projects:#7c3aed; --nv-reports:#0f766e; --nv-risks:#b45309; --nv-archive:#64748b; --nv-feedback:#be185d;
   --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.06);
   --shadow-hi:0 2px 6px rgba(0,0,0,.06),0 18px 40px rgba(0,0,0,.10);
   --radius:20px;
@@ -34,6 +36,7 @@
     --line:rgba(255,255,255,.1); --track:#3a3a3c;
     --g:#30d158; --y:#ffd60a; --r:#ff453a; --na:#48484a;
     --strat-bg:rgba(191,90,242,.2); --strat:#da8fff;
+    --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-archive:#94a3b8; --nv-feedback:#f472b6;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
     --shadow-hi:0 2px 6px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.5);
   }
@@ -47,6 +50,7 @@
   --line:rgba(255,255,255,.1); --track:#3a3a3c;
   --g:#30d158; --y:#ffd60a; --r:#ff453a; --na:#48484a;
   --strat-bg:rgba(191,90,242,.2); --strat:#da8fff;
+  --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-archive:#94a3b8; --nv-feedback:#f472b6;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
   --shadow-hi:0 2px 6px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.5);
 }
@@ -65,7 +69,13 @@ button,input,select,textarea{font:inherit;color:inherit}
 .brand-name{font-weight:600;font-size:17px;letter-spacing:-.01em;line-height:1.2}
 .brand-sub{font-size:12px;color:var(--text-2)}
 .nav{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:12px;overflow-x:auto;max-width:100%}
-.nav button{border:0;background:none;padding:7px 16px;border-radius:9px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text-2);white-space:nowrap;transition:background-color .2s,color .2s}
+.nav button{border:0;background:none;padding:4px 14px 4px 5px;border-radius:9px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text-2);white-space:nowrap;transition:background-color .2s,color .2s;display:inline-flex;align-items:center;gap:8px}
+/* значок раздела: цветной контур на мягкой подложке; на телефоне — только значки (название — в подсказке) */
+.nav .ni{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none;color:var(--nc);background:color-mix(in srgb,var(--nc) 14%,transparent)}
+.nav .ni svg{width:16px;height:16px}
+.nav [data-page=home]{--nc:var(--nv-home)}.nav [data-page=projects]{--nc:var(--nv-projects)}.nav [data-page=reports]{--nc:var(--nv-reports)}
+.nav [data-page=risks]{--nc:var(--nv-risks)}.nav [data-page=archive]{--nc:var(--nv-archive)}.nav [data-page=feedback]{--nc:var(--nv-feedback)}
+@media (max-width:720px){.nav button{flex:1;justify-content:center;padding:5px}.nav .nl{display:none}.nav .ni{width:30px;height:30px}}
 .nav button:hover{color:var(--text)}
 .nav button[aria-current="page"]{background:var(--bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .controls{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap}
@@ -1249,16 +1259,26 @@ const iconList = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" st
 const iconTiles = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.5"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1.5"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1.5"/><rect x="9" y="9" width="5.5" height="5.5" rx="1.5"/></svg>';
 const iconPlus = '<svg width="14" height="14" viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 2.5v11M2.5 8h11"/></svg>';
 const iconEdit = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10.5 2.5l3 3L6 13H3v-3z"/></svg>';
-// метка сущности бокового окна (EntTag приложения): цвет и значок по виду
+// значки разделов — Lucide (ISC License), те же в приложении (components/LucideIcons.tsx)
+const LUC = {
+  home:'<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  projects:'<path d="M20 17a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.9a2 2 0 0 1-1.69-.9l-.81-1.2a2 2 0 0 0-1.67-.9H8a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2Z"/><path d="M2 8v11a2 2 0 0 0 2 2h14"/>',
+  reports:'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>',
+  risks:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  archive:'<rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
+  feedback:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M13 8H7"/><path d="M17 12H7"/>',
+  issue:'<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>'};
+const lucide = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LUC[k]}</svg>`;
+// метка сущности бокового окна (EntTag приложения): цвет и значок по виду; проект, отчёт, риск — как раздел меню
 const ENT = {
-  project:{c:'var(--theme)', d:'M2 4.5h4l1.5 1.5H14v6.5H2z'},
-  report:{c:'var(--g)', d:'M4 2h6l3 3v9H4zM10 2v3h3M6 8h5M6 11h5'},
-  risk:{c:'var(--y)', d:'M8 2l6.5 11.5h-13zM8 6.5v3M8 11.5v.01'},
-  issue:{c:'var(--r)', d:'M8 1.5a6.5 6.5 0 1 0 0 13a6.5 6.5 0 1 0 0-13zM8 5v4M8 11v.01'},
+  project:{c:'var(--nv-projects)', l:'projects'},
+  report:{c:'var(--nv-reports)', l:'reports'},
+  risk:{c:'var(--nv-risks)', l:'risks'},
+  issue:{c:'var(--r)', l:'issue'},
   assign:{c:'#8764b8', d:'M8 8a2.5 2.5 0 1 0 0-5a2.5 2.5 0 0 0 0 5zM3 14c0-2.8 2.2-4.5 5-4.5s5 1.7 5 4.5'},
   notif:{c:'#5856d6', d:'M4 6.5a4 4 0 0 1 8 0c0 3 1.2 4.2 1.5 4.5h-11C2.8 10.7 4 9.5 4 6.5zM6.5 13a1.6 1.6 0 0 0 3 0'}};
 const ENT_L = {project:'entProject', report:'entReport', risk:'entRisk', issue:'entIssue', assign:'entAssign', notif:'entNotif'};
-const entTag = kind => { const e = ENT[kind]; return `<span class="ent ent-${kind}" style="--c:${e.c}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${e.d}"/></svg>${t(ENT_L[kind])}</span>`; };
+const entTag = kind => { const e = ENT[kind]; return `<span class="ent ent-${kind}" style="--c:${e.c}">${e.l ? lucide(e.l) : `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${e.d}"/></svg>`}${t(ENT_L[kind])}</span>`; };
 const iconBell = '<svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5a4 4 0 0 1 8 0c0 3 1.2 4.2 1.5 4.5h-11C2.8 10.7 4 9.5 4 6.5Z"/><path d="M6.5 13a1.6 1.6 0 0 0 3 0"/></svg>';
 const iconKey = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 12.5h12M4 10V7M8 10V4M12 10V6"/></svg>';
 const modeSwitch = key => `<span class="seg" role="group">
@@ -1691,7 +1711,7 @@ function renderChrome(){
   document.getElementById('siteName').textContent = t('siteTitle');
   document.getElementById('siteSub').textContent = 'SharePoint · Microsoft 365';
   const nav = {home:'navHome', projects:'navProjects', reports:'navReports', risks:'navRisks', archive:'navArchive'};
-  document.querySelectorAll('.nav button').forEach(b => { b.textContent = t(nav[b.dataset.page]); if (b.dataset.page === state.page) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  document.querySelectorAll('.nav button').forEach(b => { const l = t(nav[b.dataset.page]); b.innerHTML = `<span class="ni">${lucide(b.dataset.page)}</span><span class="nl">${esc(l)}</span>`; b.title = l; b.setAttribute('aria-label', l); if (b.dataset.page === state.page) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   document.querySelectorAll('[data-act=lang]').forEach((b, i) => b.setAttribute('aria-pressed', i === LI));
   document.querySelectorAll('[data-act=theme]').forEach(b => { b.setAttribute('aria-pressed', b.dataset.t === THEME); b.title = t(b.dataset.t === 'light' ? 'themeLight' : 'themeDark'); b.setAttribute('aria-label', b.title); });
   // сповіщення: красная точка — есть новые для меня события (правило — notifFor, как logic/notify.ts приложения)

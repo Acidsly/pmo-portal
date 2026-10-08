@@ -17,6 +17,8 @@ Everyone sees only the projects where they or their direct reports have a role.
 - **Phone and tablet (iPhone, iPad, Android):** the same address in Safari or Chrome. To open it like an app: in Safari — Share → "Add to Home Screen", in Chrome — menu ⋮ → "Add to Home screen".
 - **The SharePoint mobile app** may not show the portal fully — use the browser in that case. The SharePoint menu above the portal is hidden: everything is done in the portal tabs.
 
+The menu tabs have icons, each section in its own colour. On a phone only the icons remain (the name is in the tooltip).
+
 This guide is always available under the **?** button at the top of the portal.
 
 ## Who sees what and can do what

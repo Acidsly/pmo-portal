@@ -4,6 +4,7 @@ import { Lang } from '../i18n/i18n';
 import { Theme } from '../theme/theme';
 import { Avatar } from './Bits';
 import { Sun, Moon, Bell } from './Icons';
+import { Lucide } from './LucideIcons';
 
 const NAV: [Page, string][] = [['home', 'navHome'], ['projects', 'navProjects'], ['reports', 'navReports'], ['risks', 'navRisks'], ['archive', 'navArchive'], ['feedback', 'navFeedback']];
 
@@ -20,7 +21,9 @@ export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: 
     <div className="brand"><div className="logo" aria-hidden="true">PPM</div>
       <div><div className="brand-name">{t('siteTitle')}</div><div className="brand-sub">SharePoint · Microsoft 365</div></div></div>
     <nav className="nav" aria-label="Navigation">{NAV.filter(([pg]) => pg !== 'feedback' || !!p.onFeedback).map(([pg, k]) =>
-      <button key={pg} aria-current={p.page === pg ? 'page' : undefined} onClick={() => p.onPage(pg)}>{t(k)}</button>)}</nav>
+      // значок раздела (Lucide) и название; на телефоне — только значок, название — в подсказке
+      <button key={pg} data-page={pg} title={t(k)} aria-label={t(k)} aria-current={p.page === pg ? 'page' : undefined} onClick={() => p.onPage(pg)}>
+        <span className="ni"><Lucide k={pg} /></span><span className="nl">{t(k)}</span></button>)}</nav>
     <div className="controls">
       <div className="seg" role="group" aria-label="Мова / Language / Язык">{['UA', 'EN', 'RU'].map((l, i) =>
         <button key={l} lang={['uk', 'en', 'ru'][i]} aria-pressed={p.lang === i} onClick={() => p.onLang(i as Lang)}>{l}</button>)}</div>

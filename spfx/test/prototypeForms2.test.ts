@@ -275,3 +275,12 @@ describe('прототип: метка погодження в колонке «
     expect(rags.some(r => /дн\. тому/.test(r.getAttribute('title')))).toBe(true);
   });
 });
+
+test('меню прототипа: значок и название у каждой вкладки, цвета разделов в обеих темах', () => {
+  const bs = Array.from(w.document.querySelectorAll('.nav button')) as W[];
+  expect(bs.length).toBeGreaterThan(4);
+  bs.forEach(b => { expect(b.querySelector('.ni svg')).not.toBeNull(); expect(b.querySelector('.nl').textContent).toBe(b.title); });
+  const css = Array.from(w.document.querySelectorAll('style')).map((x: W) => x.textContent).join('\n');
+  for (const k of ['home', 'projects', 'reports', 'risks', 'archive', 'feedback']) expect((css.match(new RegExp(`--nv-${k}:`, 'g')) || []).length).toBe(3);   // светлая и две тёмные
+  expect(css).toMatch(/@media \(max-width:720px\)\{\.nav button\{[^}]*\}\.nav \.nl\{display:none\}/);
+});
