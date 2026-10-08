@@ -27,6 +27,13 @@ describe('applyPending — как шаг 1 Invoke-PMOSync.ps1', () => {
     const p = applyPending(P({ progress: 30, planEnd: '2026-11-01' }), [R({})]);
     expect(p.progress).toBe(30); expect(p.planEnd).toBe('2026-11-01');
   });
+  test('#77 статус и тип равны карточке — в истории нет «було → стало» по ним (как журнал синхронизации)', () => {
+    const p = applyPending(P({ status: 'Реалізація', type: 'Звичайний' }), [R({ status: 'Реалізація', type: 'Звичайний', progress: 50, date: '2026-09-22' })]);
+    expect(p.status).toBe('Реалізація');
+    const diffs = (p.pendingEvents || []).reduce((a: any[], e: any) => a.concat(e.diffs), []);
+    expect(diffs.filter((d: any) => d.f === 'status' || d.f === 'type')).toEqual([]);
+    expect(diffs.some((d: any) => d.f === 'progress')).toBe(true);
+  });
   test('«Завершено» -> проект «Завершено» (архив) и дата архивации', () => {
     const p = applyPending(P({}), [R({ status: 'Завершено', date: '2026-09-22' })]);
     expect(p.status).toBe('Завершено'); expect(p.archivedAt).toBe('2026-09-22');

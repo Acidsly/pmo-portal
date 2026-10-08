@@ -51,7 +51,7 @@ Everything is counted only over the projects you can see (excluding the archive)
 - **In the list:** click a column header to sort; the funnel ▽ filters by value; the gear ⚙ chooses and orders columns (↑ / ↓); on a computer, drag a column header's edge to change its width — it is remembered for each list, "Reset column widths" is in the gear menu; **CSV** exports the table as shown (the file opens in Excel). New records are on top. On a phone, status reports and risks are shown as cards (sorting and filters set on a computer apply there too).
 - **Filters** (funnel and "Show") apply while you stay on the page: switching to another tab resets them to the defaults (column choice and sorting are remembered). Column widths do not change with filters.
 - **"Report" column** — the date of the last approved report, with the approval of the newest report below it. The column filter (⏷): by freshness and by approval — "Approved", "Awaiting approval", "Returned for rework", "No reports submitted".
-- **Status** is a coloured label: Initiation — purple, Planning — blue, Execution — green, On hold — orange, Completed — green, Cancelled — grey. The dot next to it is the project health (green, yellow, red, grey — not rated).
+- **Project phase** (life-cycle stage) is a coloured label: Initiation — purple, Planning — blue, Execution — green, On hold — orange, Completed — green, Cancelled — grey. The dot next to it is the project health (green, yellow, red, grey — not rated).
 - **Colours:** a red completion date means the deadline has passed and the project is still open. The dot in the "Report" column is the freshness of the last approved report: green — up to 8 days, yellow — 9–14, red — over 14, grey — no approved reports yet (hover over the dot to see how many days old the report is). Below the date is the **approval of the newest report**: "Approved", "Awaiting approval" or "Returned for rework" (for the last two — the report date).
 
 ## Project card
@@ -75,14 +75,14 @@ You can share a link to the card: the browser address points exactly to it.
 1. In the card — **Add status report** (or the "Status reports" tab → "New status report"). A project can have **only one report awaiting approval**: until the PMO decides, the button is hidden and the card says "The report from … is awaiting PMO approval". Opened from the card, the form is for that project — you cannot switch the project there. In the general form, projects with a report awaiting approval cannot be selected (marked "report of … awaiting approval").
 2. The **submission date** is the day you save the report — nothing to pick. The **period** is calculated automatically: from the date of the project's last approved report (if there is none — from the start date) to the submission date, e.g. "06.10.2026 – 08.10.2026".
 3. Rate **schedule, budget and resources**: green, yellow, red. **Overall health** is calculated automatically — the worst of the three.
-4. **Key indicators** are prefilled with the current values. Change only what has changed: status, % complete (a whole number from 0 to 100), type, dates, actual costs (amounts are shown with spaces between thousands: 1 450 000). Launch, planned end and forecast dates cannot be earlier than the start date. For "Completed — move to archive", % complete becomes 100 and cannot be changed. Enter dates as dd.mm.yyyy (dots are added automatically) or pick them in the calendar — the button on the right of the field. For "Completed" or "Cancelled" — the **actual completion date**: not earlier than the start date and not later than the submission date (the portal explains next to the field which date it compared with); enter a future completion as the forecast, an early one is fine.
-5. If you changed the status, type or a date, fill in **Reason for changing indicators** (required, goes to the history).
+4. **Key indicators** are prefilled with the current values. Change only what has changed: phase, % complete (a whole number from 0 to 100), type, dates, actual costs (amounts are shown with spaces between thousands: 1 450 000). Launch, planned end and forecast dates cannot be earlier than the start date. For "Completed — move to archive", % complete becomes 100 and cannot be changed. Enter dates as dd.mm.yyyy (dots are added automatically) or pick them in the calendar — the button on the right of the field. For "Completed" or "Cancelled" — the **actual completion date**: not earlier than the start date and not later than the submission date (the portal explains next to the field which date it compared with); enter a future completion as the forecast, an early one is fine.
+5. If you changed the phase, type or a date, fill in **Reason for changing indicators** (required, goes to the history).
 6. A **One-line summary** (required), what was done, the plan, issues. **Management decision needed** — tick it if further work needs a decision beyond the PM's authority: e.g. approving an additional budget, changing priorities or resolving a resource conflict. Then **Decision required** is mandatory: state which decision is needed and what happens without it. A regular PMO approval of the status report does not need this tick.
 7. **Save.** If something is missing or entered incorrectly, the portal highlights all such fields at once and explains next to the field what is wrong. The report goes **to the PMO for approval**; the card updates after approval. A submitted report cannot be changed.
 8. If the PMO **returned** the report, the PMO's comment is shown in the card and in the report itself. Click **New report based on the returned one**: the form is filled with the returned report's data — fix it and save.
 9. A report is **returned automatically** if the project PM changed before the PMO decision (the new PM submits a current report) or the project moved to the archive — the comment explains why.
 
-The **"Completed — move to archive"** and **"Cancelled — move to archive"** status options send the project to the archive once the report is approved — after that the project is view-only. They require the **"Actual completion date"** — when the project was actually completed or cancelled: not before the start date and not after the report date.
+The **"Completed — move to archive"** and **"Cancelled — move to archive"** phase options send the project to the archive once the report is approved — after that the project is view-only. They require the **"Actual completion date"** — when the project was actually completed or cancelled: not before the start date and not after the report date.
 
 ## Approving status reports (for the PMO)
 
@@ -92,22 +92,22 @@ The **"Completed — move to archive"** and **"Cancelled — move to archive"** 
    - **Approve** — the report reaches the card with the PM's ratings;
    - change the schedule, budget or resources rating and click **Approve with changed ratings** — your rating reaches the card; a comment is required;
    - **Return for rework** — the card does not change, the PM sees your comment (required).
-4. The PMO changes only the ratings; the report itself (texts, dates, status) stays unchanged. The decision is recorded in the project's change history ("Report approval": "old → new", your comment).
+4. The PMO changes only the ratings; the report itself (texts, dates, phase) stays unchanged. The decision is recorded in the project's change history ("Report approval": "old → new", your comment).
 
 A decided report cannot be approved again: if changes are needed, return it and the PM will submit a new one. A report approved by mistake can only be corrected by the PM's next report.
 
 Before a decision the portal checks the report's current state: if another PMO has already decided it, your decision is not saved (you see why). A report whose author is no longer the project PM can only be returned.
 
-## How to change the project status
+## How to change the project phase
 
 The status (Initiation, Planning, Execution, On hold, Cancelled, Completed) changes **only through a status report** — it is not edited in the card.
 
 1. **The PM** opens the project card → **Add status report**.
-2. In **Key indicators** chooses the new **Project status** (and changes dates and % complete if needed).
-3. Fills in **Reason for changing indicators** — why the status changes; the reason goes to the history.
+2. In **Key indicators** chooses the new **Project phase** (and changes dates and % complete if needed).
+3. Fills in **Reason for changing indicators** — why the phase changes; the reason goes to the history.
 4. Rates schedule, budget, resources, writes the summary → **Save**. The report goes for approval.
 5. **The PMO** approves the report — the status in the card changes, and "Report approval" and "Updated by status report" rows appear in the history ("old → new", the reason). If the PMO returns the report, the status does not change and the PM submits a new report.
-6. **"Completed — move to archive"** or **"Cancelled — move to archive"** — after approval the project gets the "Completed" or "Cancelled" status, the "Completed / cancelled on" date and the "Actual completion date" and moves to the "Archive" tab; after that it is view-only.
+6. **"Completed — move to archive"** or **"Cancelled — move to archive"** — after approval the project gets the "Completed" or "Cancelled" phase, the "Completed / cancelled on" date and the "Actual completion date" and moves to the "Archive" tab; after that it is view-only.
 
 ## Risks and issues
 
@@ -145,7 +145,7 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
 
 ## Archive
 
-The "Archive" tab lists projects with the **Completed** or **Cancelled** status (the "Status" column) and their completion / cancellation date, view-only (no new comments). Their risks — "Risks and issues" → "Show: Risks of archived projects". Navigation is the same as in "Projects": **List** or **Tiles**, "Show" (All projects, **Completed**, **Cancelled**, Strategic, My projects, I am PM), CSV and column choice; tiles show the completion / cancellation date.
+The "Archive" tab lists projects with the **Completed** or **Cancelled** phase (the "Project phase" column) and their completion / cancellation date, view-only (no new comments). Their risks — "Risks and issues" → "Show: Risks of archived projects". Navigation is the same as in "Projects": **List** or **Tiles**, "Show" (All projects, **Completed**, **Cancelled**, Strategic, My projects, I am PM), CSV and column choice; tiles show the completion / cancellation date.
 
 ## Language and theme
 

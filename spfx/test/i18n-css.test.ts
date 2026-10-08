@@ -23,3 +23,12 @@ test('CSS изолирован под .pmo-app', () => {
   expect(css).not.toMatch(/(^|[\s,}])body\s*\{/);
   expect(css).not.toMatch(/(^|[\s,}])main[\s,{]/);
 });
+
+test('#78 «Статус» проекта — «Фаза проєкту» (этап жизненного цикла); статус риска — прежний', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { makeT } = require('../src/webparts/pmoPortal/i18n/i18n');
+  const uk = makeT(0), en = makeT(1), ru = makeT(2);
+  expect([uk.fl('status'), uk.t('cStatusOnly'), uk.t('cStatusR')]).toEqual(['Фаза проєкту', 'Фаза проєкту', 'Фаза у звіті']);
+  expect([en.fl('status'), ru.fl('status')]).toEqual(['Project phase', 'Фаза проекта']);
+  expect(uk.fl('kStatus')).toBe('Статус');
+});

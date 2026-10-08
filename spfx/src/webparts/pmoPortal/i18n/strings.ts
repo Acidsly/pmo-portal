@@ -1182,9 +1182,9 @@ export const T: Record<string, L3> = {
   "Причина изменения показателей"
  ],
  "errKeyReason": [
-  "Ви змінили статус, тип або дати — вкажіть причину.",
-  "You changed status, type or dates — enter a reason.",
-  "Вы изменили статус, тип или даты — укажите причину."
+  "Ви змінили фазу, тип або дати — вкажіть причину.",
+  "You changed the phase, type or dates — enter a reason.",
+  "Вы изменили фазу, тип или даты — укажите причину."
  ],
  "completeArch": [
   "Завершено — перенести в архів",
@@ -1197,9 +1197,9 @@ export const T: Record<string, L3> = {
   "Отменено — перенести в архив"
  ],
  "completeHint": [
-  "Після погодження звіту PMO проєкт отримає цей статус і перейде у вкладку «Архів».",
-  "After PMO approves the report, the project gets this status and moves to the Archive tab.",
-  "После согласования отчёта PMO проект получит этот статус и перейдёт во вкладку «Архив»."
+  "Після погодження звіту PMO проєкт отримає цю фазу і перейде у вкладку «Архів».",
+  "After PMO approves the report, the project gets this phase and moves to the Archive tab.",
+  "После согласования отчёта PMO проект получит эту фазу и перейдёт во вкладку «Архив»."
  ],
  "savedArch": [
   "Статус-звіт збережено, проєкт перенесено в архів.",
@@ -1277,9 +1277,9 @@ export const T: Record<string, L3> = {
   "Приоритет"
  ],
  "cStatusOnly": [
-  "Статус",
-  "Status",
-  "Статус"
+  "Фаза проєкту",
+  "Project phase",
+  "Фаза проекта"
  ],
  "cHealth": [
   "Стан",
@@ -1442,9 +1442,9 @@ export const T: Record<string, L3> = {
   "Проблемы"
  ],
  "cStatusR": [
-  "Статус у звіті",
-  "Status in report",
-  "Статус в отчёте"
+  "Фаза у звіті",
+  "Phase in report",
+  "Фаза в отчёте"
  ],
  "cDecFlag": [
   "Рішення",
@@ -1659,9 +1659,9 @@ export const FLD: Record<string, L3> = {
   "Направление"
  ],
  "status": [
-  "Статус проєкту",
-  "Project status",
-  "Статус проекта"
+  "Фаза проєкту",
+  "Project phase",
+  "Фаза проекта"
  ],
  "prio": [
   "Пріоритет",
