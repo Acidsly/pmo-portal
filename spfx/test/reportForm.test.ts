@@ -26,6 +26,8 @@ describe('проверка формы (#40, #53, #54)', () => {
     const e = reportErrors(d, p, c.progressText);
     expect(e.map(x => x.f).sort()).toEqual([...c.out].sort());
     expect(formErrorText(e)).toBe(c.message);
+    // #67: в сообщении — дата, с которой сравнили
+    if (c.messageDate) expect((e.filter(x => x.k === c.message)[0] || {} as any).a).toBe(c.messageDate);
   });
 });
 test('#37 из карточки — проект зафиксирован; #51 по умолчанию — без отчёта на погодженні, такие недоступны', () => {

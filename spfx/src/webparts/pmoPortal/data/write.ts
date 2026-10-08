@@ -10,7 +10,7 @@ export const spDate = (iso: string): string | null => (iso ? `${iso}T12:00:00Z` 
 
 /** Новый статус-отчёт. Статус, тип, даты и затраты — только изменённые (синхронизация переносит лишь заполненные поля); % — всегда. */
 export function reportBody(d: ReportDraft, p: Project): Body {
-  const b: Body = { Title: d.title.trim(), srProjectId: d.projectId, srDate: spDate(d.date), srPeriod: d.period,
+  const b: Body = { Title: d.title.trim(), srProjectId: d.projectId, srDate: spDate(d.date), srPeriodFrom: spDate(d.periodFrom || d.date),
     srSchedule: d.schedule, srBudget: d.budget, srResources: d.resources, srDone: d.done, srNext: d.next, srIssues: d.issues,
     srDecision: d.decision, srDecisionText: d.decision ? d.decisionText : '', srKeyReason: d.keyReason, srApplied: false };
   if (d.status !== p.status) b.srStatus = d.status;

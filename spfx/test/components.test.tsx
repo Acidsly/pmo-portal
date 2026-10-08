@@ -151,7 +151,7 @@ describe('#54 форма отчёта: дата завершення (факт)'
   const data = { projects: [{ id: 5, title: 'Проєкт П', status: 'Реалізація', type: 'Звичайний', progress: 40, actualCost: 0, start: '2026-03-02', goLive: '', planEnd: '2026-12-01', forecastEnd: '',
     canEdit: true, manager: { email: 'pm@x', name: 'PM' } }], risks: [], reports: [], comments: [], team: [] } as any;
   const typeDate = (id: string, v: string): void => { act(() => { Simulate.change(root.querySelector('#' + id) as HTMLInputElement, { target: { value: v } } as any); }); };
-  test('поле только при «Скасовано» / «Завершено»; без даты и позже даты отчёта — ошибка у поля', () => {
+  test('поле только при «Скасовано» / «Завершено»; без даты — ошибка; позже даты подання — ошибка сразу при вводе, с датой', () => {
     mount(<ReportForm data={data} projectId={5} onCancel={() => undefined} />);
     expect(root.querySelector('#f-ae')).toBeNull();
     const st = root.querySelector('#f-st') as HTMLSelectElement;
@@ -160,9 +160,13 @@ describe('#54 форма отчёта: дата завершення (факт)'
     expect((root.querySelector('label[for="f-ae"]') as HTMLElement).textContent).toContain('Дата завершення (факт)');
     act(() => { Simulate.submit(root.querySelector('form') as HTMLFormElement); });
     expect((root.querySelector('#f-ae') as HTMLElement).getAttribute('aria-invalid')).toBe('true');
-    typeDate('f-ae', '05.10.2026');                 // позже даты отчёта (сегодня 04.10.2026)
+    // дата подання — настоящее «сегодня» (день сохранения); завтра — позже
+    const tm = new Date(Date.now() + 864e5), dmy = `${String(tm.getDate()).padStart(2, '0')}.${String(tm.getMonth() + 1).padStart(2, '0')}.${tm.getFullYear()}`;
+    const today = '04.10.2026';   // «сегодня» формы (ctx.today); при сохранении — день сохранения
+    typeDate('f-ae', dmy);
+    expect(root.textContent).toContain(`Не може бути пізніше дати подання (${today}). Майбутнє завершення вкажіть як прогноз.`);   // сразу, до отправки
     act(() => { Simulate.submit(root.querySelector('form') as HTMLFormElement); });
-    expect(root.textContent).toContain('Не може бути пізніше дати звіту.');
+    expect((root.querySelector('#f-ae') as HTMLElement).getAttribute('aria-invalid')).toBe('true');
     act(() => { Simulate.change(st, { target: { value: 'Реалізація' } } as any); });
     expect(root.querySelector('#f-ae')).toBeNull();
     act(() => { Simulate.change(st, { target: { value: 'Завершено' } } as any); });

@@ -4,7 +4,8 @@ import { Rag } from './rag';
 
 /** Черновик статус-отчёта (форма reportForm прототипа). */
 export interface ReportDraft {
-  projectId: number; date: string; period: string; schedule: Rag; budget: Rag; resources: Rag;
+  /** date — дата подання (#62): сегодня, пишется в момент сохранения; periodFrom — начало периода (#69), считается при сохранении. */
+  projectId: number; date: string; periodFrom?: string; schedule: Rag; budget: Rag; resources: Rag;
   status: string; type: string; progress: number; start: string; goLive: string; planEnd: string; forecastEnd: string; actualCost: number;
   /** #54: дата завершення (факт) — только при «Завершено» / «Скасовано». */
   actualEnd: string;
@@ -32,7 +33,7 @@ export function nextCode(codes: string[]): string {
 
 /** Новый отчёт с текущими показателями проекта (с учётом неприменённых отчётов). */
 export function reportFromProject(p: Project, today: string): ReportDraft {
-  return { projectId: p.id, date: today, period: '2 тижні', schedule: '', budget: '', resources: '',
+  return { projectId: p.id, date: today, schedule: '', budget: '', resources: '',
     status: p.status, type: p.type, progress: p.progress, start: p.start, goLive: p.goLive, planEnd: p.planEnd, forecastEnd: p.forecastEnd,
     actualCost: p.actualCost, actualEnd: '', title: '', done: '', next: '', issues: '', decision: false, decisionText: '', keyReason: '' };
 }
@@ -40,7 +41,7 @@ export function reportFromProject(p: Project, today: string): ReportDraft {
 /** Новый отчёт на основе повернутого PMO: оценки, показатели и тексты повернутого, дата — сегодня. */
 export function reportFromReturned(r: StatusReport, p: Project, today: string): ReportDraft {
   const base = reportFromProject(p, today);
-  return { ...base, period: r.period || base.period, schedule: r.schedule, budget: r.budget, resources: r.resources,
+  return { ...base, schedule: r.schedule, budget: r.budget, resources: r.resources,
     status: r.status || base.status, type: r.type || base.type, progress: r.progress === null ? base.progress : r.progress,
     start: r.start || base.start, goLive: r.goLive || base.goLive, planEnd: r.planEnd || base.planEnd, forecastEnd: r.forecastEnd || base.forecastEnd,
     actualCost: r.actualCost === null ? base.actualCost : r.actualCost, actualEnd: r.actualEnd || '', basedOn: r.id, title: r.title, done: r.done, next: r.next, issues: r.issues,
@@ -94,8 +95,17 @@ export function reportProjectChoice(act: Project[], projectId: number): { fixed?
   return { fixed, first, disabled: act.filter(p => !!p.pendingDate && (!first || p.id !== first.id)).map(p => p.id) };
 }
 
-/** Ошибка поля формы: f — поле (для подсветки), k — ключ текста. */
-export interface FieldErr { f: string; k: string }
+/** Начало периода отчёта (#69; векторы tests/cases/report-period.json, те же — reportPeriodFrom прототипа): с даты последнего
+ *  погодженого отчёта проекта (без погодження — применённый) по дату подання; нет — с даты старта, нет старта — с даты создания,
+ *  нет и её — с даты подання; не позже даты подання. Повернутые и на погодженні не считаются. */
+export function reportPeriodFrom(reports: { date: string; approval: string; applied?: boolean }[], start: string, created: string, today: string): string {
+  const ok = reports.filter(r => !!r.date && r.date <= today && (r.approval === 'Погоджено' || (!r.approval && !!r.applied))).map(r => r.date).sort();
+  const from = ok.length ? ok[ok.length - 1] : start || (created || '').slice(0, 10) || today;
+  return from > today ? today : from;
+}
+
+/** Ошибка поля формы: f — поле (для подсветки), k — ключ текста, a — дата для «{date}» в тексте (#67: в сообщении — с чем сравнили). */
+export interface FieldErr { f: string; k: string; a?: string }
 /** Все ошибки формы отчёта сразу (#40): незаполненные обязательные поля, % вне 0–100, даты раньше старта.
  *  progressText — текст поля «% виконання» (без него берётся d.progress). */
 export function reportErrors(d: ReportDraft, p: Project, progressText?: string): FieldErr[] {
@@ -103,17 +113,19 @@ export function reportErrors(d: ReportDraft, p: Project, progressText?: string):
   if (!d.schedule) out.push({ f: 'sched', k: 'errReq' });
   if (!d.budget) out.push({ f: 'budget', k: 'errReq' });
   if (!d.resources) out.push({ f: 'res', k: 'errReq' });
-  if (!d.date) out.push({ f: 'date', k: 'errReq' });
   if (keyChanged(d, p) && !d.keyReason.trim()) out.push({ f: 'keyReason', k: 'errReq' });
   if (!d.title.trim()) out.push({ f: 'title', k: 'errReq' });
   if (progressText !== undefined && !progressLocked(d.status) && parseProgress(progressText) === null) out.push({ f: 'progress', k: 'errProgress' });
   datesBeforeStart(d).forEach(k => out.push({ f: k, k: 'errBeforeStart' }));
-  // #54: фактическая дата — обязательна при «Завершено» / «Скасовано», не раньше старта и не позже даты отчёта
+  // #54 / #64 / #67: фактическая дата — обязательна при «Завершено» / «Скасовано», не раньше старта и не позже даты подання (сегодня);
+  // раньше плана и прогноза — можно (досрочно); в сообщении — дата, с которой сравнили
   if (archiveStatus(d.status)) {
     if (!d.actualEnd) out.push({ f: 'actualEnd', k: 'errReq' });
-    else if (d.start && d.actualEnd < d.start) out.push({ f: 'actualEnd', k: 'errBeforeStart' });
-    else if (d.date && d.actualEnd > d.date) out.push({ f: 'actualEnd', k: 'errAfterReport' });
+    else if (d.start && d.actualEnd < d.start) out.push({ f: 'actualEnd', k: 'errBeforeStartOn', a: d.start });
+    else if (d.date && d.actualEnd > d.date) out.push({ f: 'actualEnd', k: 'errAfterSubmit', a: d.date });
   }
+  // #68: «Потрібне рішення керівництва» — опис обязателен (пробелы — пусто)
+  if (d.decision && !d.decisionText.trim()) out.push({ f: 'decisionText', k: 'errDecision' });
   return out;
 }
 /** Общее сообщение формы: есть незаполненные — «Заповніть усі обов'язкові поля, позначені *», иначе — первая ошибка поля. */
@@ -123,7 +135,6 @@ export const formErrorText = (errs: FieldErr[]): string => (!errs.length ? '' : 
 export function validateReport(d: ReportDraft, p: Project): string {
   if (!d.schedule || !d.budget || !d.resources) return 'errDims';
   if (!d.title.trim()) return 'errSum';
-  if (!d.date) return 'errDate';
   if (keyChanged(d, p) && !d.keyReason.trim()) return 'errKeyReason';
   return '';
 }

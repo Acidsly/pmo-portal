@@ -56,6 +56,11 @@ export const People: React.FC<{ list: Person[] }> = ({ list }) => list.length
       <b>{list[0].name}</b>{list.length > 1 ? <span className="more-n">+{list.length - 1}</span> : null}</span>
   : <span className="muted">—</span>;
 
+/** Период отчёта (#69): «з … по …», в один день — «за …»; прежние отчёты — их выбор («2 тижні»). */
+export const periodText = (t: (k: string) => string, r: { date: string; period: string; periodFrom: string }): string =>
+  (r.periodFrom ? (r.periodFrom < r.date ? t('periodFT').replace('{from}', fmtDate(r.periodFrom)).replace('{to}', fmtDate(r.date)) : t('periodDay').replace('{date}', fmtDate(r.date)))
+    : r.period ? tv(r.period) : '');
+
 /** Погодження статус-звіту: На погодженні — жёлтый, Погоджено — зелёный, Повернуто — красный. */
 const AC: Record<string, string> = { 'На погодженні': 'var(--y)', 'Погоджено': 'var(--g)', 'Повернуто': 'var(--r)' };
 export const ApBadge: React.FC<{ v: string }> = ({ v }) =>

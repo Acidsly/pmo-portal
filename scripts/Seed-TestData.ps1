@@ -218,9 +218,10 @@ foreach ($p in $projects) {
 
     # отчёты — как их применила бы синхронизация
     $state = @{ pmStatus = $v.pmStatus; pmProgress = "0"; pmForecastEnd = "" }
+    $prevRep = $null   # #69: период — от предыдущего (погодженого) демо-отчёта, первый — за день
     foreach ($r in $p.Reports) {
         $date = D $r.Days
-        $rv = @{ Title = $r.Title; srProject = $id; srDate = (SpDate $date); srPeriod = "2 тижні"
+        $rv = @{ Title = $r.Title; srProject = $id; srDate = (SpDate $date); srPeriodFrom = (SpDate $(if ($prevRep) { $prevRep } else { $date }))
                  srSchedule = $RAG[$r.S]; srBudget = $RAG[$r.B]; srResources = $RAG[$r.R]
                  srStatus = $r.Status; srProgress = $r.Progress; srActualCost = $r.Cost
                  srDone = $r.Done; srNext = $r.Next; srIssues = $r.Issues
@@ -230,6 +231,7 @@ foreach ($p in $projects) {
         if ($r.Decision) { $rv.srDecision = $true; $rv.srDecisionText = $r.Decision }
         foreach ($k in @($rv.Keys)) { if ($rv[$k] -eq "" -or $null -eq $rv[$k]) { $rv.Remove($k) } }
         $ri = Add-PnPListItem -List "Lists/StatusReports" -Values $rv; $n.reports++
+        $prevRep = $date
         Set-Authored "Lists/StatusReports" $ri.Id $pm (SpDate $date)
 
         $reason = @($r.Reason, $r.Title) | Where-Object { $_ } | Join-String -Separator " · "

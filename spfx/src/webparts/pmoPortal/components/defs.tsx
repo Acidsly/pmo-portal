@@ -5,8 +5,8 @@ import { Project, StatusReport, Risk, Comment } from '../data/types';
 import { Rag } from '../logic/rag';
 import { freshness, isPlanLate, forecastDelta, budgetUse, budgetLevel, riskScore } from '../logic/status';
 import { daysBetween } from '../logic/dates';
-import { freshBucket, scoreBucket } from '../logic/views';
-import { RagDot, PersonCell, People, Score, Progress, Muted, ApBadge, StatusPill, fmtDate, money, freshColor, RepMark, freshTip } from './Bits';
+import { freshBucket, scoreBucket, apBucket, AP_BUCKET } from '../logic/views';
+import { RagDot, PersonCell, People, Score, Progress, Muted, ApBadge, StatusPill, fmtDate, money, freshColor, RepMark, freshTip, periodText } from './Bits';
 import { Strat, Prio, Compass, Flag } from './Icons';
 
 /** Колонка = данные для движка таблицы + отрисовка (PDEF / RDEF / KDEF прототипа, строки 997–1072). */
@@ -57,8 +57,10 @@ export function projectDefs(x: DefsCtx, archive: boolean): TableDefs<Project> {
     // точка — свежесть последнего погодженого отчёта; ниже — погодження самого нового отчёта (#29: и отчёт на погодженні)
     repDate: { label: t('cRepDate'), cell: p => <><span className="rag" title={freshTip(t, p.lastUpdate, today)}><span className="dot sm" style={{ background: freshColor(freshness(p.lastUpdate, today)) }} />{p.lastUpdate ? fmtDate(p.lastUpdate) : t('noReports')}</span>
         <RepMark r={p.lastRep} /></>,
-      sort: p => p.lastUpdate, filter: p => freshBucket(p.lastUpdate, today),
-      flabel: v => <span className="ilabel"><span className="dot sm" style={{ background: ['var(--g)', 'var(--y)', 'var(--r)', 'var(--na)'][Number(v)] }} />{t('fr' + v)}</span> },
+      // фильтр: свежесть (0–3) и #73 погодження самого нового отчёта (a1–a4)
+      sort: p => p.lastUpdate, filter: p => [freshBucket(p.lastUpdate, today), apBucket(p.lastRep)],
+      flabel: v => (v[0] === 'a' ? (AP_BUCKET[v] ? <ApBadge v={AP_BUCKET[v]} /> : <span className="ilabel muted">{t('apNone')}</span>)
+        : <span className="ilabel"><span className="dot sm" style={{ background: ['var(--g)', 'var(--y)', 'var(--r)', 'var(--na)'][Number(v)] }} />{t('fr' + v)}</span>) },
     repAge: { label: t('cRepAge'), cell: p => { const a = age(p); return a === null ? <Muted /> : String(a); }, sort: p => age(p), cls: 'num' },
     progress: { label: fl('progress'), cell: p => <Progress v={p.progress} />, sort: p => p.progress },
     start: { label: t('cStart2'), cell: p => dateCell(p.start), sort: p => p.start },
@@ -95,7 +97,8 @@ export function reportDefs(x: DefsCtx): TableDefs<StatusReport> {
     proj: { label: fl('rProj'), cell: r => S.link(P(r)), sort: r => P(r).title, filter: r => P(r).title, cls: 'w-title' },
     code: { label: t('cCode'), cell: r => P(r).code, sort: r => P(r).code },
     date: { label: fl('rDate'), cell: r => fmtDate(r.date), sort: r => r.date },
-    period: { label: t('cPeriod'), cell: r => tv(r.period) || '—', sort: r => r.period, filter: r => r.period },
+    // #69: «з … по …» (прежние — их выбор); сортировка — по началу периода; фильтра нет (даты — не категории)
+    period: { label: t('cPeriod'), cell: r => periodText(t, r) || '—', sort: r => (r.periodFrom || '') + '|' + r.date },
     prio: { label: t('cPrio'), head: S.prioHead, cell: r => S.prioCell(P(r).priority), sort: r => P(r).priority, filter: r => P(r).priority, flabel: S.prioLabel, cls: 'w-ico' },
     rag: { label: t('cHealth'), cell: r => <RagDot v={calc(r)} notRated={t('notRated')} />, sort: r => ragOrder(calc(r)), filter: r => calc(r), flabel: S.ragLabel, cls: 'w-ico w-min' },
     sched: dim('schedule', 'rSched'), budget: dim('budget', 'rBudget'), res: dim('resources', 'rRes'),

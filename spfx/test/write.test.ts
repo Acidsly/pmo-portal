@@ -13,7 +13,7 @@ const draft = (x: Partial<ProjectDraft>): ProjectDraft => ({ title: 'Н', code: 
 
 test('отчёт: только изменённые ключевые показатели, srApplied=false, даты — полдень UTC', () => {
   const b = reportBody({ ...d, progress: 55, planEnd: '2027-01-15', keyReason: 'Зсув' }, p);
-  expect(b).toMatchObject({ srProjectId: 1, srDate: '2026-09-26T12:00:00Z', srPeriod: '2 тижні', srSchedule: 'Зелений', srBudget: 'Зелений',
+  expect(b).toMatchObject({ srProjectId: 1, srDate: '2026-09-26T12:00:00Z', srPeriodFrom: '2026-09-26T12:00:00Z', srSchedule: 'Зелений', srBudget: 'Зелений',
     srResources: 'Жовтий', srProgress: 55, srPlanEnd: '2027-01-15T12:00:00Z', srKeyReason: 'Зсув', srApplied: false, Title: 'Резюме', srDecision: false });
   expect(b).not.toHaveProperty('srStatus');
   expect(b).not.toHaveProperty('srActualCost');

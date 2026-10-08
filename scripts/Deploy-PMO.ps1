@@ -318,7 +318,10 @@ if (Test-Field $R "srScope") {
 F $R srProject     Lookup   "Проєкт"             "Project"             "Проект"               $lookup
 F $R srProjectType Choice   "Стратегічний"       "Strategic"           "Стратегический"       "Format='Dropdown'" (Choices $types)
 F $R srProjectPriority Choice "Пріоритет"        "Priority"            "Приоритет"            "Format='Dropdown'" (Choices @("1 — Високий","2 — Середній","3 — Низький"))
-F $R srDate        DateTime "Дата звіту"         "Report date"         "Дата отчёта"          "Format='DateOnly' Required='TRUE'" "<Default>[today]</Default>"
+# #62: дата подання — день сохранения отчёта (приложение ставит само, не вводится)
+F $R srDate        DateTime "Дата подання"       "Submission date"     "Дата подачи"          "Format='DateOnly' Required='TRUE'" "<Default>[today]</Default>"
+# #69: период — с даты последнего погодженого отчёта по дату подання (считает приложение); srPeriod — прежний выбор у старых отчётов
+F $R srPeriodFrom  DateTime "Період з"           "Period from"         "Период с"             "Format='DateOnly'"
 F $R srPeriod      Choice   "Період"             "Period"              "Период"               "Format='Dropdown'" (Choices @("Тиждень","2 тижні","Місяць","Квартал") "2 тижні")
 F $R srSchedule    Choice   "Терміни"            "Schedule"            "Сроки"                "Format='Dropdown' Required='TRUE'" (Choices $rag)
 F $R srBudget      Choice   "Бюджет"             "Budget"              "Бюджет"               "Format='Dropdown' Required='TRUE'" (Choices $rag)

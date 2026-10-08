@@ -11,7 +11,7 @@ export const PROJECT_SELECT = ['Id', 'Title', 'pmCode', 'pmType', 'pmPriority', 
   'pmStart', 'pmGoLive', 'pmPlanEnd', 'pmForecastEnd', 'pmActualEnd', 'pmArchivedAt', 'pmBudget', 'pmActualCost', 'pmLastUpdate', 'pmLastReport',
   'pmLastComment', 'pmLoop', 'pmLinks', 'pmDescription', 'pmEditLog', 'pmAccess', 'Created', 'EffectiveBasePermissions', ...people('pmManager', 'pmOwner', 'pmStakeholders')].join(',');
 export const PROJECT_EXPAND = 'pmManager,pmOwner,pmStakeholders';
-export const REPORT_SELECT = ['Id', 'Title', 'srProjectId', 'srDate', 'srPeriod', 'srSchedule', 'srBudget', 'srResources', 'srStatus', 'srType',
+export const REPORT_SELECT = ['Id', 'Title', 'srProjectId', 'srDate', 'srPeriod', 'srPeriodFrom', 'srSchedule', 'srBudget', 'srResources', 'srStatus', 'srType',
   'srProgress', 'srStart', 'srGoLive', 'srPlanEnd', 'srForecastEnd', 'srActualEnd', 'srActualCost', 'srKeyReason', 'srDone', 'srNext', 'srIssues',
   'srDecision', 'srDecisionText', 'srApplied', 'srApproval', 'srApprovedAt', 'srApprovalNote', 'Created', ...people('Author', 'srApprovedBy')].join(',');
 export const REPORT_EXPAND = 'Author,srApprovedBy';
@@ -53,7 +53,7 @@ export function mapProject(r: any): Project {
 }
 
 export function mapReport(r: any): StatusReport {
-  return { id: r.Id, projectId: r.srProjectId, date: dateOnly(r.srDate), period: s(r.srPeriod),
+  return { id: r.Id, projectId: r.srProjectId, date: dateOnly(r.srDate), period: s(r.srPeriod), periodFrom: dateOnly(r.srPeriodFrom),
     schedule: s(r.srSchedule) as Rag, budget: s(r.srBudget) as Rag, resources: s(r.srResources) as Rag,
     status: s(r.srStatus), type: s(r.srType), progress: nn(r.srProgress), start: dateOnly(r.srStart), goLive: dateOnly(r.srGoLive),
     planEnd: dateOnly(r.srPlanEnd), forecastEnd: dateOnly(r.srForecastEnd), actualEnd: dateOnly(r.srActualEnd), actualCost: nn(r.srActualCost), keyReason: s(r.srKeyReason),

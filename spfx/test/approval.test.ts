@@ -8,7 +8,7 @@ describe('погодження: общие векторы с Invoke-PMOSync.ps1'
   }));
 });
 
-const R = (x: Partial<StatusReport>): StatusReport => ({ id: 5, projectId: 1, date: '2026-09-20', period: '', schedule: 'Зелений', budget: 'Зелений', resources: 'Зелений',
+const R = (x: Partial<StatusReport>): StatusReport => ({ id: 5, projectId: 1, date: '2026-09-20', period: '', periodFrom: '', schedule: 'Зелений', budget: 'Зелений', resources: 'Зелений',
   status: '', type: '', progress: null, start: '', goLive: '', planEnd: '', forecastEnd: '', actualCost: null, keyReason: '', title: 'T', done: '', next: '', issues: '',
   decision: false, decisionText: '', applied: false, author: null, approval: 'На погодженні', approvedBy: null, approvedAt: '', approvalNote: '', ...x });
 const A = { id: 1, reportId: 5, projectId: 1, decision: 'Погоджено', s: 'Червоний', b: '', r: '', note: 'зсув', author: { id: 3, name: 'PMO', email: 'p@x' }, created: '2026-09-21T10:00:00Z', applied: false };

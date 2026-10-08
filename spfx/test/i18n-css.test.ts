@@ -12,7 +12,7 @@ test('словари перенесены из прототипа', () => {
 test('t / fl / язык из профиля', () => {
   const { t, fl } = makeT(1);
   expect(t('dash')).toBe('Project dashboard'); expect(t('нет такого')).toBe('нет такого');
-  expect(fl('rDate')).toBe('Report date');
+  expect(fl('rDate')).toBe('Submission date');
   expect(langFromCulture('uk-UA')).toBe(0); expect(langFromCulture('en-US')).toBe(1); expect(langFromCulture('ru-RU')).toBe(2); expect(langFromCulture('de-DE')).toBe(0);
 });
 test('CSS изолирован под .pmo-app', () => {

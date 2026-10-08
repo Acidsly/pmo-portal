@@ -96,7 +96,7 @@ test('#54: «Скасовано» с фактической датой → по�
   set('f-st', 'Скасовано');
   expect(q('#f-ae-wrap').hidden).toBe(false);
   const start = g('f-start').value || '2000-01-01';
-  set('f-d', '2026-10-01'); set('f-t', 'Скасовано'); set('f-kr', 'Рішення PMO');
+  set('f-t', 'Скасовано'); set('f-kr', 'Рішення PMO');
   set('f-ae', start > '2026-09-15' ? start : '2026-09-15');
   const ae = g('f-ae').value;
   f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
@@ -294,4 +294,17 @@ test('шапка: название — своей строкой, ниже ме�
   const ov = fs.readFileSync(path.join(__dirname, '../src/webparts/pmoPortal/theme/overrides.scss'), 'utf8');
   expect(ov).not.toMatch(/\.pmo-app \.brand \{ flex:/);   // приложение не меняет строку названия
   expect(ov).not.toMatch(/\.top-in \{ flex-wrap: nowrap/);  // название и меню в одну строку — не помещается
+});
+
+test('#73 фильтр колонки «Звіт»: свежесть и погодження; «Погоджено» — только такие проекты', () => {
+  q('[data-act="nav"][data-page="projects"]').click();
+  q('[data-act="mode"][data-key="projMode"][data-mode="list"]').click();
+  q('[data-act="tfilter"][data-col="repDate"]').click();
+  const vals = Array.from(w.document.querySelectorAll('#pop [data-pv]')).map((x: W) => x.dataset.pv);
+  expect(vals).toEqual(expect.arrayContaining(['0', 'a1']));
+  expect(w.document.querySelector('#pop').textContent).toContain('Погоджено');
+  const cb = q('#pop [data-pv="a1"]'); cb.checked = true; ev(cb, 'change');
+  const marks = Array.from(w.document.querySelectorAll('#main table tbody tr')).map((tr: W) => (tr.querySelector('.rep-ap') || { textContent: '' }).textContent);
+  expect(marks.length).toBeGreaterThan(0);
+  marks.forEach((m: string) => expect(m).toContain('Погоджено'));
 });

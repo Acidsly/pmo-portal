@@ -766,6 +766,41 @@ export const T: Record<string, L3> = {
   "Notifications",
   "Уведомления"
  ],
+ "periodFT": [
+  "з {from} по {to}",
+  "{from} – {to}",
+  "с {from} по {to}"
+ ],
+ "periodDay": [
+  "за {date}",
+  "on {date}",
+  "за {date}"
+ ],
+ "errBeforeStartOn": [
+  "Не може бути раніше дати старту ({date}).",
+  "Cannot be earlier than the start date ({date}).",
+  "Не может быть раньше даты старта ({date})."
+ ],
+ "errAfterSubmit": [
+  "Не може бути пізніше дати подання ({date}). Майбутнє завершення вкажіть як прогноз.",
+  "Cannot be later than the submission date ({date}). Enter a future completion as the forecast.",
+  "Не может быть позже даты подачи ({date}). Будущее завершение укажите как прогноз."
+ ],
+ "errDecision": [
+  "Зазначте, яке рішення потрібне від керівництва.",
+  "Specify what decision is needed from management.",
+  "Укажите, какое решение нужно от руководства."
+ ],
+ "apNone": [
+  "Звіти не подавались",
+  "No reports submitted",
+  "Отчёты не подавались"
+ ],
+ "subHint": [
+  "Дата подання — день збереження; період — від останнього погодженого звіту.",
+  "The submission date is the day you save; the period runs from the last approved report.",
+  "Дата подачи — день сохранения; период — от последнего согласованного отчёта."
+ ],
  "entProject": [
   "Проєкт",
   "Project",
@@ -1709,9 +1744,9 @@ export const FLD: Record<string, L3> = {
   "Проект"
  ],
  "rDate": [
-  "Дата звіту",
-  "Report date",
-  "Дата отчёта"
+  "Дата подання",
+  "Submission date",
+  "Дата подачи"
  ],
  "rPeriod": [
   "Період",

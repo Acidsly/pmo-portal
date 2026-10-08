@@ -208,7 +208,7 @@
       "message": "errReqAll"
     },
     {
-      "name": "#54 фактическая дата раньше старта",
+      "name": "#54 / #64 фактическая дата раньше старта — в сообщении дата старта",
       "draft": {
         "schedule": "Зелений",
         "budget": "Зелений",
@@ -227,10 +227,11 @@
       "out": [
         "actualEnd"
       ],
-      "message": "errBeforeStart"
+      "message": "errBeforeStartOn",
+      "messageDate": "2026-03-02"
     },
     {
-      "name": "#54 фактическая дата позже даты отчёта",
+      "name": "#64 / #67 фактическая дата позже даты подання — в сообщении дата подання, будущее — как прогноз",
       "draft": {
         "schedule": "Зелений",
         "budget": "Зелений",
@@ -249,10 +250,11 @@
       "out": [
         "actualEnd"
       ],
-      "message": "errAfterReport"
+      "message": "errAfterSubmit",
+      "messageDate": "2026-10-01"
     },
     {
-      "name": "#54 фактическая дата = дате отчёта и = старту — без ошибок",
+      "name": "#54 фактическая дата = дате подання и = старту — без ошибок",
       "draft": {
         "schedule": "Зелений",
         "budget": "Зелений",
@@ -286,6 +288,118 @@
         "forecastEnd": "",
         "date": "2026-10-01",
         "actualEnd": ""
+      },
+      "progressText": "40",
+      "out": [],
+      "message": ""
+    },
+    {
+      "name": "#64 факт раньше плана и прогноза (досрочно) — можно",
+      "draft": {
+        "schedule": "Зелений",
+        "budget": "Зелений",
+        "resources": "Зелений",
+        "title": "Резюме",
+        "keyReason": "Завершено",
+        "status": "Завершено",
+        "start": "2026-03-02",
+        "goLive": "",
+        "planEnd": "2026-12-01",
+        "forecastEnd": "2026-11-15",
+        "date": "2026-10-01",
+        "actualEnd": "2026-09-20"
+      },
+      "progressText": "100",
+      "out": [],
+      "message": ""
+    },
+    {
+      "name": "#68 «Потрібне рішення» без опису — обязательно",
+      "draft": {
+        "schedule": "Зелений",
+        "budget": "Зелений",
+        "resources": "Зелений",
+        "title": "Резюме",
+        "keyReason": "Перенос",
+        "status": "Реалізація",
+        "start": "2026-03-02",
+        "goLive": "",
+        "planEnd": "2026-12-01",
+        "forecastEnd": "",
+        "date": "2026-10-01",
+        "actualEnd": "",
+        "decision": true,
+        "decisionText": ""
+      },
+      "progressText": "40",
+      "out": [
+        "decisionText"
+      ],
+      "message": "errDecision"
+    },
+    {
+      "name": "#68 опис из пробелов — как пустой",
+      "draft": {
+        "schedule": "Зелений",
+        "budget": "Зелений",
+        "resources": "Зелений",
+        "title": "Резюме",
+        "keyReason": "Перенос",
+        "status": "Реалізація",
+        "start": "2026-03-02",
+        "goLive": "",
+        "planEnd": "2026-12-01",
+        "forecastEnd": "",
+        "date": "2026-10-01",
+        "actualEnd": "",
+        "decision": true,
+        "decisionText": "   "
+      },
+      "progressText": "40",
+      "out": [
+        "decisionText"
+      ],
+      "message": "errDecision"
+    },
+    {
+      "name": "#68 галочка снята — опис не нужен",
+      "draft": {
+        "schedule": "Зелений",
+        "budget": "Зелений",
+        "resources": "Зелений",
+        "title": "Резюме",
+        "keyReason": "Перенос",
+        "status": "Реалізація",
+        "start": "2026-03-02",
+        "goLive": "",
+        "planEnd": "2026-12-01",
+        "forecastEnd": "",
+        "date": "2026-10-01",
+        "actualEnd": "",
+        "decision": false,
+        "decisionText": ""
+      },
+      "progressText": "40",
+      "out": [],
+      "message": ""
+    },
+    {
+      "name": "#68 опис заполнен — без ошибок",
+      "draft": {
+        "schedule": "Зелений",
+        "budget": "Зелений",
+        "resources": "Зелений",
+        "title": "Резюме",
+        "keyReason": "Перенос",
+        "status": "Реалізація",
+        "start": "2026-03-02",
+        "goLive": "",
+        "planEnd": "2026-12-01",
+        "forecastEnd": "",
+        "date": "2026-10-01",
+        "actualEnd": "",
+        "decision": true,
+        "decisionText": "Погодити додатковий бюджет"
       },
       "progressText": "40",
       "out": [],
