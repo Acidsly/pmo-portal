@@ -454,7 +454,7 @@ function Get-ApprovalResult($rep, $ap) {
 }
 
 $DISPLAY = [ordered]@{
-    pmStatus = "Статус проєкту"; pmRAG = "Загальний стан"; pmType = "Тип проєкту"; pmProgress = "% виконання"
+    pmStatus = "Фаза проєкту"; pmRAG = "Загальний стан"; pmType = "Тип проєкту"; pmProgress = "% виконання"
     pmStart = "Дата старту"; pmGoLive = "Дата запуску (продакшн)"; pmPlanEnd = "Дата завершення (план)"; pmForecastEnd = "Прогноз завершення"
     pmActualEnd = "Дата завершення (факт)"
 }

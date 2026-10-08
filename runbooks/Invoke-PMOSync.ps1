@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:f219fbad8af5 — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:ec851a5cd3cb — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -650,7 +650,7 @@ function Get-ApprovalResult($rep, $ap) {
 }
 
 $DISPLAY = [ordered]@{
-    pmStatus = "Статус проєкту"; pmRAG = "Загальний стан"; pmType = "Тип проєкту"; pmProgress = "% виконання"
+    pmStatus = "Фаза проєкту"; pmRAG = "Загальний стан"; pmType = "Тип проєкту"; pmProgress = "% виконання"
     pmStart = "Дата старту"; pmGoLive = "Дата запуску (продакшн)"; pmPlanEnd = "Дата завершення (план)"; pmForecastEnd = "Прогноз завершення"
     pmActualEnd = "Дата завершення (факт)"
 }

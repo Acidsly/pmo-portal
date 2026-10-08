@@ -4,7 +4,7 @@
 
 A portal where the company keeps all its projects in one place:
 - every project has a **card**: team, links, timeline, budget, health, change history, comments, status reports and risks;
-- the PM regularly submits a **status report** — it is the only way to change the project's key indicators (status, health, % complete, dates, costs);
+- the PM regularly submits a **status report** — it is the only way to change the project's key indicators (phase, health, % complete, dates, costs);
 - **the PMO approves** every status report: a report reaches the card only after approval;
 - project **risks and issues** are scored as "probability × impact", and each gets a response strategy;
 - the **home page** shows the state of the portfolio: key figures, the risk map, schedule slips, upcoming go-lives, the portfolio by department.
@@ -57,7 +57,7 @@ Everything is counted only over the projects you can see (excluding the archive)
 ## Project card
 
 Click a project and its card opens on the right (full screen on a phone). Every side panel has a **coloured label** at the top showing what is open: Project, Status report, Risk, Issue, Assignment, Notifications, Feedback, Help — the same wherever you opened it from.
-- at the top — type, health, status, priority and **Links** (Loop, documents, etc.); **Add status report** and **Edit project** buttons (PM only);
+- at the top — type, health, phase, priority and **Links** (Loop, documents, etc.); **Add status report** and **Edit project** buttons (PM only);
 - **Goal and description** — up to 10 lines (line breaks are kept); a longer text — **Show all** / **Collapse**.
 - approval notes: "Status report of … is awaiting PMO approval" or "Report of … returned for rework" with the PMO's comment;
 - **Stakeholders**: PM, owner and **Project team** — a table: member, role, what to contact them about;
@@ -100,13 +100,13 @@ Before a decision the portal checks the report's current state: if another PMO h
 
 ## How to change the project phase
 
-The status (Initiation, Planning, Execution, On hold, Cancelled, Completed) changes **only through a status report** — it is not edited in the card.
+The phase (Initiation, Planning, Execution, On hold, Cancelled, Completed) changes **only through a status report** — it is not edited in the card.
 
 1. **The PM** opens the project card → **Add status report**.
 2. In **Key indicators** chooses the new **Project phase** (and changes dates and % complete if needed).
 3. Fills in **Reason for changing indicators** — why the phase changes; the reason goes to the history.
 4. Rates schedule, budget, resources, writes the summary → **Save**. The report goes for approval.
-5. **The PMO** approves the report — the status in the card changes, and "Report approval" and "Updated by status report" rows appear in the history ("old → new", the reason). If the PMO returns the report, the status does not change and the PM submits a new report.
+5. **The PMO** approves the report — the phase in the card changes, and "Report approval" and "Updated by status report" rows appear in the history ("old → new", the reason). If the PMO returns the report, the phase does not change and the PM submits a new report.
 6. **"Completed — move to archive"** or **"Cancelled — move to archive"** — after approval the project gets the "Completed" or "Cancelled" phase, the "Completed / cancelled on" date and the "Actual completion date" and moves to the "Archive" tab; after that it is view-only.
 
 ## Risks and issues
@@ -138,7 +138,7 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
 - Only the PM can **Edit project**: name, department, priority, budget, description, and also:
   - **Project team** — "+ Add member": a person, their **role** (required) and what to contact them about; × removes the member;
   - **Links** — "+ Add link": a name and an address (starting with `https://`); × removes it.
-- Status, health, dates and costs change only through a status report (see "How to change the project status").
+- Phase, health, dates and costs change only through a status report (see "How to change the project phase").
 - After the team changes, access rights are recalculated automatically: team members see the project and can comment.
 - After the project is created, only the PMO changes the **PM and the owner**: in the card — **"Change PM / owner"** (new PM, new owner — an empty field means no change, the reason is required). The change shows in the card and in the "Change history" ("Assignment") right away and is finally applied by synchronization within ~15 minutes; until then a new change cannot be submitted. A report of the former PM that is pending approval is returned automatically.
 - After a **PM change** the former PM can no longer change the project right away; the new PM sees "You are assigned as PM of this project: edit access appears within 15 minutes" — the page refreshes by itself.

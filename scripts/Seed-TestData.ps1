@@ -236,7 +236,7 @@ foreach ($p in $projects) {
 
         $reason = @($r.Reason, $r.Title) | Where-Object { $_ } | Join-String -Separator " · "
         $status = $r.Status   # «Завершено» / «Скасовано» — проект в архиве с тем же статусом (как после синхронизации)
-        if ($state.pmStatus -ne $status) { Add-Change $id "Статус проєкту" "pmStatus" $state.pmStatus $status "Статус-звіт" $pm $reason (SpDate $date); $state.pmStatus = $status }
+        if ($state.pmStatus -ne $status) { Add-Change $id "Фаза проєкту" "pmStatus" $state.pmStatus $status "Статус-звіт" $pm $reason (SpDate $date); $state.pmStatus = $status }
         if ($state.pmProgress -ne [string]$r.Progress) { Add-Change $id "% виконання" "pmProgress" "$($state.pmProgress)%" "$($r.Progress)%" "Статус-звіт" $pm $reason (SpDate $date); $state.pmProgress = [string]$r.Progress }
         if ($r.Forecast -and $state.pmForecastEnd -ne $r.Forecast) { Add-Change $id "Прогноз завершення" "pmForecastEnd" (Human $state.pmForecastEnd) (Human $r.Forecast) "Статус-звіт" $pm $reason (SpDate $date); $state.pmForecastEnd = $r.Forecast }
     }
