@@ -9,7 +9,7 @@ import { isArch } from '../logic/status';
 import { AP_OK, AP_PENDING, AP_RETURNED, approvalResult } from '../logic/approval';
 import { RagPick, Err, Frow, errText, guardText } from '../components/fields';
 import { guard } from '../logic/guard';
-import { RagPill, RagDot, ApBadge, fmtDate, fmtDT, money, PersonCell } from '../components/Bits';
+import { RagPill, RagDot, ApBadge, fmtDate, fmtDT, money, PersonCell, periodText } from '../components/Bits';
 import { Plus } from '../components/Icons';
 
 type Ind = 'status' | 'type' | 'progress' | 'start' | 'goLive' | 'planEnd' | 'forecastEnd' | 'actualEnd' | 'actualCost';
@@ -66,7 +66,7 @@ export const ReportView: React.FC<{ data: PortalData; report: StatusReport | und
   return <>
     {head}
     <div className="rv-meta"><button className="link" onClick={() => c.openProject(p.id)}>{p.title}</button>
-      <span>{fl('rDate')}: <b>{fmtDate(r.date)}</b></span>{r.period ? <span>{fl('rPeriod')}: <b>{tv(r.period)}</b></span> : null}<ApBadge v={state} /></div>
+      <span>{fl('rDate')}: <b>{fmtDate(r.date)}</b></span>{periodText(t, r) ? <span>{fl('rPeriod')}: <b>{periodText(t, r)}</b></span> : null}<ApBadge v={state} /></div>
 
     {canDecide ? <div className="sec"><h3>{t('apTitle')}</h3><div className="apbox"><form noValidate={true} onSubmit={e => { e.preventDefault(); decide(AP_OK).catch(() => undefined); }}>
       <p className="note" style={{ margin: '0 0 12px' }}>{t('apHint')}</p>

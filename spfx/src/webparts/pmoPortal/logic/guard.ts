@@ -39,6 +39,8 @@ export function guard(action: Action, me: string, f: Fresh, opts: { reportDate?:
   }
   if (action === 'report') {
     if (f.pending.length) return { ok: false, key: 'gPending', args: { date: dmy(f.pending[0].date) } };
+    // #62: дата подання — сегодня; раньше погодженого — только если у того дата в будущем (до #62 даты вводили вручную): синхронизация
+    // новый отчёт не применит («новее последнего применённого»), поэтому подать нельзя — с объяснением, к кому обратиться
     if (opts.reportDate && f.lastApprovedDate && opts.reportDate < f.lastApprovedDate) return { ok: false, key: 'gOldDate', args: { date: dmy(f.lastApprovedDate) } };
   }
   return { ok: true };

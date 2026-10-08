@@ -11,11 +11,12 @@ const d = { ...reportFromProject(p, '2026-09-26'), schedule: 'Зелений' as
 const draft = (x: Partial<ProjectDraft>): ProjectDraft => ({ title: 'Н', code: '', department: 'ІТ', links: [], type: 'Звичайний', priority: '2 — Середній',
   manager: { id: 5, name: 'M', email: 'm@x.ua' }, owner: null, team: [], start: '2026-09-26', goLive: '', planEnd: '', status: 'Ініціація', budget: 0, description: '', ...x });
 
-test('отчёт: только изменённые ключевые показатели, srApplied=false, даты — полдень UTC', () => {
+test('отчёт: статус и тип — всегда, остальные ключевые — только изменённые, srApplied=false, даты — полдень UTC', () => {
   const b = reportBody({ ...d, progress: 55, planEnd: '2027-01-15', keyReason: 'Зсув' }, p);
-  expect(b).toMatchObject({ srProjectId: 1, srDate: '2026-09-26T12:00:00Z', srPeriod: '2 тижні', srSchedule: 'Зелений', srBudget: 'Зелений',
+  expect(b).toMatchObject({ srProjectId: 1, srDate: '2026-09-26T12:00:00Z', srPeriodFrom: '2026-09-26T12:00:00Z', srSchedule: 'Зелений', srBudget: 'Зелений',
     srResources: 'Жовтий', srProgress: 55, srPlanEnd: '2027-01-15T12:00:00Z', srKeyReason: 'Зсув', srApplied: false, Title: 'Резюме', srDecision: false });
-  expect(b).not.toHaveProperty('srStatus');
+  // #77: статус и тип — в каждом отчёте, даже без изменения (иначе «Статус у звіті» пустой)
+  expect(b).toMatchObject({ srStatus: p.status, srType: p.type });
   expect(b).not.toHaveProperty('srActualCost');
   expect(b).not.toHaveProperty('srStart');
   expect(reportBody(d, p).srProgress).toBe(40);   // % пишется и без изменения

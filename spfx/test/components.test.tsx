@@ -151,7 +151,7 @@ describe('#54 форма отчёта: дата завершення (факт)'
   const data = { projects: [{ id: 5, title: 'Проєкт П', status: 'Реалізація', type: 'Звичайний', progress: 40, actualCost: 0, start: '2026-03-02', goLive: '', planEnd: '2026-12-01', forecastEnd: '',
     canEdit: true, manager: { email: 'pm@x', name: 'PM' } }], risks: [], reports: [], comments: [], team: [] } as any;
   const typeDate = (id: string, v: string): void => { act(() => { Simulate.change(root.querySelector('#' + id) as HTMLInputElement, { target: { value: v } } as any); }); };
-  test('поле только при «Скасовано» / «Завершено»; без даты и позже даты отчёта — ошибка у поля', () => {
+  test('поле только при «Скасовано» / «Завершено»; без даты — ошибка; позже даты подання — ошибка сразу при вводе, с датой', () => {
     mount(<ReportForm data={data} projectId={5} onCancel={() => undefined} />);
     expect(root.querySelector('#f-ae')).toBeNull();
     const st = root.querySelector('#f-st') as HTMLSelectElement;
@@ -160,9 +160,13 @@ describe('#54 форма отчёта: дата завершення (факт)'
     expect((root.querySelector('label[for="f-ae"]') as HTMLElement).textContent).toContain('Дата завершення (факт)');
     act(() => { Simulate.submit(root.querySelector('form') as HTMLFormElement); });
     expect((root.querySelector('#f-ae') as HTMLElement).getAttribute('aria-invalid')).toBe('true');
-    typeDate('f-ae', '05.10.2026');                 // позже даты отчёта (сегодня 04.10.2026)
+    // дата подання — настоящее «сегодня» (день сохранения); завтра — позже
+    const tm = new Date(Date.now() + 864e5), dmy = `${String(tm.getDate()).padStart(2, '0')}.${String(tm.getMonth() + 1).padStart(2, '0')}.${tm.getFullYear()}`;
+    const today = '04.10.2026';   // «сегодня» формы (ctx.today); при сохранении — день сохранения
+    typeDate('f-ae', dmy);
+    expect(root.textContent).toContain(`Не може бути пізніше дати подання (${today}). Майбутнє завершення вкажіть як прогноз.`);   // сразу, до отправки
     act(() => { Simulate.submit(root.querySelector('form') as HTMLFormElement); });
-    expect(root.textContent).toContain('Не може бути пізніше дати звіту.');
+    expect((root.querySelector('#f-ae') as HTMLElement).getAttribute('aria-invalid')).toBe('true');
     act(() => { Simulate.change(st, { target: { value: 'Реалізація' } } as any); });
     expect(root.querySelector('#f-ae')).toBeNull();
     act(() => { Simulate.change(st, { target: { value: 'Завершено' } } as any); });
@@ -377,5 +381,47 @@ describe('меню: значки разделов (Lucide)', () => {
     const { EntTag } = require('../src/webparts/pmoPortal/components/EntTag');
     mount(<EntTag kind="project" />);
     expect((root.querySelector('.ent') as HTMLElement).style.getPropertyValue('--c')).toBe('var(--nv-projects)');
+  });
+});
+
+describe('#71 «Мета та опис»: 10 строк, дальше — «Показати повністю»', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { Desc } = require('../src/webparts/pmoPortal/panels/ProjectCard');
+  const size = (scroll: number, client: number): void => {
+    Object.defineProperty(HTMLElement.prototype, 'scrollHeight', { configurable: true, get() { return this.id === 'card-desc' ? scroll : 0; } });
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get() { return this.id === 'card-desc' ? client : 0; } });
+  };
+  afterEach(() => { delete (HTMLElement.prototype as any).scrollHeight; delete (HTMLElement.prototype as any).clientHeight; });
+  test('короткий текст — без кнопки', () => {
+    size(60, 60); mount(<Desc text={'Мета\nОпис'} />);
+    expect(root.querySelector('#card-desc')!.className).toContain('clamp'); expect(root.querySelector('#desc-more')).toBeNull();
+  });
+  test('длинный — «Показати повністю», раскрытие и «Згорнути»', () => {
+    size(600, 220); mount(<Desc text={'рядок\n'.repeat(30)} />);
+    const b = root.querySelector('#desc-more') as HTMLElement; expect(b.textContent).toBe('Показати повністю');
+    act(() => { b.click(); });
+    expect(root.querySelector('#card-desc')!.className).not.toContain('clamp'); expect((root.querySelector('#desc-more') as HTMLElement).textContent).toBe('Згорнути');
+  });
+});
+
+describe('#62 / #69 сохранение отчёта: дата подання — день сохранения, период — от последнего погодженого', () => {
+  test('в запись уходят srDate = сегодня и srPeriodFrom = дата последнего погодженого (повернутий не считается)', async () => {
+    const pr = { id: 5, title: 'Проєкт П', status: 'Реалізація', type: 'Звичайний', progress: 40, actualCost: 0, start: '2026-03-02', goLive: '', planEnd: '2026-12-01', forecastEnd: '',
+      canEdit: true, manager: { email: 'pm@x', name: 'PM' } };
+    const R = (id: number, date: string, approval: string): any => ({ id, projectId: 5, date, approval, applied: approval === 'Погоджено' });
+    const data = { projects: [pr], reports: [R(1, '2026-09-01', 'Погоджено'), R(2, '2026-09-20', 'Повернуто'), R(9, '2026-09-25', 'Погоджено')].map(r => r.id === 9 ? { ...r, projectId: 7 } : r),
+      risks: [], comments: [], team: [] } as any;
+    const bodies: any[] = [];
+    const c2 = { ...ctx, me: 'pm@x', reload: async () => undefined, openProject() { /* */ },
+      repo: { fresh: async () => ({ project: pr, etag: '"1"', owner: false, pending: [], lastApprovedDate: '2026-09-01' }), createIn: async (_l: string, _id: number, b: any) => { bodies.push(b); } } };
+    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><ReportForm data={data} projectId={5} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    for (const n of ['sched', 'budget', 'res']) act(() => { Simulate.change(root.querySelector(`input[name="${n}"][value="Зелений"]`) as HTMLInputElement); });
+    act(() => { Simulate.change(root.querySelector('#f-t') as HTMLInputElement, { target: { value: 'Резюме' } } as any); });
+    await act(async () => { Simulate.submit(root.querySelector('form') as HTMLFormElement); await new Promise(r => setTimeout(r, 0)); });
+    const now = new Date(), today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    expect(bodies.length).toBe(1);
+    expect(bodies[0].srDate).toBe(`${today}T12:00:00Z`);
+    expect(bodies[0].srPeriodFrom).toBe('2026-09-01T12:00:00Z');   // отчёт другого проекта (25.09) и повернутий (20.09) — не граница
+    expect(bodies[0].srPeriod).toBeUndefined();
   });
 });

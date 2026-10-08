@@ -12,7 +12,7 @@ test('словари перенесены из прототипа', () => {
 test('t / fl / язык из профиля', () => {
   const { t, fl } = makeT(1);
   expect(t('dash')).toBe('Project dashboard'); expect(t('нет такого')).toBe('нет такого');
-  expect(fl('rDate')).toBe('Report date');
+  expect(fl('rDate')).toBe('Submission date');
   expect(langFromCulture('uk-UA')).toBe(0); expect(langFromCulture('en-US')).toBe(1); expect(langFromCulture('ru-RU')).toBe(2); expect(langFromCulture('de-DE')).toBe(0);
 });
 test('CSS изолирован под .pmo-app', () => {
@@ -22,4 +22,13 @@ test('CSS изолирован под .pmo-app', () => {
   expect(css).not.toMatch(/(^|[\s,}]):root/);
   expect(css).not.toMatch(/(^|[\s,}])body\s*\{/);
   expect(css).not.toMatch(/(^|[\s,}])main[\s,{]/);
+});
+
+test('#78 «Статус» проекта — «Фаза проєкту» (этап жизненного цикла); статус риска — прежний', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { makeT } = require('../src/webparts/pmoPortal/i18n/i18n');
+  const uk = makeT(0), en = makeT(1), ru = makeT(2);
+  expect([uk.fl('status'), uk.t('cStatusOnly'), uk.t('cStatusR')]).toEqual(['Фаза проєкту', 'Фаза проєкту', 'Фаза у звіті']);
+  expect([en.fl('status'), ru.fl('status')]).toEqual(['Project phase', 'Фаза проекта']);
+  expect(uk.fl('kStatus')).toBe('Статус');
 });

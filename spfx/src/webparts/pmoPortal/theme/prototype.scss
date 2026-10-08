@@ -13,6 +13,7 @@
   --line:rgba(0,0,0,.08); --track:#e5e5ea;
   --g:#34c759; --y:#ff9f0a; --r:#ff3b30; --na:#c7c7cc;
   --strat-bg:rgba(175,82,222,.12); --strat:#8e44c9;
+  --pick-off:transparent; --pick-hover:rgba(0,0,0,.05);
   /* цвет раздела меню (значки Lucide), он же — метка сущности бокового окна */
   --nv-home:#2563eb; --nv-projects:#7c3aed; --nv-reports:#0f766e; --nv-risks:#b45309; --nv-archive:#64748b; --nv-feedback:#be185d;
   --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.06);
@@ -29,6 +30,7 @@
     --line:rgba(255,255,255,.1); --track:#3a3a3c;
     --g:#30d158; --y:#ffd60a; --r:#ff453a; --na:#48484a;
     --strat-bg:rgba(191,90,242,.2); --strat:#da8fff;
+    --pick-off:rgba(255,255,255,.07); --pick-hover:rgba(255,255,255,.13);
     --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-archive:#94a3b8; --nv-feedback:#f472b6;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
     --shadow-hi:0 2px 6px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.5);
@@ -43,6 +45,7 @@
   --line:rgba(255,255,255,.1); --track:#3a3a3c;
   --g:#30d158; --y:#ffd60a; --r:#ff453a; --na:#48484a;
   --strat-bg:rgba(191,90,242,.2); --strat:#da8fff;
+  --pick-off:rgba(255,255,255,.07); --pick-hover:rgba(255,255,255,.13);
   --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-archive:#94a3b8; --nv-feedback:#f472b6;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
   --shadow-hi:0 2px 6px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.5);
@@ -264,13 +267,20 @@ form label.t,form legend{display:block;font-weight:600;margin-bottom:6px;font-si
 form input[type=text],form input[type=number],form input[type=date],form select,form textarea{width:100%;border:1px solid transparent;border-radius:12px;padding:10px 12px;background:var(--bg-alt);transition:border-color .15s,background-color .15s}
 form input:focus,form select:focus,form textarea:focus{outline:none;border-color:var(--theme);background:var(--bg)}
 form textarea{min-height:72px;resize:vertical}
+.subinfo{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;font-size:14px}
+.subinfo .muted{flex-basis:100%;font-size:12.5px}
 .fgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 @media (max-width:520px){.fgrid{grid-template-columns:minmax(0,1fr)}}
 fieldset.ragpick{border:0;margin:0 0 14px;padding:0}
 .ragpick .opts{display:inline-flex;background:var(--bg-alt);padding:3px;border-radius:12px;gap:2px;flex-wrap:wrap}
-.ragpick label{display:inline-flex;align-items:center;gap:6px;border-radius:9px;padding:6px 14px;cursor:pointer;font-size:14px;font-weight:500}
+/* #63: переключатели форм — выбранный: рамка цвета темы и ✓ (понятно без цветной точки); невыбранные — на своей подложке;
+   наведение и «недоступно» различимы; в тёмной теме невыбранные заметно светлее дорожки */
+.ragpick label{display:inline-flex;align-items:center;gap:6px;border-radius:9px;padding:6px 14px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text-2);background:var(--pick-off);transition:background-color .15s,color .15s}
 .ragpick input{position:absolute;opacity:0;pointer-events:none}
-.ragpick input:checked + label{background:var(--bg);box-shadow:0 1px 3px rgba(0,0,0,.14);font-weight:600}
+.ragpick input:checked + label{background:var(--bg);color:var(--text);box-shadow:inset 0 0 0 2px var(--theme),0 1px 3px rgba(0,0,0,.14);font-weight:600}
+.ragpick input:checked + label::before{content:'✓';font-weight:700;color:var(--theme);margin-right:-1px}
+.ragpick input:not(:checked):not(:disabled) + label:hover{background:var(--pick-hover);color:var(--text)}
+.ragpick input:disabled + label{opacity:.5;cursor:default}
 .ragpick input:focus-visible + label{outline:3px solid var(--theme-soft)}
 .dims{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-bottom:6px}
 .dims .ragpick{margin:0}
@@ -300,8 +310,14 @@ fieldset[aria-invalid=true]{padding:4px 6px}
 .tile-pm b{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tile-upd{flex:0 1 auto}
 .actbar{display:flex;gap:8px;flex-wrap:wrap}
+/* #72: телефон — кнопки действий по центру и одинаковой ширины: главная кнопка списка — на всю ширину, ряды кнопок карточки и форм —
+   поровну на строку (не помещаются — каждая на всю ширину) */
+@media (max-width:720px){.cmdbar .cmd.primary{flex:1 1 100%;justify-content:center}.actbar,.actions{flex-wrap:wrap}.actbar .btn{flex:1 1 100%;justify-content:center}.actions .btn{flex:1 1 120px;justify-content:center;white-space:nowrap}}
 .note.lock{background:var(--bg-alt);border-radius:12px;padding:10px 14px;margin:0;font-size:13px}
-.desc{margin:18px 0 0;color:var(--text-2);font-size:15px;max-width:60ch}
+/* #71: «Мета та опис» — переносы строк сохраняются, не больше 10 строк, дальше — «Показати повністю» */
+.desc{margin:18px 0 0;color:var(--text-2);font-size:15px;max-width:60ch;white-space:pre-wrap;overflow-wrap:anywhere}
+.desc.clamp{display:-webkit-box;-webkit-line-clamp:10;-webkit-box-orient:vertical;overflow:hidden}
+.desc-more{margin-top:4px}
 .pav.sm{width:22px;height:22px;font-size:9px}
 .chg{padding:12px 0;border-bottom:1px solid var(--line)}
 .chg:last-of-type{border-bottom:0}
@@ -567,6 +583,8 @@ form .fsec:first-child{margin-top:0}
 .opts.scale input{position:absolute;opacity:0;pointer-events:none}
 .opts.scale label{min-width:40px;text-align:center;padding:6px 0;border-radius:9px;cursor:pointer;font-weight:600}
 .opts.scale input:checked + label{background:var(--theme);color:#fff}
+.opts.scale input:not(:checked):not(:disabled) + label:hover{background:var(--pick-hover)}
+.opts.scale input:disabled + label{opacity:.5;cursor:default}
 .opts.scale input:focus-visible + label{outline:3px solid var(--theme-soft)}
 .scale-d{margin:6px 2px 0;font-size:13px;color:var(--text-2)}
 .scorebox{display:flex;align-items:center;gap:10px;padding-top:10px;border-top:1px solid var(--line)}

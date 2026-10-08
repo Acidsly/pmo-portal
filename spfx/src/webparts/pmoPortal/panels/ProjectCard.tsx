@@ -47,6 +47,17 @@ export const RefLink: React.FC<{ r: { type: 'report' | 'risk'; id: number }; pid
   const c = React.useContext(AppCtx);
   return <button className="link chg-ref" onClick={() => c.openForm((r.type === 'report' ? 'rep:' : 'risk:') + r.id, pid)}>{c.t(r.type === 'report' ? 'openReport' : 'openRisk')} →</button>;
 };
+/** #71: «Мета та опис» — переносы строк сохраняются, не больше 10 строк; не помещается — «Показати повністю» / «Згорнути». */
+export const Desc: React.FC<{ text: string }> = ({ text }) => {
+  const { t } = React.useContext(AppCtx);
+  const ref = React.useRef<HTMLParagraphElement>(null);
+  const [open, setOpen] = React.useState(false);
+  const [long, setLong] = React.useState(false);
+  React.useEffect(() => { const el = ref.current; if (el && !open) setLong(el.scrollHeight > el.clientHeight + 1); }, [text, open]);
+  return <><p ref={ref} id="card-desc" className={'desc' + (open ? '' : ' clamp')}>{text}</p>
+    {long || open ? <button type="button" className="link desc-more" id="desc-more" onClick={() => setOpen(!open)}>{t(open ? 'descLess' : 'descMore')}</button> : null}</>;
+};
+
 export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: SpRepo; onClose(): void }> = ({ project: p, data, repo, onClose }) => {
   const c = React.useContext(AppCtx); const { t, fl, today } = c;
   const [cm, setCm] = React.useState('');
@@ -138,7 +149,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
         <button className="link" onClick={() => c.openForm('rep:' + returned.id, p.id)}>{t('openReport')} →</button>
         {edit ? <div><button className="btn" onClick={() => c.openForm('report-from:' + returned.id, p.id)}><Plus />{t('newFromReturned')}</button></div> : null}</div> : null}
     </div> : null}
-    {p.description ? <p className="desc">{p.description}</p> : null}
+    {p.description ? <Desc text={p.description} /> : null}
 
     <div className="sec"><h3>{t('secPeople')}</h3>
       {p.manager ? <div className="pmcard"><Avatar name={p.manager.name} /><span className="pn"><b>{p.manager.name}</b>

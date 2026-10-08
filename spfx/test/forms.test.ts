@@ -16,7 +16,7 @@ test('nextCode: максимальный PRJ + 1, трёхзначный', () =>
 });
 test('подстановка и «изменились ли показатели» (как keyChanged прототипа)', () => {
   const d = reportFromProject(p, '2026-09-26');
-  expect(d).toMatchObject({ projectId: 1, date: '2026-09-26', period: '2 тижні', status: 'Реалізація', progress: 40, planEnd: '2026-12-01', actualCost: 100 });
+  expect(d).toMatchObject({ projectId: 1, date: '2026-09-26', status: 'Реалізація', progress: 40, planEnd: '2026-12-01', actualCost: 100 });
   expect(keyChanged(d, p)).toBe(false);
   expect(keyChanged({ ...d, progress: 60, actualCost: 500 }, p)).toBe(false);   // % и затраты причины не требуют
   expect(keyChanged({ ...d, planEnd: '2027-01-15' }, p)).toBe(true);
@@ -26,7 +26,6 @@ test('проверки отчёта в порядке прототипа', () =>
   const ok: ReportDraft = { ...reportFromProject(p, '2026-09-26'), schedule: 'Зелений', budget: 'Зелений', resources: 'Жовтий', title: 'Резюме' };
   expect(validateReport({ ...ok, resources: '' }, p)).toBe('errDims');
   expect(validateReport({ ...ok, title: ' ' }, p)).toBe('errSum');
-  expect(validateReport({ ...ok, date: '' }, p)).toBe('errDate');
   expect(validateReport({ ...ok, status: 'Призупинено' }, p)).toBe('errKeyReason');
   expect(validateReport({ ...ok, status: 'Призупинено', keyReason: 'Пауза' }, p)).toBe('');
   expect(validateReport(ok, p)).toBe('');

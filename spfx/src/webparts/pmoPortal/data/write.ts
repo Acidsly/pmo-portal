@@ -8,13 +8,14 @@ type Body = Record<string, unknown>;
 /** Дата «только дата» для записи — полдень UTC, как ToSpDate синхронизации; пусто — null. */
 export const spDate = (iso: string): string | null => (iso ? `${iso}T12:00:00Z` : null);
 
-/** Новый статус-отчёт. Статус, тип, даты и затраты — только изменённые (синхронизация переносит лишь заполненные поля); % — всегда. */
+/** Новый статус-отчёт. Статус, тип и % — всегда (#77: «Статус у звіті» — то, что зафиксировано в отчёте; равное карточке синхронизация
+ *  не меняет и в журнал не пишет); даты и затраты — только изменённые (синхронизация переносит лишь заполненные поля). */
 export function reportBody(d: ReportDraft, p: Project): Body {
-  const b: Body = { Title: d.title.trim(), srProjectId: d.projectId, srDate: spDate(d.date), srPeriod: d.period,
+  const b: Body = { Title: d.title.trim(), srProjectId: d.projectId, srDate: spDate(d.date), srPeriodFrom: spDate(d.periodFrom || d.date),
     srSchedule: d.schedule, srBudget: d.budget, srResources: d.resources, srDone: d.done, srNext: d.next, srIssues: d.issues,
     srDecision: d.decision, srDecisionText: d.decision ? d.decisionText : '', srKeyReason: d.keyReason, srApplied: false };
-  if (d.status !== p.status) b.srStatus = d.status;
-  if (d.type !== p.type) b.srType = d.type;
+  b.srStatus = d.status;
+  b.srType = d.type;
   // % выполнения — в каждом отчёте (матрица состояний в карточке); без изменения синхронизация журнал не пишет
   b.srProgress = Math.max(0, Math.min(100, d.progress));
   // суммы — целые доллары, x,5 — вверх (как синхронизация, ошибка сверки №5)

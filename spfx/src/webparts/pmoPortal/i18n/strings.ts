@@ -356,11 +356,6 @@ export const T: Record<string, L3> = {
   "Fill in the one-line summary.",
   "Заполните резюме одной строкой."
  ],
- "errDate": [
-  "Вкажіть дату звіту.",
-  "Enter the report date.",
-  "Укажите дату отчёта."
- ],
  "errCmt": [
   "Введіть текст коментаря.",
   "Enter the comment text.",
@@ -581,11 +576,6 @@ export const T: Record<string, L3> = {
   "Cannot be earlier than the start date.",
   "Не может быть раньше даты старта."
  ],
- "errAfterReport": [
-  "Не може бути пізніше дати звіту.",
-  "Cannot be later than the report date.",
-  "Не может быть позже даты отчёта."
- ],
  "aeHint": [
   "Коли проєкт фактично завершено або скасовано.",
   "When the project was actually completed or cancelled.",
@@ -765,6 +755,51 @@ export const T: Record<string, L3> = {
   "Сповіщення",
   "Notifications",
   "Уведомления"
+ ],
+ "periodFT": [
+  "з {from} по {to}",
+  "{from} – {to}",
+  "с {from} по {to}"
+ ],
+ "periodDay": [
+  "за {date}",
+  "on {date}",
+  "за {date}"
+ ],
+ "errBeforeStartOn": [
+  "Не може бути раніше дати старту ({date}).",
+  "Cannot be earlier than the start date ({date}).",
+  "Не может быть раньше даты старта ({date})."
+ ],
+ "errAfterSubmit": [
+  "Не може бути пізніше дати подання ({date}). Майбутнє завершення вкажіть як прогноз.",
+  "Cannot be later than the submission date ({date}). Enter a future completion as the forecast.",
+  "Не может быть позже даты подачи ({date}). Будущее завершение укажите как прогноз."
+ ],
+ "errDecision": [
+  "Зазначте, яке рішення потрібне від керівництва.",
+  "Specify what decision is needed from management.",
+  "Укажите, какое решение нужно от руководства."
+ ],
+ "apNone": [
+  "Звіти не подавались",
+  "No reports submitted",
+  "Отчёты не подавались"
+ ],
+ "descMore": [
+  "Показати повністю",
+  "Show all",
+  "Показать полностью"
+ ],
+ "descLess": [
+  "Згорнути",
+  "Collapse",
+  "Свернуть"
+ ],
+ "subHint": [
+  "Дата подання — день збереження; період — від останнього погодженого звіту.",
+  "The submission date is the day you save; the period runs from the last approved report.",
+  "Дата подачи — день сохранения; период — от последнего согласованного отчёта."
  ],
  "entProject": [
   "Проєкт",
@@ -1142,9 +1177,9 @@ export const T: Record<string, L3> = {
   "Причина изменения показателей"
  ],
  "errKeyReason": [
-  "Ви змінили статус, тип або дати — вкажіть причину.",
-  "You changed status, type or dates — enter a reason.",
-  "Вы изменили статус, тип или даты — укажите причину."
+  "Ви змінили фазу, тип або дати — вкажіть причину.",
+  "You changed the phase, type or dates — enter a reason.",
+  "Вы изменили фазу, тип или даты — укажите причину."
  ],
  "completeArch": [
   "Завершено — перенести в архів",
@@ -1157,9 +1192,9 @@ export const T: Record<string, L3> = {
   "Отменено — перенести в архив"
  ],
  "completeHint": [
-  "Після погодження звіту PMO проєкт отримає цей статус і перейде у вкладку «Архів».",
-  "After PMO approves the report, the project gets this status and moves to the Archive tab.",
-  "После согласования отчёта PMO проект получит этот статус и перейдёт во вкладку «Архив»."
+  "Після погодження звіту PMO проєкт отримає цю фазу і перейде у вкладку «Архів».",
+  "After PMO approves the report, the project gets this phase and moves to the Archive tab.",
+  "После согласования отчёта PMO проект получит эту фазу и перейдёт во вкладку «Архив»."
  ],
  "savedArch": [
   "Статус-звіт збережено, проєкт перенесено в архів.",
@@ -1187,9 +1222,9 @@ export const T: Record<string, L3> = {
   "Бюджет / факт"
  ],
  "cStatus": [
-  "Статус / пріоритет",
-  "Status / priority",
-  "Статус / приоритет"
+  "Фаза / пріоритет",
+  "Phase / priority",
+  "Фаза / приоритет"
  ],
  "cRag": [
   "Стан / звіт",
@@ -1237,9 +1272,9 @@ export const T: Record<string, L3> = {
   "Приоритет"
  ],
  "cStatusOnly": [
-  "Статус",
-  "Status",
-  "Статус"
+  "Фаза проєкту",
+  "Project phase",
+  "Фаза проекта"
  ],
  "cHealth": [
   "Стан",
@@ -1402,9 +1437,9 @@ export const T: Record<string, L3> = {
   "Проблемы"
  ],
  "cStatusR": [
-  "Статус у звіті",
-  "Status in report",
-  "Статус в отчёте"
+  "Фаза у звіті",
+  "Phase in report",
+  "Фаза в отчёте"
  ],
  "cDecFlag": [
   "Рішення",
@@ -1619,9 +1654,9 @@ export const FLD: Record<string, L3> = {
   "Направление"
  ],
  "status": [
-  "Статус проєкту",
-  "Project status",
-  "Статус проекта"
+  "Фаза проєкту",
+  "Project phase",
+  "Фаза проекта"
  ],
  "prio": [
   "Пріоритет",
@@ -1709,9 +1744,9 @@ export const FLD: Record<string, L3> = {
   "Проект"
  ],
  "rDate": [
-  "Дата звіту",
-  "Report date",
-  "Дата отчёта"
+  "Дата подання",
+  "Submission date",
+  "Дата подачи"
  ],
  "rPeriod": [
   "Період",
@@ -2126,9 +2161,9 @@ export const EXTRA: Record<string, L3> = {
   "По проекту уже есть отчёт на согласовании от {date} — новый можно подать после решения PMO."
  ],
  "gOldDate": [
-  "Дата звіту раніша за останній погоджений звіт ({date}). Вкажіть пізнішу дату.",
-  "The report date is earlier than the last approved report ({date}). Enter a later date.",
-  "Дата отчёта раньше последнего согласованного отчёта ({date}). Укажите более позднюю дату."
+  "Останній погоджений звіт датований {date} — пізніше за сьогодні. Новий звіт не застосується, поки не настане ця дата; зверніться до PMO.",
+  "The last approved report is dated {date}, later than today. A new report will not apply until that date; contact the PMO.",
+  "Последний согласованный отчёт датирован {date} — позже сегодняшнего дня. Новый отчёт не применится, пока не наступит эта дата; обратитесь к PMO."
  ],
  "gDecided": [
   "Звіт уже вирішено ({state}) — можливо, іншим PMO. Дані оновлено.",

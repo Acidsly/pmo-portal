@@ -6,7 +6,7 @@ const P = (x: Partial<Project>): Project => ({ id: 1, code: '', title: 'P', type
   stakeholders: [], department: '', status: 'Реалізація', rag: '', progress: 0, start: '', goLive: '', planEnd: '', forecastEnd: '',
   archivedAt: '', budget: 0, actualCost: 0, lastUpdate: '', lastReport: '', lastComment: '', links: [], team: [], description: '',
   canEdit: false, pending: false, ...x });
-const R = (x: Partial<StatusReport>): StatusReport => ({ id: 1, projectId: 1, date: '2026-09-20', period: '2 тижні', schedule: 'Зелений',
+const R = (x: Partial<StatusReport>): StatusReport => ({ id: 1, projectId: 1, date: '2026-09-20', period: '2 тижні', periodFrom: '', schedule: 'Зелений',
   budget: 'Зелений', resources: 'Зелений', status: '', type: '', progress: null, start: '', goLive: '', planEnd: '', forecastEnd: '',
   actualCost: null, keyReason: '', title: 'Звіт', done: '', next: '', issues: '', decision: false, decisionText: '', applied: false, author: { id: 1, name: 'Y', email: 'Y@x' },
   approval: 'Погоджено', approvedBy: null, approvedAt: '', approvalNote: '', ...x });
@@ -26,6 +26,13 @@ describe('applyPending — как шаг 1 Invoke-PMOSync.ps1', () => {
   test('пустые поля отчёта не меняют карточку', () => {
     const p = applyPending(P({ progress: 30, planEnd: '2026-11-01' }), [R({})]);
     expect(p.progress).toBe(30); expect(p.planEnd).toBe('2026-11-01');
+  });
+  test('#77 статус и тип равны карточке — в истории нет «було → стало» по ним (как журнал синхронизации)', () => {
+    const p = applyPending(P({ status: 'Реалізація', type: 'Звичайний' }), [R({ status: 'Реалізація', type: 'Звичайний', progress: 50, date: '2026-09-22' })]);
+    expect(p.status).toBe('Реалізація');
+    const diffs = (p.pendingEvents || []).reduce((a: any[], e: any) => a.concat(e.diffs), []);
+    expect(diffs.filter((d: any) => d.f === 'status' || d.f === 'type')).toEqual([]);
+    expect(diffs.some((d: any) => d.f === 'progress')).toBe(true);
   });
   test('«Завершено» -> проект «Завершено» (архив) и дата архивации', () => {
     const p = applyPending(P({}), [R({ status: 'Завершено', date: '2026-09-22' })]);

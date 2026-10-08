@@ -6,7 +6,7 @@ const me = { id: 1, name: 'PM', email: 'pm@x.ua' };
 const P = (x: Partial<Project>): Project => ({ id: 1, code: '', title: 'P', type: 'Звичайний', priority: '', manager: me, owner: null, stakeholders: [],
   department: 'ІТ', status: 'Реалізація', rag: 'Зелений', progress: 0, start: '', goLive: '', planEnd: '', forecastEnd: '', archivedAt: '', budget: 0,
   actualCost: 0, lastUpdate: '2026-09-25', lastReport: '', lastComment: '', links: [], team: [], description: '', canEdit: true, pending: false, ...x });
-const R = (x: Partial<StatusReport>): StatusReport => ({ id: 1, projectId: 1, date: '2026-09-20', period: '', schedule: 'Зелений', budget: 'Зелений', resources: 'Зелений',
+const R = (x: Partial<StatusReport>): StatusReport => ({ id: 1, projectId: 1, date: '2026-09-20', period: '', periodFrom: '', schedule: 'Зелений', budget: 'Зелений', resources: 'Зелений',
   status: '', type: '', progress: null, start: '', goLive: '', planEnd: '', forecastEnd: '', actualCost: null, keyReason: '', title: 'T', done: '', next: '', issues: '',
   decision: false, decisionText: '', applied: true, author: me, approval: 'Погоджено', approvedBy: null, approvedAt: '', approvalNote: '', ...x });
 const K = (x: Partial<Risk>): Risk => ({ id: 1, projectId: 1, title: 'K', type: 'Ризик', probability: 3, impact: 3, owner: null, status: 'Відкритий', due: '',

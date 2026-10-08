@@ -236,7 +236,8 @@ F $P pmManager     User     "PM"                 "PM"                  "PM"     
 F $P pmOwner       User     "Власник"            "Owner"               "Собственник"          "UserSelectionMode='PeopleOnly'"
 F $P pmStakeholders UserMulti "Стейкхолдери"     "Stakeholders"        "Стейкхолдеры"         "UserSelectionMode='PeopleOnly' Mult='TRUE'"
 F $P pmDepartment  Choice   "Напрям"             "Area"                "Направление"          "Format='Dropdown'" (Choices @("ІТ","HR та кадрове адміністрування","Розрахунок зарплати","Продажі","Фінанси","Операції","Юридичний"))
-F $P pmStatus      Choice   "Статус проєкту"     "Project status"      "Статус проекта"       "Format='Dropdown' Required='TRUE'" (Choices $status "Ініціація")
+# #78: отображаемое «Фаза проєкту» (этап жизненного цикла); внутреннее имя pmStatus не меняется
+F $P pmStatus      Choice   "Фаза проєкту"       "Project phase"       "Фаза проекта"       "Format='Dropdown' Required='TRUE'" (Choices $status "Ініціація")
 # F не меняет выбор у существующего поля: недостающие значения — явно; прежнее «Архівний» остаётся до миграции 6a3 # archive-migration
 $curSt = @((Get-PnPField -List $P -Identity pmStatus).Choices)
 if (@($status | Where-Object { $curSt -notcontains $_ }).Count) {
@@ -318,7 +319,10 @@ if (Test-Field $R "srScope") {
 F $R srProject     Lookup   "Проєкт"             "Project"             "Проект"               $lookup
 F $R srProjectType Choice   "Стратегічний"       "Strategic"           "Стратегический"       "Format='Dropdown'" (Choices $types)
 F $R srProjectPriority Choice "Пріоритет"        "Priority"            "Приоритет"            "Format='Dropdown'" (Choices @("1 — Високий","2 — Середній","3 — Низький"))
-F $R srDate        DateTime "Дата звіту"         "Report date"         "Дата отчёта"          "Format='DateOnly' Required='TRUE'" "<Default>[today]</Default>"
+# #62: дата подання — день сохранения отчёта (приложение ставит само, не вводится)
+F $R srDate        DateTime "Дата подання"       "Submission date"     "Дата подачи"          "Format='DateOnly' Required='TRUE'" "<Default>[today]</Default>"
+# #69: период — с даты последнего погодженого отчёта по дату подання (считает приложение); srPeriod — прежний выбор у старых отчётов
+F $R srPeriodFrom  DateTime "Період з"           "Period from"         "Период с"             "Format='DateOnly'"
 F $R srPeriod      Choice   "Період"             "Period"              "Период"               "Format='Dropdown'" (Choices @("Тиждень","2 тижні","Місяць","Квартал") "2 тижні")
 F $R srSchedule    Choice   "Терміни"            "Schedule"            "Сроки"                "Format='Dropdown' Required='TRUE'" (Choices $rag)
 F $R srBudget      Choice   "Бюджет"             "Budget"              "Бюджет"               "Format='Dropdown' Required='TRUE'" (Choices $rag)
@@ -329,7 +333,7 @@ $anyYel = 'OR([srSchedule]="Жовтий",[srBudget]="Жовтий",[srResources
 F $R srRAG         Calculated "Загальний стан"   "Overall health"      "Общее состояние"      "ResultType='Text'" `
     ("<Formula>=IF($anyRed,""Червоний"",IF($anyYel,""Жовтий"",""Зелений""))</Formula>" +
      "<FieldRefs><FieldRef Name='srSchedule'/><FieldRef Name='srBudget'/><FieldRef Name='srResources'/></FieldRefs>")
-F $R srStatus      Choice   "Статус проєкту"     "Project status"      "Статус проекта"       "Format='Dropdown'" (Choices $repStatus)
+F $R srStatus      Choice   "Фаза проєкту"       "Project phase"       "Фаза проекта"       "Format='Dropdown'" (Choices $repStatus)
 F $R srType        Choice   "Тип проєкту"        "Project type"        "Тип проекта"          "Format='Dropdown'" (Choices $types)
 F $R srProgress    Number   "% виконання"        "% complete"          "% выполнения"         "Min='0' Max='100' Decimals='0'"
 F $R srStart       DateTime "Дата старту"        "Start date"          "Дата старта"          "Format='DateOnly'"
@@ -603,9 +607,12 @@ if ($Feedback) {
 # Подсказки к полям (описания столбцов, uk / en / ru)
 # ---------------------------------------------------------------------------
 $keep = @("Залиште порожнім, якщо не змінюється.", "Leave empty if unchanged.", "Оставьте пустым, если не меняется.")
-foreach ($n in @("srType","srProgress","srStart","srGoLive","srPlanEnd","srForecastEnd","srActualCost")) { Desc $R $n $keep[0] $keep[1] $keep[2] }
-Desc $R srStatus "Залиште порожнім, якщо не змінюється. «Завершено» переводить проєкт в архів." "Leave empty if unchanged. «Завершено» moves the project to the archive." "Оставьте пустым, если не меняется. «Завершено» переводит проект в архив."
-Desc $R srActualEnd "Обов'язково для «Завершено» і «Скасовано»: коли проєкт фактично завершено або скасовано (не раніше старту, не пізніше дати звіту)." "Required for «Завершено» and «Скасовано»: when the project was actually completed or cancelled (not before the start, not after the report date)." "Обязательно для «Завершено» и «Скасовано»: когда проект фактически завершён или отменён (не раньше старта, не позже даты отчёта)."
+foreach ($n in @("srStart","srGoLive","srPlanEnd","srForecastEnd","srActualCost")) { Desc $R $n $keep[0] $keep[1] $keep[2] }
+# #77: статус, тип и % — в каждом отчёте (зафиксированы в нём; равные карточке синхронизация не меняет)
+Desc $R srType "Тип проєкту на дату звіту (записується завжди)." "Project type as of the report (always recorded)." "Тип проекта на дату отчёта (записывается всегда)."
+Desc $R srProgress "% виконання на дату звіту (записується завжди)." "% complete as of the report (always recorded)." "% выполнения на дату отчёта (записывается всегда)."
+Desc $R srStatus "Фаза проєкту на дату звіту (записується завжди). «Завершено» / «Скасовано» переводить проєкт в архів." "Project phase as of the report (always recorded). «Завершено» / «Скасовано» moves the project to the archive." "Фаза проекта на дату отчёта (записывается всегда). «Завершено» / «Скасовано» переводит проект в архив."
+Desc $R srActualEnd "Обов'язково для «Завершено» і «Скасовано»: коли проєкт фактично завершено або скасовано (не раніше старту, не пізніше дати подання)." "Required for «Завершено» and «Скасовано»: when the project was actually completed or cancelled (not before the start, not after the submission date)." "Обязательно для «Завершено» и «Скасовано»: когда проект фактически завершён или отменён (не раньше старта, не позже даты подачи)."
 Desc $R srKeyReason "Обов'язково, якщо змінюєте статус, тип або дати — потрапить у журнал змін." "Required if you change the status, type or dates — goes to the change log." "Обязательно, если меняете статус, тип или даты — попадёт в журнал изменений."
 Desc $R srDecisionText "Заповніть, якщо позначено «Потрібне рішення керівництва»." "Fill in if «Management decision needed» is checked." "Заполните, если отмечено «Требуется решение руководства»."
 Desc $R srSchedule "Загальний стан звіту — найгірша з трьох оцінок." "Overall health is the worst of the three ratings." "Общее состояние отчёта — худшая из трёх оценок."

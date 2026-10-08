@@ -5,17 +5,17 @@ import { PortalData } from '../data/SpRepo';
 import { Project } from '../data/types';
 import { isActive, byOrder } from '../logic/status';
 import { calcRag, Rag } from '../logic/rag';
-import { ReportDraft, reportFromProject, reportFromReturned, keyChanged, reportErrors, formErrorText, parseProgress, progressLocked, FieldErr,
+import { ReportDraft, reportPeriodFrom, reportFromProject, reportFromReturned, keyChanged, reportErrors, formErrorText, parseProgress, progressLocked, FieldErr,
   initialReport, switchStatus, switchProject, reportToSave, reportProjectChoice, archiveStatus } from '../logic/forms';
 import { reportBody } from '../data/write';
 import { Frow, RagPick, SegPick, DateIn, Err, Opts, errText, guardText, FieldErrText, MoneyIn } from '../components/fields';
-import { fmtDate } from '../components/Bits';
+import { fmtDate, periodText } from '../components/Bits';
+import { todayIso } from '../logic/dates';
 import { guard } from '../logic/guard';
 import { RagDot } from '../components/Bits';
 
 const REPORT_STATUSES = ['Ініціація', 'Планування', 'Реалізація', 'Призупинено'];
 const TYPES = ['Стратегічний', 'Звичайний'];
-const PERIODS = ['Тиждень', '2 тижні', 'Місяць', 'Квартал'];
 
 /** Новый статус-отчёт (reportForm прототипа, строки 1470–1550): подстановка показателей, живой стан, причина при смене показателей. */
 export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?: number; onCancel(): void }> = ({ data, projectId, fromId, onCancel }) => {
@@ -38,7 +38,12 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
   const p: Project = act.filter(x => x.id === d.projectId)[0] || first;
   const set = (x: Partial<ReportDraft>): void => { setD({ ...d, ...x }); if (errs.length) setErrs([]); };
   const bad = (f: string): boolean => errs.some(e => e.f === f);
-  const fErr = (f: string): string => { const e = errs.filter(x => x.f === f && x.k !== 'errReq')[0]; return e ? t(e.k) : ''; };
+  // #67: в тексте — дата, с которой сравнили
+  const errMsg = (e: FieldErr): string => t(e.k).replace('{date}', e.a ? fmtDate(e.a) : '');
+  const fErr = (f: string): string => { const e = errs.filter(x => x.f === f && x.k !== 'errReq')[0]; return e ? errMsg(e) : ''; };
+  // #64: фактическая дата проверяется сразу при вводе и выборе в календаре (не только при отправке)
+  const aeLive = archiveStatus(d.status) && d.actualEnd ? reportErrors({ ...d, date: c.today }, p, prTxt).filter(e => e.f === 'actualEnd')[0] : undefined;
+  const [decTouched, setDecTouched] = React.useState(false);
   // #52: «Завершено» — 100 % и поле закрыто; другой статус — прежнее значение
   const setStatus = (st: string): void => {
     const r = switchStatus(d, prevPr, st);
@@ -54,15 +59,18 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
     e.preventDefault();
     if (pendingBlock) { setErr(pendingBlock); return; }
     // #40: все ошибки сразу — общее сообщение и подсветка полей
-    const es = reportErrors(d, p, prTxt);
-    if (es.length) { setErrs(es); setErr(t(formErrorText(es))); return; }
+    // #62 / #69: дата подання — день сохранения, период — от последнего погодженого отчёта (считаются сейчас, а не при открытии)
+    const today = todayIso();
+    const sub: ReportDraft = { ...d, date: today, periodFrom: reportPeriodFrom(data.reports.filter(r => r.projectId === p.id), p.start, p.created || '', today) };
+    const es = reportErrors(sub, p, prTxt);
+    if (es.length) { setErrs(es); setErr(formErrorText(es) === 'errReqAll' ? t('errReqAll') : errMsg(es[0])); return; }
     setBusy(true); setErr(''); setErrs([]);
     try {
       // свежая проверка: PM на месте, проект не в архиве, по проекту нет другого отчёта на погодженні, дата не раньше погодженого
       const f = await c.repo.fresh(p.id);
-      const g = guard('report', c.me, f, { reportDate: d.date });
+      const g = guard('report', c.me, f, { reportDate: sub.date });
       if (!g.ok) { setErr(guardText(t, g.key, g.args)); setBusy(false); await c.reload(); return; }
-      await c.repo.createIn('StatusReports', p.id, reportBody(reportToSave(d), f.project));
+      await c.repo.createIn('StatusReports', p.id, reportBody(reportToSave(sub), f.project));
       await c.reload();
       c.toast(t('savedReportPending'));
       c.openProject(p.id);
@@ -78,12 +86,10 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
           <select id="f-p" value={d.projectId} onChange={e => { const np = act.filter(x => x.id === Number(e.target.value))[0]; if (np) { const nd = switchProject(d, np); setD(nd); setPrTxt(String(nd.progress)); setPrevPr(null); setErrs([]); setErr(''); } }}>
             {act.map(x => <option key={x.id} value={x.id} disabled={!!x.pendingDate && x.id !== d.projectId}>{x.title}{x.pendingDate ? ' — ' + t('repPendingOpt').replace('{date}', fmtDate(x.pendingDate)) : ''}</option>)}</select></Frow>}
       {pendingBlock ? <p className="note lock">🔒 {pendingBlock}</p> : null}
-      <div className="fgrid frow">
-        <div><label className="t" htmlFor="f-d">{fl('rDate')} *</label><DateIn id="f-d" value={d.date} invalid={bad('date')} onChange={v => set({ date: v })} /></div>
-        <div><label className="t" htmlFor="f-per">{fl('rPeriod')}</label>
-          <select id="f-per" value={d.period} onChange={e => set({ period: e.target.value })}><Opts values={PERIODS} /></select></div>
-        <div />
-      </div>
+      {/* #62 / #69: дата подання и период не вводятся — показываются, как будут записаны */}
+      <div className="subinfo frow" id="f-sub"><span>{fl('rDate')}: <b>{fmtDate(c.today)}</b></span>
+        <span>{fl('rPeriod')}: <b>{periodText(t, { date: c.today, period: '', periodFrom: reportPeriodFrom(data.reports.filter(r => r.projectId === p.id), p.start, p.created || '', c.today) })}</b></span>
+        <span className="muted">{t('subHint')}</span></div>
       <div className="dims">
         <RagPick name="sched" label={fl('rSched')} req={true} invalid={bad('sched')} value={d.schedule} onChange={v => set({ schedule: v })} />
         <RagPick name="budget" label={fl('rBudget')} req={true} invalid={bad('budget')} value={d.budget} onChange={v => set({ budget: v })} />
@@ -110,9 +116,9 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
             <MoneyIn id="f-c" value={d.actualCost} onChange={v => set({ actualCost: v })} /></div>
         </div>
         {archiveStatus(d.status) ? <><p className="note" style={{ margin: '-4px 0 14px' }}>{t('completeHint')}</p>
-          {/* #54: когда проект фактически завершён или отменён — обязательно, не раньше старта, не позже даты отчёта */}
+          {/* #54: когда проект фактически завершён или отменён — обязательно, не раньше старта, не позже даты подання (#64) */}
           <div className="frow" id="f-ae-wrap"><label className="t" htmlFor="f-ae">{fl('ae')} *</label>
-            <DateIn id="f-ae" value={d.actualEnd} invalid={bad('actualEnd')} onChange={v => set({ actualEnd: v })} /><FieldErrText msg={fErr('actualEnd')} />
+            <DateIn id="f-ae" value={d.actualEnd} invalid={bad('actualEnd') || !!aeLive} onChange={v => set({ actualEnd: v })} /><FieldErrText msg={fErr('actualEnd') || (aeLive ? errMsg(aeLive) : '')} />
             <p className="hint">{t('aeHint')}</p></div></> : null}
         <fieldset className="ragpick"><legend>{fl('type')}</legend><SegPick name="f-type" options={TYPES} value={d.type} onChange={v => set({ type: v })} /></fieldset>
         <div className="fgrid2 frow">
@@ -130,7 +136,10 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
       <Frow label={fl('rNext')} htmlFor="f-next"><textarea id="f-next" value={d.next} onChange={e => set({ next: e.target.value })} /></Frow>
       <Frow label={fl('rIssues')} htmlFor="f-iss"><textarea id="f-iss" value={d.issues} onChange={e => set({ issues: e.target.value })} /></Frow>
       <div className="frow"><label className="check"><input type="checkbox" checked={d.decision} onChange={e => set({ decision: e.target.checked })} /> {fl('rDec')}</label></div>
-      {d.decision ? <Frow label={fl('rDecText')} htmlFor="f-dect"><textarea id="f-dect" value={d.decisionText} onChange={e => set({ decisionText: e.target.value })} /></Frow> : null}
+      {/* #68: при галочке — опис обязателен; ошибка — при уходе с поля и при отправке */}
+      {d.decision ? <Frow label={fl('rDecText')} htmlFor="f-dect" req={true} err={fErr('decisionText') || (decTouched && !d.decisionText.trim() ? t('errDecision') : '')}>
+        <textarea id="f-dect" aria-invalid={bad('decisionText') || (decTouched && !d.decisionText.trim()) || undefined} value={d.decisionText}
+          onChange={e => set({ decisionText: e.target.value })} onBlur={() => setDecTouched(true)} /></Frow> : null}
       <Err msg={err} />
       <div className="actions">
         <button type="submit" className="btn primary" disabled={busy || !!pendingBlock}>{t('save')}</button>

@@ -44,7 +44,8 @@ export interface TeamMember { id: number; projectId: number; user: Person | null
 export interface Link { t: string; u: string; }
 
 export interface StatusReport {
-  id: number; projectId: number; date: string; period: string; schedule: Rag; budget: Rag; resources: Rag;
+  /** period — прежний выбор «Тиждень / 2 тижні …» (отчёты до #69); periodFrom — начало периода (новые отчёты: «з … по date»). */
+  id: number; projectId: number; date: string; period: string; periodFrom: string; schedule: Rag; budget: Rag; resources: Rag;
   status: string; type: string; progress: number | null; start: string; goLive: string; planEnd: string; forecastEnd: string;
   actualCost: number | null; keyReason: string; title: string; done: string; next: string; issues: string;
   /** #54: фактическая дата завершения / отмены (только «Завершено» / «Скасовано»). */

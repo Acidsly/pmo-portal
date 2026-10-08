@@ -55,3 +55,15 @@ describe('«Архів»: представления «Завершені» / «
     expect(archiveView('all', p('Скасовано'), 'x')).toBe(true);
   });
 });
+
+describe('#73 фильтр колонки «Звіт» по погодженню', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { apBucket, AP_BUCKET } = require('../src/webparts/pmoPortal/logic/views');
+  test('a1 Погоджено, a2 На погодженні, a3 Повернуто, a4 — отчётов не подавали', () => {
+    expect(apBucket({ approval: 'Погоджено' })).toBe('a1');
+    expect(apBucket({ approval: 'На погодженні' })).toBe('a2');
+    expect(apBucket({ approval: 'Повернуто' })).toBe('a3');
+    expect(apBucket(null)).toBe('a4'); expect(apBucket(undefined)).toBe('a4');
+    expect(AP_BUCKET).toEqual({ a1: 'Погоджено', a2: 'На погодженні', a3: 'Повернуто' });
+  });
+});

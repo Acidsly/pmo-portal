@@ -54,7 +54,7 @@ function openFromCard(): W {
 }
 const setVal = (el: W, v: string): void => { el.value = v; ev(el, 'input'); ev(el, 'change'); };
 const setStatus = (g: (id: string) => W, st: string): void => { const s = g('f-st'); s.value = st; ev(s, 'change'); };
-const FIELD: Record<string, string> = { 'f-ae': 'actualEnd', 'f-d': 'date', 'f-kr': 'keyReason', 'f-t': 'title', 'f-pr': 'progress', 'f-golive': 'goLive', 'f-plan': 'planEnd', 'f-fc': 'forecastEnd' };
+const FIELD: Record<string, string> = { 'f-ae': 'actualEnd', 'f-dect': 'decisionText', 'f-kr': 'keyReason', 'f-t': 'title', 'f-pr': 'progress', 'f-golive': 'goLive', 'f-plan': 'planEnd', 'f-fc': 'forecastEnd' };
 
 test('прототип: #37 из карточки проект зафиксирован; #51 проекты с отчётом на погодженні недоступны', () => {
   const form = openFromCard();
@@ -82,10 +82,14 @@ describe('прототип: статус и % (#52)', () => {
   });
 });
 
-describe('прототип: проверка формы (#40, #53, #54)', () => {
+describe('прототип: проверка формы (#40, #53, #54, #64, #67, #68)', () => {
   for (const c of V.validation) test(c.name, () => {
     const { form, g } = openForm();
-    const d = c.draft;
+    // #62: дата подання в прототипе — настоящее «сегодня»; даты вектора сдвигаются так, чтобы его дата подання стала сегодня
+    const now = new Date(); const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const dayMs = 864e5, delta = Math.round((Date.parse(today) - Date.parse(c.draft.date || '2026-10-04')) / dayMs);
+    const sh = (v: string): string => (v ? new Date(Date.parse(v) + delta * dayMs).toISOString().slice(0, 10) : v);
+    const d: any = { ...c.draft }; for (const k of ['start', 'goLive', 'planEnd', 'forecastEnd', 'actualEnd']) if (d[k]) d[k] = sh(d[k]);
     setStatus(g, d.status);
     for (const [k, n] of [['schedule', 'sched'], ['budget', 'budget'], ['resources', 'res']]) {
       form.querySelectorAll(`input[name="${n}"]`).forEach((x: W) => { x.checked = !!d[k] && x.value === d[k]; });
@@ -93,7 +97,7 @@ describe('прототип: проверка формы (#40, #53, #54)', () => 
     setVal(g('f-start'), d.start); setVal(g('f-golive'), d.goLive); setVal(g('f-plan'), d.planEnd); setVal(g('f-fc'), d.forecastEnd);
     if (!g('f-pr').disabled) setVal(g('f-pr'), c.progressText);
     setVal(g('f-t'), d.title); setVal(g('f-kr'), d.keyReason);
-    if (d.date) setVal(g('f-d'), d.date);
+    if (d.decision !== undefined) { const cb = g('f-dec'); cb.checked = !!d.decision; ev(cb, 'change'); setVal(g('f-dect'), d.decisionText || ''); }
     if (d.actualEnd !== undefined) setVal(g('f-ae'), d.actualEnd);
     form.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
     const got = Array.from(form.querySelectorAll('[aria-invalid="true"]')).map((el: W) => {
@@ -102,7 +106,8 @@ describe('прототип: проверка формы (#40, #53, #54)', () => 
     }).map((x: string) => (x === 'sched' || x === 'budget' || x === 'res' ? x : x));
     expect(got.sort()).toEqual([...c.out].sort());
     const msg = form.querySelector('.err');
-    if (c.message) { expect(msg.hidden).toBe(false); expect(msg.textContent).toBe(T[c.message][0]); }
+    const dmy = (v: string): string => v.split('-').reverse().join('.');
+    if (c.message) { expect(msg.hidden).toBe(false); expect(msg.textContent).toBe(T[c.message][0].replace('{date}', c.messageDate ? dmy(sh(c.messageDate)) : '')); }
     else expect(msg.hidden && !got.length).toBe(true);
   });
 });

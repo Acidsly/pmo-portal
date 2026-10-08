@@ -39,5 +39,12 @@ export const riskInView = (v: RiskView, k: Risk, archivedProject: boolean): bool
 export function freshBucket(lastUpdate: string, today: string): '0' | '1' | '2' | '3' {
   const f = freshness(lastUpdate, today); return f === 'g' ? '0' : f === 'y' ? '1' : f === 'r' ? '2' : '3';
 }
+/** #73: фильтр колонки «Звіт» по погодженню самого нового отчёта — вторая группа значений рядом со свежестью:
+ *  a1 Погоджено, a2 На погодженні, a3 Повернуто, a4 отчётов не подавали (apBucket прототипа). */
+export function apBucket(lastRep: { approval: string } | null | undefined): 'a1' | 'a2' | 'a3' | 'a4' {
+  if (!lastRep) return 'a4';
+  return lastRep.approval === 'Повернуто' ? 'a3' : lastRep.approval === 'На погодженні' ? 'a2' : 'a1';
+}
+export const AP_BUCKET: Record<string, string> = { a1: 'Погоджено', a2: 'На погодженні', a3: 'Повернуто' };
 export const scoreBucket = (s: number): '0' | '1' | '2' => (s >= 15 ? '0' : s >= 8 ? '1' : '2');
 export const ofProject = <T extends { projectId: number }>(items: T[], id: number): T[] => items.filter(x => x.projectId === id);
