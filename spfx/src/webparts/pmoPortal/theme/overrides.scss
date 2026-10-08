@@ -157,15 +157,11 @@
   .pmo-app .fb-text { white-space: pre-wrap; line-height: 1.5; }
 }
 
-// Шапка в одну строку на компьютере (вкладка «Відгуки», кнопки «?» и «Відгук» — сверх прототипа)
+// Шапка: верхняя строка — название и кнопки, меню — второй строкой на всю ширину (как в прототипе): с колокольчиком,
+// «?», вкладкой «Відгуки» и значками в одну строку шириной 1280 px не помещается — название не сжимается и не перекрывается
 :global {
-  @media (min-width: 1101px) {
-    .pmo-app .top-in { flex-wrap: nowrap; gap: 14px; }
-    .pmo-app .brand { min-width: 0; }
-    .pmo-app .nav { flex: none; }
-    .pmo-app .nav button { padding: 7px 11px; }
-    .pmo-app .controls { flex: none; flex-wrap: nowrap; gap: 8px; }
-  }
+  .pmo-app .brand { flex: none; }
+  .pmo-app .brand-name, .pmo-app .brand-sub { white-space: nowrap; }
   // «Статус-звіти»: базовый набор колонок помещается без прокрутки вбок
   .pmo-app .dt td.w-rep { min-width: 140px; }
   .pmo-app .dt td .pill.ap { font-size: 11px; padding: 3px 7px; }

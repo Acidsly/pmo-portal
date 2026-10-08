@@ -68,7 +68,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(145deg,#0a84ff,#5e5ce6);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px;letter-spacing:-.02em;flex:none}
 .brand-name{font-weight:600;font-size:17px;letter-spacing:-.01em;line-height:1.2}
 .brand-sub{font-size:12px;color:var(--text-2)}
-.nav{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:12px;overflow-x:auto;max-width:100%}
+/* меню — второй строкой на всю ширину на любом экране: название и кнопки сверху не сжимаются */
+.nav{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:12px;overflow-x:auto;max-width:100%;order:3;width:100%}
 .nav button{border:0;background:none;padding:4px 14px 4px 5px;border-radius:9px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text-2);white-space:nowrap;transition:background-color .2s,color .2s;display:inline-flex;align-items:center;gap:8px}
 /* значок раздела: цветной контур на мягкой подложке; на телефоне — только значки (название — в подсказке) */
 .nav .ni{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none;color:var(--nc);background:color-mix(in srgb,var(--nc) 14%,transparent)}
@@ -84,7 +85,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .seg button[aria-pressed="true"]{background:var(--bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .viewas{display:inline-flex;align-items:center;gap:8px;background:var(--bg-alt);border-radius:10px;padding:3px 4px 3px 10px;font-size:13px;color:var(--text-2)}
 .viewas select{border:0;background:var(--bg);border-radius:8px;padding:5px 8px;font-weight:600;font-size:13px;box-shadow:0 1px 3px rgba(0,0,0,.12);max-width:200px}
-@media (max-width:1100px){.top-in{gap:12px}.nav{order:3;width:100%}.controls{margin-left:0}}
+@media (max-width:1100px){.top-in{gap:12px}.controls{margin-left:0}}
 
 main{max-width:1280px;margin:0 auto;padding:40px 32px 96px}
 @media (max-width:720px){main,.top-in{padding-left:16px;padding-right:16px} main{padding-top:24px}}

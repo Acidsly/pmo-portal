@@ -284,3 +284,11 @@ test('меню прототипа: значок и название у кажд�
   for (const k of ['home', 'projects', 'reports', 'risks', 'archive', 'feedback']) expect((css.match(new RegExp(`--nv-${k}:`, 'g')) || []).length).toBe(3);   // светлая и две тёмные
   expect(css).toMatch(/@media \(max-width:720px\)\{\.nav button\{[^}]*\}\.nav \.nl\{display:none\}/);
 });
+
+test('шапка: меню — второй строкой на всю ширину, название не сжимается (перекрытие на 1440 px)', () => {
+  const css = Array.from(w.document.querySelectorAll('style')).map((x: W) => x.textContent).join('\n');
+  expect(css).toMatch(/\.nav\{[^}]*order:3;width:100%\}/);
+  const ov = fs.readFileSync(path.join(__dirname, '../src/webparts/pmoPortal/theme/overrides.scss'), 'utf8');
+  expect(ov).toMatch(/\.pmo-app \.brand \{ flex: none; \}/);
+  expect(ov).not.toMatch(/\.top-in \{ flex-wrap: nowrap/);   // одна строка с меню — не помещается
+});
