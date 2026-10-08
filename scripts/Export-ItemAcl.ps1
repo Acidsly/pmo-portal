@@ -22,7 +22,7 @@ else                      { Connect-PnPOnline -Url $SiteUrl -ClientId $ClientId 
 $ctx = Get-PnPContext
 $out = [ordered]@{}
 $sw = [Diagnostics.Stopwatch]::StartNew()
-foreach ($url in @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/ProjectComments", "Lists/KeyChanges", "Lists/ProjectTeam", "Lists/ReportApprovals", "Lists/ProjectAssignments")) {
+foreach ($url in @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/ProjectComments", "Lists/KeyChanges", "Lists/ProjectTeam", "Lists/ReportApprovals", "Lists/ProjectAssignments", "Lists/NotifyState")) {
     $list = Get-PnPList -Identity $url -ErrorAction SilentlyContinue
     if (-not $list) { continue }
     $q = [Microsoft.SharePoint.Client.CamlQuery]::new()

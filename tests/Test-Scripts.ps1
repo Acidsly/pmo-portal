@@ -256,6 +256,9 @@ $i7 = $syncSrc.IndexOf("# 7. Сповіщення в приложении"); $se
 if ($sec7 -match 'Add-PnPListItem -List \$L_NS -Values @\{ Title = \$e; nsUser = \$e; nsReadId = \$maxJ; nsReadCmId = \$maxC \}') { Ok "прочитане: новая строка — сразу с метками (одной записью)" } else { Bad "прочитане: строка должна создаваться сразу с метками" }
 if ($sec7 -match 'if \(\$DryRun\) \{ Log "  прочитане: \+' -and $sec7 -match 'if \(\$DryRun\) \{ Log "    права: прочитане') { Ok "прочитане: пробный запуск ничего не пишет" } else { Bad "прочитане: DryRun должен только писать в журнал запуска" }
 if ($syncSrc.IndexOf("# 7. Сповіщення в приложении") -gt $syncSrc.IndexOf("# 5. Права по иерархии")) { Ok "прочитане: раздел 7 — после прав (раздел 5)" } else { Bad "раздел 7 должен идти после раздела 5" }
+# Get-ListRows возвращает коллекцию одним объектом (return , $rows): по конвейеру пойдёт сама коллекция, а не строки
+$piped = [regex]::Matches($syncSrc, 'Get-ListRows \$\w+\s*\|').Count
+if (-not $piped) { Ok "Get-ListRows не передаётся по конвейеру (коллекция одним объектом)" } else { Bad "Invoke-PMOSync.ps1: Get-ListRows по конвейеру ($piped) — обрабатывается коллекция, а не строки; используйте foreach" }
 # «Створення» один раз (R8): нужна ли строка — и эталон пишется раньше строки журнала (ошибка сверки №3)
 $fnc = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Test-NeedCreation" }, $true) | Select-Object -First 1
 if ($fnc) { Invoke-Expression $fnc.Extent.Text } else { Bad "нет функции Test-NeedCreation" }

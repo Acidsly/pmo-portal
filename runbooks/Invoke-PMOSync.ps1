@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:286888f6c900 — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:44b39112ffd2 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -1493,8 +1493,8 @@ if ($HAS_NS) {
         else { try { $a = ConvertFrom-JsonText ([string]$p.Item["pmAccess"]); foreach ($x in @($a["people"])) { if ($x["e"]) { $nsPeople.Add([string]$x["e"]) } } } catch { } }
     }
     foreach ($e in @($PMO_EMAILS) + @($OWNER_EMAILS)) { if ($e) { $nsPeople.Add([string]$e) } }
-    $nsRows = @(Get-ListRows $L_NS | ForEach-Object {
-        @{ id = $_.Id; email = $(if ($_["nsUser"]) { Email $_["nsUser"] } else { ([string]$_["Title"]).ToLowerInvariant() }); readId = $_["nsReadId"]; readCmId = $_["nsReadCmId"]; acl = [string]$_["pmoAcl"] } })
+    $nsRows = @(foreach ($it in (Get-ListRows $L_NS)) {
+        @{ id = $it.Id; email = $(if ($it["nsUser"]) { Email $it["nsUser"] } else { ([string]$it["Title"]).ToLowerInvariant() }); readId = $it["nsReadId"]; readCmId = $it["nsReadCmId"]; acl = [string]$it["pmoAcl"] } })
     $nsPlan = Get-NotifyRowPlan @($nsPeople) $nsRows $maxJ $maxC
     foreach ($d in $nsPlan.dup) { Warn "Прочитане: зайвий рядок $d — не використовується" }
     foreach ($e in $nsPlan.create) {
