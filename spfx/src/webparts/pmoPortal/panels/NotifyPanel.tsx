@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
-import { NOTIFY_DAYS, notifyItems, notifyList, marksAfterView, NotifyItem, NotifyKind, ReadMarks } from '../logic/notify';
+import { NOTIFY_DAYS, notifyItems, notifyList, marksAfterView, marksAfterOpen, NotifyItem, NotifyKind, ReadMarks } from '../logic/notify';
 import { fmtDT } from '../components/Bits';
 import { tv } from '../i18n/values';
 
@@ -9,7 +9,7 @@ const NK: Record<NotifyKind, string> = { created: 'nkCreated', assigned: 'nkAssi
   archived: 'nkArchived', risk: 'nkRisk', cardEdit: 'nkCardEdit', comment: 'nkComment' };
 
 /** Свои метки «прочитано до» (null — строки «Прочитане» ещё нет). */
-export const readMarks = (data: PortalData): ReadMarks | null => (data.notify ? { readId: data.notify.readId, readCmId: data.notify.readCmId } : null);
+export const readMarks = (data: PortalData): ReadMarks | null => (data.notify ? { readId: data.notify.readId, readCmId: data.notify.readCmId, seen: data.notify.seen || [] } : null);
 
 /** Строки колокольчика и есть ли новые (правило — logic/notify.ts). PMO и владельцы сайта — canApprove. */
 export function notifyState(data: PortalData, me: string): { list: NotifyItem[]; unread: number } {
@@ -18,8 +18,8 @@ export function notifyState(data: PortalData, me: string): { list: NotifyItem[];
   return { list, unread: list.filter(x => x.unread).length };
 }
 
-/** Панель «Сповіщення» (notifPanel прототипа): события за 14 дней по моей роли; «Позначити все прочитаним» — метки до последнего показанного.
- *  onOpen — переход к событию (открытие и переход ничего не отмечают). */
+/** Панель «Сповіщення» (notifPanel прототипа): события за 14 дней по моей роли; открыл событие — прочитано оно;
+ *  «Позначити все прочитаним» — метки до последнего показанного. onOpen — переход к событию. */
 export const NotifyPanel: React.FC<{ data: PortalData; onOpen(form: string, projectId: number): void; onCancel(): void }> = ({ data, onOpen, onCancel }) => {
   const c = React.useContext(AppCtx); const { t, fl } = c;
   const list = notifyState(data, c.me).list;
@@ -28,10 +28,12 @@ export const NotifyPanel: React.FC<{ data: PortalData; onOpen(form: string, proj
   const readAll = (): void => {
     if (!data.notify) return;
     setBusy(true);
-    c.repo.markRead(marksAfterView(list, { readId: data.notify.readId, readCmId: data.notify.readCmId })).then(() => c.reload())
+    c.repo.markRead(marksAfterView(list, readMarks(data)!)).then(() => c.reload())
       .then(() => setBusy(false), (x: Error) => { setBusy(false); c.toast(String((x && x.message) || x)); });
   };
+  // открыл событие — прочитано именно оно (число на колокольчике уменьшится после записи)
   const open = (x: NotifyItem): void => {
+    if (x.unread && data.notify) c.repo.markRead(marksAfterOpen(x, readMarks(data)!)).then(() => c.reload(), () => undefined);
     const r = x.ev && x.ev.ref;
     onOpen(r ? (r.type === 'report' ? 'rep:' : 'risk:') + r.id : '', x.projectId);
   };

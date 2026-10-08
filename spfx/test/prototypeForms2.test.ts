@@ -214,19 +214,26 @@ describe('сповіщення: колокольчик в прототипе', (
     const cb = q('#ntf-new'); cb.checked = true; ev(cb, 'change');
     expect(q('.ntf-i.new')).not.toBeNull();
     expect(w.document.body.textContent).toContain('Перевірка сповіщень');
-    // переход к событию — вверху «← Сповіщення»; возврат — список с тем же выделением «Нове»
+    // переход к событию — вверху «← Сповіщення»; открытое событие прочитано, точка гаснет
     q('.ntf-i.new').click();
     expect(q('[data-act="notifback"]')).not.toBeNull();
+    expect(dot()).toBe(false);
     q('[data-act="notifback"]').click();
-    expect(q('#ntf-list')).not.toBeNull(); expect(q('.ntf-i.new')).not.toBeNull();
-    q('#ntf-all').click();
-    expect(dot()).toBe(false); expect(q('.ntf-i.new')).toBeNull(); expect(q('#ntf-all')).toBeNull();
+    expect(q('#ntf-list')).not.toBeNull(); expect(q('.ntf-i.new')).toBeNull();
     // открытие из шапки — без кнопки возврата
     q('#bell').click(); expect(q('[data-act="notifback"]')).toBeNull();
   });
   test('число новых на колокольчике', () => {
     comment(1, 'Перше'); comment(1, 'Друге');
     asUser('Сергій Литвиненко'); expect(q('#bell .dot-new').textContent).toBe('2'); expect(q('#bell').classList.contains('has')).toBe(true);
+    // открыл одно — прочитано оно, второе осталось новым
+    q('#bell').click(); q('.ntf-i.new').click();
+    expect(q('#bell .dot-new').textContent).toBe('1');
+    q('[data-act="notifback"]').click();
+    expect(w.document.querySelectorAll('.ntf-i.new').length).toBe(1);
+    // «Позначити все прочитаним» — всё
+    q('#ntf-all').click();
+    expect(q('#bell .dot-new')).toBeNull(); expect(q('.ntf-i.new')).toBeNull(); expect(q('#ntf-all')).toBeNull();
   });
   test('видит проект, но не по своей роли (руководитель власника) — точки нет', () => {
     asUser('Андрій Мельник'); comment(2, 'Коментар PM');        // PRJ-002: PM — Андрій Мельник, власник — Юрій

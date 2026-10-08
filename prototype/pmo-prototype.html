@@ -1756,7 +1756,10 @@ function accessList(p){
 // ===== Сповіщення (колокольчик) — те же правила, что logic/notify.ts приложения: кто что видит, что новое =====
 // «прочитано до» — время последнего открытия панели (в приложении — номер записи журнала); при загрузке страницы — сейчас
 const NOTIF_LOADED = new Date().toISOString(), NOTIF_READ = {};
-let NOTIF_RET = null;   // переход из «Сповіщень»: {onlyNew} — вернуться к списку
+let NOTIF_RET = null;
+// открытые события поверх «прочитано до» (в приложении — nsReadSet): открыл — прочитано именно оно
+const NOTIF_SEEN = {};
+const notifSeen = () => NOTIF_SEEN[VIEWER] || (NOTIF_SEEN[VIEWER] = new Set());   // переход из «Сповіщень»: {onlyNew} — вернуться к списку
 const notifRead = () => NOTIF_READ[VIEWER] || NOTIF_LOADED;
 const notifKind = c => ({create:'created', assign:'assigned', submit:'submitted', approval:'decided', risk:'risk', edit:'cardEdit'})[c.kind]
   || ((c.diffs || []).some(d => d.f === 'status' && isArch({status:d.to})) ? 'archived' : 'applied');
@@ -1781,11 +1784,13 @@ function notifItems(){
     for (const c of p.changes || []){
       if (new Date(c.date).getTime() < since) continue;
       const kind = notifKind(c), risk = c.ref && c.ref.type === 'risk' ? (p.risks || []).find(k => String(k.id) === String(c.ref.id)) : null;
-      if (notifFor(kind, c.who, c.diffs, p, risk)) out.push({p, c, kind, date:c.date, who:c.who, unread:c.date > read});
+      const k = `${p.id}:j:${c.date}:${c.kind}`;
+      if (notifFor(kind, c.who, c.diffs, p, risk)) out.push({p, c, kind, k, date:c.date, who:c.who, unread:c.date > read && !notifSeen().has(k)});
     }
     for (const m of p.comments || []){
       if (new Date(m.date).getTime() < since || !notifFor('comment', m.who, [], p, null)) continue;
-      out.push({p, m, kind:'comment', date:m.date, who:m.who, unread:m.date > read});
+      const k = `${p.id}:c:${m.date}:${m.who}:${m.txt}`;
+      out.push({p, m, kind:'comment', k, date:m.date, who:m.who, unread:m.date > read && !notifSeen().has(k)});
     }
   }
   return out.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
@@ -1798,7 +1803,7 @@ function notifPanel(onlyNew){
     const act = x.c && x.c.ref ? `data-act="${x.c.ref.type === 'report' ? 'repopen' : 'riskopen'}" data-id="${x.p.id}" data-rid="${esc(x.c.ref.id)}"` : `data-act="openp" data-id="${x.p.id}"`;
     const body = x.m ? `<div class="ntf-t">${esc(x.m.txt)}</div>`
       : `${x.c.diffs && x.c.diffs.length ? `<div class="diffs">${x.c.diffs.map(d => `<div class="diff"><span class="df">${fl(d.f)}</span><span class="dv"><s>${valFmt(d.f, d.from)}</s><span class="arr">→</span>${valFmt(d.f, d.to)}</span></div>`).join('')}</div>` : ''}${x.c.reason ? `<div class="ntf-t">${esc(x.c.reason)}</div>` : ''}`;
-    return `<button class="ntf-i ${x.unread ? 'new' : 'old'}" ${act}><div class="ntf-h"><span class="ntf-p">${esc(x.p.code)} · ${esc(x.p.title)}</span><span class="chg-k">${t(NK[x.kind])}</span>${x.unread ? `<span class="pill ap" style="--c:var(--theme)">${t('notifNew')}</span>` : ''}<span class="muted">${esc(x.who || '')} · ${fmtDT(new Date(x.date))}</span></div>${body}</button>`;
+    return `<button class="ntf-i ${x.unread ? 'new' : 'old'}" data-k="${esc(x.k)}" ${act}><div class="ntf-h"><span class="ntf-p">${esc(x.p.code)} · ${esc(x.p.title)}</span><span class="chg-k">${t(NK[x.kind])}</span>${x.unread ? `<span class="pill ap" style="--c:var(--theme)">${t('notifNew')}</span>` : ''}<span class="muted">${esc(x.who || '')} · ${fmtDT(new Date(x.date))}</span></div>${body}</button>`;
   };
   openPanel(`<div class="ph"><div><div class="k">PPM</div><h2>${t('notifTitle')}</h2></div>${closeBtn()}</div>
     <p class="note">${t('notifHint')}</p>
@@ -1806,7 +1811,8 @@ function notifPanel(onlyNew){
     <div id="ntf-list">${list.length ? list.map(item).join('') : `<p class="empty">${t('notifEmpty')}</p>`}</div>`);
   panel.querySelector('#ntf-new').addEventListener('change', e => notifPanel(e.target.checked));
   NOTIF_RET = null;
-  panel.querySelector('#ntf-list').addEventListener('click', e => { if (e.target.closest('.ntf-i')) NOTIF_RET = {onlyNew}; }, true);
+  panel.querySelector('#ntf-list').addEventListener('click', e => { const it = e.target.closest('.ntf-i'); if (!it) return;
+    NOTIF_RET = {onlyNew}; notifSeen().add(it.dataset.k); renderChrome(); }, true);
 }
 
 function changesHtml(p, showAll){
@@ -2344,7 +2350,7 @@ document.addEventListener('click', e => {
   else if (a === 'notif') notifPanel(false);
   else if (a === 'notifback') notifPanel(!!(NOTIF_RET && NOTIF_RET.onlyNew));
   // «Позначити все прочитаним» — «прочитано до» = сейчас (в приложении — номер последнего показанного события)
-  else if (a === 'notifreadall') { NOTIF_READ[VIEWER] = new Date().toISOString(); notifPanel(!!el.dataset.new); renderChrome(); }
+  else if (a === 'notifreadall') { NOTIF_READ[VIEWER] = new Date().toISOString(); notifSeen().clear(); notifPanel(!!el.dataset.new); renderChrome(); }
   else if (a === 'assign') assignForm(pById(id));
   else if (a === 'backp') { if (id) projectPanel(id, false); else closePanel(); }
   else if (a === 'close') closePanel();

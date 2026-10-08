@@ -456,6 +456,8 @@ $NS = Ensure-List "Lists/NotifyState" "Прочитане" "Read marks" "Про�
 F $NS nsUser        User     "Користувач"         "User"                "Пользователь"         "UserSelectionMode='PeopleOnly'"
 F $NS nsReadId      Number   "Прочитано до (журнал)" "Read up to (log)" "Прочитано до (журнал)" "Decimals='0'" "<Default>0</Default>"
 F $NS nsReadCmId    Number   "Прочитано до (коментарі)" "Read up to (comments)" "Прочитано до (комментарии)" "Decimals='0'" "<Default>0</Default>"
+# открытые события поверх метки (JSON-массив «j<номер>» / «c<номер>», не больше 200) — пишет приложение в свою строку
+F $NS nsReadSet     Note     "Прочитані події"    "Read events"         "Прочитанные события"  "NumLines='3' RichText='FALSE'"
 F $NS pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='255'"
 $script:Loc += , @($NS, "Title", "E-mail", "E-mail", "E-mail")
 
@@ -757,7 +759,7 @@ $vRisks = Ensure-View $K "Відкриті" $kFields `
     "<OrderBy><FieldRef Name='riScore' Ascending='FALSE'/></OrderBy><Where><Neq><FieldRef Name='riStatus'/><Value Type='Choice'>Закрито</Value></Neq></Where>"
 
 $null = Set-BaseView $C "Усі зміни" @("kcProject","kcDate","kcChangedBy","kcKind","LinkTitle","kcFrom","kcTo","kcReason") "<OrderBy><FieldRef Name='kcDate' Ascending='FALSE'/></OrderBy>"
-$null = Set-BaseView $NS "Усі" @("LinkTitle","nsUser","nsReadId","nsReadCmId","Modified") "<OrderBy><FieldRef Name='Title'/></OrderBy>"
+$null = Set-BaseView $NS "Усі" @("LinkTitle","nsUser","nsReadId","nsReadCmId","nsReadSet","Modified") "<OrderBy><FieldRef Name='Title'/></OrderBy>"
 $null = Set-BaseView $PA "Усі призначення" @("paProject","paManager","paOwner","paNote","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
 $null = Set-BaseView $AP "Усі погодження" @("apProject","apReport","apDecision","apSchedule","apBudget","apResources","apNote","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
 $null = Set-BaseView $TM "Уся команда" @("tmProject","tmUser","tmRole","tmTopics") "<OrderBy><FieldRef Name='tmProject'/></OrderBy>"

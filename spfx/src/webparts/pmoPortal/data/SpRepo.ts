@@ -6,7 +6,7 @@ import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, 
   withoutFolders, CHANGES_ON_LOAD, changesOf, changesSince, NOTIFY_SELECT, mapNotify } from './map';
 import { withApproval, approvedIds as approvedOf, pendingReports, latestReport } from '../logic/approval';
 import { applyAssignments } from '../logic/assign';
-import { NOTIFY_DAYS } from '../logic/notify';
+import { NOTIFY_DAYS, ReadMarks, mergeMarks } from '../logic/notify';
 import { teamPeople, teamVisible } from '../logic/team';
 import { applyPending } from '../logic/overlay';
 import { Regional, regionalFrom, toFormValues } from './formValues';
@@ -30,7 +30,7 @@ export interface PortalData { projects: Project[]; reports: StatusReport[]; risk
   /** Страница «Відгуки»: все отзывы с решениями (пусто, если списка нет). */
   feedbackRows: FeedbackRow[];
   /** Сповіщення: журнал за 14 дней (видимые проекты) и своя строка «Прочитане» (null — строки ещё нет). */
-  recent: ChangeEntry[]; notify: { id: number; readId: number; readCmId: number } | null; }
+  recent: ChangeEntry[]; notify: { id: number; readId: number; readCmId: number; seen: string[] } | null; }
 
 /** Чтение списков портала от имени пользователя: видны только проекты, которые ему открыла синхронизация. */
 export class SpRepo {
@@ -104,14 +104,15 @@ export class SpRepo {
   }
 
   /** Сповіщення: отметить прочитанным (своя строка «Прочитане», свежая версия, метки только растут). */
-  async markRead(next: { readId: number; readCmId: number }): Promise<void> {
+  async markRead(next: ReadMarks): Promise<void> {
     for (let attempt = 0; attempt < 2; attempt++) {
       const rows = await this.items('NotifyState', NOTIFY_SELECT, '', `Title eq '${this.me.toLowerCase().replace(/'/g, "''")}'`);
       if (!rows[0]) return;
       const j = await this.getJson(this.itemUrl('NotifyState', rows[0].Id, NOTIFY_SELECT, ''), true);
       const cur = mapNotify(j);
-      const body = { nsReadId: Math.max(cur.readId, next.readId), nsReadCmId: Math.max(cur.readCmId, next.readCmId) };
-      if (body.nsReadId === cur.readId && body.nsReadCmId === cur.readCmId) return;
+      const m = mergeMarks(cur, next);
+      const body = { nsReadId: m.readId, nsReadCmId: m.readCmId, nsReadSet: JSON.stringify(m.seen || []) };
+      if (body.nsReadId === cur.readId && body.nsReadCmId === cur.readCmId && body.nsReadSet === JSON.stringify(cur.seen)) return;
       try { await this.update('NotifyState', cur.id, body, String(j['odata.etag'] || '')); return; } catch (x) { if ((x as Error).message !== 'conflict' || attempt) throw x; }
     }
   }

@@ -58,17 +58,42 @@ export interface NotifyItem {
   key: string; source: 'journal' | 'comment'; id: number; projectId: number; kind: NotifyKind; date: string; who: Person | null;
   ev?: ChangeEvent; comment?: Comment; unread: boolean;
 }
-export interface ReadMarks { readId: number; readCmId: number; }
+/** «Прочитано до» (журнал / комментарии) и открытые поверх метки события (ключи «j<номер>» / «c<номер>»). */
+export interface ReadMarks { readId: number; readCmId: number; seen?: string[]; }
+/** Сколько открытых событий храним поверх метки (новейшие) — строка «Прочитане» не растёт без конца. */
+export const SEEN_MAX = 200;
+/** Открытые события: без повторов, только номера больше метки (остальное и так прочитано), не больше SEEN_MAX новейших. */
+export function pruneSeen(seen: string[], readId: number, readCmId: number): string[] {
+  const out: { k: string; id: number }[] = [];
+  for (const k of seen) {
+    const m = /^([jc])(\d+)$/.exec(k); if (!m) continue;
+    const id = Number(m[2]);
+    if (id <= (m[1] === 'j' ? readId : readCmId) || out.some(x => x.k === k)) continue;
+    out.push({ k, id });
+  }
+  return out.sort((a, b) => b.id - a.id).slice(0, SEEN_MAX).map(x => x.k);
+}
 
 /** Новые сверху: непрочитанное — номер больше метки. Событие, дописанное синхронизацией после прочтения, снова новое — целиком. */
 export function notifyList(items: Omit<NotifyItem, 'unread'>[], marks: ReadMarks | null): NotifyItem[] {
-  return items.map(x => ({ ...x, unread: !!marks && x.id > (x.source === 'journal' ? marks.readId : marks.readCmId) }))
+  const seen = marks && marks.seen ? marks.seen : [];
+  return items.map(x => ({ ...x, unread: !!marks && x.id > (x.source === 'journal' ? marks.readId : marks.readCmId) && seen.indexOf(x.key) < 0 }))
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.id - a.id));
 }
-/** Метки после просмотра панели: только растут. */
+/** «Позначити все прочитаним»: метки — до последнего показанного (только растут), открытые ниже метки — не нужны. */
 export function marksAfterView(items: NotifyItem[], marks: ReadMarks): ReadMarks {
   const max = (src: NotifyItem['source'], cur: number): number => items.filter(x => x.source === src).reduce((m, x) => Math.max(m, x.id), cur);
-  return { readId: max('journal', marks.readId), readCmId: max('comment', marks.readCmId) };
+  const readId = max('journal', marks.readId), readCmId = max('comment', marks.readCmId);
+  return { readId, readCmId, seen: pruneSeen(marks.seen || [], readId, readCmId) };
+}
+/** Открыл событие — прочитано именно оно (метки не двигаются). */
+export function marksAfterOpen(item: NotifyItem, marks: ReadMarks): ReadMarks {
+  return { readId: marks.readId, readCmId: marks.readCmId, seen: pruneSeen((marks.seen || []).concat(item.key), marks.readId, marks.readCmId) };
+}
+/** Запись в свою строку: к свежей версии — метки максимумом, открытые — объединением (параллельная вкладка не теряет своё). */
+export function mergeMarks(cur: ReadMarks, next: ReadMarks): ReadMarks {
+  const readId = Math.max(cur.readId, next.readId), readCmId = Math.max(cur.readCmId, next.readCmId);
+  return { readId, readCmId, seen: pruneSeen((next.seen || []).concat(cur.seen || []), readId, readCmId) };
 }
 /** Роли проекта для правила: PM, власник, команда (люди «Команди проєкту» и стейкхолдери). */
 export function notifyProject(p: Project): NotifyProject {

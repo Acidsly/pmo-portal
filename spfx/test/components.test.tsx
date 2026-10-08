@@ -247,7 +247,7 @@ describe('сповіщення: колокольчик и панель', () => {
     head({ unread: 0, onOpen: () => undefined }); expect(root.querySelector('#bell')).not.toBeNull(); expect(root.querySelector('#bell .dot-new')).toBeNull();
     expect(root.querySelector('#bell')!.className).not.toContain('has');
   });
-  test('панель: мои новые события выделены; открытие ничего не пишет, «Позначити все прочитаним» — метки растут; нажатие открывает событие', async () => {
+  test('панель: мои новые события выделены; открытие панели ничего не пишет; нажатие открывает событие и отмечает его; «Позначити все прочитаним» — метки растут', async () => {
     const marked: any[] = []; const opened: string[] = [];
     const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } }, reload: async () => undefined };
     await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 20, readCmId: 5 })} onOpen={(f, id) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
@@ -256,9 +256,12 @@ describe('сповіщення: колокольчик и панель', () => {
     expect(items[0].className).toContain('new');
     expect(root.textContent).toContain('Новий коментар');
     expect(marked).toEqual([]);
+    // открыл событие — прочитано именно оно (метки не двигаются)
+    await act(async () => { (items[0] as HTMLElement).click(); await Promise.resolve(); });
+    expect(opened).toEqual(['@1']);
+    expect(marked).toEqual([{ readId: 20, readCmId: 5, seen: ['c7'] }]);
     await act(async () => { (root.querySelector('#ntf-all') as HTMLElement).click(); await Promise.resolve(); });
-    expect(marked).toEqual([{ readId: 20, readCmId: 7 }]);
-    act(() => { (items[0] as HTMLElement).click(); }); expect(opened).toEqual(['@1']);
+    expect(marked[1]).toEqual({ readId: 20, readCmId: 7, seen: [] });
   });
   test('строки «Прочитане» ещё нет — подсказка, ничего не пишется', async () => {
     const marked: any[] = [];
