@@ -796,6 +796,16 @@ export const T: Record<string, L3> = {
   "No reports submitted",
   "Отчёты не подавались"
  ],
+ "descMore": [
+  "Показати повністю",
+  "Show all",
+  "Показать полностью"
+ ],
+ "descLess": [
+  "Згорнути",
+  "Collapse",
+  "Свернуть"
+ ],
  "subHint": [
   "Дата подання — день збереження; період — від останнього погодженого звіту.",
   "The submission date is the day you save; the period runs from the last approved report.",

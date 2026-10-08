@@ -383,3 +383,23 @@ describe('меню: значки разделов (Lucide)', () => {
     expect((root.querySelector('.ent') as HTMLElement).style.getPropertyValue('--c')).toBe('var(--nv-projects)');
   });
 });
+
+describe('#71 «Мета та опис»: 10 строк, дальше — «Показати повністю»', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { Desc } = require('../src/webparts/pmoPortal/panels/ProjectCard');
+  const size = (scroll: number, client: number): void => {
+    Object.defineProperty(HTMLElement.prototype, 'scrollHeight', { configurable: true, get() { return this.id === 'card-desc' ? scroll : 0; } });
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get() { return this.id === 'card-desc' ? client : 0; } });
+  };
+  afterEach(() => { delete (HTMLElement.prototype as any).scrollHeight; delete (HTMLElement.prototype as any).clientHeight; });
+  test('короткий текст — без кнопки', () => {
+    size(60, 60); mount(<Desc text={'Мета\nОпис'} />);
+    expect(root.querySelector('#card-desc')!.className).toContain('clamp'); expect(root.querySelector('#desc-more')).toBeNull();
+  });
+  test('длинный — «Показати повністю», раскрытие и «Згорнути»', () => {
+    size(600, 220); mount(<Desc text={'рядок\n'.repeat(30)} />);
+    const b = root.querySelector('#desc-more') as HTMLElement; expect(b.textContent).toBe('Показати повністю');
+    act(() => { b.click(); });
+    expect(root.querySelector('#card-desc')!.className).not.toContain('clamp'); expect((root.querySelector('#desc-more') as HTMLElement).textContent).toBe('Згорнути');
+  });
+});

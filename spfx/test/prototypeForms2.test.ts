@@ -308,3 +308,34 @@ test('#73 фильтр колонки «Звіт»: свежесть и пого
   expect(marks.length).toBeGreaterThan(0);
   marks.forEach((m: string) => expect(m).toContain('Погоджено'));
 });
+
+test('#63 переключатели форм: выбранный — рамка темы и ✓, наведение и «недоступно»; невыбранные в тёмной теме светлее', () => {
+  const css = Array.from(w.document.querySelectorAll('style')).map((x: W) => x.textContent).join('\n');
+  expect(css).toMatch(/\.ragpick input:checked \+ label\{[^}]*inset 0 0 0 2px var\(--theme\)/);
+  expect(css).toMatch(/\.ragpick input:checked \+ label::before\{content:'✓'/);
+  expect(css).toMatch(/\.ragpick input:not\(:checked\):not\(:disabled\) \+ label:hover\{/);
+  expect(css).toMatch(/\.ragpick input:disabled \+ label\{opacity:\.5/);
+  expect((css.match(/--pick-off:/g) || []).length).toBe(3);   // светлая и две тёмные
+  expect(css).toMatch(/--pick-off:rgba\(255,255,255,\.07\)/);
+});
+
+test('#71 прототип: «Мета та опис» — clamp и «Показати повністю» / «Згорнути»', () => {
+  // PM (Юрій) записывает в PRJ-001 длинную «Мета та опис» с переносами строк
+  q('[data-act="nav"][data-page="projects"]').click(); q('[data-act="openp"][data-id="1"]').click();
+  q('[data-act="editproj"][data-id="1"]').click();
+  const ta = q('#pform textarea#p-desc'); ta.value = 'Мета\n' + 'рядок опису\n'.repeat(20); ev(ta, 'input');
+  q('#pform').dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+  q('[data-act="openp"][data-id="1"]').click();
+  const ds = q('#card-desc'); expect(ds).not.toBeNull();
+  expect(ds.className).toContain('clamp'); expect(ds.textContent).toContain('\n');
+  const b = q('#desc-more'); b.hidden = false; b.click();
+  expect(q('#card-desc').className).not.toContain('clamp'); expect(q('#desc-more').textContent).toBe('Згорнути');
+  q('#desc-more').click(); expect(q('#card-desc').className).toContain('clamp');
+});
+
+test('#72 телефон: главная кнопка списка — на всю ширину, кнопки карточки и форм — по центру поровну', () => {
+  const css = Array.from(w.document.querySelectorAll('style')).map((x: W) => x.textContent).join('\n');
+  expect(css).toMatch(/@media \(max-width:720px\)\{\.cmdbar \.cmd\.primary\{flex:1 1 100%;justify-content:center\}/);
+  expect(css).toMatch(/\.actbar \.btn\{flex:1 1 100%;justify-content:center\}/);
+  expect(css).toMatch(/\.actions \.btn\{flex:1 1 120px;justify-content:center;white-space:nowrap\}/);
+});
