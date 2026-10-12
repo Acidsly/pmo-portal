@@ -13,6 +13,9 @@ import { Regional, regionalFrom, toFormValues } from './formValues';
 import { applyState, parseState, StateJson } from '../logic/state';
 import { Fresh } from '../logic/guard';
 
+/** Поля «Відгуки — загальні» для страницы «Відгуки» (fpDecidedAt — отдельно: его может ещё не быть на сайте). */
+const FP_SELECT = 'Id,fpId,fpCreated,fpAuthor,fpScreen,fpText,fpStatus,fpAnswer,fpShots';
+
 export type WritableList = 'Projects' | 'StatusReports' | 'RisksIssues' | 'ProjectComments' | 'Feedback' | 'ProjectTeam' | 'ReportApprovals' | 'ProjectAssignments' | 'NotifyState';
 
 export interface PortalData { projects: Project[]; reports: StatusReport[]; risks: Risk[]; comments: Comment[];
@@ -125,7 +128,8 @@ export class SpRepo {
   /** Отзывы: общий список (все видят все) + «Відгуки» (свои или все — у администратора) со скриншотами; свежие, ещё не скопированные синхронизацией, — тоже. */
   private async loadFeedback(): Promise<FeedbackRow[]> {
     const [pub, own] = await Promise.all([
-      this.items('FeedbackPublic', 'Id,fpId,fpCreated,fpAuthor,fpScreen,fpText,fpStatus,fpAnswer,fpShots,fpDecidedAt', '').catch(() => [] as any[]),
+      // поля «Розглянуто» (fpDecidedAt) может ещё не быть (приложение установили раньше Deploy-PMO.ps1) — тогда без него, список не пропадает
+      this.items('FeedbackPublic', FP_SELECT + ',fpDecidedAt', '').catch(() => this.items('FeedbackPublic', FP_SELECT, '')).catch(() => [] as any[]),
       this.items('Feedback', 'Id,Created,fbScreen,fbText,fbStatus,fbAnswer,Author/Title,Author/EMail,AttachmentFiles', 'Author,AttachmentFiles')]);
     const me = (this.me || '').toLowerCase();
     const byId: Record<number, FeedbackRow> = {};

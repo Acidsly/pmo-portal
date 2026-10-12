@@ -3,7 +3,7 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
-   "ver": "1.7.2.8",
+   "ver": "1.7.2.9",
    "date": "12.10.2026",
    "html": "<p><b>Нове</b></p>\n<ul>\n<li>Сповіщення «Вас додано до команди проєкту» з вашою роллю, а також про зміну вашої ролі в команді (#84).</li>\n<li>Довгі таблиці прокручуються у своєму вікні: заголовки колонок закріплені, горизонтальна смуга прокрутки завжди видна внизу таблиці (#89).</li>\n<li>Номер версії порталу й «Що змінилося» — у «Довідці» (кнопка <b>?</b>) (#90); про новий випуск повідомляє дзвіночок.</li>\n<li>Дзвіночок: «Відгук розглянуто» — коли змінився статус або відповідь на ваш відгук.</li>\n<li>У картці проєкту — три останні статус-звіти й «Показати всі звіти (N)» (#82).</li>\n</ul>\n<p><b>Змінено</b></p>\n<ul>\n<li>Колонка «Звіт»: мітка погодження й дата — один блок, дата окремим рядком; підказка «Подано … · автор» (#85).</li>\n<li>Поле звіту «Проблеми та ризики» → «Проблеми та ризики за період», з підказкою, де реєстр ризиків (#81).</li>\n<li>«Термін виконання заходів» ризику: для нового запису — не раніше сьогодні, при зміні — не раніше дати реєстрації; прострочений позначається «Термін минув» (#88).</li>\n<li>Меню без порожнього місця після «Відгуки»; у формі проєкту — права учасникам з'являються протягом ~15 хвилин (#83).</li>\n</ul>\n<p><b>Перевірте повторно</b></p>\n<ul>\n<li>Додайте учасника до команди проєкту — через ~15 хвилин у нього в дзвіночку «Вас додано до команди».</li>\n<li>Форма ризику: термін раніше сьогодні (новий запис) — помилка біля поля.</li>\n<li>Довгі списки: заголовки колонок і горизонтальна смуга прокрутки лишаються видимими.</li>\n</ul>"
   },
@@ -25,7 +25,7 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
-   "ver": "1.7.2.8",
+   "ver": "1.7.2.9",
    "date": "12.10.2026",
    "html": "<p><b>New</b></p>\n<ul>\n<li>Notification \"You were added to the project team\" with your role, and when your role in the team changes (#84).</li>\n<li>Long tables scroll in their own window: column headers stay pinned, the horizontal scroll bar is always visible at the bottom of the table (#89).</li>\n<li>The portal version and \"What's new\" are in Help (the <b>?</b> button) (#90); the bell announces a new release.</li>\n<li>Bell: \"Feedback reviewed\" — when the status of or answer to your feedback changes.</li>\n<li>The project card shows the three latest status reports and \"Show all reports (N)\" (#82).</li>\n</ul>\n<p><b>Changed</b></p>\n<ul>\n<li>\"Report\" column: the approval label and the date form one block, the date on its own line; tooltip \"Submitted … · author\" (#85).</li>\n<li>The report field \"Issues and risks\" → \"Issues and risks for the period\", with a hint where the risk register is (#81).</li>\n<li>Risk \"Mitigation due date\": for a new record — not earlier than today, when changed — not earlier than the registration date; an overdue one is marked \"The due date has passed\" (#88).</li>\n<li>No empty space in the menu after \"Feedback\"; the project form says team members get access within ~15 minutes (#83).</li>\n</ul>\n<p><b>Re-check</b></p>\n<ul>\n<li>Add a member to a project team — within ~15 minutes their bell shows \"You were added to the team\".</li>\n<li>Risk form: a due date earlier than today (new record) — an error next to the field.</li>\n<li>Long lists: column headers and the horizontal scroll bar stay visible.</li>\n</ul>"
   },
@@ -47,7 +47,7 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
-   "ver": "1.7.2.8",
+   "ver": "1.7.2.9",
    "date": "12.10.2026",
    "html": "<p><b>Новое</b></p>\n<ul>\n<li>Уведомление «Вас добавили в команду проекта» с вашей ролью, а также об изменении вашей роли в команде (#84).</li>\n<li>Длинные таблицы прокручиваются в своём окне: заголовки колонок закреплены, горизонтальная полоса прокрутки всегда видна внизу таблицы (#89).</li>\n<li>Номер версии портала и «Что изменилось» — в «Справке» (кнопка <b>?</b>) (#90); о новом выпуске сообщает колокольчик.</li>\n<li>Колокольчик: «Отзыв рассмотрен» — когда изменился статус или ответ на ваш отзыв.</li>\n<li>В карточке проекта — три последних статус-отчёта и «Показать все отчёты (N)» (#82).</li>\n</ul>\n<p><b>Изменено</b></p>\n<ul>\n<li>Колонка «Отчёт»: метка согласования и дата — один блок, дата отдельной строкой; подсказка «Подан … · автор» (#85).</li>\n<li>Поле отчёта «Проблемы и риски» → «Проблемы и риски за период», с подсказкой, где реестр рисков (#81).</li>\n<li>«Срок выполнения мер» риска: для новой записи — не раньше сегодня, при изменении — не раньше даты регистрации; просроченный помечается «Срок истёк» (#88).</li>\n<li>Меню без пустого места после «Отзывы»; в форме проекта — права участникам появляются в течение ~15 минут (#83).</li>\n</ul>\n<p><b>Проверьте повторно</b></p>\n<ul>\n<li>Добавьте участника в команду проекта — через ~15 минут у него в колокольчике «Вас добавили в команду».</li>\n<li>Форма риска: срок раньше сегодня (новая запись) — ошибка у поля.</li>\n<li>Длинные списки: заголовки колонок и горизонтальная полоса прокрутки остаются видимыми.</li>\n</ul>"
   },

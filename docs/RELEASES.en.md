@@ -1,6 +1,6 @@
 # What's new
 
-## 1.7.2.8 · 12.10.2026
+## 1.7.2.9 · 12.10.2026
 
 **New**
 - Notification "You were added to the project team" with your role, and when your role in the team changes (#84).
