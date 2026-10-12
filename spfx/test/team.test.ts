@@ -35,7 +35,8 @@ test('teamText, teamPeople и журнал правки карточки', () =>
   expect(teamPeople([M(1, A, 'x'), M(2, { ...A, id: 9 }, 'y'), M(3, null, 'z'), M(4, B, 'w')]).map(p => p.id)).toEqual([1, 2]);
   const before = { title: 'P', code: '', department: 'ІТ', priority: '', manager: null, owner: null, budget: 0, links: [{ t: 'Loop', u: 'https://l' }], team: [M(1, A, 'Замовник')] } as unknown as Project;
   const d = { title: 'P', code: '', department: 'ІТ', priority: '', manager: null, owner: null, budget: 0, links: [], team: [{ id: 1, user: A, role: 'Замовник', topics: '' }, { user: B, role: 'Архітектор', topics: '' }] } as unknown as ProjectDraft;
-  expect(cardDiff(before, d)).toEqual([{ f: 'links', from: 'Loop', to: '' }, { f: 'team', from: 'Анна — Замовник', to: 'Анна — Замовник; Борис — Архітектор' }]);
+  expect(cardDiff(before, d)).toEqual([{ f: 'links', from: 'Loop', to: '' }, { f: 'team', from: 'Анна — Замовник', to: 'Анна — Замовник; Борис — Архітектор' },
+    { f: 'teamIn', from: '', to: B.email.toLowerCase() }]);   // #84: отметка для сповіщення добавленному
 });
 
 // R7: строки команды — те же векторы, что у Test-TeamRowAccepted синхронизации (folders.json -> team)

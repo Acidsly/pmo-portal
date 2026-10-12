@@ -936,6 +936,21 @@ export const T: Record<string, L3> = {
   "Card edited",
   "Редактирование карточки"
  ],
+ "nkTeamAdded": [
+  "Вас додано до команди",
+  "You were added to the team",
+  "Вас добавили в команду"
+ ],
+ "nkTeamRole": [
+  "Змінено вашу роль у команді",
+  "Your team role was changed",
+  "Изменена ваша роль в команде"
+ ],
+ "ntfMyRole": [
+  "Ваша роль: {r}",
+  "Your role: {r}",
+  "Ваша роль: {r}"
+ ],
  "nkComment": [
   "Коментар",
   "Comment",
@@ -1949,6 +1964,26 @@ export const EXTRA: Record<string, L3> = {
   "Детальний огляд системи",
   "Detailed system overview",
   "Подробный обзор системы"
+ ],
+ "relTitle": [
+  "Що змінилося",
+  "What's new",
+  "Что изменилось"
+ ],
+ "relBack": [
+  "← Довідка",
+  "← Help",
+  "← Справка"
+ ],
+ "relVer": [
+  "Версія {v}",
+  "Version {v}",
+  "Версия {v}"
+ ],
+ "relCurrent": [
+  "поточна",
+  "current",
+  "текущая"
  ],
  "overviewLead": [
   "Хочете більше? Детальний огляд: навіщо система, з чого складається, усі екрани зі скриншотами, правила й безпека.",

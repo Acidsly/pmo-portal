@@ -1,13 +1,14 @@
 import { ChangeEntry, ChangeEvent, Comment, Person, Project, Risk } from '../data/types';
 import { toEvents } from './changes';
 import { isArch } from './status';
+import { teamNotice } from './team';
 
 /** Сповіщення в приложении (колокольчик): какие события журнала и комментарии — мои и какие из них новые.
  *  Правило «кто что видит» — общие векторы tests/cases/notify.json (их же возьмёт синхронизация для писем, часть 2). */
 /** Сповіщення: окно журнала в днях. */
 export const NOTIFY_DAYS = 14;
 
-export type NotifyKind = 'created' | 'assigned' | 'submitted' | 'decided' | 'applied' | 'archived' | 'risk' | 'cardEdit' | 'comment';
+export type NotifyKind = 'created' | 'assigned' | 'submitted' | 'decided' | 'applied' | 'archived' | 'risk' | 'cardEdit' | 'comment' | 'teamAdded' | 'teamRole';
 
 /** Вид события истории: «Статус → Завершено / Скасовано» (прежнее «→ Архівний») в событии отчёта — архив; правка в обход, откаченная синхронизацией, — как отчёт. */
 export function notifyKind(ev: { kind: ChangeEvent['kind']; diffs: { f: string; to: string }[] }): NotifyKind {
@@ -43,6 +44,8 @@ export function notifyFor(kind: NotifyKind, author: string, diffs: { f: string; 
     case 'archived': return pm || owner || team || ctx.isPmo;
     case 'created': case 'assigned': case 'decided': case 'applied': case 'comment': return pm || owner || team;
     case 'cardEdit': return pm || owner;
+    // #84: «вас додано до команди» / «змінено вашу роль» — только самому человеку (kind уже персональный, см. notifyItems)
+    case 'teamAdded': case 'teamRole': return true;
     case 'risk': {
       if (pm) return true;
       if (ctx.risk && low(ctx.risk.owner) === me) return true;
@@ -108,7 +111,10 @@ export function notifyItems(d: { projects: Project[]; risks: Risk[]; comments: C
   const out: Omit<NotifyItem, 'unread'>[] = [];
   for (const ev of toEvents(d.recent)) {
     const p = byId[ev.projectId || 0]; if (!p) continue;
-    const kind = notifyKind(ev);
+    let kind = notifyKind(ev);
+    // #84: правка команды, которая касается меня, — отдельное событие (даже если я не PM и не власник)
+    const tn = kind === 'cardEdit' ? teamNotice(ev.diffs, me) : '';
+    if (tn) kind = tn;
     const rk = ev.ref && ev.ref.type === 'risk' ? d.risks.filter(x => x.id === ev.ref!.id)[0] : undefined;
     const risk = rk ? { score: rk.probability * rk.impact, owner: rk.owner ? rk.owner.email : '' } : null;
     if (!notifyFor(kind, ev.who ? ev.who.email : '', ev.diffs, notifyProject(p), { me, isPmo, risk })) continue;

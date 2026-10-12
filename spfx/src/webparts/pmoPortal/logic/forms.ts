@@ -1,5 +1,5 @@
 import { Project, Person, Link, StatusReport } from '../data/types';
-import { TeamRow, teamText, linksText, validateTeamLinks } from './team';
+import { TeamRow, teamText, linksText, validateTeamLinks, teamMarks } from './team';
 import { Rag } from './rag';
 import { todayIso } from './dates';
 
@@ -175,5 +175,6 @@ export function cardDiff(b: Project, d: ProjectDraft): { f: string; from: string
     ['prio', b.priority, d.priority], ['pm', b.manager ? b.manager.name : '', d.manager ? d.manager.name : ''],
     ['owner', b.owner ? b.owner.name : '', d.owner ? d.owner.name : ''], ['team', teamText(b.team), teamText(d.team)],
     ['budget', String(b.budget || 0), String(d.budget || 0)]];
-  return pairs.filter(x => x[1] !== x[2]).map(([f, from, to]) => ({ f, from, to }));
+  const rows = (t: { user: Person | null; role: string }[]): { email: string; role: string }[] => t.filter(r => r.user).map(r => ({ email: r.user!.email, role: r.role }));
+  return pairs.filter(x => x[1] !== x[2]).map(([f, from, to]) => ({ f, from, to })).concat(teamMarks(rows(b.team), rows(d.team)));
 }

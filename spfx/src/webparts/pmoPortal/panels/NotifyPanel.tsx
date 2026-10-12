@@ -2,12 +2,14 @@ import * as React from 'react';
 import { EntTag } from '../components/EntTag';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
+import { shownDiffs } from '../logic/team';
 import { NOTIFY_DAYS, notifyItems, notifyList, marksAfterView, marksAfterOpen, NotifyItem, NotifyKind, ReadMarks } from '../logic/notify';
 import { fmtDT } from '../components/Bits';
 import { tv } from '../i18n/values';
 
 const NK: Record<NotifyKind, string> = { created: 'nkCreated', assigned: 'nkAssigned', submitted: 'nkSubmitted', decided: 'nkDecided', applied: 'nkApplied',
-  archived: 'nkArchived', risk: 'nkRisk', cardEdit: 'nkCardEdit', comment: 'nkComment' };
+  archived: 'nkArchived', risk: 'nkRisk', cardEdit: 'nkCardEdit', comment: 'nkComment',
+  teamAdded: 'nkTeamAdded', teamRole: 'nkTeamRole' };
 
 /** Свои метки «прочитано до» (null — строки «Прочитане» ещё нет). */
 export const readMarks = (data: PortalData): ReadMarks | null => (data.notify ? { readId: data.notify.readId, readCmId: data.notify.readCmId, seen: data.notify.seen || [] } : null);
@@ -40,6 +42,9 @@ export const NotifyPanel: React.FC<{ data: PortalData; onOpen(form: string, proj
     onOpen(r ? (r.type === 'report' ? 'rep:' : 'risk:') + r.id : '', x.projectId);
   };
   const shown = onlyNew ? list.filter(x => x.unread) : list;
+  // #84: моя роль в команде проекта сейчас (для «Вас додано до команди» / «Змінено вашу роль»)
+  const myRole = (id: number): string => { const pr = data.projects.filter(x => x.id === id)[0]; const me = (c.me || '').toLowerCase();
+    const m = pr ? (pr.team || []).filter(r => r.user && r.user.email.toLowerCase() === me)[0] : undefined; return m ? m.role : ''; };
   const p = (id: number): string => { const pr = data.projects.filter(x => x.id === id)[0]; return pr ? `${pr.code} · ${pr.title}` : ''; };
   return <>
     <div className="ph"><div><div className="k"><EntTag kind="notif" /></div><h2>{t('notifTitle')}</h2></div>
@@ -54,7 +59,8 @@ export const NotifyPanel: React.FC<{ data: PortalData; onOpen(form: string, proj
           {x.unread ? <span className="pill ap" style={{ '--c': 'var(--theme)' } as React.CSSProperties}>{t('notifNew')}</span> : null}
           <span className="muted">{x.who ? x.who.name + ' · ' : ''}{fmtDT(x.date)}</span></div>
         {x.comment ? <div className="ntf-t">{x.comment.text}</div> : null}
-        {x.ev && x.ev.diffs.length ? <div className="diffs">{x.ev.diffs.map((d, i) => <div key={i} className="diff"><span className="df">{fl(d.f)}</span>
+        {x.kind === 'teamAdded' || x.kind === 'teamRole' ? <div className="ntf-t">{t('ntfMyRole').replace('{r}', myRole(x.projectId) || '—')}</div>
+        : x.ev && shownDiffs(x.ev.diffs).length ? <div className="diffs">{shownDiffs(x.ev.diffs).map((d, i) => <div key={i} className="diff"><span className="df">{fl(d.f)}</span>
           <span className="dv"><s>{tv(d.from) || '—'}</s><span className="arr">→</span>{tv(d.to) || '—'}</span></div>)}</div> : null}
         {x.ev && x.ev.reason ? <div className="ntf-t">{x.ev.reason}</div> : null}
       </button>) : <p className="empty">{t('notifEmpty')}</p>}</div>

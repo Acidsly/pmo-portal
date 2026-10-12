@@ -413,6 +413,10 @@ main{padding-bottom:40px}
 .c2 .pill{font-size:11px}
 .clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .strat-t{color:var(--strat);font-weight:600}
+/* #89: длинный список прокручивается внутри своего окна (высота — экран без шапок SharePoint и портала): заголовки колонок закреплены,
+   горизонтальная полоса — внизу видимой части таблицы; на телефоне — без своего окна (карточки или обычная прокрутка) */
+@media (min-width:721px){.tablewrap.dt{overflow:auto;max-height:max(360px,calc(100vh - 300px))}}
+.dt thead th{position:sticky;top:0;z-index:2;background:var(--bg);box-shadow:inset 0 -1px 0 var(--line)}
 .dt table td{white-space:normal;vertical-align:top;padding:12px 14px}
 .dt table td .prog{margin-top:4px}
 .dt th{padding:6px 10px 10px;vertical-align:bottom}
@@ -571,7 +575,7 @@ main{padding-bottom:40px}
 .sec-h .more{display:inline-flex;align-items:center;gap:4px}
 .rlist{display:grid;gap:6px}
 /* #35, #49: ширина колонки — перетаскиванием границы заголовка (широкий экран) */
-.dt th{position:relative}
+.dt th{position:sticky}  /* закреплённый заголовок (#89) — он же опора для ручки ширины */
 .col-rs{position:absolute;top:0;right:-2px;width:6px;height:100%;cursor:col-resize;z-index:2;touch-action:none}
 .col-rs:hover,.col-rs.on{background:var(--theme-soft)}
 /* #58: на телефоне статус-звіти й ризики — картками (те самі рядки, фільтри й сортування, що в таблиці) */
@@ -802,7 +806,7 @@ const T = {
  nkCreated:['Новий проєкт','New project','Новый проект'], nkAssigned:['Призначення','Assignment','Назначение'], nkSubmitted:['Подання звіту','Report submitted','Подача отчёта'],
  nkDecided:['Погодження звіту','Report approval','Согласование отчёта'], nkApplied:['Оновлено статус-звітом','Updated by status report','Обновлено статус-отчётом'],
  nkArchived:['Проєкт в архіві','Project archived','Проект в архиве'], nkRisk:['Ризик / проблема','Risk / issue','Риск / проблема'],
- nkCardEdit:['Редагування картки','Card edited','Редактирование карточки'], nkComment:['Коментар','Comment','Комментарий'], kRiskEv:['Ризик / проблема','Risk / issue','Риск / проблема'], openRisk:['Відкрити ризик','Open risk','Открыть риск'],
+ nkCardEdit:['Редагування картки','Card edited','Редактирование карточки'], nkTeamAdded:['Вас додано до команди','You were added to the team','Вас добавили в команду'], nkTeamRole:['Змінено вашу роль у команді','Your team role was changed','Изменена ваша роль в команде'], ntfMyRole:['Ваша роль: {r}','Your role: {r}','Ваша роль: {r}'], nkComment:['Коментар','Comment','Комментарий'], kRiskEv:['Ризик / проблема','Risk / issue','Риск / проблема'], openRisk:['Відкрити ризик','Open risk','Открыть риск'],
  assignBtn:['Змінити PM / власника','Change PM / owner','Сменить PM / владельца'], assignTitle:['Зміна PM / власника','Change of PM / owner','Смена PM / владельца'],
  assignHint:['Після створення проєкту PM і власника змінює лише PMO. Порожнє поле — без змін.','After the project is created, only the PMO changes the PM and the owner. An empty field means no change.','После создания проекта PM и владельца меняет только PMO. Пустое поле — без изменений.'],
  assignNewPm:['Новий PM','New PM','Новый PM'], assignNewOwner:['Новий власник','New owner','Новый владелец'], assignNote:['Коментар (причина)','Comment (reason)','Комментарий (причина)'],
@@ -1842,6 +1846,23 @@ const notifSeen = () => NOTIF_SEEN[VIEWER] || (NOTIF_SEEN[VIEWER] = new Set());
 const notifRead = () => NOTIF_READ[VIEWER] || NOTIF_LOADED;
 const notifKind = c => ({create:'created', assign:'assigned', submit:'submitted', approval:'decided', risk:'risk', edit:'cardEdit'})[c.kind]
   || ((c.diffs || []).some(d => d.f === 'status' && isArch({status:d.to})) ? 'archived' : 'applied');
+// #84: служебные отметки правки команды (кого добавили / у кого сменилась роль) — видит только сам человек, в истории не показываются
+// (векторы tests/cases/team-notify.json; те же — teamMarks / teamNotice приложения; в прототипе человек — по имени)
+function teamMarks(before, after){
+  const key = s => String(s || '').trim().toLowerCase(), was = {};
+  before.forEach(r => { if (key(r.email)) was[key(r.email)] = String(r.role || '').trim(); });
+  const added = [], role = [];
+  after.forEach(r => { const k = key(r.email); if (!k || added.includes(k) || role.includes(k)) return;
+    if (!(k in was)) added.push(k); else if (was[k] !== String(r.role || '').trim()) role.push(k); });
+  return (added.length ? [{f:'teamIn', from:'', to:added.join('; ')}] : []).concat(role.length ? [{f:'teamRole', from:'', to:role.join('; ')}] : []);
+}
+function teamNotice(diffs, me){
+  const m = String(me || '').trim().toLowerCase(); if (!m) return '';
+  const has = f => (diffs || []).some(d => d.f === f && String(d.to || '').split(';').some(x => x.trim().toLowerCase() === m));
+  return has('teamIn') ? 'teamAdded' : has('teamRole') ? 'teamRole' : '';
+}
+const shownDiffs = ds => (ds || []).filter(d => d.f !== 'teamIn' && d.f !== 'teamRole');
+window.PPM_RULES = Object.assign(window.PPM_RULES || {}, {teamMarks, teamNotice});
 function notifFor(kind, author, diffs, p, risk){
   const me = VIEWER;
   if (!me || author === me) return false;
@@ -1850,6 +1871,7 @@ function notifFor(kind, author, diffs, p, risk){
   if (kind === 'submitted') return isPMO();
   if (kind === 'archived') return pm || owner || team || isPMO();
   if (kind === 'cardEdit') return pm || owner;
+  if (kind === 'teamAdded' || kind === 'teamRole') return true;
   if (kind === 'risk'){
     if (pm || (risk && risk.owner === me)) return true;
     const sc = risk ? risk.p * risk.i : +(((diffs || []).filter(d => d.f === 'kScore').pop() || {}).to || 0);
@@ -1862,7 +1884,8 @@ function notifItems(){
   for (const p of visAll()){
     for (const c of p.changes || []){
       if (new Date(c.date).getTime() < since) continue;
-      const kind = notifKind(c), risk = c.ref && c.ref.type === 'risk' ? (p.risks || []).find(k => String(k.id) === String(c.ref.id)) : null;
+      let kind = notifKind(c); if (kind === 'cardEdit') kind = teamNotice(c.diffs, VIEWER) || kind;
+      const risk = c.ref && c.ref.type === 'risk' ? (p.risks || []).find(k => String(k.id) === String(c.ref.id)) : null;
       const k = `${p.id}:j:${c.date}:${c.kind}`;
       if (notifFor(kind, c.who, c.diffs, p, risk)) out.push({p, c, kind, k, date:c.date, who:c.who, unread:c.date > read && !notifSeen().has(k)});
     }
@@ -1874,14 +1897,16 @@ function notifItems(){
   }
   return out.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 }
-const NK = {created:'nkCreated', assigned:'nkAssigned', submitted:'nkSubmitted', decided:'nkDecided', applied:'nkApplied', archived:'nkArchived', risk:'nkRisk', cardEdit:'nkCardEdit', comment:'nkComment'};
+const NK = {created:'nkCreated', assigned:'nkAssigned', submitted:'nkSubmitted', decided:'nkDecided', applied:'nkApplied', archived:'nkArchived', risk:'nkRisk', cardEdit:'nkCardEdit', comment:'nkComment', teamAdded:'nkTeamAdded', teamRole:'nkTeamRole'};
 function notifPanel(onlyNew){
   const all = notifItems(), list = onlyNew ? all.filter(x => x.unread) : all;
   state.panel = {kind:'notif'};
   const item = x => {
     const act = x.c && x.c.ref ? `data-act="${x.c.ref.type === 'report' ? 'repopen' : 'riskopen'}" data-id="${x.p.id}" data-rid="${esc(x.c.ref.id)}"` : `data-act="openp" data-id="${x.p.id}"`;
+    const myRole = ((x.p.team || []).find(m => m.n === VIEWER) || {}).role || '—';
     const body = x.m ? `<div class="ntf-t">${esc(x.m.txt)}</div>`
-      : `${x.c.diffs && x.c.diffs.length ? `<div class="diffs">${x.c.diffs.map(d => `<div class="diff"><span class="df">${fl(d.f)}</span><span class="dv"><s>${valFmt(d.f, d.from)}</s><span class="arr">→</span>${valFmt(d.f, d.to)}</span></div>`).join('')}</div>` : ''}${x.c.reason ? `<div class="ntf-t">${esc(x.c.reason)}</div>` : ''}`;
+      : x.kind === 'teamAdded' || x.kind === 'teamRole' ? `<div class="ntf-t">${esc(t('ntfMyRole').replace('{r}', myRole))}</div>`
+      : `${shownDiffs(x.c.diffs).length ? `<div class="diffs">${shownDiffs(x.c.diffs).map(d => `<div class="diff"><span class="df">${fl(d.f)}</span><span class="dv"><s>${valFmt(d.f, d.from)}</s><span class="arr">→</span>${valFmt(d.f, d.to)}</span></div>`).join('')}</div>` : ''}${x.c.reason ? `<div class="ntf-t">${esc(x.c.reason)}</div>` : ''}`;
     return `<button class="ntf-i ${x.unread ? 'new' : 'old'}" data-k="${esc(x.k)}" ${act}><div class="ntf-h"><span class="ntf-p">${esc(x.p.code)} · ${esc(x.p.title)}</span><span class="chg-k">${t(NK[x.kind])}</span>${x.unread ? `<span class="pill ap" style="--c:var(--theme)">${t('notifNew')}</span>` : ''}<span class="muted">${esc(x.who || '')} · ${fmtDT(new Date(x.date))}</span></div>${body}</button>`;
   };
   openPanel(`<div class="ph"><div><div class="k">${entTag('notif')}</div><h2>${t('notifTitle')}</h2></div>${closeBtn()}</div>
@@ -1900,7 +1925,7 @@ function changesHtml(p, showAll){
   const kindL = {create:'kCreate', key:'kKey', edit:'kEdit', report:'kReport', approval:'kApproval', assign:'kAssign', submit:'kSubmit', risk:'kRiskEv'};
   const item = c => `<div class="chg">
     <div class="chg-h">${avatar(c.who, 'sm')}<b>${esc(c.who)}</b><span class="muted">${fmtDT(D(c.date))}</span><span class="chg-k chg-${c.kind}">${t(kindL[c.kind] || 'kEdit')}</span></div>
-    ${c.diffs && c.diffs.length ? `<div class="diffs">${c.diffs.map(d => `<div class="diff"><span class="df">${fl(d.f)}</span><span class="dv"><s>${valFmt(d.f, d.from)}</s><span class="arr">→</span>${valFmt(d.f, d.to)}</span></div>`).join('')}</div>` : ''}
+    ${shownDiffs(c.diffs).length ? `<div class="diffs">${shownDiffs(c.diffs).map(d => `<div class="diff"><span class="df">${fl(d.f)}</span><span class="dv"><s>${valFmt(d.f, d.from)}</s><span class="arr">→</span>${valFmt(d.f, d.to)}</span></div>`).join('')}</div>` : ''}
     ${c.reason ? `<div class="chg-r">${esc(c.reason)}</div>` : ''}
     ${c.ref ? `<button class="link chg-ref" data-act="${c.ref.type === 'report' ? 'repopen' : 'riskopen'}" data-id="${p.id}" data-rid="${esc(c.ref.id)}">${t(c.ref.type === 'report' ? 'openReport' : 'openRisk')} →</button>` : ''}</div>`;
   const shown = showAll ? list : list.slice(0, 3);
@@ -2089,6 +2114,8 @@ function projectForm(p){
       const same = k => LST[k] ? JSON.stringify(p[k] || []) === JSON.stringify(vals[k]) : String(p[k] ?? '') === String(vals[k] ?? '');
       const diffs = Object.keys(vals).filter(k => !same(k)).map(k => LST[k] ? {f:k, from:LST[k](p[k]), to:LST[k](vals[k])} : {f:k, from:p[k] ?? '', to:vals[k]});
       if (!diffs.length){ projectPanel(p.id, false); return; }
+      const tRows = list => (list || []).map(m => ({email:m.n, role:m.role}));
+      diffs.push(...teamMarks(tRows(p.team), tRows(vals.team)));
       Object.assign(p, vals);
       syncStakeholders(p);
       p.changes = (p.changes || []).concat([{id:uid(), date:new Date().toISOString(), who:VIEWER, kind:'edit', reason:'', diffs:diffs.filter(d => d.f !== 'desc')}]);

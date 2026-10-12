@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:ec851a5cd3cb — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:5b119197b435 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -660,6 +660,8 @@ $DATE_FIELDS = @("pmStart","pmGoLive","pmPlanEnd","pmForecastEnd","pmLastUpdate"
 $EDIT_DISPLAY = @{ Title = "Назва проєкту"; pmCode = "Код проєкту"; pmDepartment = "Напрям"; pmLoop = "Посилання на картку в Loop"; pmPriority = "Пріоритет"
                    pmManager = "PM"; pmOwner = "Власник"; pmStakeholders = "Стейкхолдери"; pmBudget = "Бюджет (план)"
                    pmTeam = "Команда проєкту"; pmLinks = "Посилання"
+                   # #84: служебные отметки правки команды (e-mail): кого добавили, у кого сменилась роль — сповіщення этому человеку
+                   teamIn = "Команда: додано учасників"; teamRole = "Команда: змінено роль"
                    srSchedule = "Терміни"; srBudget = "Бюджет"; srResources = "Ресурси"; srApproval = "Погодження звіту"
                    pmActualCost = "Витрати на дату"; pmArchivedAt = "Дата архівації"; pmLastUpdate = "Останній апдейт"; pmLastReport = "Останній звіт" }
 function EditLogRows([string]$json) {

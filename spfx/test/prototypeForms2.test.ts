@@ -382,3 +382,10 @@ describe('раунд 5: прототип', () => {
     expect(q('#f-iss-h').textContent).toMatch(/відкритих: \d+\)/);
   });
 });
+
+test('#89 таблицы: своё окно прокрутки на компьютере, заголовки колонок закреплены', () => {
+  const css = Array.from(w.document.querySelectorAll('style')).map((x: W) => x.textContent).join('\n');
+  expect(css).toMatch(/@media \(min-width:721px\)\{\.tablewrap\.dt\{overflow:auto;max-height:max\(360px,calc\(100vh - 300px\)\)\}\}/);
+  expect(css).toMatch(/\.dt thead th\{position:sticky;top:0;z-index:2;background:var\(--bg\);[^}]*\}/);
+  expect(css).not.toMatch(/\.dt th\{position:relative\}/);   // относительное положение сбило бы закрепление
+});

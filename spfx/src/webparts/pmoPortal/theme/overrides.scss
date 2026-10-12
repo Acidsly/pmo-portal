@@ -134,6 +134,11 @@
   @media (max-width: 600px) { .pmo-app .ovw-paper { padding: 12px; } .pmo-app .ovw .cards, .pmo-app .ovw .two, .pmo-app .ovw .arch { grid-template-columns: 1fr; } .pmo-app .ovw .phones { flex-wrap: wrap; } .pmo-app .ovw .phones figure { width: 100%; } }
   .pmo-app .ovw section { margin-top: 26px; padding-top: 18px; border-top: 1px solid #d5dbe8; }
   .pmo-app .ovw .tablewrap, .pmo-app .ovw table { max-width: 100%; }
+  /* #90: версия портала в «Довідці» и «Що змінилося» */
+  .pmo-app .rel-ver { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 0 0 14px; font-size: 13px; color: var(--text-2); }
+  .pmo-app .rel-i { padding: 14px 0; border-top: 1px solid var(--line); }
+  .pmo-app .rel-i:first-child { border-top: 0; padding-top: 4px; }
+  .pmo-app .rel-i h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; }
   .pmo-app .ovw img { max-width: 100%; height: auto; }
 }
 

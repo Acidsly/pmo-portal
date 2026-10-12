@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { shownDiffs } from '../logic/team';
 import { EntTag } from '../components/EntTag';
 import { tv } from '../i18n/values';
 import { AppCtx } from '../components/ctx';
@@ -183,7 +184,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
         <div key={c.id} className="chg">
           <div className="chg-h">{c.who ? <><Avatar name={c.who.name} /><b>{c.who.name}</b></> : null}<span className="muted">{c.date.length === 10 ? fmtDate(c.date) : fmtDT(c.date)}</span>
             <span className={'chg-k chg-' + c.kind}>{t(kindL[c.kind] || 'kEdit')}</span></div>
-          {c.diffs.length ? <div className="diffs">{c.diffs.map((d, i) => <div key={i} className="diff"><span className="df">{fl(d.f)}</span>
+          {shownDiffs(c.diffs).length ? <div className="diffs">{shownDiffs(c.diffs).map((d, i) => <div key={i} className="diff"><span className="df">{fl(d.f)}</span>
             <span className="dv"><s>{tv(d.from) || '—'}</s><span className="arr">→</span>{tv(d.to) || '—'}</span></div>)}</div> : null}
           {c.reason ? <div className="chg-r">{c.reason}</div> : null}
           {c.ref ? <RefLink r={c.ref} pid={p.id} /> : null}

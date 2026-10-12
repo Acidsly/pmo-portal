@@ -474,3 +474,30 @@ describe('раунд 5: отзывы 81–88', () => {
     expect((root.querySelector('#f-iss') as HTMLElement).parentElement!.querySelector('.hint')!.textContent).toContain('(відкритих: 1)');
   });
 });
+
+describe('#90 версия портала и «Що змінилося»', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { RELEASES } = require('../src/webparts/pmoPortal/help/releases');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { Help } = require('../src/webparts/pmoPortal/panels/Help');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { Releases, linkFeedback } = require('../src/webparts/pmoPortal/panels/Releases');
+  const pkg = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '../config/package-solution.json'), 'utf8'));
+  test('первый выпуск заметок — версия пакета; три языка — одинаковые версии и даты', () => {
+    expect(RELEASES[0][0].ver).toBe(pkg.solution.version);
+    for (const l of [1, 2]) expect(RELEASES[l].map((r: any) => r.ver + ' ' + r.date)).toEqual(RELEASES[0].map((r: any) => r.ver + ' ' + r.date));
+    expect(RELEASES[0][0].date).toMatch(/^\d\d\.\d\d\.\d{4}$/);
+  });
+  test('«Довідка»: строка версии и кнопка «Що змінилося»; панель — выпуски, текущий помечен, «#84» — ссылка на отзыв', () => {
+    let opened = 0; mount(<Help onCancel={() => undefined} onOverview={() => undefined} onReleases={() => { opened++; }} />);
+    expect((root.querySelector('#rel-ver') as HTMLElement).textContent).toContain(`Версія ${pkg.solution.version} · ${RELEASES[0][0].date}`);
+    act(() => { Simulate.click(root.querySelector('#rel-open') as HTMLElement); }); expect(opened).toBe(1);
+    ReactDOM.unmountComponentAtNode(root);
+    const fb: number[] = []; mount(<Releases onBack={() => undefined} onCancel={() => undefined} onFeedback={(n: number) => fb.push(n)} />);
+    expect(root.querySelectorAll('.rel-i').length).toBe(RELEASES[0].length);
+    expect((root.querySelector('.rel-i h3') as HTMLElement).textContent).toContain('поточна');
+    const a = root.querySelector('a.rel-fb[data-fb="84"]') as HTMLElement; expect(a).not.toBeNull();
+    act(() => { a.dispatchEvent(new MouseEvent('click', { bubbles: true })); }); expect(fb).toEqual([84]);
+    expect(linkFeedback('<li>x (#82, #84)</li>')).toBe('<li>x (<a href="#" class="rel-fb" data-fb="82">#82</a>, <a href="#" class="rel-fb" data-fb="84">#84</a>)</li>');
+  });
+});

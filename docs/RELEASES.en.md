@@ -1,0 +1,42 @@
+# What's new
+
+## 1.7.2.6 · 12.10.2026
+
+**New**
+- Notification "You were added to the project team" with your role, and when your role in the team changes (#84).
+- Long tables scroll in their own window: column headers stay pinned, the horizontal scroll bar is always visible at the bottom of the table (#89).
+- The portal version and "What's new" are in Help (the **?** button) (#90).
+- The project card shows the three latest status reports and "Show all reports (N)" (#82).
+
+**Changed**
+- "Report" column: the approval label and the date form one block, the date on its own line; tooltip "Submitted … · author" (#85).
+- The report field "Issues and risks" → "Issues and risks for the period", with a hint where the risk register is (#81).
+- Risk "Mitigation due date": for a new record — not earlier than today, when changed — not earlier than the registration date; an overdue one is marked "The due date has passed" (#88).
+- No empty space in the menu after "Feedback"; the project form says team members get access within ~15 minutes (#83).
+
+**Re-check**
+- Add a member to a project team — within ~15 minutes their bell shows "You were added to the team".
+- Risk form: a due date earlier than today (new record) — an error next to the field.
+- Long lists: column headers and the horizontal scroll bar stay visible.
+
+## 1.7.2.1 · 08.10.2026
+
+**Changed**
+- The report submission date is the day it is saved, the period is calculated (#62, #69).
+- Report form checks: actual completion, description of the decision needed (#64, #67, #68).
+- Project "Status" → "Project phase"; phase and type are written to every report (#77, #78).
+- "Report" column — approval of the newest report, filter by approval (#73); "Goal and description" — up to 10 lines (#71); buttons on the phone (#72).
+
+## 1.7.1 · 08.10.2026
+
+**New**
+- Notifications: a bell with the number of new events in your projects, "Mark all as read".
+- Archive by phase "Completed" / "Cancelled", views "Completed" / "Cancelled".
+- Section icons in the menu, a coloured label in every side window.
+
+## 1.7.0 · 04.10.2026
+
+**New**
+- "Assignment": only PMO changes the PM and the owner (#43).
+- Risk form: type first, then description (#47, #55); actual completion date (#54).
+- Sync runs in Azure Automation.

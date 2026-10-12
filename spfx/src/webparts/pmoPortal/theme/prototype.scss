@@ -407,6 +407,10 @@ form .fsec:first-child{margin-top:0}
 .c2 .pill{font-size:11px}
 .clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .strat-t{color:var(--strat);font-weight:600}
+/* #89: длинный список прокручивается внутри своего окна (высота — экран без шапок SharePoint и портала): заголовки колонок закреплены,
+   горизонтальная полоса — внизу видимой части таблицы; на телефоне — без своего окна (карточки или обычная прокрутка) */
+@media (min-width:721px){.tablewrap.dt{overflow:auto;max-height:max(360px,calc(100vh - 300px))}}
+.dt thead th{position:sticky;top:0;z-index:2;background:var(--bg);box-shadow:inset 0 -1px 0 var(--line)}
 .dt table td{white-space:normal;vertical-align:top;padding:12px 14px}
 .dt table td .prog{margin-top:4px}
 .dt th{padding:6px 10px 10px;vertical-align:bottom}
@@ -565,7 +569,7 @@ form .fsec:first-child{margin-top:0}
 .sec-h .more{display:inline-flex;align-items:center;gap:4px}
 .rlist{display:grid;gap:6px}
 /* #35, #49: ширина колонки — перетаскиванием границы заголовка (широкий экран) */
-.dt th{position:relative}
+.dt th{position:sticky}  /* закреплённый заголовок (#89) — он же опора для ручки ширины */
 .col-rs{position:absolute;top:0;right:-2px;width:6px;height:100%;cursor:col-resize;z-index:2;touch-action:none}
 .col-rs:hover,.col-rs.on{background:var(--theme-soft)}
 /* #58: на телефоне статус-звіти й ризики — картками (те самі рядки, фільтри й сортування, що в таблиці) */

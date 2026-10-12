@@ -49,6 +49,7 @@ Everything is counted only over the projects you can see (excluding the archive)
 - **Tiles** or **List** — the switch at the top. Tiles are handier on a phone.
 - **Show:** All projects, Strategic, At risk, My projects (all) — where I am PM, owner or on the team, **I am PM** — only projects where I am the PM, No recent report, Overdue.
 - **In the list:** click a column header to sort; the funnel ▽ filters by value; the gear ⚙ chooses and orders columns (↑ / ↓); on a computer, drag a column header's edge to change its width — it is remembered for each list, "Reset column widths" is in the gear menu; **CSV** exports the table as shown (the file opens in Excel). New records are on top. On a phone, status reports and risks are shown as cards (sorting and filters set on a computer apply there too).
+- **A long list** scrolls in its own window: column headers stay at the top, the horizontal scroll bar is always at the bottom of the visible part of the table, so the right-hand columns of the first rows are visible without scrolling the page down. On the phone — as before, without a separate window.
 - **Filters** (funnel and "Show") apply while you stay on the page: switching to another tab resets them to the defaults (column choice and sorting are remembered). Column widths do not change with filters.
 - **"Report" column** — the date of the last approved report, with the approval of the newest report below it (for "Awaiting approval" and "Returned for rework" — also the report date on its own line). Hover the label to see when and by whom the report was submitted. The column filter (⏷): by freshness and by approval — "Approved", "Awaiting approval", "Returned for rework", "No reports submitted".
 - **Project phase** (life-cycle stage) is a coloured label: Initiation — purple, Planning — blue, Execution — green, On hold — orange, Completed — green, Cancelled — grey. The dot next to it is the project health (green, yellow, red, grey — not rated).
@@ -129,6 +130,7 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
 - Click the bell to open **"Notifications"**: events for 14 days, new ones at the top and highlighted ("New"), already seen ones below. Clicking an event opens the card, status report or risk; **"← Notifications"** at the top takes you back to the list. "Only new" hides what you have seen.
 - Opening an event marks it as read and the number goes down. **"Mark all as read"** marks everything shown as read and the number disappears. Just opening the list marks nothing.
 - What you see depends on your role in the project: the PM, owner and team see project creation, assignments, PMO decisions on reports, indicator updates and comments; risks — the PM and the risk owner always, the owner and team only high ones (score 15 and above); card edits — the PM and the owner; the PMO sees reports submitted for approval and projects moved to the archive. Your own actions are not shown.
+- **You were added to a project team** or your role in it changed — a separate notification only for you: "You were added to the team" / "Your team role was changed" with your role; clicking it opens the card. It appears together with the access rights, within ~15 minutes. There is no notification about removal from a team — the project simply disappears from your list.
 - For a new participant notifications appear within ~15 minutes; earlier events are not treated as new.
 
 ## New project and editing
@@ -183,5 +185,7 @@ Do what applies to your role and after each task leave **feedback**: what was un
 10. Switch the language and theme; send feedback with a screenshot from your phone.
 
 ## Detailed system overview
+
+At the top of Help — the **portal version** and release date and **What's new →**: new features and fixes of the current release, numbers of implemented feedback items (click a number to open the item), what to re-check, and earlier releases.
 
 At the end of Help there is a **Detailed system overview** button: why the portal exists, what it consists of, every screen with screenshots, approval rules and security. The overview opens in the portal (in Ukrainian); **Download PDF** there saves or prints it.
