@@ -781,7 +781,7 @@ Set-PnPView -List $K -Identity $vRisks.Id -Values @{ DefaultView = $true } | Out
 
 # Дочерние списки разложены по папкам проектов P<ID> (права папки — синхронизация): все представления показывают записи
 # всех папок плоским списком, без самих папок
-foreach ($lst in @($R, $K, $C, $M, $AP, $TM)) {
+foreach ($lst in @($R, $K, $C, $M, $AP, $TM, $PA) | Where-Object { $_ }) {
     foreach ($v in (Get-PnPView -List $lst)) {
         if ($v.Scope -ne [Microsoft.SharePoint.Client.ViewScope]::Recursive) {
             Set-PnPView -List $lst -Identity $v.Id -Values @{ Scope = [Microsoft.SharePoint.Client.ViewScope]::Recursive } | Out-Null

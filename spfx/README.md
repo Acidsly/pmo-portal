@@ -1,77 +1,35 @@
-# pmo-portal
+# pmo-portal — додаток SPFx порталу «PPM — Портфель проєктів»
 
-## Summary
+Веб-частина `PmoPortalWebPart` (SPFx 1.23.2, React 17.0.1, TypeScript ~5.8, Heft 1.2.17, Node 22) на сторінці `SitePages/Portal.aspx` (`SingleWebPartAppPage`), пакет `pmo-portal.sppkg`. Працює від імені користувача через SharePoint REST. Архітектура — [../docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md#6-додаток-spfx), модель даних — [../docs/DATA-MODEL.md](../docs/DATA-MODEL.md), еталон інтерфейсу — `../prototype/pmo-prototype.html`.
 
-Short summary on functionality and used technologies.
+## Будова
 
-[picture of the solution in action, if possible]
+| Папка (`src/webparts/pmoPortal/`) | Що це |
+|---|---|
+| `logic/` | чисті правила (Jest, спільні з синхронізацією вектори `../tests/cases/*.json`) |
+| `data/` | `SpRepo` — читання й запис SharePoint REST, тіла записів, значення форм за регіональними налаштуваннями сайту |
+| `components/`, `pages/`, `panels/` | інтерфейс за прототипом: шапка, таблиці, головна, списки, картка, форми, сповіщення, «Довідка» |
+| `i18n/` | `strings.ts` (згенеровано з прототипу), `values.ts` — переклади значень вибору |
+| `theme/` | `prototype.scss` (згенеровано з прототипу), `overrides.scss` |
+| `help/` | `guide.ts`, `releases.ts`, `overview.ts` — згенеровано |
 
-## Used SharePoint Framework Version
+## Згенеровані файли (вручну не правляться)
 
-![version](https://img.shields.io/badge/version-1.23.2-green.svg)
+| Команда | Джерело → результат |
+|---|---|
+| `npm run extract` | `../prototype/pmo-prototype.html` → `i18n/strings.ts`, `theme/prototype.scss` |
+| `npm run guide` | `../docs/USER-GUIDE.{uk,en,ru}.md` → `help/guide.ts`; `../docs/RELEASES.{uk,en,ru}.md` → `help/releases.ts` («Що змінилося») |
+| `npm run overview` | `../docs/overview/overview.uk.html` → `help/overview.ts` |
 
-## Applies to
+## Команди
 
-- [SharePoint Framework](https://aka.ms/spfx)
-- [Microsoft 365 tenant](https://docs.microsoft.com/sharepoint/dev/spfx/set-up-your-developer-tenant)
+З кореня репозиторію, під Node 22 (`scripts/spfx.sh` підставляє `node@22` з Homebrew):
 
-> Get your own free development tenant by subscribing to [Microsoft 365 developer program](http://aka.ms/o365devprogram)
+```bash
+scripts/spfx.sh npm ci
+scripts/spfx.sh npm run test:unit   # Jest: правила, рендер у jsdom, прототип у jsdom
+scripts/spfx.sh npm run build       # перед комітом: лінтер збірки суворіший за tsc
+pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action app   # встановлення на тестовий сайт
+```
 
-## Prerequisites
-
-> Any special pre-requisites?
-
-## Solution
-
-| Solution    | Author(s)                                               |
-| ----------- | ------------------------------------------------------- |
-| folder name | Author details (name, company, twitter alias with link) |
-
-## Version history
-
-| Version | Date             | Comments        |
-| ------- | ---------------- | --------------- |
-| 1.1     | March 10, 2021   | Update comment  |
-| 1.0     | January 29, 2021 | Initial release |
-
-## Disclaimer
-
-**THIS CODE IS PROVIDED _AS IS_ WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.**
-
----
-
-## Minimal Path to Awesome
-
-- Clone this repository
-- Ensure that you are at the solution folder
-- in the command-line run:
-  - `npm install -g @rushstack/heft`
-  - `npm install`
-  - `heft start`
-
-> Include any additional steps as needed.
-
-Other build commands can be listed using `heft --help`.
-
-## Features
-
-Description of the extension that expands upon high-level summary above.
-
-This extension illustrates the following concepts:
-
-- topic 1
-- topic 2
-- topic 3
-
-> Notice that better pictures and documentation will increase the sample usage and the value you are providing for others. Thanks for your submissions advance.
-
-> Share your web part with others through Microsoft 365 Patterns and Practices program to get visibility and exposure. More details on the community, open-source projects and other activities from http://aka.ms/m365pnp.
-
-## References
-
-- [Getting started with SharePoint Framework](https://docs.microsoft.com/sharepoint/dev/spfx/set-up-your-developer-tenant)
-- [Building for Microsoft teams](https://docs.microsoft.com/sharepoint/dev/spfx/build-for-teams-overview)
-- [Use Microsoft Graph in your solution](https://docs.microsoft.com/sharepoint/dev/spfx/web-parts/get-started/using-microsoft-graph-apis)
-- [Publish SharePoint Framework applications to the Marketplace](https://docs.microsoft.com/sharepoint/dev/spfx/publish-to-marketplace-overview)
-- [Microsoft 365 Patterns and Practices](https://aka.ms/m365pnp) - Guidance, tooling, samples and open-source controls for your Microsoft 365 development
-- [Heft Documentation](https://heft.rushstack.io/)
+Тести — `test/`; правило, яке є і в синхронізації, і в додатку, перевіряється спільними векторами `../tests/cases/*.json`.

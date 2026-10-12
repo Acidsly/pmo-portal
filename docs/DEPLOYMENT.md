@@ -10,6 +10,11 @@
 | `scripts/Invoke-PMOSync.ps1` | Логика по расписанию: отчёт → карточка, журнал, архив, последний комментарий, права по иерархии, напоминания |
 | `scripts/Invoke-Env.ps1` | Запуск всего перечисленного с параметрами окружения из `config/environments.json` |
 | `scripts/Seed-TestData.ps1` | Демонстрационные данные для тестового сайта |
+| `scripts/Build-Runbook.ps1`, `scripts/Publish-Runbook.ps1` | Сборка runbook `runbooks/Invoke-PMOSync.ps1` (`Invoke-PMOSync.ps1` + `PMO.Common.ps1`) и публикация `PMO-Sync` в Azure Automation |
+| `scripts/New-PMOAutomation.ps1`, `scripts/Grant-PMOAutomation.ps1` | Ресурсы Azure Automation (учётная запись `aa-pmo-sync`, среда PowerShell 7.4 с PnP.PowerShell, переменная кэша) и права её управляемой учётной записи |
+| `scripts/Set-AzureSchedule.ps1` | Расписания Azure Automation и письмо при сбое задания |
+| `scripts/Set-MacSchedule.ps1` | Запасное расписание на Mac (launchd) |
+| `scripts/Export-Feedback.ps1`, `scripts/Set-FeedbackAnswers.ps1` | Выгрузка отзывов фокус-группы (`-Action feedback`) и статусы / ответы на них (`-Action feedback-answers`) |
 | `spfx/` | Приложение SPFx — интерфейс портала по прототипу |
 | `prototype/pmo-prototype.html` | Прототип интерфейса — эталон ([PROTOTYPE.md](PROTOTYPE.md)) |
 
@@ -53,10 +58,11 @@
 
 ## Установка
 
-Нужны PowerShell 7.2+, модуль PnP.PowerShell и права глобального администратора или администратора SharePoint.
+Нужны PowerShell 7.4+ (рекомендуется; скрипты проверяют 7.2, но PnP.PowerShell 3.x требует 7.4), модуль PnP.PowerShell 3.x, Node 22 (`brew install node@22`, для приложения SPFx), для Azure Automation — модули Az.Accounts, Az.Resources, Az.Automation, для PDF планов тестирования (`docs/testing/build.mjs`) — Google Chrome. Права глобального администратора или администратора SharePoint.
 
 ```powershell
 Install-Module PnP.PowerShell -Scope CurrentUser
+Install-Module Az.Accounts, Az.Resources, Az.Automation -Scope CurrentUser   # только для Azure Automation
 ```
 
 1. **Приложение для развёртывания:**
@@ -65,6 +71,12 @@ Install-Module PnP.PowerShell -Scope CurrentUser
    ```
    Скрипт выведет ClientId приложения PMO Deploy.
 
+   **Развёртывание без браузера** (тестовый сайт, Claude Code) — приложение PMO Automation (app-only, сертификат, Sites.FullControl.All):
+   ```powershell
+   ./Register-PMOApps.ps1 -Stage Automation -Tenant contoso.onmicrosoft.com -OutPath ../certs
+   ```
+   ClientId и сертификат — в секцию `test.Deploy` файла `config/environments.json`.
+
 2. **Развёртывание:**
    ```powershell
    ./Deploy-PMO.ps1 -TenantName contoso -ClientId <PMO Deploy> -Owner yurii@contoso.com
@@ -72,7 +84,7 @@ Install-Module PnP.PowerShell -Scope CurrentUser
 
 3. **Приложение синхронизации** (по умолчанию доступ только к сайту портала — Sites.Selected):
    ```powershell
-   ./Register-PMOApps.ps1 -Stage Sync -Tenant contoso.onmicrosoft.com -SiteUrl https://contoso.sharepoint.com/sites/ppm -DeployClientId <PMO Deploy>
+   ./Register-PMOApps.ps1 -Stage Sync -Tenant contoso.onmicrosoft.com -SiteUrl https://contoso.sharepoint.com/sites/ppm -DeployClientId <PMO Deploy> -OutPath ../certs
    ```
    Скрипт выведет ClientId приложения PMO Sync, отпечаток сертификата и путь к файлам `.pfx` / `.cer`. Если напоминания по почте не нужны, добавьте `-NoMail`.
 
@@ -88,11 +100,11 @@ Install-Module PnP.PowerShell -Scope CurrentUser
    ```powershell
    $pw = Read-Host -AsSecureString
    ./Invoke-PMOSync.ps1 -SiteUrl https://contoso.sharepoint.com/sites/ppm -ClientId <PMO Sync> -Tenant contoso.onmicrosoft.com `
-       -CertificatePath "./certs/PMO Sync.pfx" -CertificatePassword $pw -DryRun
+       -CertificatePath "../certs/PMO Sync.pfx" -CertificatePassword $pw -DryRun
    ```
    Затем тот же запуск без `-DryRun`.
 
-7. **Приложение SPFx** — `Invoke-Env.ps1 -Action app` (см. «Приложение SPFx»).
+7. **Приложение SPFx** — пока только на тестовом сайте: `Invoke-Env.ps1 -Env test -Action app` (см. «Приложение SPFx»). Установка на прод (каталог приложений тенанта) — этап 4, после подтверждения; `Deploy-App.ps1` сейчас отказывает для адресов не на `-test`.
 
 8. **Расписание** синхронизации — см. следующий раздел.
 
@@ -106,7 +118,7 @@ Install-Module PnP.PowerShell -Scope CurrentUser
 3. **Журнал.** По каждому изменённому показателю — строка в «Зміни показників»: было, стало, автор отчёта, причина. Для нового проекта — строка «Створення».
 4. **Комментарии.** «Останній коментар» в карточке — последний комментарий из списка «Коментарі» с автором и датой.
 5. **Тип проекта** копируется в колонку «Стратегічний» отчётов и рисков.
-6. **Права** — по таблице в разделе «Доступ»: записи проекта и **папке проекта** `P<ID проекта>` в каждом дочернем списке (статус-отчёты, риски, комментарии, журнал, команда, погодження). Записи внутри папки наследуют её права — число уникальных прав не растёт с числом отчётов (одна папка на проект в списке вместо прав на каждую запись; лимиты SharePoint: рекомендовано до 5 000, предел 50 000 на список). Записи, которые приложение создало в корне списка, синхронизация переносит в папку их проекта (ID, автор, даты, связи и версии сохраняются) и сбрасывает личные права; журнал пишется сразу в папку. Права пересчитываются только там, где изменился круг участников: хэш в поле `pmoAcl` проекта и папок; у архивного проекта — `arch:<хэш>`.
+6. **Права** — по таблице в разделе «Доступ»: записи проекта и **папке проекта** `P<ID проекта>` в каждом дочернем списке (статус-отчёты, риски, комментарии, журнал, команда, погодження). Записи внутри папки наследуют её права — число уникальных прав не растёт с числом отчётов (одна папка на проект в списке вместо прав на каждую запись; лимиты SharePoint: рекомендовано до 5 000, предел 50 000 на список). Записи, которые приложение создало в корне списка, синхронизация переносит в папку их проекта (ID, автор, даты, связи и версии сохраняются) и сбрасывает личные права; журнал пишется сразу в папку. Права пересчитываются только там, где изменился круг участников: хэш в поле `pmoAcl` проекта и папок (`v2:<хэш>`); у архивного проекта — `arch2:<хэш>` (прежняя модель — `arch:`).
    **Архив не пересчитывается:** если права архива уже выданы проекту и всем его папкам, обычный запуск его пропускает (без запросов в Entra ID); воскресный `-RebuildPermissions` пересчитывает и архив.
 7. **Напоминания** (с ключом `-SendReminders`). Каждому PM уходит одно письмо со списком его активных проектов без отчёта дольше `-ReminderDays` дней (по умолчанию 7).
 8. **Правки карточки** из приложения (скрытое поле `pmEditLog`) переносятся в журнал видом «Редагування картки», поле очищается.
@@ -119,7 +131,7 @@ Install-Module PnP.PowerShell -Scope CurrentUser
 
 **Скорость.** Права записи выдаются одним пакетным запросом (сброс, группа PMO, владельцы, люди, отметка `pmoAcl`); люди, группы и роли ищутся один раз за запуск; при ответе SharePoint 429 (ограничение частоты) запрос повторяется с паузой (`Invoke-PnPQuery -RetryCount`). На тесте: полный пересчёт прав 204 записей — 2,5 минуты (было 43 минуты), обычный запуск без изменений — около 25 секунд. Проверка «до / после» — `Invoke-Env.ps1 -Env test -Action acl-export -File <файл.json>` (фактические права всех записей портала, только чтение).
 
-**Кэш оргструктуры.** Руководители, имена и должности из Entra ID хранятся между запусками в `~/.pmo-sync/managers-<env>.json` и читаются заново не чаще раза в сутки (`-ManagerCacheHours`, по умолчанию 24). Поэтому смена руководителя в Entra ID попадает в права в течение суток; сразу — `-Action rebuild-permissions` (полный пересчёт кэш не использует и обновляет его). Сбой Graph в кэш не записывается. В Azure Automation домашняя папка не сохраняется между запусками — там кэш действует только на время запуска (перенести в хранилище Automation — при переезде).
+**Кэш оргструктуры.** Руководители, имена и должности из Entra ID хранятся между запусками в `~/.pmo-sync/managers-<env>.json` и читаются заново не чаще раза в сутки (`-ManagerCacheHours`, по умолчанию 24). Поэтому смена руководителя в Entra ID попадает в права в течение суток; сразу — `-Action rebuild-permissions` (полный пересчёт кэш не использует и обновляет его). Сбой Graph в кэш не записывается. В Azure Automation домашняя папка не сохраняется между запусками, поэтому кэш хранится в зашифрованной переменной учётной записи `pmo-managers-<env>` (`-ManagerCacheVariable`; переменную создаёт `New-PMOAutomation.ps1`, параметр передаёт `Set-AzureSchedule.ps1`).
 
 **Один запуск за раз.** Синхронизация берёт блокировку — служебную строку «Блокування синхронізації» в скрытом списке «Еталон показників» (`psProject = 0`): если идёт другой запуск (с Mac, из Azure Automation или вручную), новый сразу завершается с сообщением «уже выполняется». Захват — запись с проверкой версии (If-Match), поэтому из двух одновременных запусков блокировку получает один. Блокировка снимается в конце запуска, в том числе при ошибке; если запуск оборвался, она освобождается сама через 45 минут. Пробный запуск (`sync-dryrun`) блокировку не берёт. Параллельные запуски конфликтуют при выдаче прав («Конфлікт версій»). Если выдать права записи не удалось, отметка `pmoAcl` не ставится — следующий запуск повторит; после серии сбоев — `-Action rebuild-permissions`.
 
@@ -129,17 +141,23 @@ Install-Module PnP.PowerShell -Scope CurrentUser
 
 **Расписание:**
 - синхронизация — каждые 10–15 минут;
-- `-SendReminders -ReminderFrom pmo@contoso.com` — раз в неделю, например в понедельник утром;
+- `-SendReminders -ReminderFrom pmo@contoso.com` — раз в неделю, например в понедельник утром (в Azure Automation пока не настроено: `Set-AzureSchedule.ps1` такого расписания не создаёт, а у управляемой учётной записи нет Mail.Send);
 - `-RebuildPermissions` — раз в неделю ночью, чтобы учесть смену руководителей в Entra ID.
 
-**Рабочие запуски — в Azure Automation** с 04.10.2026 (тест): runbook `PMO-Sync`, расписания `scripts/Set-AzureSchedule.ps1 -Env test -Live` (каждые 15 минут, воскресенье 3:00 — пересчёт прав), письмо при сбое; после изменения скриптов синхронизации — `scripts/Build-Runbook.ps1`, коммит, `scripts/Publish-Runbook.ps1`. Откат на Mac: `Set-AzureSchedule.ps1 -Env test -Disable`, затем `Set-MacSchedule.ps1 -Env test -AllDay`.
+**Рабочие запуски — в Azure Automation** с 04.10.2026 (тест): учётная запись `aa-pmo-sync` (группа ресурсов `rg-pmo-automation`, Germany West Central), runbook `PMO-Sync`, вход управляемой учётной записью. Сначала вход в Azure: `Connect-AzAccount -Tenant <тенант> -Subscription <подписка> -UseDeviceAuthentication`. Расписания — `scripts/Set-AzureSchedule.ps1 -SiteUrl https://<тенант>.sharepoint.com/sites/pmo-test -Env test -Live -AlertEmail <e-mail>`: каждые 15 минут круглосуточно (четыре часовых расписания :00 / :15 / :30 / :45), воскресенье 3:00 по Киеву — пересчёт прав; письмо при сбое задания — только с `-AlertEmail`. Без `-Live` — пробный режим (`-DryRun`). После изменения скриптов синхронизации — `scripts/Build-Runbook.ps1`, коммит, `scripts/Publish-Runbook.ps1`. Откат на Mac: `Set-AzureSchedule.ps1 -SiteUrl … -Env test -Disable`, затем `Set-MacSchedule.ps1 -Env test -AllDay`.
 
-**Запасной вариант — Mac:** `pwsh -NoLogo -File scripts/Set-MacSchedule.ps1 -Env test` ставит задания launchd по тому же графику — пн–пт 8:00–20:00 каждые 15 минут, ежедневно 6:00 и 22:00, воскресенье 3:00 полный пересчёт прав. Работает, пока Mac включён и пользователь вошёл в систему; после сна пропущенный запуск выполняется сразу. Журнал — `~/Library/Logs/pmo-sync-test.log`. Снять — тот же скрипт с `-Remove`.
+**Запасной вариант — Mac:** `pwsh -NoLogo -File scripts/Set-MacSchedule.ps1 -Env test` ставит задания launchd: пн–пт 8:00–20:00 каждые 15 минут, ежедневно 6:00 и 22:00, воскресенье 3:00 полный пересчёт прав (`-AllDay` — каждые 15 минут круглосуточно, как в Azure). Работает, пока Mac включён и пользователь вошёл в систему; после сна пропущенный запуск выполняется сразу. Журнал — `~/Library/Logs/pmo-sync-test.log`. Снять — тот же скрипт с `-Remove`.
 
 Задания запускают `scripts/` **последнего коммита** (копия `git archive HEAD` в `~/Library/Application Support/PMO-sync/<env>`; `config/` и сертификат — из репозитория через `Invoke-Env.ps1 -RepoRoot`): незаконченные правки рабочей копии в синхронизацию по расписанию не попадают. После выкладки и коммита перезапустите `Set-MacSchedule.ps1` — копия обновится.
 
 Где запускать:
-- **Azure Automation:** runbook PowerShell 7.4; импортируйте модуль PnP.PowerShell; загрузите сертификат `.pfx` в «Сертификаты» учётной записи; в runbook передавайте `-Thumbprint`. Можно также подключаться через управляемое удостоверение (`-ManagedIdentity`) — тогда права Sites.Selected, User.Read.All и Mail.Send выдаются удостоверению.
+- **Azure Automation** (рабочий режим; вход `Connect-AzAccount … -UseDeviceAuthentication`, модули Az.Accounts, Az.Resources, Az.Automation):
+  1. `scripts/New-PMOAutomation.ps1 [-Wait]` — группа `rg-pmo-automation`, учётная запись `aa-pmo-sync` (Germany West Central) с системной управляемой учётной записью, среда PowerShell 7.4 с PnP.PowerShell 3.4.1, зашифрованная переменная кэша `pmo-managers-<env>` (`-CacheEnvs`, по умолчанию `test`);
+  2. `scripts/Grant-PMOAutomation.ps1 -SiteUrl <сайт> -DeployClientId <PMO Deploy>` (глобальный администратор) — Sites.Selected, User.Read.All и FullControl только на сайт портала (для второго сайта — с `-SkipAppRoles`);
+  3. `scripts/Build-Runbook.ps1` → коммит → `scripts/Publish-Runbook.ps1`;
+  4. `scripts/Set-AzureSchedule.ps1` (см. выше).
+
+  Runbook входит с `-ManagedIdentity`. Mail.Send управляемой учётной записи не выдаётся — напоминания из Azure пока не настроены.
 - **Сервер Windows:** «Планировщик заданий», `pwsh.exe -File Invoke-PMOSync.ps1 …`; сертификат — в хранилище компьютера, в скрипт передаётся `-Thumbprint`.
 
 В стандартных списках изменения из статус-отчёта появляются с задержкой до одного интервала расписания; в приложении они видны сразу.
@@ -182,7 +200,7 @@ New-ApplicationAccessPolicy -AppId <PMO Sync> -PolicyScopeGroupId "PMO Sync send
 - **Решения PMO в приложении.** Приложение считает доверенными все видимые ему решения в «Погодження звітів» (добавлять их может только PMO — права списка); синхронизация дополнительно проверяет автора. Действующее решение определяется без учёта текущего статуса отчёта — применяются всё равно только отчёты «Погоджено».
 - **Ограничение сверки с эталоном.** Законность правки ключевого поля определяется по полю «Змінив» карточки (последний человек, не служебная запись). Если владелец сайта исправил ключевое поле, а до ближайшей синхронизации PM изменил карточку (название, команда), правка владельца будет откачена — исправлять ключевые поля владельцу лучше статус-отчётом или повторить после синхронизации. Приложения (синхронизация, развёртывание, скрипты) распознаются по учётной записи «Програма SharePoint» (`i:0i.t|…|app@sharepoint`, так SharePoint подписывает записи входа приложения) или `i:0i.t|ms.sp.ext|…`; человек без e-mail доверенным не считается.
 
-**Переход на v2** (тест, затем прод — окно обслуживания, сайт в это время не используется): остановить расписание → `-Action deploy` (дважды — проверка идемпотентности) → `-Action app` → `-Action rebuild-permissions` (новые роли всем папкам, ~3 мин) → `sync-dryrun`, `sync` → переустановить расписание `Set-MacSchedule.ps1`.
+**Переход на v2** (тест, затем прод — окно обслуживания, сайт в это время не используется): выключить расписание (`Set-AzureSchedule.ps1 -SiteUrl … -Env <env> -Disable`) → `-Action deploy` (дважды — проверка идемпотентности) → `-Action app` → `-Action rebuild-permissions` (новые роли всем папкам, ~3 мин) → `sync-dryrun`, `sync` → `Build-Runbook.ps1`, `Publish-Runbook.ps1` → снова включить расписание (`Set-AzureSchedule.ps1 -SiteUrl … -Env <env> -Live`).
 
 ## Ключевые показатели и общее состояние
 
@@ -259,7 +277,7 @@ New-ApplicationAccessPolicy -AppId <PMO Sync> -PolicyScopeGroupId "PMO Sync send
 3. `Invoke-Env.ps1 -Env test -Action sync` — права и «Доступ до картки».
 4. После теста удалите `config/focus-group.json`.
 5. Отзывы: `Invoke-Env.ps1 -Env test -Action feedback` выгружает текст, экран, устройство и скриншоты в `feedback-export/` (вне git). Статусы, ответы и отзывы, пришедшие письмом, — файл `config/feedback-answers.json` и `Invoke-Env.ps1 -Env test -Action feedback-answers` (затем `-Action sync` — общий список «Відгуки — загальні»).
-6. На время теста расписание на Mac — круглосуточно: `scripts/Set-MacSchedule.ps1 -Env test -AllDay`.
+6. Синхронизация на тесте идёт в Azure Automation каждые 15 минут круглосуточно — отдельного расписания на время теста не нужно.
 7. Освежить демо-данные (свежие отчёты, сроки рисков демо-проектов PRJ-001…PRJ-010): `Invoke-Env.ps1 -Env test -Action refresh`, затем `-Action sync`.
 8. Единая нумерация проектов (PRJ-001… по порядку создания, журнал «було → стало»): `Invoke-Env.ps1 -Env test -Action renumber-dryrun`, затем `-Action renumber`. Номер нового проекта — только автоматический.
 
@@ -276,7 +294,9 @@ scripts/spfx.sh npm ci                                   # зависимост�
 scripts/spfx.sh npm run test:unit                        # модульные тесты логики
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action app   # сборка и установка на тестовый сайт
 ```
-`Deploy-App.ps1` один раз создаёт каталог приложений сайта (нужны права администратора SharePoint), загружает и обновляет пакет и делает страницу `SitePages/Portal.aspx` (приложение на весь экран) главной.
+`Deploy-App.ps1` (только сайт `…-test`): собирает пакет (`scripts/spfx.sh npm run build`, пропустить — `-SkipBuild`); один раз создаёт каталог приложений сайта (вход на `<тенант>-admin.sharepoint.com`, нужны права администратора SharePoint); загружает, публикует и устанавливает или обновляет пакет; создаёт страницу `SitePages/Portal.aspx` (приложение на весь экран) и делает её главной, шапка сайта — компактная, без названия; загружает «Детальний огляд системи» — `docs/overview/overview.uk.pdf` и `docs/overview/img/*.png` — в «Ресурси сайту»/`pmo-overview` (только файлы, изменившиеся по размеру).
+
+**Новая версия приложения:** поднять `solution.version` и версию feature в `spfx/config/package-solution.json` → дописать выпуск `## <версия> · <дд.мм.рррр>` в `docs/RELEASES.uk.md`, `.en.md`, `.ru.md` (Jest сверяет первый выпуск с версией пакета) → `scripts/spfx.sh npm run guide` → `scripts/spfx.sh npm run test:unit` и `npm run build` → `-Env test -Action app`. Без новой версии `Deploy-App.ps1` пишет «приложение актуально» и установленное приложение не обновляет.
 
 Ограничения: над приложением остаётся полоса Microsoft 365 (в Teams её нет); размещённый workbench SharePoint снимается 2026-12-01 — отладка на странице тестового сайта с `?debug=true&noredir=true&debugManifestsFile=https://localhost:4321/temp/build/manifests.js` при запущенном `scripts/spfx.sh npm run start`.
 
@@ -288,7 +308,7 @@ pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action app   # сборка
 - статус-отчёты, созданные до появления синхронизации, отмечаются применёнными, чтобы не задвоить журнал;
 - раунд 2 (один раз на проект, по отметке `pmMigrated`): стейкхолдеры → строки «Команда проєкту» с ролью «Стейкхолдер», ссылка на Loop → «Посилання»; уже применённые статус-отчёты → «Погоджено», остальные — «На погодженні»; в журнал добавлен вид «Погодження звіту».
 
-Порядок выкладки раунда 2 на сайт с работающей синхронизацией: снять расписание (`Set-MacSchedule.ps1 -Remove`) → `-Action deploy` → `-Action app` → `-Action sync` → коммит → снова поставить расписание (скрипты нового коммита).
+Порядок выкладки раунда 2 на сайт с работающей синхронизацией: выключить расписание (`Set-AzureSchedule.ps1 -SiteUrl … -Env <env> -Disable`) → `-Action deploy` → `-Action app` → `-Action sync` → коммит → `Build-Runbook.ps1`, `Publish-Runbook.ps1` → снова включить расписание (`Set-AzureSchedule.ps1 -SiteUrl … -Env <env> -Live`).
 
 **Архив по статусам «Завершено» / «Скасовано» (вместо «Архівний»), порядок выкладки:** (1) синхронизация — `Build-Runbook.ps1` → `Publish-Runbook.ps1`; она понимает оба варианта и, пока в выборе статуса нет «Завершено», пишет прежнее «Архівний»; `acl-export` до → `sync-dryrun` → `sync`; (2) приложение `-Action app`; (3) `deploy`: добавляет «Завершено» в выбор, переводит «Архівний» в «Завершено» / «Скасовано» по последнему итоговому отчёту (без записи в журнал, эталон обновляется), убирает «Архівний» из выбора, когда проектов с ним не осталось; (4) `sync-dryrun` → `sync` → `acl-export` после: права архивных проектов не изменились.
 

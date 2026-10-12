@@ -20,6 +20,13 @@
 | `spfx/` | Приложение SPFx (React) по прототипу: `logic/` — правила с тестами, `data/` — чтение SharePoint, `components/`, `pages/`. Спецификация и планы — `docs/superpowers/` |
 | `scripts/spfx.sh` | Команды в `spfx/` под Node 22: `scripts/spfx.sh npm run test:unit`, `scripts/spfx.sh npm run build` |
 | `scripts/Deploy-App.ps1` | Установка приложения на сайт (`-Env test -Action app`): каталог приложений сайта, страница `Portal` на весь экран — главная |
+| `scripts/Build-Runbook.ps1`, `scripts/Publish-Runbook.ps1` | Сборка runbook `runbooks/Invoke-PMOSync.ps1` (совпадение с исходниками проверяет `tests/Test-Scripts.ps1`) и публикация `PMO-Sync` в `aa-pmo-sync` — после каждого изменения синхронизации |
+| `scripts/Set-AzureSchedule.ps1` | Расписания Azure Automation (каждые 15 минут, воскресенье 3:00 — пересчёт прав) и письмо при сбое; `-SiteUrl` обязателен |
+| `scripts/New-PMOAutomation.ps1`, `scripts/Grant-PMOAutomation.ps1` | Ресурсы Azure Automation и права управляемой учётной записи (выполняет человек) |
+| `scripts/Set-MacSchedule.ps1` | Запасное расписание на Mac (launchd); снято с 04.10.2026 — рабочие запуски в Azure Automation |
+| `scripts/Export-Feedback.ps1` | Выгрузка отзывов (`-Action feedback`) в `feedback-export/` вне git |
+| `runbooks/` | Собранный runbook (не править вручную) и проверочный `PMO-WhoAmI.ps1` |
+| `docs/testing/` | Планы тестирования фокус-группы (`.md` и `.pdf`), PDF — `node docs/testing/build.mjs` |
 | `tests/cases/` | Общие тест-векторы: их проверяют и `tests/Test-Scripts.ps1`, и Jest в `spfx/test` |
 | `tests/Test-Scripts.ps1` | Проверки без доступа к SharePoint. Запускай после каждого изменения |
 | `prototype/pmo-prototype.html` | Прототип интерфейса — эталон UX ([docs/PROTOTYPE.md](docs/PROTOTYPE.md), скриншоты в `docs/img/`) |
@@ -42,6 +49,11 @@ pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action sync
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action seed          # демонстрационные данные, повторный запуск ничего не дублирует
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action refresh       # освежить демо-данные, затем sync
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action feedback-answers   # статусы и ответы на отзывы
+pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action app          # приложение SPFx (только test)
+pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action feedback     # выгрузка отзывов в feedback-export/
+pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action whois -Email <e-mail>        # почему человек не видит портал (только чтение)
+pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action acl-export -File <файл.json> # фактические права записей (только чтение)
+pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action rebuild-permissions          # полный пересчёт прав
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action sync-dryrun
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action deploy -ConfirmProduction   # только после подтверждения
 ```
@@ -52,7 +64,7 @@ pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action deploy -ConfirmProdu
 2. **Ветка.** `git switch -c change/<кратко>`.
 3. **Реализация.** Меняй согласованно прототип, скрипты и документацию — одно требование не должно жить только в одном месте.
 4. **Проверки.** `tests/Test-Scripts.ps1` и `scripts/spfx.sh npm run test:unit` должны проходить. Правило, которое есть и в синхронизации, и в приложении, проверяется общими векторами `tests/cases/*.json`. Поведение формы, которое есть и в приложении, и в прототипе, — тоже векторами: их прогоняет и Jest по `logic/`, и `spfx/test/prototypeForm.test.ts` на самом прототипе в jsdom (через кнопки интерфейса, каждый тест — на свежем прототипе). Состояние формы (открытие, смена статуса и проекта, что записывается) держи в чистых функциях `logic/`, а не внутри компонента; поведение самого компонента (ввод, фокус, перетаскивание, что показано) — тестом с рендером в jsdom (`spfx/test/components.test.tsx`). Перед коммитом кода приложения — полная сборка (`scripts/spfx.sh npm run build`): линтер сборки строже `tsc`. Нашёл ошибку — сначала тест, который её ловит (проверь, что без исправления он падает).
-5. **Тест-сайт.** `-Env test -Action deploy`, затем `sync-dryrun` и `sync`. Проверь результат и перечисли пользователю, что изменилось на сайте.
+5. **Тест-сайт.** `-Env test -Action deploy` → если менялось приложение — `-Env test -Action app` → `sync-dryrun` → `sync`; если менялся `Invoke-PMOSync.ps1` или `PMO.Common.ps1` — `scripts/Build-Runbook.ps1`, коммит, `scripts/Publish-Runbook.ps1` (иначе Azure Automation продолжит прежний код). Проверь результат и перечисли пользователю, что изменилось на сайте.
 6. **Коммит.** Понятное сообщение на русском, запись в `CHANGELOG.md`.
 7. **Ворота 1 — ревью человеком.** Покажи diff и итоги теста. `git push` и слияние — только после «да».
 8. **Ворота 2 — прод.** `-Env prod -Action deploy -ConfirmProduction` — только после отдельного «да». Перед этим `-Env prod -Action sync-dryrun`.
