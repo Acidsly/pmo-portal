@@ -1500,8 +1500,8 @@ const KDEF = {
 };
 TDEFS.projects = PDEF; TDEFAULTS.projects = ['strat','prio','title','pm','status','rag','repDate','progress','plan','update'];
 TDEFS.archive = PDEF; TDEFAULTS.archive = ['strat','prio','title','status','pm','owner','archived','ae','plan','budget','actual'];
-TDEFS.reports = RDEF; TDEFAULTS.reports = ['strat','prio','proj','date','rag','sched','budget','res','title','approval','author','decision'];
-TDEFS.risks = KDEF; TDEFAULTS.risks = ['strat','prio','proj','title','type','score','owner','status','due'];
+TDEFS.reports = RDEF; TDEFAULTS.reports = ['strat','prio','proj','date','rag','sched','budget','res','title','author','approval','decision'];   // как в приложении (defs.tsx)
+TDEFS.risks = KDEF; TDEFAULTS.risks = ['strat','prio','proj','title','type','score','strategy','owner','status','due'];   // как в приложении: стратегия реагування
 
 const icoSort = d => d === 'asc' ? '↑' : d === 'desc' ? '↓' : '';
 const icoFunnel = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M2 3h12l-4.5 5.5V13l-3 1.5V8.5z"/></svg>';

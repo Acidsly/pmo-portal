@@ -389,3 +389,11 @@ test('#89 таблицы: своё окно прокрутки на компью
   expect(css).toMatch(/\.dt thead th\{position:sticky;top:0;z-index:2;background:var\(--bg\);[^}]*\}/);
   expect(css).not.toMatch(/\.dt th\{position:relative\}/);   // относительное положение сбило бы закрепление
 });
+
+test('колонки по умолчанию — те же, что в приложении (статус-звіти, ризики)', () => {
+  const src = fs.readFileSync(path.join(__dirname, '../src/webparts/pmoPortal/components/defs.tsx'), 'utf8');
+  const app = (re: RegExp): string[] => JSON.parse((src.match(re) as RegExpMatchArray)[1].replace(/'/g, '"'));
+  const proto = (k: string): string[] => JSON.parse((HTML.match(new RegExp(`TDEFAULTS\\.${k} = (\\[[^\\]]*\\])`)) as RegExpMatchArray)[1].replace(/'/g, '"'));
+  expect(proto('reports')).toEqual(app(/lock: 'proj', cols, defaults: (\['strat', 'prio', 'proj', 'date'[^\]]*\])/));
+  expect(proto('risks')).toEqual(app(/lock: 'proj', cols, defaults: (\['strat', 'prio', 'proj', 'title'[^\]]*\])/));
+});
