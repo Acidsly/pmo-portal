@@ -127,9 +127,10 @@ tr.grp.collapsed .chev{transform:rotate(-90deg)}
 .dot.sm{width:8px;height:8px}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:999px;font-size:12px;font-weight:600;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--text);white-space:nowrap}
 .pill .dot{background:var(--c)}
-.rep-ap{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px}
+/* #85: метка и дата — один блок, дата своей строкой и не переносится внутри */
+.rep-ap{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin-top:4px;font-size:12px}.rep-ap .muted{white-space:nowrap}
 .rep-ap .pill{font-size:11.5px;padding:1px 8px 1px 6px}
-.tile-upd .ul .rep-ap{display:inline-flex;margin:0 0 0 6px}
+.tile-upd .ul .rep-ap{display:inline-flex;flex-direction:row;align-items:center;gap:6px;margin:0 0 0 6px}
 .pill.st{padding:3px 10px;background:color-mix(in srgb,var(--c) 18%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 35%,transparent)}
 .prog{display:inline-flex;align-items:center;gap:10px;min-width:130px}
 .prog .track{flex:1;height:6px;border-radius:3px;background:var(--track);overflow:hidden;min-width:70px}

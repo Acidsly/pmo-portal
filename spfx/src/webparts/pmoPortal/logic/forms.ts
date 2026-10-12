@@ -153,6 +153,14 @@ export const validateProject = (d: ProjectDraft, otherCodes: string[] = [], othe
     : codeTaken(d.code, otherCodes) ? 'errCode' : isNew && datesBeforeStart(d).length ? 'errDatesOrder' : validateTeamLinks(d.team, d.links));
 export const validateRisk = (d: RiskDraft): string => (!d.title.trim() ? 'errRiskTitle' : '');
 
+/** #88: «Термін виконання заходів» — новый риск не раньше сегодняшнего дня, существующий — не раньше даты регистрации;
+ *  пустой и не изменённый срок (даже просроченный) не блокируют. Ответ — дата, раньше которой нельзя, или ''. Векторы tests/cases/risk-due.json. */
+export function riskDueMin(due: string, prev: string, created: string, today: string): string {
+  if (!due || due === prev) return '';
+  const min = created ? created.slice(0, 10) : today;
+  return due < min ? min : '';
+}
+
 /** Изменения карточки для журнала («Редагування картки»); описание не журналируется, как в прототипе. */
 export function cardDiff(b: Project, d: ProjectDraft): { f: string; from: string; to: string }[] {
   const pairs: [string, string, string][] = [

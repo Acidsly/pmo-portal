@@ -425,3 +425,50 @@ describe('#62 / #69 сохранение отчёта: дата подання �
     expect(bodies[0].srPeriod).toBeUndefined();
   });
 });
+
+describe('раунд 5: отзывы 81–88', () => {
+  test('#85 метка «Звіт»: подсказка — когда и кем подан отчёт; дата под меткой и не переносится', () => {
+    mount(<RepMark r={{ approval: 'На погодженні', date: '2026-10-08', created: '2026-10-08T14:04:00Z', author: 'Дарина Д' }} />);
+    const el = root.querySelector('.rep-ap') as HTMLElement;
+    expect(el.title).toMatch(/^Подано 08\.10\.2026 \d\d:04 · Дарина Д$/);
+    ReactDOM.unmountComponentAtNode(root);
+    mount(<RepMark r={{ approval: 'Повернуто', date: '2026-10-01' }} />);
+    expect((root.querySelector('.rep-ap') as HTMLElement).title).toBe('Подано 01.10.2026 · —');
+    const css = require('fs').readFileSync(require('path').join(__dirname, '../src/webparts/pmoPortal/theme/prototype.scss'), 'utf8');
+    expect(css).toMatch(/\.rep-ap\{display:flex;flex-direction:column;[^}]*\}\.rep-ap \.muted\{white-space:nowrap\}/);
+  });
+
+  const today = (): string => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  const typeDate = (id: string, v: string): void => { act(() => { Simulate.change(root.querySelector('#' + id) as HTMLInputElement, { target: { value: v } } as any); }); };
+  test('#88 новый риск: срок 01.01.2000 — ошибка у поля, сохранить нельзя; сегодня — можно', () => {
+    const data = { projects: [{ id: 5, title: 'Проєкт П', status: 'Реалізація', canEdit: true, manager: { email: 'pm@x', name: 'PM' } }], risks: [], reports: [], comments: [], team: [] } as any;
+    mount(<RiskForm data={data} projectId={5} riskId={0} onCancel={() => undefined} />);
+    typeDate('k-due', '01.01.2000');
+    expect((root.querySelector('.ferr') as HTMLElement).textContent).toMatch(/^Термін не може бути раніше \d\d\.\d\d\.\d{4}\.$/);
+    act(() => { Simulate.change(root.querySelector('#k-title') as HTMLTextAreaElement, { target: { value: 'Ризик' } } as any); });
+    act(() => { Simulate.submit(root.querySelector('form') as HTMLFormElement); });
+    expect(root.querySelector('.err')!.textContent).toMatch(/^Термін не може бути раніше/);
+    const t0 = today().split('-').reverse().join('.');
+    typeDate('k-due', t0); expect(root.querySelector('.ferr')).toBeNull();
+  });
+  test('#88 существующий риск: прежний просроченный срок не блокирует — пометка «Термін минув»; закрытый — без пометки', () => {
+    const k = { id: 9, projectId: 5, title: 'Р', type: 'Ризик', probability: 3, impact: 3, owner: null, status: 'Відкрито', due: '2026-01-10', mitigation: '', strategy: '', contingency: '', created: '2026-01-05T09:00:00Z' };
+    const data = { projects: [{ id: 5, title: 'Проєкт П', status: 'Реалізація', canEdit: true, manager: { email: 'pm@x', name: 'PM' } }], risks: [k], reports: [], comments: [], team: [] } as any;
+    mount(<RiskForm data={data} projectId={5} riskId={9} onCancel={() => undefined} />);
+    expect((root.querySelector('.ferr') as HTMLElement).textContent).toBe('Термін минув — оновіть його або закрийте запис.');
+    typeDate('k-due', '01.01.2026');   // раньше регистрации (05.01.2026)
+    expect((root.querySelector('.ferr') as HTMLElement).textContent).toBe('Термін не може бути раніше 05.01.2026.');
+    typeDate('k-due', '10.01.2026');
+    act(() => { Simulate.change(root.querySelector('#k-status') as HTMLSelectElement, { target: { value: 'Закрито' } } as any); });
+    expect(root.querySelector('.ferr')).toBeNull();
+  });
+
+  test('#81 форма отчёта: «Проблеми та ризики за період» и подсказка о реестре с числом открытых', () => {
+    const data = { projects: [{ id: 5, title: 'Проєкт П', status: 'Реалізація', type: 'Звичайний', progress: 40, actualCost: 0, start: '2026-03-02', goLive: '', planEnd: '2026-12-01', forecastEnd: '',
+      canEdit: true, manager: { email: 'pm@x', name: 'PM' } }],
+      risks: [{ id: 1, projectId: 5, status: 'Відкрито' }, { id: 2, projectId: 5, status: 'Закрито' }, { id: 3, projectId: 6, status: 'Відкрито' }], reports: [], comments: [], team: [] } as any;
+    mount(<ReportForm data={data} projectId={5} onCancel={() => undefined} />);
+    expect((root.querySelector('label[for="f-iss"]') as HTMLElement).textContent).toBe('Проблеми та ризики за період');
+    expect((root.querySelector('#f-iss') as HTMLElement).parentElement!.querySelector('.hint')!.textContent).toContain('(відкритих: 1)');
+  });
+});

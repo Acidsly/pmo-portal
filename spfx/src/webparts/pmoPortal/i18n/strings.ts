@@ -296,6 +296,21 @@ export const T: Record<string, L3> = {
   "Show full history",
   "Показать всю историю"
  ],
+ "showReports": [
+  "Показати всі звіти",
+  "Show all reports",
+  "Показать все отчёты"
+ ],
+ "apSubTip": [
+  "Подано {date} · {who}",
+  "Submitted {date} · {who}",
+  "Подан {date} · {who}"
+ ],
+ "issuesHint": [
+  "Коротко — що заважало в цьому періоді. Реєстр ризиків і проблем проєкту — у картці, блок «Ризики та проблеми» (відкритих: {n}).",
+  "Briefly — what got in the way this period. The project risk and issue register is in the card, «Risks and issues» block (open: {n}).",
+  "Коротко — что мешало в этом периоде. Реестр рисков и проблем проекта — в карточке, блок «Риски и проблемы» (открытых: {n})."
+ ],
  "hideHistory": [
   "Згорнути",
   "Collapse",
@@ -722,9 +737,9 @@ export const T: Record<string, L3> = {
   "— не указано —"
  ],
  "accessRecalc": [
-  "Після зміни учасників права доступу буде перераховано.",
-  "Access will be recalculated after participants change.",
-  "После смены участников права доступа будут пересчитаны."
+  "Після зміни учасників права доступу оновляться протягом ~15 хвилин: тоді учасник побачить проєкт у своєму списку й у «Доступ до картки».",
+  "After participants change, access is updated within ~15 minutes: then the person sees the project in their list and in «Card access».",
+  "После смены участников права доступа обновятся в течение ~15 минут: тогда участник увидит проект в своём списке и в «Доступ к карточке»."
  ],
  "kCreate": [
   "Проєкт створено",
@@ -1551,6 +1566,16 @@ export const T: Record<string, L3> = {
   "Risk saved.",
   "Риск сохранён."
  ],
+ "errRiskDue": [
+  "Термін не може бути раніше {date}.",
+  "The due date cannot be earlier than {date}.",
+  "Срок не может быть раньше {date}."
+ ],
+ "riskOverdue": [
+  "Термін минув — оновіть його або закрийте запис.",
+  "The due date has passed — update it or close the record.",
+  "Срок истёк — обновите его или закройте запись."
+ ],
  "errRiskTitle": [
   "Опишіть ризик або проблему.",
   "Describe the risk or issue.",
@@ -1789,9 +1814,9 @@ export const FLD: Record<string, L3> = {
   "План на следующий период"
  ],
  "rIssues": [
-  "Проблеми та ризики",
-  "Issues and risks",
-  "Проблемы и риски"
+  "Проблеми та ризики за період",
+  "Issues and risks for the period",
+  "Проблемы и риски за период"
  ],
  "rDec": [
   "Потрібне рішення керівництва",

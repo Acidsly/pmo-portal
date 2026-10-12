@@ -4,6 +4,7 @@ import { Rag } from '../logic/rag';
 import { Fresh } from '../logic/status';
 import { Person } from '../data/types';
 import { daysBetween } from '../logic/dates';
+import { AppCtx } from './ctx';
 
 const RC: Record<string, string> = { 'Зелений': 'var(--g)', 'Жовтий': 'var(--y)', 'Червоний': 'var(--r)' };
 const FC: Record<Fresh, string> = { g: 'var(--g)', y: 'var(--y)', r: 'var(--r)', na: 'var(--na)' };
@@ -67,8 +68,12 @@ export const ApBadge: React.FC<{ v: string }> = ({ v }) =>
   <span className="pill ap" style={{ ['--c' as string]: AC[v || 'На погодженні'] } as React.CSSProperties}><span className="dot sm" />{tv(v || 'На погодженні')}</span>;
 
 /** Метка погодження самого нового отчёта (apMark прототипа): «Погоджено» / «На погодженні · дата» / «Повернуто · дата». */
-export const RepMark: React.FC<{ r: { approval: string; date: string } | null | undefined }> = ({ r }) => r
-  ? <span className="rep-ap"><ApBadge v={r.approval} />{r.approval !== 'Погоджено' ? <span className="muted">{fmtDate(r.date)}</span> : null}</span> : null;
+export const RepMark: React.FC<{ r: { approval: string; date: string; created?: string; author?: string } | null | undefined }> = ({ r }) => {
+  const c = React.useContext(AppCtx);
+  // #85: подсказка — когда и кем подан самый новый отчёт; дата под меткой (стили .rep-ap)
+  const tip = r ? c.t('apSubTip').replace('{date}', r.created ? fmtDT(r.created) : fmtDate(r.date)).replace('{who}', r.author || '—') : '';
+  return r ? <span className="rep-ap" title={tip}><ApBadge v={r.approval} />{r.approval !== 'Погоджено' ? <span className="muted">{fmtDate(r.date)}</span> : null}</span> : null;
+};
 
 /** Статус проекта или риска — цветная пилюля без точки (точка — у стану RAG). */
 const SC: Record<string, string> = { 'Ініціація': '#5856d6', 'Планування': 'var(--theme)', 'Реалізація': 'var(--g)', 'Призупинено': 'var(--y)',

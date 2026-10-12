@@ -24,7 +24,7 @@ export interface Project {
   /** Дата отчёта «на погодженні» по проекту (не применён), если есть — колонка «Звіт» и плитки (#29). */
   pendingDate?: string;
   /** Самый новый отчёт проекта и его погодження — метка в колонке «Звіт» и на плитке (latestReport). */
-  lastRep?: { approval: string; date: string } | null;
+  lastRep?: { approval: string; date: string; created?: string; author?: string } | null;
   /** События истории из неперенесённых отчётов — видны сразу, журнал запишет синхронизация. */
   pendingEvents?: ChangeEvent[];
   /** Дата-время создания (ISO) — базовая сортировка «новые сверху». */

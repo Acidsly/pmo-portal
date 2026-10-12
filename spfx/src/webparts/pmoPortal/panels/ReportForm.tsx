@@ -12,6 +12,7 @@ import { Frow, RagPick, SegPick, DateIn, Err, Opts, errText, guardText, FieldErr
 import { fmtDate, periodText } from '../components/Bits';
 import { todayIso } from '../logic/dates';
 import { guard } from '../logic/guard';
+import { ofProject } from '../logic/views';
 import { RagDot } from '../components/Bits';
 
 const REPORT_STATUSES = ['Ініціація', 'Планування', 'Реалізація', 'Призупинено'];
@@ -134,7 +135,9 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
       <Frow label={fl('rTitle')} htmlFor="f-t" req={true}><input type="text" id="f-t" placeholder={t('summaryPh')} aria-invalid={bad('title') || undefined} value={d.title} onChange={e => set({ title: e.target.value })} /></Frow>
       <Frow label={fl('rDone')} htmlFor="f-done"><textarea id="f-done" value={d.done} onChange={e => set({ done: e.target.value })} /></Frow>
       <Frow label={fl('rNext')} htmlFor="f-next"><textarea id="f-next" value={d.next} onChange={e => set({ next: e.target.value })} /></Frow>
-      <Frow label={fl('rIssues')} htmlFor="f-iss"><textarea id="f-iss" value={d.issues} onChange={e => set({ issues: e.target.value })} /></Frow>
+      <Frow label={fl('rIssues')} htmlFor="f-iss"><textarea id="f-iss" value={d.issues} onChange={e => set({ issues: e.target.value })} />
+        {/* #81: поле отчёта — не реестр рисков; сколько открытых рисков и проблем у проекта */}
+        <p className="hint">{t('issuesHint').replace('{n}', String(ofProject(data.risks, p.id).filter(k => k.status !== 'Закрито').length))}</p></Frow>
       <div className="frow"><label className="check"><input type="checkbox" checked={d.decision} onChange={e => set({ decision: e.target.checked })} /> {fl('rDec')}</label></div>
       {/* #68: при галочке — опис обязателен; ошибка — при уходе с поля и при отправке */}
       {d.decision ? <Frow label={fl('rDecText')} htmlFor="f-dect" req={true} err={fErr('decisionText') || (decTouched && !d.decisionText.trim() ? t('errDecision') : '')}>

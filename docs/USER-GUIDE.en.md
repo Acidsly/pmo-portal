@@ -50,7 +50,7 @@ Everything is counted only over the projects you can see (excluding the archive)
 - **Show:** All projects, Strategic, At risk, My projects (all) — where I am PM, owner or on the team, **I am PM** — only projects where I am the PM, No recent report, Overdue.
 - **In the list:** click a column header to sort; the funnel ▽ filters by value; the gear ⚙ chooses and orders columns (↑ / ↓); on a computer, drag a column header's edge to change its width — it is remembered for each list, "Reset column widths" is in the gear menu; **CSV** exports the table as shown (the file opens in Excel). New records are on top. On a phone, status reports and risks are shown as cards (sorting and filters set on a computer apply there too).
 - **Filters** (funnel and "Show") apply while you stay on the page: switching to another tab resets them to the defaults (column choice and sorting are remembered). Column widths do not change with filters.
-- **"Report" column** — the date of the last approved report, with the approval of the newest report below it. The column filter (⏷): by freshness and by approval — "Approved", "Awaiting approval", "Returned for rework", "No reports submitted".
+- **"Report" column** — the date of the last approved report, with the approval of the newest report below it (for "Awaiting approval" and "Returned for rework" — also the report date on its own line). Hover the label to see when and by whom the report was submitted. The column filter (⏷): by freshness and by approval — "Approved", "Awaiting approval", "Returned for rework", "No reports submitted".
 - **Project phase** (life-cycle stage) is a coloured label: Initiation — purple, Planning — blue, Execution — green, On hold — orange, Completed — green, Cancelled — grey. The dot next to it is the project health (green, yellow, red, grey — not rated).
 - **Colours:** a red completion date means the deadline has passed and the project is still open. The dot in the "Report" column is the freshness of the last approved report: green — up to 8 days, yellow — 9–14, red — over 14, grey — no approved reports yet (hover over the dot to see how many days old the report is). Below the date is the **approval of the newest report**: "Approved", "Awaiting approval" or "Returned for rework" (for the last two — the report date).
 
@@ -65,7 +65,7 @@ Click a project and its card opens on the right (full screen on a phone). Every 
 - **Change history** — who changed what and when: "old → new", the reason (including PMO decisions — "Report approval"); also **report submissions** ("Report submitted", including "New report based on the returned one") and **risks and issues** ("Added", field changes, "Closed") — with an "Open report" / "Open risk" link. These events appear after synchronization (~15 minutes);
 - **Comments** — the feed and "Add comment";
 - **Health history** — ratings from the latest reports;
-- **Status reports** — with the approval mark; click the date or summary to open a report; **Risks and issues**;
+- **Status reports** — the three latest, with the approval mark; **Show all reports (N)** — all of them, **Collapse** — three again; click the date or summary to open a report; **Risks and issues**;
 - **Card access** — who sees the project and with what rights.
 
 You can share a link to the card: the browser address points exactly to it.
@@ -77,7 +77,7 @@ You can share a link to the card: the browser address points exactly to it.
 3. Rate **schedule, budget and resources**: green, yellow, red. **Overall health** is calculated automatically — the worst of the three.
 4. **Key indicators** are prefilled with the current values. Change only what has changed: phase, % complete (a whole number from 0 to 100), type, dates, actual costs (amounts are shown with spaces between thousands: 1 450 000). Launch, planned end and forecast dates cannot be earlier than the start date. For "Completed — move to archive", % complete becomes 100 and cannot be changed. Enter dates as dd.mm.yyyy (dots are added automatically) or pick them in the calendar — the button on the right of the field. For "Completed" or "Cancelled" — the **actual completion date**: not earlier than the start date and not later than the submission date (the portal explains next to the field which date it compared with); enter a future completion as the forecast, an early one is fine.
 5. If you changed the phase, type or a date, fill in **Reason for changing indicators** (required, goes to the history).
-6. A **One-line summary** (required), what was done, the plan, issues. **Management decision needed** — tick it if further work needs a decision beyond the PM's authority: e.g. approving an additional budget, changing priorities or resolving a resource conflict. Then **Decision required** is mandatory: state which decision is needed and what happens without it. A regular PMO approval of the status report does not need this tick.
+6. A **One-line summary** (required), what was done, the plan, **issues and risks for the period** — briefly, what got in the way (the project's risk and issue register is separate, in the card, «Risks and issues» block). **Management decision needed** — tick it if further work needs a decision beyond the PM's authority: e.g. approving an additional budget, changing priorities or resolving a resource conflict. Then **Decision required** is mandatory: state which decision is needed and what happens without it. A regular PMO approval of the status report does not need this tick.
 7. **Save.** If something is missing or entered incorrectly, the portal highlights all such fields at once and explains next to the field what is wrong. The report goes **to the PMO for approval**; the card updates after approval. A submitted report cannot be changed.
 8. If the PMO **returned** the report, the PMO's comment is shown in the card and in the report itself. Click **New report based on the returned one**: the form is filled with the returned report's data — fix it and save.
 9. A report is **returned automatically** if the project PM changed before the PMO decision (the new PM submits a current report) or the project moved to the archive — the comment explains why.
@@ -116,7 +116,7 @@ The phase (Initiation, Planning, Execution, On hold, Cancelled, Completed) chang
 - **Probability** and **impact** are 1 to 5; the **score** = probability × impact: 15–25 — high (red), 8–14 — medium (yellow), 1–7 — low (green).
 - **Response strategy:** Avoid, Reduce (mitigate), Transfer, Accept (clicking the selected one again clears the choice).
 - **Risk reduction actions** — what we do now; **Contingency plan** — what we do if the risk occurs.
-- Set the risk owner, status (Open — orange label, In progress — blue, Closed — green) and the **Mitigation due date**. An overdue open risk is shown in red.
+- Set the risk owner, status (Open — orange label, In progress — blue, Closed — green) and the **Mitigation due date**: for a new record — not earlier than today, when changed — not earlier than the date the record was registered. An overdue open risk is shown in red; the form says "The due date has passed": update the date or close the record (other fields can be changed anyway).
 - "Show: High risks" — open risks with a score of 15 and above; "Risks of archived projects" — risks of archived projects (view-only).
 
 ## Comments
@@ -139,7 +139,7 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
   - **Project team** — "+ Add member": a person, their **role** (required) and what to contact them about; × removes the member;
   - **Links** — "+ Add link": a name and an address (starting with `https://`); × removes it.
 - Phase, health, dates and costs change only through a status report (see "How to change the project phase").
-- After the team changes, access rights are recalculated automatically: team members see the project and can comment.
+- After the team changes, access rights are recalculated automatically **within ~15 minutes**: then the person sees the project in their list and in «Card access» and can comment.
 - After the project is created, only the PMO changes the **PM and the owner**: in the card — **"Change PM / owner"** (new PM, new owner — an empty field means no change, the reason is required). The change shows in the card and in the "Change history" ("Assignment") right away and is finally applied by synchronization within ~15 minutes; until then a new change cannot be submitted. A report of the former PM that is pending approval is returned automatically.
 - After a **PM change** the former PM can no longer change the project right away; the new PM sees "You are assigned as PM of this project: edit access appears within 15 minutes" — the page refreshes by itself.
 
