@@ -1,6 +1,6 @@
 # What's new
 
-## 1.7.2.9 · 12.10.2026
+## 1.7.2.10 · 12.10.2026
 
 **New**
 - Notification "You were added to the project team" with your role, and when your role in the team changes (#84).
@@ -19,6 +19,8 @@
 - Add a member to a project team — within ~15 minutes their bell shows "You were added to the team".
 - Risk form: a due date earlier than today (new record) — an error next to the field.
 - Long lists: column headers and the horizontal scroll bar stay visible.
+- Bell: "New portal release" opens "What's new"; the feedback author gets "Feedback reviewed" after the status or answer changes.
+- Project card: the three latest reports and "Show all reports (N)"; "Report" column — tooltip "Submitted … · author".
 
 ## 1.7.2.1 · 08.10.2026
 
