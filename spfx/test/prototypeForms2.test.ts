@@ -289,8 +289,10 @@ test('меню прототипа: значок и название у кажд�
 test('шапка: название — своей строкой, ниже меню и кнопки; на телефоне меню отдельной строкой (перекрытие на 1440 px)', () => {
   const css = Array.from(w.document.querySelectorAll('style')).map((x: W) => x.textContent).join('\n');
   expect(css).toMatch(/\.brand\{[^}]*flex:1 0 100%\}/);
-  expect(css).toMatch(/\.nav\{[^}]*flex:1 1 0;min-width:0\}/);   // меню занимает место до кнопок и прокручивается внутри, кнопки не уходят ниже
-  expect(css).toMatch(/@media \(max-width:1279px\)\{\.nav\{order:3;flex:1 0 100%\}\}/);
+  // меню по ширине своих разделов (без пустого места справа), сжимается и прокручивается внутри — кнопки не уходят ниже
+  expect(css).toMatch(/\.nav\{[^}]*flex:0 1 auto;min-width:0\}/);
+  // меню своей строкой — разделы делят ширину поровну
+  expect(css).toMatch(/@media \(max-width:1279px\)\{\.nav\{order:3;flex:1 0 100%\}\.nav button\{flex:1 1 auto;justify-content:center\}\}/);
   const ov = fs.readFileSync(path.join(__dirname, '../src/webparts/pmoPortal/theme/overrides.scss'), 'utf8');
   expect(ov).not.toMatch(/\.pmo-app \.brand \{ flex:/);   // приложение не меняет строку названия
   expect(ov).not.toMatch(/\.top-in \{ flex-wrap: nowrap/);  // название и меню в одну строку — не помещается

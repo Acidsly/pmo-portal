@@ -66,7 +66,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(145deg,#0a84ff,#5e5ce6);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px;letter-spacing:-.02em;flex:none}
 .brand-name{font-weight:600;font-size:17px;letter-spacing:-.01em;line-height:1.2}
 .brand-sub{font-size:12px;color:var(--text-2)}
-.nav{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:12px;overflow-x:auto;max-width:100%;flex:1 1 0;min-width:0}
+.nav{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:12px;overflow-x:auto;max-width:100%;flex:0 1 auto;min-width:0}
 .nav button{border:0;background:none;padding:4px 14px 4px 5px;border-radius:9px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text-2);white-space:nowrap;transition:background-color .2s,color .2s;display:inline-flex;align-items:center;gap:8px}
 /* значок раздела: цветной контур на мягкой подложке; на телефоне — только значки (название — в подсказке) */
 .nav .ni{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none;color:var(--nc);background:color-mix(in srgb,var(--nc) 14%,transparent)}
@@ -74,7 +74,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .nav [data-page=home]{--nc:var(--nv-home)}.nav [data-page=projects]{--nc:var(--nv-projects)}.nav [data-page=reports]{--nc:var(--nv-reports)}
 .nav [data-page=risks]{--nc:var(--nv-risks)}.nav [data-page=archive]{--nc:var(--nv-archive)}.nav [data-page=feedback]{--nc:var(--nv-feedback)}
 /* уже 1280 px меню и кнопки в одну строку не помещаются — меню своей строкой (с подписями; на телефоне — только значки) */
-@media (max-width:1279px){.nav{order:3;flex:1 0 100%}}
+/* меню своей строкой — разделы делят ширину поровну, без пустого места справа */
+@media (max-width:1279px){.nav{order:3;flex:1 0 100%}.nav button{flex:1 1 auto;justify-content:center}}
 @media (max-width:720px){.nav button{flex:1;justify-content:center;padding:5px}.nav .nl{display:none}.nav .ni{width:30px;height:30px}}
 .nav button:hover{color:var(--text)}
 .nav button[aria-current="page"]{background:var(--bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
