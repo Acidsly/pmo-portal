@@ -1,4 +1,4 @@
-import { ChangeEntry, ChangeEvent, Comment, Person, Project, Risk } from '../data/types';
+import { ChangeEntry, ChangeEvent, Comment, FeedbackRow, Person, Project, Risk } from '../data/types';
 import { toEvents } from './changes';
 import { isArch } from './status';
 import { teamNotice, onlyHidden } from './team';
@@ -8,7 +8,7 @@ import { teamNotice, onlyHidden } from './team';
 /** Сповіщення: окно журнала в днях. */
 export const NOTIFY_DAYS = 14;
 
-export type NotifyKind = 'created' | 'assigned' | 'submitted' | 'decided' | 'applied' | 'archived' | 'risk' | 'cardEdit' | 'comment' | 'teamAdded' | 'teamRole';
+export type NotifyKind = 'created' | 'assigned' | 'submitted' | 'decided' | 'applied' | 'archived' | 'risk' | 'cardEdit' | 'comment' | 'teamAdded' | 'teamRole' | 'feedback' | 'release';
 
 /** Вид события истории: «Статус → Завершено / Скасовано» (прежнее «→ Архівний») в событии отчёта — архив; правка в обход, откаченная синхронизацией, — как отчёт. */
 export function notifyKind(ev: { kind: ChangeEvent['kind']; diffs: { f: string; to: string }[] }): NotifyKind {
@@ -58,16 +58,23 @@ export function notifyFor(kind: NotifyKind, author: string, diffs: { f: string; 
 
 /** Строка панели «Сповіщення»: событие журнала (номер — наибольший номер его строк) или комментарий. */
 export interface NotifyItem {
-  key: string; source: 'journal' | 'comment'; id: number; projectId: number; kind: NotifyKind; date: string; who: Person | null;
+  key: string; source: 'journal' | 'comment' | 'feedback' | 'release'; id: number; projectId: number; kind: NotifyKind; date: string; who: Person | null;
   ev?: ChangeEvent; comment?: Comment; unread: boolean;
+  /** «Відгук розглянуто»: мой отзыв, его статус и ответ; «Новий випуск»: версия и дата выпуска. */
+  fb?: { id: number; status: string; answer: string }; rel?: { ver: string; date: string };
 }
 /** «Прочитано до» (журнал / комментарии) и открытые поверх метки события (ключи «j<номер>» / «c<номер>»). */
 export interface ReadMarks { readId: number; readCmId: number; seen?: string[]; }
 /** Сколько открытых событий храним поверх метки (новейшие) — строка «Прочитане» не растёт без конца. */
 export const SEEN_MAX = 200;
+const OTHER_KEY = /^(f\d+@\S+|v[\w.]+)$/;
+/** Сколько ключей отзывов и выпусков храним (окно — 14 дней, больше не набирается). */
+export const SEEN_OTHER = 50;
 /** Открытые события: без повторов, только номера больше метки (остальное и так прочитано), не больше SEEN_MAX новейших. */
 export function pruneSeen(seen: string[], readId: number, readCmId: number): string[] {
   const out: { k: string; id: number }[] = [];
+  // отзыв («f<номер>@<когда розглянуто>») и выпуск («v<версия>») — без меток, только ключом; не больше SEEN_OTHER
+  const other = seen.filter((k, i) => OTHER_KEY.test(k) && seen.indexOf(k) === i).sort().slice(-SEEN_OTHER);
   for (const k of seen) {
     const m = /^([jc])(\d+)$/.exec(k); if (!m) continue;
     const id = Number(m[2]);
@@ -75,20 +82,21 @@ export function pruneSeen(seen: string[], readId: number, readCmId: number): str
     out.push({ k, id });
   }
   // устойчивый порядок (номер, затем ключ): одинаковый набор — одинаковая строка, без лишних записей
-  return out.sort((a, b) => b.id - a.id || (a.k < b.k ? -1 : a.k > b.k ? 1 : 0)).slice(0, SEEN_MAX).map(x => x.k);
+  return out.sort((a, b) => b.id - a.id || (a.k < b.k ? -1 : a.k > b.k ? 1 : 0)).slice(0, SEEN_MAX).map(x => x.k).concat(other);
 }
+const keyed = (x: { source: string }): boolean => x.source === 'feedback' || x.source === 'release';
 
 /** Новые сверху: непрочитанное — номер больше метки. Событие, дописанное синхронизацией после прочтения, снова новое — целиком. */
 export function notifyList(items: Omit<NotifyItem, 'unread'>[], marks: ReadMarks | null): NotifyItem[] {
   const seen = marks && marks.seen ? marks.seen : [];
-  return items.map(x => ({ ...x, unread: !!marks && x.id > (x.source === 'journal' ? marks.readId : marks.readCmId) && seen.indexOf(x.key) < 0 }))
+  return items.map(x => ({ ...x, unread: !!marks && (keyed(x) || x.id > (x.source === 'journal' ? marks.readId : marks.readCmId)) && seen.indexOf(x.key) < 0 }))
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.id - a.id));
 }
 /** «Позначити все прочитаним»: метки — до последнего показанного (только растут), открытые ниже метки — не нужны. */
 export function marksAfterView(items: NotifyItem[], marks: ReadMarks): ReadMarks {
   const max = (src: NotifyItem['source'], cur: number): number => items.filter(x => x.source === src).reduce((m, x) => Math.max(m, x.id), cur);
   const readId = max('journal', marks.readId), readCmId = max('comment', marks.readCmId);
-  return { readId, readCmId, seen: pruneSeen(marks.seen || [], readId, readCmId) };
+  return { readId, readCmId, seen: pruneSeen((marks.seen || []).concat(items.filter(keyed).map(x => x.key)), readId, readCmId) };
 }
 /** Открыл событие — прочитано именно оно (метки не двигаются). */
 export function marksAfterOpen(item: NotifyItem, marks: ReadMarks): ReadMarks {
@@ -103,6 +111,23 @@ export function mergeMarks(cur: ReadMarks, next: ReadMarks): ReadMarks {
 export function notifyProject(p: Project): NotifyProject {
   const team = (p.team || []).map(m => (m.user ? m.user.email : '')).concat((p.stakeholders || []).map(s => s.email)).filter(Boolean);
   return { status: p.status, pm: p.manager ? p.manager.email : '', owner: p.owner ? p.owner.email : '', team };
+}
+
+/** #колокольчик: «Відгук розглянуто» — мои отзывы, у которых за окно сменились статус или ответ (fpDecidedAt пишет синхронизация);
+ *  «Новий випуск» — текущий выпуск заметок «Що змінилося», если он моложе окна. Векторы — spfx/test/notify.test.ts. */
+export function extraItems(feedback: FeedbackRow[], rel: { ver: string; date: string } | null, sinceIso: string): Omit<NotifyItem, 'unread'>[] {
+  const out: Omit<NotifyItem, 'unread'>[] = [];
+  for (const r of feedback) {
+    if (!r.mine || !r.decidedAt || r.decidedAt < sinceIso || r.status === 'Новий') continue;
+    out.push({ key: `f${r.id}@${r.decidedAt}`, source: 'feedback', id: r.id, projectId: 0, kind: 'feedback', date: r.decidedAt, who: null,
+      fb: { id: r.id, status: r.status, answer: r.answer } });
+  }
+  const m = rel ? /^(\d\d)\.(\d\d)\.(\d{4})$/.exec(rel.date) : null;
+  if (rel && m) {
+    const iso = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]), 9).toISOString();   // 09:00 местного — день выпуска
+    if (iso >= sinceIso) out.push({ key: 'v' + rel.ver, source: 'release', id: 0, projectId: 0, kind: 'release', date: iso, who: null, rel });
+  }
+  return out;
 }
 
 /** Строки панели «Сповіщення»: события журнала за окно и комментарии — только мои по правилу (notifyFor), только видимые проекты. */

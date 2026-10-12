@@ -40,7 +40,7 @@ export const App: React.FC<AppProps> = p => {
   const [route, setRoute] = React.useState<Route>(() => parse(window.location.hash, DEFAULT_VIEWS));
   const [data, setData] = React.useState<PortalData | undefined>(undefined);
   // колокольчик: есть ли новые для меня события — пересчёт только при новых данных
-  const bellUnread = React.useMemo(() => (data ? notifyState(data, p.userEmail).unread : 0), [data, p.userEmail]);
+  const bellUnread = React.useMemo(() => (data ? notifyState(data, p.userEmail, lang).unread : 0), [data, p.userEmail, lang]);
   // переход из «Сповіщень»: вверху «← Сповіщення» — вернуться к списку
   const [ntfRet, setNtfRet] = React.useState(false);
   const [err, setErr] = React.useState('');

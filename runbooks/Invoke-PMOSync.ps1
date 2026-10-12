@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:5b119197b435 — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:3e513d3159a0 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -177,6 +177,16 @@ $STATE_DATES = @("pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd", "pmArchive
 # Проект в архиве: «Завершено» или «Скасовано» (векторы tests/cases/archive.json, те же — isArch приложения);
 # «Архівний» — прежнее значение, понимается до миграции (Deploy-PMO.ps1, раздел миграции архива)
 function Test-ArchivedStatus([string]$status) { return $status -in @("Завершено", "Скасовано", "Архівний") }
+# «Розглянуто» отзыва для колокольчика автора (fpDecidedAt, векторы tests/cases/feedback-decided.json): сменились статус или ответ
+# и статус не «Новий» — сейчас; прежняя строка без отметки и уже разобранный отзыв — время записи строки (Modified); иначе «keep» — не трогать.
+function Get-FeedbackDecidedAt($old, $new, [datetime]$now) {
+    $st = [string]$new["fpStatus"]
+    if (-not $st -or $st -eq "Новий") { return "keep" }
+    $changed = -not $old -or ((Norm $old["fpStatus"]) -ne $st) -or ((Norm $old["fpAnswer"]) -ne [string]$new["fpAnswer"])
+    if ($changed) { return $now.ToUniversalTime().ToString("o") }
+    if (-not $old["fpDecidedAt"] -and $old["Modified"]) { return ([datetime]$old["Modified"]).ToUniversalTime().ToString("o") }
+    return "keep"
+}
 # Исход прежнего «Архівний» при миграции (Deploy-PMO.ps1, раздел 6a3; векторы tests/cases/archive-migration.json):
 # (1) статус отчёта из эталона (psLastApplied), если итоговый; (2) новейший применённый итоговый отчёт (дата, затем номер);
 # (3) строка журнала прежней миграции «Скасовано -> Архівний» — «Скасовано»; (4) иначе «Завершено» и предупреждение. # archive-migration
@@ -1220,6 +1230,7 @@ if ($HAS_HIST) {
 # 2b. Відгуки → «Відгуки — загальні» (тест с фокус-группой): копия без скриншотов для страницы «Відгуки»
 # ---------------------------------------------------------------------------
 if ((Get-PnPList -Identity "Lists/Feedback" -ErrorAction SilentlyContinue) -and (Get-PnPList -Identity "Lists/FeedbackPublic" -ErrorAction SilentlyContinue)) {
+    $HAS_FP_DECIDED = [bool](Get-PnPField -List "Lists/FeedbackPublic" -Identity "fpDecidedAt" -ErrorAction SilentlyContinue)
     $pub = @{}
     foreach ($x in (Get-PnPListItem -List "Lists/FeedbackPublic" -PageSize 500)) { if ($x["fpId"]) { $pub[[int]$x["fpId"]] = $x } }
     foreach ($fb in (Get-PnPListItem -List "Lists/Feedback" -PageSize 500)) {
@@ -1228,7 +1239,12 @@ if ((Get-PnPList -Identity "Lists/Feedback" -ErrorAction SilentlyContinue) -and 
                   fpScreen = [string]$fb["fbScreen"]; fpText = [string]$fb["fbText"]; fpStatus = ([string]$fb["fbStatus"]); fpAnswer = [string]$fb["fbAnswer"]; fpShots = $shots }
         $old = $pub[$fb.Id]
         $same = $old -and ((Norm $old["fpText"]) -eq $vals.fpText) -and ((Norm $old["fpStatus"]) -eq $vals.fpStatus) -and ((Norm $old["fpAnswer"]) -eq $vals.fpAnswer) -and ([int]$old["fpShots"] -eq $shots) -and ((Norm $old["fpScreen"]) -eq $vals.fpScreen)
-        if ($same) { continue }
+        # колокольчик автора: «розглянуто» — когда сменились статус или ответ (не «Новий»); у прежних строк без отметки — время их записи
+        if ($HAS_FP_DECIDED) {
+            $decided = Get-FeedbackDecidedAt $old $vals ([datetime]::UtcNow)
+            if ($same -and $decided -eq "keep") { continue }
+            if ($decided -notin @("keep", "")) { $vals.fpDecidedAt = $decided }
+        } elseif ($same) { continue }
         $stats.feedback++
         if ($DryRun) { Log ("  відгук #{0} → загальний список ({1})" -f $fb.Id, $vals.fpStatus); continue }
         if ($old) { Set-PnPListItem -List "Lists/FeedbackPublic" -Identity $old.Id -Values $vals -UpdateType SystemUpdate | Out-Null }

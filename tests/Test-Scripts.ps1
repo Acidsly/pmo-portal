@@ -35,7 +35,7 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/assignments.json", "tests/cases/history.json", "tests/cases/notify-state.json", "tests/cases/archive.json", "tests/cases/archive-migration.json", "config/focus-group.example.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/assignments.json", "tests/cases/history.json", "tests/cases/notify-state.json", "tests/cases/archive.json", "tests/cases/feedback-decided.json", "tests/cases/archive-migration.json", "config/focus-group.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
@@ -64,7 +64,7 @@ foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/acl.json") | Conv
 }
 
 Write-Host "3c. Папки проектов: роли, заморозка архива, перенос записей (tests/cases/folders.json)"
-foreach ($n in @("Test-ArchivedStatus", "Get-FolderName", "Test-RowPlacement", "Get-FolderRole", "Get-GroupFolderRole", "Get-AclMark", "Get-ArchPrefix", "Test-ArchiveFrozen", "Get-RowAction")) {
+foreach ($n in @("Test-ArchivedStatus", "Norm", "Get-FeedbackDecidedAt", "Get-FolderName", "Test-RowPlacement", "Get-FolderRole", "Get-GroupFolderRole", "Get-AclMark", "Get-ArchPrefix", "Test-ArchiveFrozen", "Get-RowAction")) {
     $fn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $n }, $true) | Select-Object -First 1
     if ($fn) { Invoke-Expression $fn.Extent.Text } else { Bad "нет функции $n" }
 }
@@ -86,6 +86,12 @@ if ((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")) -match 'Ex
 $raw = @([regex]::Matches((Get-Content -Raw (Join-Path $root "scripts/Invoke-PMOSync.ps1")), 'Get-PnPListItem -List (\S+)') | ForEach-Object { $_.Groups[1].Value } | Where-Object { $_ -notin @('$list', '$L_PROJ', '"Lists/FeedbackPublic"', '"Lists/Feedback"') })
 if ($raw) { Bad "Get-PnPListItem без отбрасывания папок: $($raw -join ', ')" } else { Ok "дочерние списки — без папок" }
 
+Write-Host "3c00. Колокольчик: «Відгук розглянуто» (Get-FeedbackDecidedAt, tests/cases/feedback-decided.json)"
+$fdc = Get-Content -Raw (Join-Path $root "tests/cases/feedback-decided.json") | ConvertFrom-Json -AsHashtable -DateKind String
+foreach ($c in $fdc.cases) {
+    $r = Get-FeedbackDecidedAt $c.old $c.new ([datetime]::Parse($fdc.now, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::AdjustToUniversal))
+    if ($r -eq $c.out) { Ok "розглянуто: $($c.name)" } else { Bad "розглянуто: $($c.name) -> $r, ожидалось $($c.out)" }
+}
 Write-Host "3c0. Архив: «Завершено» / «Скасовано» (Test-ArchivedStatus, tests/cases/archive.json)"
 foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/archive.json") | ConvertFrom-Json).cases) {
     $r = Test-ArchivedStatus $c.status; if ($r -eq $c.archived) { Ok "архів: «$($c.status)» -> $r" } else { Bad "архів: «$($c.status)» -> $r, ожидалось $($c.archived)" }

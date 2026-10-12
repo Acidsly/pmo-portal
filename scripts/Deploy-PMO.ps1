@@ -590,6 +590,8 @@ if ($Feedback) {
     F $FP fpStatus  Text     "Статус розгляду"    "Review status"       "Статус рассмотрения"  "MaxLength='50'"
     F $FP fpAnswer  Note     "Відповідь"          "Answer"              "Ответ"                "NumLines='4' RichText='FALSE'"
     F $FP fpShots   Number   "Скриншотів"         "Screenshots"         "Скриншотов"           "Decimals='0'"
+    # колокольчик автора: когда синхронизация увидела новый статус или ответ
+    F $FP fpDecidedAt DateTime "Розглянуто"       "Reviewed"            "Рассмотрено"          "Format='DateTime'"
     $script:Loc += , @($FP, "Title", "Коротко", "Summary", "Кратко")
     Set-PnPField -List $FP -Identity "Title" -Values @{ Required = $false } | Out-Null
     #region feedback-format

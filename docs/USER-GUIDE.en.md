@@ -131,6 +131,8 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
 - Opening an event marks it as read and the number goes down. **"Mark all as read"** marks everything shown as read and the number disappears. Just opening the list marks nothing.
 - What you see depends on your role in the project: the PM, owner and team see project creation, assignments, PMO decisions on reports, indicator updates and comments; risks — the PM and the risk owner always, the owner and team only high ones (score 15 and above); card edits — the PM and the owner; the PMO sees reports submitted for approval and projects moved to the archive. Your own actions are not shown.
 - **You were added to a project team** or your role in it changed — a separate notification only for you: "You were added to the team" / "Your team role was changed" with your role; clicking it opens the card. It appears together with the access rights, within ~15 minutes. There is no notification about removal from a team — the project simply disappears from your list.
+- **Your feedback was reviewed** — the "Feedback reviewed" notification: the item number, status and answer; clicking it opens the item. A new answer to the same item — a new notification.
+- **New portal release** — a notification for everyone with the version number; clicking it opens "What's new".
 - For a new participant notifications appear within ~15 minutes; earlier events are not treated as new.
 
 ## New project and editing

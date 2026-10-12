@@ -242,7 +242,9 @@ describe('сповіщення: колокольчик и панель', () => {
   const data = (notify: any): any => ({ projects: [{ id: 1, code: 'PRJ-001', title: 'П1', status: 'Реалізація', manager: person('pm@x', 'PM'), owner: null, team: [], stakeholders: [] }],
     risks: [], reports: [], comments: [{ id: 7, projectId: 1, text: 'Новий коментар', author: person('au@x', 'Автор'), created: now }],
     recent: [{ id: 30, projectId: 1, date: now, who: person('au@x', 'Автор'), kind: 'Подання звіту', field: 'srApproval', from: '', to: 'На погодженні', reason: 'Звіт', item: 12 }],
-    canApprove: false, notify });
+    canApprove: false, notify: notify && { ...notify, seen: [...(notify.seen || []), V] } });   // текущий выпуск уже прочитан — в этих тестах не мешает
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const V = 'v' + require('../src/webparts/pmoPortal/help/releases').RELEASES[0][0].ver;
   const head = (bell: any): void => mount(<Header page="home" lang={0} theme="light" userName="PM" userEmail="pm@x" onPage={() => undefined} onLang={() => undefined}
     onTheme={() => undefined} onHelp={() => undefined} bell={bell} />);
   test('шапка: число новых и покачивание только при новых; больше 99 — «99+»', () => {
@@ -259,7 +261,7 @@ describe('сповіщення: колокольчик и панель', () => {
     const marked: any[] = []; const opened: string[] = [];
     const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } }, reload: async () => undefined };
     await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 20, readCmId: 5 })} onOpen={(f, id) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
-    const items = Array.from(root.querySelectorAll('.ntf-i'));
+    const items = Array.from(root.querySelectorAll('.ntf-i:not(.rel-n)'));
     expect(items.length).toBe(1);   // подача отчёта — только PMO; PM видит комментарий
     expect(items[0].className).toContain('new');
     expect(root.textContent).toContain('Новий коментар');
@@ -268,16 +270,16 @@ describe('сповіщення: колокольчик и панель', () => {
     // открыл событие — прочитано именно оно (метки не двигаются)
     await act(async () => { (items[0] as HTMLElement).click(); await Promise.resolve(); });
     expect(opened).toEqual(['@1']);
-    expect(marked).toEqual([{ readId: 20, readCmId: 5, seen: ['c7'] }]);
+    expect(marked).toEqual([{ readId: 20, readCmId: 5, seen: ['c7', V] }]);
     await act(async () => { (root.querySelector('#ntf-all') as HTMLElement).click(); await Promise.resolve(); });
-    expect(marked[1]).toEqual({ readId: 20, readCmId: 7, seen: [] });
+    expect(marked[1]).toEqual({ readId: 20, readCmId: 7, seen: [V] });
   });
   test('открыл уже прочитанное событие — ничего не пишется, «Нових» нет', async () => {
     const marked: any[] = []; const opened: string[] = [];
     const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } }, reload: async () => undefined };
     await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 30, readCmId: 7 })} onOpen={(f, id) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
     expect(root.querySelector('#ntf-n')).toBeNull();
-    await act(async () => { (root.querySelector('.ntf-i') as HTMLElement).click(); await Promise.resolve(); });
+    await act(async () => { (root.querySelector('.ntf-i:not(.rel-n)') as HTMLElement).click(); await Promise.resolve(); });
     expect(opened).toEqual(['@1']); expect(marked).toEqual([]);
   });
   test('строки «Прочитане» ещё нет — подсказка, ничего не пишется', async () => {
@@ -499,5 +501,30 @@ describe('#90 версия портала и «Що змінилося»', () =>
     const a = root.querySelector('a.rel-fb[data-fb="84"]') as HTMLElement; expect(a).not.toBeNull();
     act(() => { a.dispatchEvent(new MouseEvent('click', { bubbles: true })); }); expect(fb).toEqual([84]);
     expect(linkFeedback('<li>x (#82, #84)</li>')).toBe('<li>x (<a href="#" class="rel-fb" data-fb="82">#82</a>, <a href="#" class="rel-fb" data-fb="84">#84</a>)</li>');
+  });
+});
+
+describe('колокольчик: отзыв и выпуск в панели', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { NotifyPanel: NP } = require('../src/webparts/pmoPortal/panels/NotifyPanel');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { RELEASES } = require('../src/webparts/pmoPortal/help/releases');
+  test('«Відгук розглянуто» открывает отзыв, «Новий випуск» — «Що змінилося»; открытие — прочитано ключом', async () => {
+    const marked: any[] = []; const opened: string[] = [];
+    const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } }, reload: async () => undefined };
+    const now = new Date().toISOString();
+    const d: any = { projects: [], risks: [], reports: [], comments: [], recent: [], canApprove: false, notify: { id: 1, readId: 0, readCmId: 0, seen: [] },
+      feedbackRows: [{ id: 84, created: '', author: '', screen: '', text: '', status: 'Зроблено', answer: 'Готово, див. 1.7.2.7', shots: 0, mine: true, files: [], decidedAt: now }] };
+    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NP data={d} onOpen={(f: string, id: number) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    const f = root.querySelector('.ntf-i.fb-n') as HTMLElement;
+    expect(f.textContent).toContain('Ваш відгук #84'); expect(f.textContent).toContain('Відгук розглянуто'); expect(f.textContent).toContain('Зроблено'); expect(f.textContent).toContain('Готово, див. 1.7.2.7');
+    await act(async () => { f.click(); await Promise.resolve(); });
+    expect(opened).toEqual(['fb:84@0']); expect(marked[0].seen).toEqual([`f84@${now}`]);
+    const r = root.querySelector('.ntf-i.rel-n') as HTMLElement;
+    if (r && RELEASES[0][0]) {   // выпуск моложе 14 дней — в колокольчике у всех (позже — события нет)
+      expect(r.textContent).toContain('Новий випуск порталу'); expect(r.textContent).toContain(`Версія ${RELEASES[0][0].ver}`);
+      await act(async () => { r.click(); await Promise.resolve(); });
+      expect(opened[1]).toBe('releases@0');
+    }
   });
 });

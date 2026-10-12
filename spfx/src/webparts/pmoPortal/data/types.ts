@@ -82,4 +82,6 @@ export interface ChangeEvent { id: number; date: string; who: Person | null; kin
 export interface FeedbackRow {
   id: number; created: string; author: string; screen: string; text: string; status: string; answer: string;
   shots: number; mine: boolean; files: { name: string; url: string }[];
+  /** Когда синхронизация увидела новый статус или ответ (fpDecidedAt) — для колокольчика автора. */
+  decidedAt?: string;
 }

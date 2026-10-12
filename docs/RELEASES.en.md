@@ -1,11 +1,12 @@
 # What's new
 
-## 1.7.2.7 · 12.10.2026
+## 1.7.2.8 · 12.10.2026
 
 **New**
 - Notification "You were added to the project team" with your role, and when your role in the team changes (#84).
 - Long tables scroll in their own window: column headers stay pinned, the horizontal scroll bar is always visible at the bottom of the table (#89).
-- The portal version and "What's new" are in Help (the **?** button) (#90).
+- The portal version and "What's new" are in Help (the **?** button) (#90); the bell announces a new release.
+- Bell: "Feedback reviewed" — when the status of or answer to your feedback changes.
 - The project card shows the three latest status reports and "Show all reports (N)" (#82).
 
 **Changed**

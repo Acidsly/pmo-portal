@@ -1024,6 +1024,7 @@ if ($HAS_HIST) {
 # 2b. Відгуки → «Відгуки — загальні» (тест с фокус-группой): копия без скриншотов для страницы «Відгуки»
 # ---------------------------------------------------------------------------
 if ((Get-PnPList -Identity "Lists/Feedback" -ErrorAction SilentlyContinue) -and (Get-PnPList -Identity "Lists/FeedbackPublic" -ErrorAction SilentlyContinue)) {
+    $HAS_FP_DECIDED = [bool](Get-PnPField -List "Lists/FeedbackPublic" -Identity "fpDecidedAt" -ErrorAction SilentlyContinue)
     $pub = @{}
     foreach ($x in (Get-PnPListItem -List "Lists/FeedbackPublic" -PageSize 500)) { if ($x["fpId"]) { $pub[[int]$x["fpId"]] = $x } }
     foreach ($fb in (Get-PnPListItem -List "Lists/Feedback" -PageSize 500)) {
@@ -1032,7 +1033,12 @@ if ((Get-PnPList -Identity "Lists/Feedback" -ErrorAction SilentlyContinue) -and 
                   fpScreen = [string]$fb["fbScreen"]; fpText = [string]$fb["fbText"]; fpStatus = ([string]$fb["fbStatus"]); fpAnswer = [string]$fb["fbAnswer"]; fpShots = $shots }
         $old = $pub[$fb.Id]
         $same = $old -and ((Norm $old["fpText"]) -eq $vals.fpText) -and ((Norm $old["fpStatus"]) -eq $vals.fpStatus) -and ((Norm $old["fpAnswer"]) -eq $vals.fpAnswer) -and ([int]$old["fpShots"] -eq $shots) -and ((Norm $old["fpScreen"]) -eq $vals.fpScreen)
-        if ($same) { continue }
+        # колокольчик автора: «розглянуто» — когда сменились статус или ответ (не «Новий»); у прежних строк без отметки — время их записи
+        if ($HAS_FP_DECIDED) {
+            $decided = Get-FeedbackDecidedAt $old $vals ([datetime]::UtcNow)
+            if ($same -and $decided -eq "keep") { continue }
+            if ($decided -notin @("keep", "")) { $vals.fpDecidedAt = $decided }
+        } elseif ($same) { continue }
         $stats.feedback++
         if ($DryRun) { Log ("  відгук #{0} → загальний список ({1})" -f $fb.Id, $vals.fpStatus); continue }
         if ($old) { Set-PnPListItem -List "Lists/FeedbackPublic" -Identity $old.Id -Values $vals -UpdateType SystemUpdate | Out-Null }

@@ -1985,6 +1985,21 @@ export const EXTRA: Record<string, L3> = {
   "current",
   "текущая"
  ],
+ "nkFeedback": [
+  "Відгук розглянуто",
+  "Feedback reviewed",
+  "Отзыв рассмотрен"
+ ],
+ "nkRelease": [
+  "Новий випуск порталу",
+  "New portal release",
+  "Новый выпуск портала"
+ ],
+ "fbNumT": [
+  "Ваш відгук #{n}",
+  "Your feedback #{n}",
+  "Ваш отзыв #{n}"
+ ],
  "overviewLead": [
   "Хочете більше? Детальний огляд: навіщо система, з чого складається, усі екрани зі скриншотами, правила й безпека.",
   "Want more? The detailed overview (in Ukrainian): why the system exists, its parts, every screen with screenshots, rules and security.",
