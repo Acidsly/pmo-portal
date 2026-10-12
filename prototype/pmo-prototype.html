@@ -1532,7 +1532,7 @@ function dataTable(key, rows, emptyMsg){
   }).join('');
   const body = data.map(r => `<tr class="row">${cols.map(([id, d]) => `<td class="${d.cls || ''}">${d.main(r)}</td>`).join('')}</tr>`).join('');
   return `<div class="dt-bar"><span class="muted">${t('shown')} ${data.length} ${t('of')} ${rows.length}</span>${chips}</div>
-    ${data.length ? `<div class="tablewrap dt${CARDS[key] ? ' has-cards' : ''}" data-tkey="${key}">${tLockOpen(key, st.cols)}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${CARDS[key] ? `<div class="mcards">${data.map(CARDS[key]).join('')}</div>` : ''}` : `<p class="empty">${emptyMsg || t('empty')}</p>`}`;
+    ${data.length ? `<div class="tablewrap dt${CARDS[key] ? ' has-cards' : ''}" data-tkey="${key}" tabindex="0">${tLockOpen(key, st.cols)}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${CARDS[key] ? `<div class="mcards">${data.map(CARDS[key]).join('')}</div>` : ''}` : `<p class="empty">${emptyMsg || t('empty')}</p>`}`;
 }
 // #33: на широком экране ширины колонок закрепляются после первой раскладки по содержимому (фильтры и вид их не меняют);
 // пересчёт — при смене колонок, переходе на вкладку и изменении окна. На телефоне и планшете (< 900 px) — как раньше.
@@ -1920,7 +1920,8 @@ function notifPanel(onlyNew){
 }
 
 function changesHtml(p, showAll){
-  const list = (p.changes || []).slice().sort((a, b) => D(b.date) - D(a.date));
+  // правка только из служебных отметок команды (#84) — в истории не показывается
+  const list = (p.changes || []).filter(c => !(c.kind === 'edit' && (c.diffs || []).length && !shownDiffs(c.diffs).length && !c.reason)).sort((a, b) => D(b.date) - D(a.date));
   if (!list.length) return `<p class="empty">${t('noChanges')}</p>`;
   const kindL = {create:'kCreate', key:'kKey', edit:'kEdit', report:'kReport', approval:'kApproval', assign:'kAssign', submit:'kSubmit', risk:'kRiskEv'};
   const item = c => `<div class="chg">

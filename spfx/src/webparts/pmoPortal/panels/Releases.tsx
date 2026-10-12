@@ -7,7 +7,7 @@ import { RELEASES } from '../help/releases';
 export const currentRelease = (lang: number): { ver: string; date: string } => (RELEASES[lang] || RELEASES[0])[0] || { ver: '', date: '' };
 
 /** «#84» в заметках — ссылка на отзыв (если на сайте есть «Відгуки»); остальной текст — как в заметках. */
-export const linkFeedback = (html: string): string => html.replace(/#(\d{1,4})\b/g, '<a href="#" class="rel-fb" data-fb="$1">#$1</a>');
+export const linkFeedback = (html: string): string => html.replace(/(^|[^&\w])#(\d{1,4})\b/g, '$1<a href="#" class="rel-fb" data-fb="$2">#$2</a>');
 
 /** «Що змінилося»: заметки о выпусках docs/RELEASES.{uk,en,ru}.md (генерирует tools/guide.mjs), текущий — первым. */
 export const Releases: React.FC<{ onBack(): void; onCancel(): void; onFeedback?: (id: number) => void }> = ({ onBack, onCancel, onFeedback }) => {

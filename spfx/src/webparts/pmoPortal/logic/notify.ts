@@ -1,7 +1,7 @@
 import { ChangeEntry, ChangeEvent, Comment, Person, Project, Risk } from '../data/types';
 import { toEvents } from './changes';
 import { isArch } from './status';
-import { teamNotice } from './team';
+import { teamNotice, onlyHidden } from './team';
 
 /** Сповіщення в приложении (колокольчик): какие события журнала и комментарии — мои и какие из них новые.
  *  Правило «кто что видит» — общие векторы tests/cases/notify.json (их же возьмёт синхронизация для писем, часть 2). */
@@ -114,7 +114,7 @@ export function notifyItems(d: { projects: Project[]; risks: Risk[]; comments: C
     let kind = notifyKind(ev);
     // #84: правка команды, которая касается меня, — отдельное событие (даже если я не PM и не власник)
     const tn = kind === 'cardEdit' ? teamNotice(ev.diffs, me) : '';
-    if (tn) kind = tn;
+    if (tn) kind = tn; else if (onlyHidden(ev)) continue;   // правка из одних служебных отметок — показывать нечего
     const rk = ev.ref && ev.ref.type === 'risk' ? d.risks.filter(x => x.id === ev.ref!.id)[0] : undefined;
     const risk = rk ? { score: rk.probability * rk.impact, owner: rk.owner ? rk.owner.email : '' } : null;
     if (!notifyFor(kind, ev.who ? ev.who.email : '', ev.diffs, notifyProject(p), { me, isPmo, risk })) continue;

@@ -42,3 +42,33 @@ describe('команда → сповіщення: прототип', () => {
   (cases.marks as any[]).forEach(c => test('отметки: ' + c.name, () => { expect(JSON.parse(JSON.stringify(w.PPM_RULES.teamMarks(c.before, c.after)))).toEqual(c.out); }));
   (cases.notice as any[]).forEach(c => test('моё: ' + c.name, () => { expect(w.PPM_RULES.teamNotice(c.diffs, c.me)).toBe(c.out); }));
 });
+
+describe('после кросс-ревью', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { onlyHidden } = require('../src/webparts/pmoPortal/logic/team');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { linkFeedback } = require('../src/webparts/pmoPortal/panels/Releases');
+  test('заметки о выпусках: заголовок не по образцу «## <версия> · <дата>» — ошибка генерации', () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { execFileSync } = require('child_process');
+    const run = (md: string): string => execFileSync(process.execPath, ['--input-type=module', '-e',
+      `import { releases } from ${JSON.stringify(require('path').join(__dirname, '../tools/guide.mjs'))}; try { releases(${JSON.stringify(md)}); console.log('ok'); } catch (e) { console.log('err'); }`]).toString().trim();
+    expect(run('# T\n\n## 1.7.3 · 13.10.2026\n- a')).toBe('ok');
+    expect(run('# T\n\n## 1.7.3 - 13.10.2026\n- a')).toBe('err');
+  });
+  test('правка из одних служебных отметок — не показывается; с видимым полем или причиной — показывается', () => {
+    expect(onlyHidden({ kind: 'edit', diffs: [{ f: 'teamIn' }], reason: '' })).toBe(true);
+    expect(onlyHidden({ kind: 'edit', diffs: [{ f: 'team' }, { f: 'teamIn' }], reason: '' })).toBe(false);
+    expect(onlyHidden({ kind: 'edit', diffs: [{ f: 'teamIn' }], reason: 'Причина' })).toBe(false);
+    expect(onlyHidden({ kind: 'risk', diffs: [{ f: 'teamIn' }] })).toBe(false);
+  });
+  test('колокольчик: правка из одних отметок — не моя — не показывается власнику', () => {
+    const P: any = { id: 7, code: 'PRJ-007', title: 'П', status: 'Реалізація', manager: { email: 'pm@x' }, owner: { email: 'own@x' }, stakeholders: [], team: [] };
+    const recent = [{ id: 2, projectId: 7, date: '2026-10-12T10:00:00Z', kind: 'Редагування картки', field: 'teamIn', from: '', to: 'b@x', reason: '', who: { id: 1, name: 'PM', email: 'pm@x' } }];
+    expect(notifyItems({ projects: [P], risks: [], comments: [], recent } as any, 'own@x', false, '2026-10-01')).toEqual([]);
+    expect(notifyItems({ projects: [P], risks: [], comments: [], recent } as any, 'b@x', false, '2026-10-01').map((x: any) => x.kind)).toEqual(['teamAdded']);
+  });
+  test('ссылки на отзывы: только «#N» в тексте, не сущности HTML', () => {
+    expect(linkFeedback('<li>#84 і &#39;x&#39;</li>')).toBe('<li><a href="#" class="rel-fb" data-fb="84">#84</a> і &#39;x&#39;</li>');
+  });
+});

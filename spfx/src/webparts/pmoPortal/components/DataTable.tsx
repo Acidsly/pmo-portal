@@ -126,7 +126,7 @@ export function DataTable<R extends { id: number }>(p: { tkey: string; defs: Tab
       <button className="iconbtn gear-lg" aria-label={t('cols')} title={t('cols')}
         onClick={e => { const a = e.currentTarget; setPop(pop && pop.kind === 'cols' ? undefined : { kind: 'cols', anchor: a }); }}><Gear /></button></div>
     <div className="dt-bar"><span className="muted">{t('shown')} {data.length} {t('of')} {p.rows.length}</span>{chips}</div>
-    {data.length ? <><div className={'tablewrap dt' + (p.card ? ' has-cards' : '')} ref={tableRef}><table className={widths ? 'locked' : undefined}
+    {data.length ? <><div className={'tablewrap dt' + (p.card ? ' has-cards' : '')} ref={tableRef} tabIndex={0}><table className={widths ? 'locked' : undefined}
       style={widths ? { tableLayout: 'fixed', width: widths.reduce((a, b) => a + b, 0) } : undefined}>
       {widths ? <colgroup>{widths.map((w, i) => <col key={shownCols[i]} style={{ width: w }} />)}</colgroup> : null}<thead><tr>{head}</tr></thead>
       <tbody>{data.map(r => <tr key={r.id} className="row">{shownCols.map(id => <td key={id} className={defs[id].cls || ''}>{defs[id].cell(r)}</td>)}</tr>)}</tbody></table></div>

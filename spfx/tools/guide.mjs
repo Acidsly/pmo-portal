@@ -45,6 +45,7 @@ export function releases(md) {
   for (const line of md.split('\n')) {
     const m = /^## (\S+) · (\S+)\s*$/.exec(line.trimEnd());
     if (m) { cur = { ver: m[1], date: m[2], md: [] }; out.push(cur); continue; }
+    if (/^## /.test(line)) throw new Error(`RELEASES: заголовок выпуска — «## <версия> · <дд.мм.рррр>»: ${line}`);
     if (cur && !/^# /.test(line)) cur.md.push(line);
   }
   return out.map(r => ({ ver: r.ver, date: r.date, html: mdToHtml(r.md.join('\n')) }));

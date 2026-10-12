@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { shownDiffs } from '../logic/team';
+import { shownDiffs, onlyHidden } from '../logic/team';
 import { EntTag } from '../components/EntTag';
 import { tv } from '../i18n/values';
 import { AppCtx } from '../components/ctx';
@@ -97,7 +97,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
     repo.loadChanges(p.id).then(x => { if (live) { setJournal(x); setJournalErr(false); } }, () => { if (live) { setJournal(j => j || []); setJournalErr(true); } });
     return () => { live = false; };
   }, [p.id, data]);
-  const events = [...(p.pendingEvents || []), ...editLogEvents(p.editLog || '', people), ...toEvents(journal || [])]
+  const events = [...(p.pendingEvents || []), ...editLogEvents(p.editLog || '', people), ...toEvents(journal || [])].filter(e => !onlyHidden(e))
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
   const edit = p.canEdit && !isArch(p.status);
   // назначили PM, права ещё не выданы синхронизацией — плашка и проверка раз в минуту (права появятся без перезагрузки страницы)

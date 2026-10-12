@@ -71,6 +71,9 @@ export const linksText = (links: Link[]): string => links.map(l => l.t).join(', 
  *  Их видит в колокольчике только сам человек (teamNotice); в истории не показываются (HIDDEN_DIFFS). Векторы tests/cases/team-notify.json. */
 export const HIDDEN_DIFFS = ['teamIn', 'teamRole'];
 export const shownDiffs = <T extends { f: string }>(diffs: T[]): T[] => diffs.filter(d => HIDDEN_DIFFS.indexOf(d.f) < 0);
+/** Правка карточки только из служебных отметок (например, человека в строке заменили тёзкой) — в истории не показывается. */
+export const onlyHidden = (ev: { kind: string; diffs: { f: string }[]; reason?: string }): boolean =>
+  ev.kind === 'edit' && ev.diffs.length > 0 && !shownDiffs(ev.diffs).length && !ev.reason;
 export function teamMarks(before: { email: string; role: string }[], after: { email: string; role: string }[]): { f: string; from: string; to: string }[] {
   const key = (s: string): string => (s || '').trim().toLowerCase();
   const was: Record<string, string> = {}; before.forEach(r => { if (key(r.email)) was[key(r.email)] = (r.role || '').trim(); });
