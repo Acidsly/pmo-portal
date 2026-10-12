@@ -72,7 +72,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(145deg,#0a84ff,#5e5ce6);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px;letter-spacing:-.02em;flex:none}
 .brand-name{font-weight:600;font-size:17px;letter-spacing:-.01em;line-height:1.2}
 .brand-sub{font-size:12px;color:var(--text-2)}
-.nav{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:12px;overflow-x:auto;max-width:100%;flex:1 1 0;min-width:0}
+.nav{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:12px;overflow-x:auto;max-width:100%;flex:0 1 auto;min-width:0}
 .nav button{border:0;background:none;padding:4px 14px 4px 5px;border-radius:9px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text-2);white-space:nowrap;transition:background-color .2s,color .2s;display:inline-flex;align-items:center;gap:8px}
 /* значок раздела: цветной контур на мягкой подложке; на телефоне — только значки (название — в подсказке) */
 .nav .ni{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none;color:var(--nc);background:color-mix(in srgb,var(--nc) 14%,transparent)}
@@ -80,7 +80,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .nav [data-page=home]{--nc:var(--nv-home)}.nav [data-page=projects]{--nc:var(--nv-projects)}.nav [data-page=reports]{--nc:var(--nv-reports)}
 .nav [data-page=risks]{--nc:var(--nv-risks)}.nav [data-page=archive]{--nc:var(--nv-archive)}.nav [data-page=feedback]{--nc:var(--nv-feedback)}
 /* уже 1280 px меню и кнопки в одну строку не помещаются — меню своей строкой (с подписями; на телефоне — только значки) */
-@media (max-width:1279px){.nav{order:3;flex:1 0 100%}}
+/* меню своей строкой — разделы делят ширину поровну, без пустого места справа */
+@media (max-width:1279px){.nav{order:3;flex:1 0 100%}.nav button{flex:1 1 auto;justify-content:center}}
 @media (max-width:720px){.nav button{flex:1;justify-content:center;padding:5px}.nav .nl{display:none}.nav .ni{width:30px;height:30px}}
 .nav button:hover{color:var(--text)}
 .nav button[aria-current="page"]{background:var(--bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
@@ -132,9 +133,10 @@ tr.grp.collapsed .chev{transform:rotate(-90deg)}
 .dot.sm{width:8px;height:8px}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:999px;font-size:12px;font-weight:600;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--text);white-space:nowrap}
 .pill .dot{background:var(--c)}
-.rep-ap{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px}
+/* #85: метка и дата — один блок, дата своей строкой и не переносится внутри */
+.rep-ap{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin-top:4px;font-size:12px}.rep-ap .muted{white-space:nowrap}
 .rep-ap .pill{font-size:11.5px;padding:1px 8px 1px 6px}
-.tile-upd .ul .rep-ap{display:inline-flex;margin:0 0 0 6px}
+.tile-upd .ul .rep-ap{display:inline-flex;flex-direction:row;align-items:center;gap:6px;margin:0 0 0 6px}
 .pill.st{padding:3px 10px;background:color-mix(in srgb,var(--c) 18%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 35%,transparent)}
 .prog{display:inline-flex;align-items:center;gap:10px;min-width:130px}
 .prog .track{flex:1;height:6px;border-radius:3px;background:var(--track);overflow:hidden;min-width:70px}
@@ -298,6 +300,8 @@ fieldset.ragpick{border:0;margin:0 0 14px;padding:0}
 @media (max-width:520px){.fgrid-k{grid-template-columns:minmax(0,1fr) 92px}.fgrid-k .k-cost{grid-column:1/-1}}
 .err{color:var(--r);font-weight:600;margin:8px 0}
 .ferr{color:var(--r);font-size:12.5px;font-weight:500;margin:4px 0 0}
+/* предупреждение у поля — сохранять не мешает (#88 «Термін минув») */
+.fwarn{color:var(--nv-risks);font-size:12.5px;font-weight:500;margin:4px 0 0}
 [aria-invalid=true]{box-shadow:0 0 0 2px var(--r) !important;border-radius:12px}
 fieldset[aria-invalid=true]{padding:4px 6px}
 .date-in:has(.date-native[aria-invalid=true]) input[type=text]{box-shadow:0 0 0 2px var(--r)}
@@ -409,6 +413,10 @@ main{padding-bottom:40px}
 .c2 .pill{font-size:11px}
 .clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .strat-t{color:var(--strat);font-weight:600}
+/* #89: длинный список прокручивается внутри своего окна (высота — экран без шапок SharePoint и портала): заголовки колонок закреплены,
+   горизонтальная полоса — внизу видимой части таблицы; на телефоне — без своего окна (карточки или обычная прокрутка) */
+@media (min-width:721px){.tablewrap.dt{overflow:auto;max-height:max(360px,calc(100vh - 300px))}}
+.dt thead th{position:sticky;top:0;z-index:2;background:var(--bg);box-shadow:inset 0 -1px 0 var(--line)}
 .dt table td{white-space:normal;vertical-align:top;padding:12px 14px}
 .dt table td .prog{margin-top:4px}
 .dt th{padding:6px 10px 10px;vertical-align:bottom}
@@ -567,7 +575,7 @@ main{padding-bottom:40px}
 .sec-h .more{display:inline-flex;align-items:center;gap:4px}
 .rlist{display:grid;gap:6px}
 /* #35, #49: ширина колонки — перетаскиванием границы заголовка (широкий экран) */
-.dt th{position:relative}
+.dt th{position:sticky}  /* закреплённый заголовок (#89) — он же опора для ручки ширины */
 .col-rs{position:absolute;top:0;right:-2px;width:6px;height:100%;cursor:col-resize;z-index:2;touch-action:none}
 .col-rs:hover,.col-rs.on{background:var(--theme-soft)}
 /* #58: на телефоне статус-звіти й ризики — картками (те самі рядки, фільтри й сортування, що в таблиці) */
@@ -707,7 +715,7 @@ const T = {
  errRole:['Вкажіть роль для кожного учасника команди','Enter a role for every team member','Укажите роль для каждого участника команды'],
  errUrl:['Посилання має починатися з https://','A link must start with https://','Ссылка должна начинаться с https://'],
  noTeam:['Команду ще не додано','No team members yet','Команда ещё не добавлена'], noLinks:['Посилань немає','No links','Ссылок нет'],
- showHistory:['Показати всю історію','Show full history','Показать всю историю'], hideHistory:['Згорнути','Collapse','Свернуть'],
+ showHistory:['Показати всю історію','Show full history','Показать всю историю'], showReports:['Показати всі звіти','Show all reports','Показать все отчёты'], apSubTip:['Подано {date} · {who}','Submitted {date} · {who}','Подан {date} · {who}'], issuesHint:['Коротко — що заважало в цьому періоді. Реєстр ризиків і проблем проєкту — у картці, блок «Ризики та проблеми» (відкритих: {n}).','Briefly — what got in the way this period. The project risk and issue register is in the card, «Risks and issues» block (open: {n}).','Коротко — что мешало в этом периоде. Реестр рисков и проблем проекта — в карточке, блок «Риски и проблемы» (открытых: {n}).'], hideHistory:['Згорнути','Collapse','Свернуть'],
  addComment:['Додати коментар','Add comment','Добавить комментарий'], cmtPh:['Що змінилося?','What changed?','Что изменилось?'],
  noComments:['Коментарів ще немає.','No comments yet.','Комментариев пока нет.'],
  save:['Зберегти','Save','Сохранить'], cancel:['Скасувати','Cancel','Отмена'],
@@ -775,7 +783,7 @@ const T = {
  pmoGroup:['Група «PMO — адміністратори»','Group “PMO — administrators”','Группа «PMO — администраторы»'],
  m365:['Користувач Microsoft 365','Microsoft 365 user','Пользователь Microsoft 365'],
  notSet:['— не вказано —','— not set —','— не указано —'],
- accessRecalc:['Після зміни учасників права доступу буде перераховано.','Access will be recalculated after participants change.','После смены участников права доступа будут пересчитаны.'],
+ accessRecalc:['Після зміни учасників права доступу оновляться протягом ~15 хвилин: тоді учасник побачить проєкт у своєму списку й у «Доступ до картки».','After participants change, access is updated within ~15 minutes: then the person sees the project in their list and in «Card access».','После смены участников права доступа обновятся в течение ~15 минут: тогда участник увидит проект в своём списке и в «Доступ к карточке».'],
  kCreate:['Проєкт створено','Project created','Проект создан'], kKey:['Зміна ключових показників','Key indicators changed','Изменение ключевых показателей'],
  kEdit:['Редагування картки','Card edited','Редактирование карточки'], kAssign:['Призначення','Assignment','Назначение'],
  kSubmit:['Подання звіту','Report submitted','Подача отчёта'],
@@ -798,7 +806,7 @@ const T = {
  nkCreated:['Новий проєкт','New project','Новый проект'], nkAssigned:['Призначення','Assignment','Назначение'], nkSubmitted:['Подання звіту','Report submitted','Подача отчёта'],
  nkDecided:['Погодження звіту','Report approval','Согласование отчёта'], nkApplied:['Оновлено статус-звітом','Updated by status report','Обновлено статус-отчётом'],
  nkArchived:['Проєкт в архіві','Project archived','Проект в архиве'], nkRisk:['Ризик / проблема','Risk / issue','Риск / проблема'],
- nkCardEdit:['Редагування картки','Card edited','Редактирование карточки'], nkComment:['Коментар','Comment','Комментарий'], kRiskEv:['Ризик / проблема','Risk / issue','Риск / проблема'], openRisk:['Відкрити ризик','Open risk','Открыть риск'],
+ nkCardEdit:['Редагування картки','Card edited','Редактирование карточки'], nkTeamAdded:['Вас додано до команди','You were added to the team','Вас добавили в команду'], nkTeamRole:['Змінено вашу роль у команді','Your team role was changed','Изменена ваша роль в команде'], ntfMyRole:['Ваша роль: {r}','Your role: {r}','Ваша роль: {r}'], nkComment:['Коментар','Comment','Комментарий'], kRiskEv:['Ризик / проблема','Risk / issue','Риск / проблема'], openRisk:['Відкрити ризик','Open risk','Открыть риск'],
  assignBtn:['Змінити PM / власника','Change PM / owner','Сменить PM / владельца'], assignTitle:['Зміна PM / власника','Change of PM / owner','Смена PM / владельца'],
  assignHint:['Після створення проєкту PM і власника змінює лише PMO. Порожнє поле — без змін.','After the project is created, only the PMO changes the PM and the owner. An empty field means no change.','После создания проекта PM и владельца меняет только PMO. Пустое поле — без изменений.'],
  assignNewPm:['Новий PM','New PM','Новый PM'], assignNewOwner:['Новий власник','New owner','Новый владелец'], assignNote:['Коментар (причина)','Comment (reason)','Комментарий (причина)'],
@@ -871,7 +879,7 @@ const T = {
  i3:['3 — суттєвий: зсув етапу або перевитрата до 10%','3 — moderate: stage slip or overspend up to 10%','3 — существенное: сдвиг этапа или перерасход до 10%'],
  i4:['4 — значний: зсув запуску або перевитрата понад 10%','4 — major: go-live slip or overspend over 10%','4 — значительное: сдвиг запуска или перерасход более 10%'],
  i5:['5 — критичний: зрив цілей проєкту','5 — critical: project goals fail','5 — критическое: срыв целей проекта'],
- savedRisk:['Ризик збережено.','Risk saved.','Риск сохранён.'], errRiskTitle:['Опишіть ризик або проблему.','Describe the risk or issue.','Опишите риск или проблему.'],
+ savedRisk:['Ризик збережено.','Risk saved.','Риск сохранён.'], errRiskDue:['Термін не може бути раніше {date}.','The due date cannot be earlier than {date}.','Срок не может быть раньше {date}.'], riskOverdue:['Термін минув — оновіть його або закрийте запис.','The due date has passed — update it or close the record.','Срок истёк — обновите его или закройте запись.'], errRiskTitle:['Опишіть ризик або проблему.','Describe the risk or issue.','Опишите риск или проблему.'],
  readOnly:['Лише перегляд: змінювати ризики може лише PM проєкту.','View only: only the project PM can change risks.','Только просмотр: изменять риски может только PM проекта.'],
  kMit:['Заходи для зниження ризику','Risk reduction actions','Меры по снижению риска'],
  noVisible:['У вас поки немає доступних проєктів.','You don’t have any available projects yet.','У вас пока нет доступных проектов.']
@@ -957,7 +965,7 @@ const FLD = {
  rTitle:['Резюме одним рядком','One-line summary','Резюме одной строкой'], rProj:['Проєкт','Project','Проект'], rDate:['Дата подання','Submission date','Дата подачи'],
  rPeriod:['Період','Period','Период'], rSched:['Терміни','Schedule','Сроки'], rBudget:['Бюджет','Budget','Бюджет'], rScope:['Обсяг та якість','Scope and quality','Объём и качество'],
  rRes:['Ресурси','Resources','Ресурсы'], rCost:['Витрати на дату','Cost to date','Затраты на дату'], rDone:['Зроблено за період','Done this period','Сделано за период'],
- rNext:['План на наступний період','Plan for next period','План на следующий период'], rIssues:['Проблеми та ризики','Issues and risks','Проблемы и риски'],
+ rNext:['План на наступний період','Plan for next period','План на следующий период'], rIssues:['Проблеми та ризики за період','Issues and risks for the period','Проблемы и риски за период'],
  rDec:['Потрібне рішення керівництва','Management decision needed','Требуется решение руководства'], rDecText:['Яке рішення потрібне','Decision required','Какое решение нужно'],
  rAuthor:['Автор','Created by','Автор'],
  apStatus:['Погодження','Approval','Согласование'], apNote:['Коментар PMO','PMO comment','Комментарий PMO'],
@@ -1185,7 +1193,9 @@ const freshColor = d => !d ? 'var(--na)' : age(d) > 14 ? 'var(--r)' : age(d) > 8
 const pendDate = p => { const r = (p.reports || []).find(x => x.approval === AP_PEND); return r ? D(r.date) : null; };
 // метка погодження самого нового отчёта (по дате, затем по порядку подачи) — колонка «Звіт», главная, плитки (latestReport приложения)
 const lastRep = p => (p.reports || []).reduce((r, x) => (!r || x.date >= r.date ? x : r), null);
-const apMark = p => { const r = lastRep(p); if (!r) return ''; const v = r.approval || AP_OK; return `<span class="rep-ap">${apBadge(v)}${v !== AP_OK ? `<span class="muted">${fmt(D(r.date))}</span>` : ''}</span>`; };
+// подсказка метки (#85): когда и кем подан самый новый отчёт
+const apTip = r => t('apSubTip').replace('{date}', r.created ? fmtDT(new Date(r.created)) : fmt(D(r.date))).replace('{who}', r.author || '—');
+const apMark = p => { const r = lastRep(p); if (!r) return ''; const v = r.approval || AP_OK; return `<span class="rep-ap" title="${esc(apTip(r))}">${apBadge(v)}${v !== AP_OK ? `<span class="muted">${fmt(D(r.date))}</span>` : ''}</span>`; };
 // подсказка к точке свежести: сколько дней последнему погодженому отчёту и что значат цвета
 const freshTip = d => esc(d ? t('freshTip').replace('{n}', age(d)) : t('freshNone'));
 const freshHtml = p => { const d = lastUpd(p); return `<span class="rag" title="${freshTip(d)}"><span class="dot sm" style="background:${freshColor(d)}"></span>${d ? fmt(d) : `<span class="muted">${t('noReports')}</span>`}</span>`; };
@@ -1522,7 +1532,7 @@ function dataTable(key, rows, emptyMsg){
   }).join('');
   const body = data.map(r => `<tr class="row">${cols.map(([id, d]) => `<td class="${d.cls || ''}">${d.main(r)}</td>`).join('')}</tr>`).join('');
   return `<div class="dt-bar"><span class="muted">${t('shown')} ${data.length} ${t('of')} ${rows.length}</span>${chips}</div>
-    ${data.length ? `<div class="tablewrap dt${CARDS[key] ? ' has-cards' : ''}" data-tkey="${key}">${tLockOpen(key, st.cols)}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${CARDS[key] ? `<div class="mcards">${data.map(CARDS[key]).join('')}</div>` : ''}` : `<p class="empty">${emptyMsg || t('empty')}</p>`}`;
+    ${data.length ? `<div class="tablewrap dt${CARDS[key] ? ' has-cards' : ''}" data-tkey="${key}" tabindex="0">${tLockOpen(key, st.cols)}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${CARDS[key] ? `<div class="mcards">${data.map(CARDS[key]).join('')}</div>` : ''}` : `<p class="empty">${emptyMsg || t('empty')}</p>`}`;
 }
 // #33: на широком экране ширины колонок закрепляются после первой раскладки по содержимому (фильтры и вид их не меняют);
 // пересчёт — при смене колонок, переходе на вкладку и изменении окна. На телефоне и планшете (< 900 px) — как раньше.
@@ -1836,6 +1846,23 @@ const notifSeen = () => NOTIF_SEEN[VIEWER] || (NOTIF_SEEN[VIEWER] = new Set());
 const notifRead = () => NOTIF_READ[VIEWER] || NOTIF_LOADED;
 const notifKind = c => ({create:'created', assign:'assigned', submit:'submitted', approval:'decided', risk:'risk', edit:'cardEdit'})[c.kind]
   || ((c.diffs || []).some(d => d.f === 'status' && isArch({status:d.to})) ? 'archived' : 'applied');
+// #84: служебные отметки правки команды (кого добавили / у кого сменилась роль) — видит только сам человек, в истории не показываются
+// (векторы tests/cases/team-notify.json; те же — teamMarks / teamNotice приложения; в прототипе человек — по имени)
+function teamMarks(before, after){
+  const key = s => String(s || '').trim().toLowerCase(), was = {};
+  before.forEach(r => { if (key(r.email)) was[key(r.email)] = String(r.role || '').trim(); });
+  const added = [], role = [];
+  after.forEach(r => { const k = key(r.email); if (!k || added.includes(k) || role.includes(k)) return;
+    if (!(k in was)) added.push(k); else if (was[k] !== String(r.role || '').trim()) role.push(k); });
+  return (added.length ? [{f:'teamIn', from:'', to:added.join('; ')}] : []).concat(role.length ? [{f:'teamRole', from:'', to:role.join('; ')}] : []);
+}
+function teamNotice(diffs, me){
+  const m = String(me || '').trim().toLowerCase(); if (!m) return '';
+  const has = f => (diffs || []).some(d => d.f === f && String(d.to || '').split(';').some(x => x.trim().toLowerCase() === m));
+  return has('teamIn') ? 'teamAdded' : has('teamRole') ? 'teamRole' : '';
+}
+const shownDiffs = ds => (ds || []).filter(d => d.f !== 'teamIn' && d.f !== 'teamRole');
+window.PPM_RULES = Object.assign(window.PPM_RULES || {}, {teamMarks, teamNotice});
 function notifFor(kind, author, diffs, p, risk){
   const me = VIEWER;
   if (!me || author === me) return false;
@@ -1844,6 +1871,7 @@ function notifFor(kind, author, diffs, p, risk){
   if (kind === 'submitted') return isPMO();
   if (kind === 'archived') return pm || owner || team || isPMO();
   if (kind === 'cardEdit') return pm || owner;
+  if (kind === 'teamAdded' || kind === 'teamRole') return true;
   if (kind === 'risk'){
     if (pm || (risk && risk.owner === me)) return true;
     const sc = risk ? risk.p * risk.i : +(((diffs || []).filter(d => d.f === 'kScore').pop() || {}).to || 0);
@@ -1856,7 +1884,8 @@ function notifItems(){
   for (const p of visAll()){
     for (const c of p.changes || []){
       if (new Date(c.date).getTime() < since) continue;
-      const kind = notifKind(c), risk = c.ref && c.ref.type === 'risk' ? (p.risks || []).find(k => String(k.id) === String(c.ref.id)) : null;
+      let kind = notifKind(c); if (kind === 'cardEdit') kind = teamNotice(c.diffs, VIEWER) || kind;
+      const risk = c.ref && c.ref.type === 'risk' ? (p.risks || []).find(k => String(k.id) === String(c.ref.id)) : null;
       const k = `${p.id}:j:${c.date}:${c.kind}`;
       if (notifFor(kind, c.who, c.diffs, p, risk)) out.push({p, c, kind, k, date:c.date, who:c.who, unread:c.date > read && !notifSeen().has(k)});
     }
@@ -1868,14 +1897,16 @@ function notifItems(){
   }
   return out.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 }
-const NK = {created:'nkCreated', assigned:'nkAssigned', submitted:'nkSubmitted', decided:'nkDecided', applied:'nkApplied', archived:'nkArchived', risk:'nkRisk', cardEdit:'nkCardEdit', comment:'nkComment'};
+const NK = {created:'nkCreated', assigned:'nkAssigned', submitted:'nkSubmitted', decided:'nkDecided', applied:'nkApplied', archived:'nkArchived', risk:'nkRisk', cardEdit:'nkCardEdit', comment:'nkComment', teamAdded:'nkTeamAdded', teamRole:'nkTeamRole'};
 function notifPanel(onlyNew){
   const all = notifItems(), list = onlyNew ? all.filter(x => x.unread) : all;
   state.panel = {kind:'notif'};
   const item = x => {
     const act = x.c && x.c.ref ? `data-act="${x.c.ref.type === 'report' ? 'repopen' : 'riskopen'}" data-id="${x.p.id}" data-rid="${esc(x.c.ref.id)}"` : `data-act="openp" data-id="${x.p.id}"`;
+    const myRole = ((x.p.team || []).find(m => m.n === VIEWER) || {}).role || '—';
     const body = x.m ? `<div class="ntf-t">${esc(x.m.txt)}</div>`
-      : `${x.c.diffs && x.c.diffs.length ? `<div class="diffs">${x.c.diffs.map(d => `<div class="diff"><span class="df">${fl(d.f)}</span><span class="dv"><s>${valFmt(d.f, d.from)}</s><span class="arr">→</span>${valFmt(d.f, d.to)}</span></div>`).join('')}</div>` : ''}${x.c.reason ? `<div class="ntf-t">${esc(x.c.reason)}</div>` : ''}`;
+      : x.kind === 'teamAdded' || x.kind === 'teamRole' ? `<div class="ntf-t">${esc(t('ntfMyRole').replace('{r}', myRole))}</div>`
+      : `${shownDiffs(x.c.diffs).length ? `<div class="diffs">${shownDiffs(x.c.diffs).map(d => `<div class="diff"><span class="df">${fl(d.f)}</span><span class="dv"><s>${valFmt(d.f, d.from)}</s><span class="arr">→</span>${valFmt(d.f, d.to)}</span></div>`).join('')}</div>` : ''}${x.c.reason ? `<div class="ntf-t">${esc(x.c.reason)}</div>` : ''}`;
     return `<button class="ntf-i ${x.unread ? 'new' : 'old'}" data-k="${esc(x.k)}" ${act}><div class="ntf-h"><span class="ntf-p">${esc(x.p.code)} · ${esc(x.p.title)}</span><span class="chg-k">${t(NK[x.kind])}</span>${x.unread ? `<span class="pill ap" style="--c:var(--theme)">${t('notifNew')}</span>` : ''}<span class="muted">${esc(x.who || '')} · ${fmtDT(new Date(x.date))}</span></div>${body}</button>`;
   };
   openPanel(`<div class="ph"><div><div class="k">${entTag('notif')}</div><h2>${t('notifTitle')}</h2></div>${closeBtn()}</div>
@@ -1889,12 +1920,13 @@ function notifPanel(onlyNew){
 }
 
 function changesHtml(p, showAll){
-  const list = (p.changes || []).slice().sort((a, b) => D(b.date) - D(a.date));
+  // правка только из служебных отметок команды (#84) — в истории не показывается
+  const list = (p.changes || []).filter(c => !(c.kind === 'edit' && (c.diffs || []).length && !shownDiffs(c.diffs).length && !c.reason)).sort((a, b) => D(b.date) - D(a.date));
   if (!list.length) return `<p class="empty">${t('noChanges')}</p>`;
   const kindL = {create:'kCreate', key:'kKey', edit:'kEdit', report:'kReport', approval:'kApproval', assign:'kAssign', submit:'kSubmit', risk:'kRiskEv'};
   const item = c => `<div class="chg">
     <div class="chg-h">${avatar(c.who, 'sm')}<b>${esc(c.who)}</b><span class="muted">${fmtDT(D(c.date))}</span><span class="chg-k chg-${c.kind}">${t(kindL[c.kind] || 'kEdit')}</span></div>
-    ${c.diffs && c.diffs.length ? `<div class="diffs">${c.diffs.map(d => `<div class="diff"><span class="df">${fl(d.f)}</span><span class="dv"><s>${valFmt(d.f, d.from)}</s><span class="arr">→</span>${valFmt(d.f, d.to)}</span></div>`).join('')}</div>` : ''}
+    ${shownDiffs(c.diffs).length ? `<div class="diffs">${shownDiffs(c.diffs).map(d => `<div class="diff"><span class="df">${fl(d.f)}</span><span class="dv"><s>${valFmt(d.f, d.from)}</s><span class="arr">→</span>${valFmt(d.f, d.to)}</span></div>`).join('')}</div>` : ''}
     ${c.reason ? `<div class="chg-r">${esc(c.reason)}</div>` : ''}
     ${c.ref ? `<button class="link chg-ref" data-act="${c.ref.type === 'report' ? 'repopen' : 'riskopen'}" data-id="${p.id}" data-rid="${esc(c.ref.id)}">${t(c.ref.type === 'report' ? 'openReport' : 'openRisk')} →</button>` : ''}</div>`;
   const shown = showAll ? list : list.slice(0, 3);
@@ -1903,7 +1935,9 @@ function changesHtml(p, showAll){
 
 function projectPanel(id, showCm, keep, showCh){
   const p = pById(id); if (!p) return;
-  state.panel = {kind:'project', id, showCm:!!showCm, showCh:!!showCh};
+  // #82: в карточке — 3 последних статус-отчёта, «Показати всі звіти (N)» — все (как история и комментарии)
+  const prev = state.panel, showRp = !!(keep && prev && prev.kind === 'project' && prev.id === id && prev.showRp);
+  state.panel = {kind:'project', id, showCm:!!showCm, showCh:!!showCh, showRp};
   const rs = repsOf(p), last8 = rs.filter(isApproved).slice(-8), edit = canEditP(p) && !isArch(p);
   let dev = '';
   if (p.fc && p.plan){ const dd = Math.round((D(p.fc) - D(p.plan)) / DAY); dev = dd > 0 ? ` <span class="late">+${dd} ${t('days')}</span>` : dd < 0 ? ` <span class="muted">${dd} ${t('days')}</span>` : ''; }
@@ -1911,10 +1945,12 @@ function projectPanel(id, showCm, keep, showCh){
   const matrix = last8.length ? `<div class="tablewrap"><table class="matrix"><thead><tr><th></th>${last8.map(r => `<th>${fmtShort(r.d)}</th>`).join('')}</tr></thead><tbody>
     ${dims.map(([k, l]) => `<tr><td>${fl(l)}</td>${last8.map(r => `<td>${dotOnly(r[k])}</td>`).join('')}</tr>`).join('')}
     <tr><td>${fl('progress')}</td>${last8.map(r => `<td class="muted">${r.progress}</td>`).join('')}</tr></tbody></table></div>` : `<p class="empty">${t('noReportsYet')}</p>`;
-  const repList = rs.slice().reverse().map(r => `<div class="rep rep-open" role="button" tabindex="0" data-act="repopen" data-id="${p.id}" data-rid="${esc(r.id)}">
+  const repAll = rs.slice().reverse();
+  const repList = (showRp ? repAll : repAll.slice(0, 3)).map(r => `<div class="rep rep-open" role="button" tabindex="0" data-act="repopen" data-id="${p.id}" data-rid="${esc(r.id)}">
     <div class="rep-h"><b>${fmt(r.d)}</b>${ragHtml(r.rag)}${person(r.author)}${r.decision ? `<span class="flag">${t('needDecision')}</span>` : ''}${apBadge(r.approval)}</div>
     <p><b>${esc(r.title)}</b></p><p><span class="lbl">${t('done')}:</span> ${esc(r.done)}</p><p><span class="lbl">${t('plan')}:</span> ${esc(r.next)}</p>
-    ${r.issues ? `<p><span class="lbl">${t('issues')}:</span> ${esc(r.issues)}</p>` : ''}${r.decisionText ? `<p><span class="lbl">${t('needDecision')}:</span> ${esc(r.decisionText)}</p>` : ''}</div>`).join('');
+    ${r.issues ? `<p><span class="lbl">${t('issues')}:</span> ${esc(r.issues)}</p>` : ''}${r.decisionText ? `<p><span class="lbl">${t('needDecision')}:</span> ${esc(r.decisionText)}</p>` : ''}</div>`).join('')
+    + (repAll.length > 3 ? `<button class="more" data-act="togglerp">${showRp ? t('hideHistory') : t('showReports') + ` (${repAll.length})`}</button>` : '');
   const cms = (p.comments || []).slice().reverse();
   const cmItem = c => `<div class="hist-c"><div class="who">${fmtDT(D(c.date))} · ${esc(c.who)}</div><div>${esc(c.txt)}</div></div>`;
   const cmBlock = cms.length ? '<div class="cmts">' + cmItem(cms[0]) + (cms.length > 1 ? (showCm ? cms.slice(1).map(cmItem).join('') : '') +
@@ -2079,6 +2115,8 @@ function projectForm(p){
       const same = k => LST[k] ? JSON.stringify(p[k] || []) === JSON.stringify(vals[k]) : String(p[k] ?? '') === String(vals[k] ?? '');
       const diffs = Object.keys(vals).filter(k => !same(k)).map(k => LST[k] ? {f:k, from:LST[k](p[k]), to:LST[k](vals[k])} : {f:k, from:p[k] ?? '', to:vals[k]});
       if (!diffs.length){ projectPanel(p.id, false); return; }
+      const tRows = list => (list || []).map(m => ({email:m.n, role:m.role}));
+      diffs.push(...teamMarks(tRows(p.team), tRows(vals.team)));
       Object.assign(p, vals);
       syncStakeholders(p);
       p.changes = (p.changes || []).concat([{id:uid(), date:new Date().toISOString(), who:VIEWER, kind:'edit', reason:'', diffs:diffs.filter(d => d.f !== 'desc')}]);
@@ -2149,7 +2187,7 @@ function riskForm(pid, rid, fromList){
     <div class="fgrid2 frow">
       <div><label class="t" for="k-owner">${fl('kOwner')}</label>${peopleSelect('k-owner', cur.owner, true)}</div>
       <div><label class="t" for="k-status">${fl('kStatus')}</label><select id="k-status"${dis}>${['Відкрито','В роботі','Закрито'].map(v => opt(v, cur.status)).join('')}</select></div>
-      <div><label class="t" for="k-due">${fl('kDue')}</label><input type="date" id="k-due" value="${cur.due || ''}"${dis}></div>
+      <div><label class="t" for="k-due">${fl('kDue')}</label><input type="date" id="k-due" value="${cur.due || ''}"${dis}><p class="ferr" id="k-due-e" hidden></p></div>
     </div>
     <fieldset class="ragpick"><legend>${fl('kStrategy')}</legend>${segPick('k-str', ['Уникнення', "Зниження (пом'якшення)", 'Передача', 'Прийняття'], cur.strategy)}</fieldset>
     <div class="frow"><label class="t" for="k-mit">${t('kMit')}</label><textarea id="k-mit"${dis}>${esc(cur.mitigation || '')}</textarea></div>
@@ -2162,7 +2200,13 @@ function riskForm(pid, rid, fromList){
   const sync = () => { const pr = +radioVal(form, 'k-pr') || 1, im = +radioVal(form, 'k-im') || 1, sc = pr * im;
     g('k-score').innerHTML = `${scoreHtml(sc)} <b>${t('sc' + scoreBucket(sc))}</b> <span class="muted">= ${pr} × ${im}</span>`;
     g('k-pr-d').textContent = t('p' + pr); g('k-im-d').textContent = t('i' + im); };
-  form.addEventListener('change', sync); sync();
+  // #88: срок — новый не раньше сегодняшнего дня, существующий не раньше даты регистрации; прежний не проверяется; просроченный открытый — пометка
+  const dueMsg = () => { const v = g('k-due').value, today = iso(TODAY), min = riskDueMin(v, k ? k.due || '' : '', k ? k.created || '1970-01-01' : '', today);
+    return min ? t('errRiskDue').replace('{date}', fmt(D(min))) : ''; };
+  const dueShow = () => { const m = dueMsg(), v = g('k-due').value, e = g('k-due-e');
+    const late = edit && !m && v && v < iso(TODAY) && g('k-status').value !== 'Закрито'; e.textContent = m || (late ? t('riskOverdue') : ''); e.hidden = !e.textContent;
+    e.className = m ? 'ferr' : 'fwarn'; };
+  form.addEventListener('change', sync); sync(); form.addEventListener('change', dueShow); dueShow();
   if (!k) form.addEventListener('change', e => { if (e.target.name === 'k-type') { const h = panel.querySelector('.ph h2'); if (h) h.textContent = newTitle(e.target.value);
     const en = panel.querySelector('.ph .ent'); if (en) en.outerHTML = entTag(e.target.value === 'Проблема' ? 'issue' : 'risk'); } });
   form.addEventListener('submit', e => {
@@ -2171,6 +2215,7 @@ function riskForm(pid, rid, fromList){
     const vals = {title:g('k-title').value.trim(), type:radioVal(form, 'k-type') || 'Ризик', p:+radioVal(form, 'k-pr') || 1, i:+radioVal(form, 'k-im') || 1,
       owner:g('k-owner').value, status:g('k-status').value, due:g('k-due').value, mitigation:g('k-mit').value.trim(), strategy:radioVal(form, 'k-str') || '', contingency:g('k-cont').value.trim()};
     if (!vals.title){ g('k-title').focus(); return err(t('errRiskTitle')); }
+    if (dueMsg()){ g('k-due').focus(); return err(dueMsg()); }
     // #48: «Ризик» в истории — «Додано», изменения полей «було → стало», «Закрито»
     const KF = [['title','kDesc'],['type','kType'],['p','kProb'],['i','kImp'],['status','kStatus'],['strategy','kStrategy'],['owner','kOwner'],['due','kDue']];
     const nid = k ? k.id : uid();
@@ -2179,7 +2224,7 @@ function riskForm(pid, rid, fromList){
     if (k && k.p * k.i !== vals.p * vals.i) rdiffs.push({f:'kScore', from:String(k.p * k.i), to:String(vals.p * vals.i)});
     if (rdiffs.length) p.changes = (p.changes || []).concat([{id:uid(), date:new Date().toISOString(), who:VIEWER, kind:'risk', ref:{type:'risk', id:nid},
       reason:!k ? 'Додано: ' + vals.title : vals.status === 'Закрито' && k.status !== 'Закрито' ? 'Закрито: ' + vals.title : vals.title, diffs:rdiffs}]);
-    if (k) Object.assign(k, vals); else p.risks = (p.risks || []).concat([Object.assign({id:nid}, vals)]);
+    if (k) Object.assign(k, vals); else p.risks = (p.risks || []).concat([Object.assign({id:nid, created:new Date().toISOString()}, vals)]);
     rerenderMain();
     if (pid && !fromList) projectPanel(p.id, false); else closePanel();
     persist(p); toast(t('savedRisk'));
@@ -2193,12 +2238,22 @@ function reportPeriodFrom(reports, start, created, today){
   return from > today ? today : from;
 }
 // правила прототипа для общих векторов (Jest прогоняет их на прототипе в jsdom)
-window.PPM_RULES = Object.assign(window.PPM_RULES || {}, {reportPeriodFrom});
+// термін ризику (#88; векторы tests/cases/risk-due.json, те же — riskDueMin приложения)
+function riskDueMin(due, prev, created, today){
+  if (!due || due === prev) return '';
+  // дата регистрации — по местному времени; нет — сегодня
+  const c = !created ? '' : String(created).length <= 10 ? String(created) : (d => isNaN(d) ? String(created).slice(0, 10) : iso(d))(new Date(created));
+  const min = c || today;
+  return due < min ? min : '';
+}
+window.PPM_RULES = Object.assign(window.PPM_RULES || {}, {reportPeriodFrom, riskDueMin});
 const pCreated = p => ((p.changes || []).find(x => x.kind === 'create') || {}).date || '';
 const pFrom = (p, today) => reportPeriodFrom(p.reports || [], p.start || '', pCreated(p), today);
 const periodTxt = r => r.pfrom ? (r.pfrom < r.date ? t('periodFT').replace('{from}', fmt(D(r.pfrom))).replace('{to}', fmt(D(r.date))) : t('periodDay').replace('{date}', fmt(D(r.date)))) : (r.period ? tv(r.period) : '');
 // #64 / #67: ошибка фактической даты завершения — с датой, с которой сравнили (reportErrors приложения)
 const aeErr = (ae, st, sub) => !ae ? '' : st && ae < st ? t('errBeforeStartOn').replace('{date}', fmt(D(st))) : sub && ae > sub ? t('errAfterSubmit').replace('{date}', fmt(D(sub))) : '';
+// #81: поле отчёта — не реестр рисков; сколько открытых рисков и проблем у проекта
+const issuesHint = p => t('issuesHint').replace('{n}', (p.risks || []).filter(k => k.status !== 'Закрито').length);
 function reportForm(pid, base){
   state.panel = {kind:'form'};
   const act = visP().filter(p => isActive(p) && canEditP(p)).sort(byOrder);
@@ -2239,7 +2294,7 @@ function reportForm(pid, base){
     <div class="frow"><label class="t" for="f-t">${fl('rTitle')} *</label><input type="text" id="f-t" placeholder="${t('summaryPh')}" value="${esc(bt('title'))}"></div>
     <div class="frow"><label class="t" for="f-done">${fl('rDone')}</label><textarea id="f-done">${esc(bt('done'))}</textarea></div>
     <div class="frow"><label class="t" for="f-next">${fl('rNext')}</label><textarea id="f-next">${esc(bt('next'))}</textarea></div>
-    <div class="frow"><label class="t" for="f-iss">${fl('rIssues')}</label><textarea id="f-iss">${esc(bt('issues'))}</textarea></div>
+    <div class="frow"><label class="t" for="f-iss">${fl('rIssues')}</label><textarea id="f-iss">${esc(bt('issues'))}</textarea><p class="hint" id="f-iss-h">${esc(issuesHint(p0))}</p></div>
     <div class="frow"><label class="check"><input type="checkbox" id="f-dec"${b.decision ? ' checked' : ''}> ${fl('rDec')}</label></div>
     <div class="frow" id="f-dec-wrap"${b.decision ? '' : ' hidden'}><label class="t" for="f-dect">${fl('rDecText')} *</label><textarea id="f-dect">${esc(b.decisionText || '')}</textarea><p class="ferr" id="e-dect" hidden></p></div>
     <p class="err" hidden></p>
@@ -2252,7 +2307,7 @@ function reportForm(pid, base){
   const dimsNow = () => ({sched:radioVal(form, 'sched'), budget:radioVal(form, 'budget'), res:radioVal(form, 'res')});
   const syncKey = () => { g('f-kr-wrap').hidden = !keyChanged(); g('f-arch').hidden = g('f-ae-wrap').hidden = !['Завершено','Скасовано'].includes(g('f-st').value); g('f-ragv').innerHTML = ragLabel(calcRag(dimsNow())); };
   form.addEventListener('input', syncKey); form.addEventListener('change', syncKey);
-  g('f-p').addEventListener('change', e => { const p = pById(+e.target.value);
+  g('f-p').addEventListener('change', e => { const p = pById(+e.target.value); if (p) g('f-iss-h').textContent = issuesHint(p);
     if (p) g('f-sub-per').textContent = periodTxt({date:iso(TODAY), pfrom:pFrom(p, iso(TODAY))});
     g('f-pr').disabled = false; prevPr = null; g('f-pr-done').hidden = true;
     form.querySelectorAll('[aria-invalid]').forEach(x => x.removeAttribute('aria-invalid')); form.querySelectorAll('.ferr').forEach(x => { x.hidden = true; });
@@ -2313,7 +2368,7 @@ function reportForm(pid, base){
     p.reports = (p.reports || []).concat([{id:rid, date:dstr, rag, sched:dims.sched, budget:dims.budget, res:dims.res,
       progress, status:g('f-st').value, type:radioVal(form, 'f-type') || p.type, start:g('f-start').value, golive:g('f-golive').value, plan:g('f-plan').value, fc:g('f-fc').value, ae:arch ? ae : '',
       cost, keyReason:keyChanged() ? kr : '', pfrom:pFrom(p, dstr), title, done:g('f-done').value.trim() || '—', next:g('f-next').value.trim() || '—', issues:g('f-iss').value.trim(),
-      author:VIEWER, decision:dec, decisionText:dec ? g('f-dect').value.trim() : '', approval:AP_PEND, apBy:'', apAt:'', apNote:''}]);
+      author:VIEWER, created:new Date().toISOString(), decision:dec, decisionText:dec ? g('f-dect').value.trim() : '', approval:AP_PEND, apBy:'', apAt:'', apNote:''}]);
     rerenderMain(); projectPanel(p.id, false); persist(p); toast(t('savedReportPending'));
   });
 }
@@ -2431,6 +2486,7 @@ document.addEventListener('click', e => {
   else if (a === 'togglecm') projectPanel(state.panel.id, !state.panel.showCm, true, state.panel.showCh);
   else if (a === "descmore"){ const ds = panel.querySelector("#card-desc"), open = ds.classList.toggle('clamp'); el.textContent = t(open ? 'descMore' : 'descLess'); }
   else if (a === 'togglech') projectPanel(state.panel.id, state.panel.showCm, true, !state.panel.showCh);
+  else if (a === 'togglerp'){ state.panel.showRp = !state.panel.showRp; projectPanel(state.panel.id, state.panel.showCm, true, state.panel.showCh); }
   else if (a === 'newrep') reportForm(id);
   else if (a === 'repopen') reportView(id, el.dataset.rid);
   else if (a === 'rmcell'){ state.rmCell = state.rmCell === el.dataset.k ? null : el.dataset.k; rerenderMain(); }

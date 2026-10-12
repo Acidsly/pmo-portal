@@ -107,6 +107,17 @@ $STATE_DATES = @("pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd", "pmArchive
 # Проект в архиве: «Завершено» или «Скасовано» (векторы tests/cases/archive.json, те же — isArch приложения);
 # «Архівний» — прежнее значение, понимается до миграции (Deploy-PMO.ps1, раздел миграции архива)
 function Test-ArchivedStatus([string]$status) { return $status -in @("Завершено", "Скасовано", "Архівний") }
+# «Розглянуто» отзыва для колокольчика автора (fpDecidedAt, векторы tests/cases/feedback-decided.json): сменились статус или ответ
+# и статус не «Новий» — сейчас; прежняя строка без отметки и уже разобранный отзыв — давняя дата (вне окна колокольчика: о старых разборах
+# не сповіщаем — решение 12.10.2026); иначе «keep» — не трогать.
+function Get-FeedbackDecidedAt($old, $new, [datetime]$now) {
+    $st = [string]$new["fpStatus"]
+    if (-not $st -or $st -eq "Новий") { return "keep" }
+    $changed = -not $old -or ((Norm $old["fpStatus"]) -ne $st) -or ((Norm $old["fpAnswer"]) -ne [string]$new["fpAnswer"])
+    if ($changed) { return $now.ToUniversalTime().ToString("o") }
+    if (-not $old["fpDecidedAt"]) { return "2000-01-01T00:00:00.0000000Z" }
+    return "keep"
+}
 # Исход прежнего «Архівний» при миграции (Deploy-PMO.ps1, раздел 6a3; векторы tests/cases/archive-migration.json):
 # (1) статус отчёта из эталона (psLastApplied), если итоговый; (2) новейший применённый итоговый отчёт (дата, затем номер);
 # (3) строка журнала прежней миграции «Скасовано -> Архівний» — «Скасовано»; (4) иначе «Завершено» и предупреждение. # archive-migration

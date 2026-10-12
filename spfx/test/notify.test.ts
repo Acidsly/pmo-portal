@@ -84,3 +84,37 @@ describe('открыл событие — прочитано оно (nsReadSet)'
     expect(mergeMarks({ readId: 25, readCmId: 7, seen: ['j27'] }, { readId: 20, readCmId: 9, seen: ['j26', 'j21'] })).toEqual({ readId: 25, readCmId: 9, seen: ['j27', 'j26'] });
   });
 });
+
+describe('колокольчик: разбор моего отзыва и новый выпуск', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { extraItems, SEEN_OTHER } = require('../src/webparts/pmoPortal/logic/notify');
+  const fb = (x: any): any => ({ id: 84, created: '', author: '', screen: '', text: '', status: 'Зроблено', answer: 'Готово', shots: 0, mine: true, files: [], decidedAt: '2026-10-12T08:00:00Z', ...x });
+  const since = '2026-09-28T00:00:00Z';
+  test('мой разобранный отзыв за окно — событие; чужой, «Новий», без отметки, старше окна — нет', () => {
+    const items = extraItems([fb({}), fb({ id: 85, mine: false }), fb({ id: 86, status: 'Новий' }), fb({ id: 87, decidedAt: undefined }), fb({ id: 88, decidedAt: '2026-09-01T00:00:00Z' })], null, since);
+    expect(items.map((x: any) => x.key)).toEqual(['f84@2026-10-12T08:00:00Z']);
+    expect(items[0]).toMatchObject({ source: 'feedback', kind: 'feedback', fb: { id: 84, status: 'Зроблено', answer: 'Готово' } });
+  });
+  test('выпуск: моложе окна — событие с ключом версии; старше — нет; дата не по образцу — нет', () => {
+    expect(extraItems([], { ver: '1.7.2.8', date: '12.10.2026' }, since).map((x: any) => x.key)).toEqual(['v1.7.2.8']);
+    expect(extraItems([], { ver: '1.7.0', date: '04.09.2026' }, since)).toEqual([]);
+    expect(extraItems([], { ver: '1.7.0', date: '2026-10-12' }, since)).toEqual([]);
+  });
+  test('новое, пока ключа нет в открытых; повторный ответ (новая отметка) — снова новое', () => {
+    const items = extraItems([fb({})], { ver: '1.7.2.8', date: '12.10.2026' }, since);
+    expect(notifyList(items, { readId: 999, readCmId: 999, seen: [] }).filter(x => x.unread).length).toBe(2);   // метки журнала их не закрывают
+    expect(notifyList(items, { readId: 0, readCmId: 0, seen: ['f84@2026-10-12T08:00:00Z', 'v1.7.2.8'] }).filter(x => x.unread).length).toBe(0);
+    const again = extraItems([fb({ decidedAt: '2026-10-12T09:30:00Z' })], null, since);
+    expect(notifyList(again, { readId: 0, readCmId: 0, seen: ['f84@2026-10-12T08:00:00Z'] })[0].unread).toBe(true);
+    expect(notifyList(items, null).some(x => x.unread)).toBe(false);   // строки «Прочитане» ещё нет — ничего не новое
+  });
+  test('«Позначити все прочитаним» и открытие — ключи в открытых; pruneSeen их сохраняет (не больше SEEN_OTHER)', () => {
+    const list = notifyList(extraItems([fb({})], { ver: '1.7.2.8', date: '12.10.2026' }, since), { readId: 5, readCmId: 2, seen: ['j9'] });
+    const m = marksAfterView(list, { readId: 5, readCmId: 2, seen: ['j9'] });
+    expect(m.seen).toEqual(['j9', 'f84@2026-10-12T08:00:00Z', 'v1.7.2.8']);
+    expect(marksAfterOpen(list[0], { readId: 5, readCmId: 2, seen: [] }).seen).toEqual([list[0].key]);
+    const many = Array.from({ length: SEEN_OTHER + 5 }, (_, i) => `v1.${String(i).padStart(3, '0')}`);
+    expect(pruneSeen(many, 0, 0)).toEqual(many.slice(5));
+    expect(pruneSeen(['f84@x y', 'vbad!', 'f@1'], 0, 0)).toEqual([]);   // мусор — нет
+  });
+});

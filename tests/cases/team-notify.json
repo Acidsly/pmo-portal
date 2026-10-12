@@ -1,0 +1,25 @@
+{
+  "_doc": "#84: правка команды — служебные отметки teamIn (кого добавили) и teamRole (у кого сменилась роль), e-mail через «; », без учёта регистра; teamNotice — касается ли правка меня. teamMarks / teamNotice приложения (logic/team.ts) и прототипа; синхронизация переносит отметки в журнал как есть (tests/cases/editlog.json).",
+  "marks": [
+    { "name": "добавили одного", "before": [{ "email": "a@x", "role": "PM" }], "after": [{ "email": "a@x", "role": "PM" }, { "email": "B@x", "role": "Аналітик" }],
+      "out": [{ "f": "teamIn", "from": "", "to": "b@x" }] },
+    { "name": "сменили роль", "before": [{ "email": "a@x", "role": "PM" }, { "email": "b@x", "role": "Аналітик" }], "after": [{ "email": "a@x", "role": "PM" }, { "email": "b@x", "role": "Архітектор" }],
+      "out": [{ "f": "teamRole", "from": "", "to": "b@x" }] },
+    { "name": "роль отличается только пробелами — не смена", "before": [{ "email": "b@x", "role": "Аналітик" }], "after": [{ "email": "b@x", "role": " Аналітик " }], "out": [] },
+    { "name": "удалили — без отметки (у человека уже нет доступа к проекту)", "before": [{ "email": "a@x", "role": "PM" }, { "email": "b@x", "role": "Аналітик" }], "after": [{ "email": "a@x", "role": "PM" }], "out": [] },
+    { "name": "добавили двух и сменили роль третьему", "before": [{ "email": "c@x", "role": "Тестувальник" }],
+      "after": [{ "email": "a@x", "role": "PM" }, { "email": "b@x", "role": "Аналітик" }, { "email": "c@x", "role": "Ключовий користувач" }],
+      "out": [{ "f": "teamIn", "from": "", "to": "a@x; b@x" }, { "f": "teamRole", "from": "", "to": "c@x" }] },
+    { "name": "повтор человека в списке — один раз", "before": [], "after": [{ "email": "a@x", "role": "PM" }, { "email": "A@x", "role": "PM" }], "out": [{ "f": "teamIn", "from": "", "to": "a@x" }] },
+    { "name": "без изменений", "before": [{ "email": "a@x", "role": "PM" }], "after": [{ "email": "a@x", "role": "PM" }], "out": [] }
+  ],
+  "notice": [
+    { "name": "меня добавили", "diffs": [{ "f": "team", "to": "…" }, { "f": "teamIn", "to": "a@x; me@x" }], "me": "Me@X", "out": "teamAdded" },
+    { "name": "мне сменили роль", "diffs": [{ "f": "teamRole", "to": "me@x" }], "me": "me@x", "out": "teamRole" },
+    { "name": "добавили и сменили роль — добавление важнее", "diffs": [{ "f": "teamIn", "to": "me@x" }, { "f": "teamRole", "to": "me@x" }], "me": "me@x", "out": "teamAdded" },
+    { "name": "добавили другого", "diffs": [{ "f": "teamIn", "to": "a@x" }], "me": "me@x", "out": "" },
+    { "name": "часть адреса не совпадение", "diffs": [{ "f": "teamIn", "to": "ame@x" }], "me": "me@x", "out": "" },
+    { "name": "обычная правка карточки", "diffs": [{ "f": "title", "to": "Нова назва" }], "me": "me@x", "out": "" },
+    { "name": "без меня (нет пользователя)", "diffs": [{ "f": "teamIn", "to": "me@x" }], "me": "", "out": "" }
+  ]
+}

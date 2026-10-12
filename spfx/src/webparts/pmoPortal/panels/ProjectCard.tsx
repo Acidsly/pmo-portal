@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { shownDiffs, onlyHidden } from '../logic/team';
 import { EntTag } from '../components/EntTag';
 import { tv } from '../i18n/values';
 import { AppCtx } from '../components/ctx';
@@ -78,6 +79,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
   };
   const [showCh, setShowCh] = React.useState(false);
   const [showCm, setShowCm] = React.useState(false);
+  const [showRp, setShowRp] = React.useState(false);   // #82: 3 последних отчёта, «Показати всі звіти (N)» — все
   const [pmTitle, setPmTitle] = React.useState('');
   React.useEffect(() => { if (p.manager) repo.jobTitle(p.manager.email).then(setPmTitle, () => undefined); }, [p.id]);
   const reps = ofProject(data.reports, p.id).slice().sort(byDateDesc);
@@ -95,7 +97,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
     repo.loadChanges(p.id).then(x => { if (live) { setJournal(x); setJournalErr(false); } }, () => { if (live) { setJournal(j => j || []); setJournalErr(true); } });
     return () => { live = false; };
   }, [p.id, data]);
-  const events = [...(p.pendingEvents || []), ...editLogEvents(p.editLog || '', people), ...toEvents(journal || [])]
+  const events = [...(p.pendingEvents || []), ...editLogEvents(p.editLog || '', people), ...toEvents(journal || [])].filter(e => !onlyHidden(e))
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
   const edit = p.canEdit && !isArch(p.status);
   // назначили PM, права ещё не выданы синхронизацией — плашка и проверка раз в минуту (права появятся без перезагрузки страницы)
@@ -182,7 +184,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
         <div key={c.id} className="chg">
           <div className="chg-h">{c.who ? <><Avatar name={c.who.name} /><b>{c.who.name}</b></> : null}<span className="muted">{c.date.length === 10 ? fmtDate(c.date) : fmtDT(c.date)}</span>
             <span className={'chg-k chg-' + c.kind}>{t(kindL[c.kind] || 'kEdit')}</span></div>
-          {c.diffs.length ? <div className="diffs">{c.diffs.map((d, i) => <div key={i} className="diff"><span className="df">{fl(d.f)}</span>
+          {shownDiffs(c.diffs).length ? <div className="diffs">{shownDiffs(c.diffs).map((d, i) => <div key={i} className="diff"><span className="df">{fl(d.f)}</span>
             <span className="dv"><s>{tv(d.from) || '—'}</s><span className="arr">→</span>{tv(d.to) || '—'}</span></div>)}</div> : null}
           {c.reason ? <div className="chg-r">{c.reason}</div> : null}
           {c.ref ? <RefLink r={c.ref} pid={p.id} /> : null}
@@ -209,7 +211,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
         : <p className="empty">{t('noReportsYet')}</p>}</div>
 
     <div className="sec"><h3>{t('secReports')} ({reps.length})</h3>
-      {reps.length ? reps.map(r => <div key={r.id} className="rep rep-open" role="button" tabIndex={0} onClick={() => c.openForm('rep:' + r.id, p.id)}
+      {reps.length ? <>{(showRp ? reps : reps.slice(0, 3)).map(r => <div key={r.id} className="rep rep-open" role="button" tabIndex={0} onClick={() => c.openForm('rep:' + r.id, p.id)}
         onKeyDown={e => { if (e.key === 'Enter') c.openForm('rep:' + r.id, p.id); }}>
         <div className="rep-h"><b>{fmtDate(r.date)}</b><RagPill v={calcRag(r.schedule, r.budget, r.resources)} notRated={t('notRated')} />
           {r.author ? <span className="person"><Avatar name={r.author.name} /><span className="pn"><b>{r.author.name}</b></span></span> : null}
@@ -220,7 +222,9 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
         <p><span className="lbl">{t('plan')}:</span> {r.next || '—'}</p>
         {r.issues ? <p><span className="lbl">{t('issues')}:</span> {r.issues}</p> : null}
         {r.decisionText ? <p><span className="lbl">{t('needDecision')}:</span> {r.decisionText}</p> : null}
-      </div>) : <p className="empty">{t('noReportsYet')}</p>}</div>
+      </div>)}
+        {reps.length > 3 ? <button className="more" onClick={() => setShowRp(!showRp)}>{showRp ? t('hideHistory') : `${t('showReports')} (${reps.length})`}</button> : null}</>
+        : <p className="empty">{t('noReportsYet')}</p>}</div>
 
     <div className="sec"><div className="sec-h"><h3>{t('secRisks')} ({risks.length})</h3>
       {edit ? <button className="more" onClick={() => c.openForm('risk:new', p.id)}><Plus /> {t('addRisk')}</button> : null}</div>

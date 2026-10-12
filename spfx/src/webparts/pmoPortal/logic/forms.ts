@@ -1,6 +1,7 @@
 import { Project, Person, Link, StatusReport } from '../data/types';
-import { TeamRow, teamText, linksText, validateTeamLinks } from './team';
+import { TeamRow, teamText, linksText, validateTeamLinks, teamMarks } from './team';
 import { Rag } from './rag';
+import { todayIso } from './dates';
 
 /** Черновик статус-отчёта (форма reportForm прототипа). */
 export interface ReportDraft {
@@ -153,6 +154,20 @@ export const validateProject = (d: ProjectDraft, otherCodes: string[] = [], othe
     : codeTaken(d.code, otherCodes) ? 'errCode' : isNew && datesBeforeStart(d).length ? 'errDatesOrder' : validateTeamLinks(d.team, d.links));
 export const validateRisk = (d: RiskDraft): string => (!d.title.trim() ? 'errRiskTitle' : '');
 
+/** #88: «Термін виконання заходів» — новый риск не раньше сегодняшнего дня, существующий — не раньше даты регистрации;
+ *  пустой и не изменённый срок (даже просроченный) не блокируют. Ответ — дата, раньше которой нельзя, или ''. Векторы tests/cases/risk-due.json. */
+/** Дата регистрации записи — по местному времени (created — ISO UTC из SharePoint или «гггг-мм-дд»); нет — сегодня. */
+function riskDueFloor(created: string, today: string): string {
+  if (!created) return today;
+  if (created.length <= 10) return created;
+  const d = new Date(created);
+  return isNaN(d.getTime()) ? created.slice(0, 10) : todayIso(d);
+}
+export function riskDueMin(due: string, prev: string, created: string, today: string): string {
+  if (!due || due === prev) return '';
+  return due < riskDueFloor(created, today) ? riskDueFloor(created, today) : '';
+}
+
 /** Изменения карточки для журнала («Редагування картки»); описание не журналируется, как в прототипе. */
 export function cardDiff(b: Project, d: ProjectDraft): { f: string; from: string; to: string }[] {
   const pairs: [string, string, string][] = [
@@ -160,5 +175,6 @@ export function cardDiff(b: Project, d: ProjectDraft): { f: string; from: string
     ['prio', b.priority, d.priority], ['pm', b.manager ? b.manager.name : '', d.manager ? d.manager.name : ''],
     ['owner', b.owner ? b.owner.name : '', d.owner ? d.owner.name : ''], ['team', teamText(b.team), teamText(d.team)],
     ['budget', String(b.budget || 0), String(d.budget || 0)]];
-  return pairs.filter(x => x[1] !== x[2]).map(([f, from, to]) => ({ f, from, to }));
+  const rows = (t: { user: Person | null; role: string }[]): { email: string; role: string }[] => t.filter(r => r.user).map(r => ({ email: r.user!.email, role: r.role }));
+  return pairs.filter(x => x[1] !== x[2]).map(([f, from, to]) => ({ f, from, to })).concat(teamMarks(rows(b.team), rows(d.team)));
 }

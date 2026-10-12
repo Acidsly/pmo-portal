@@ -71,8 +71,8 @@ export function withApproval(r: StatusReport, approvals: Approval[]): StatusRepo
 
 /** Метка погодження в колонке «Звіт» и на плитке: самый новый отчёт проекта (по дате, затем номеру) и его состояние;
  *  отчёт без погодження: применённый — «Погоджено» (отчёты до погоджень), иначе — «На погодженні». Нет отчётов — null. */
-export function latestReport(rs: StatusReport[]): { approval: string; date: string } | null {
+export function latestReport(rs: StatusReport[]): { approval: string; date: string; created: string; author: string } | null {
   let r: StatusReport | null = null;
   for (const x of rs) if (!r || x.date > r.date || (x.date === r.date && x.id > r.id)) r = x;
-  return r ? { approval: r.approval || (r.applied ? 'Погоджено' : AP_PENDING), date: r.date } : null;
+  return r ? { approval: r.approval || (r.applied ? 'Погоджено' : AP_PENDING), date: r.date, created: r.created || '', author: r.author ? r.author.name : '' } : null;
 }

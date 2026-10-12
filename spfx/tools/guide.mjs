@@ -39,10 +39,29 @@ export function mdToHtml(md) {
   return out.filter(Boolean).join('\n');
 }
 
+/** Заметки о выпусках: разделы «## 1.7.2.5 · 12.10.2026» -> [{ ver, date, html }] в порядке файла (новые сверху). */
+export function releases(md) {
+  const out = []; let cur = null;
+  for (const line of md.split('\n')) {
+    const m = /^## (\S+) · (\S+)\s*$/.exec(line.trimEnd());
+    if (m) { cur = { ver: m[1], date: m[2], md: [] }; out.push(cur); continue; }
+    if (/^## /.test(line)) throw new Error(`RELEASES: заголовок выпуска — «## <версия> · <дд.мм.рррр>»: ${line}`);
+    if (cur && !/^# /.test(line)) cur.md.push(line);
+  }
+  return out.map(r => ({ ver: r.ver, date: r.date, html: mdToHtml(r.md.join('\n')) }));
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const html = ['uk', 'en', 'ru'].map(l => mdToHtml(readFileSync(join(root, 'docs', `USER-GUIDE.${l}.md`), 'utf8')));
   writeFileSync(join(root, 'spfx/src/webparts/pmoPortal/help/guide.ts'),
     '// Сгенерировано tools/guide.mjs из docs/USER-GUIDE.{uk,en,ru}.md — не править вручную.\n' +
     `export const GUIDE: [string, string, string] = ${JSON.stringify(html, null, 1)};\n`);
   console.log('help/guide.ts обновлён');
+  // #90: «Що змінилося» — docs/RELEASES.{uk,en,ru}.md: выпуски «## <версия> · <дата>», новые сверху
+  const rel = ['uk', 'en', 'ru'].map(l => releases(readFileSync(join(root, 'docs', `RELEASES.${l}.md`), 'utf8')));
+  writeFileSync(join(root, 'spfx/src/webparts/pmoPortal/help/releases.ts'),
+    '// Сгенерировано tools/guide.mjs из docs/RELEASES.{uk,en,ru}.md — не править вручную.\n' +
+    'export interface Release { ver: string; date: string; html: string; }\n' +
+    `export const RELEASES: [Release[], Release[], Release[]] = ${JSON.stringify(rel, null, 1)};\n`);
+  console.log('help/releases.ts обновлён');
 }

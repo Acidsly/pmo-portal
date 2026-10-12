@@ -52,6 +52,19 @@
       "done": [],
       "keys": [],
       "fields": []
+    },
+    {
+      "name": "#84: отметки правки команды переносятся как есть (поле — teamIn / teamRole)",
+      "log": "{\"entries\": [{\"id\": \"t1\", \"when\": \"2026-10-12T10:00:00.000Z\", \"who\": \"pm@x\", \"reason\": \"\", \"diffs\": [{\"f\": \"team\", \"from\": \"\", \"to\": \"B — Аналітик\"}, {\"f\": \"teamIn\", \"from\": \"\", \"to\": \"b@x\"}, {\"f\": \"teamRole\", \"from\": \"\", \"to\": \"c@x\"}]}]}",
+      "done": [],
+      "keys": [
+        "id:t1"
+      ],
+      "fields": [
+        "pmTeam",
+        "teamIn",
+        "teamRole"
+      ]
     }
   ],
   "remove": [

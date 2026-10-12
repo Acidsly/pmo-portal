@@ -5,11 +5,12 @@ import { PortalData } from '../data/SpRepo';
 import { Person } from '../data/types';
 import { isActive, isArch, byOrder, riskScore } from '../logic/status';
 import { scoreBucket } from '../logic/views';
-import { RiskDraft, validateRisk } from '../logic/forms';
+import { RiskDraft, validateRisk, riskDueMin } from '../logic/forms';
+import { todayIso } from '../logic/dates';
+import { fmtDate, Score } from '../components/Bits';
 import { riskBody } from '../data/write';
 import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts, errText, guardText } from '../components/fields';
 import { guard, changedFields } from '../logic/guard';
-import { Score } from '../components/Bits';
 
 const TYPES = ['Ризик', 'Проблема'];
 const STATUSES = ['Відкрито', 'В роботі', 'Закрито'];
@@ -37,11 +38,17 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
   const [busy, setBusy] = React.useState(false);
   const set = (x: Partial<RiskDraft>): void => setD({ ...d, ...x });
   const sc = riskScore(d.probability, d.impact);
+  // #88: срок не раньше сегодняшнего дня (новый) / даты регистрации (существующий); прежний срок — без проверки, просроченный открытый — пометка
+  const today = todayIso();
+  const dueMin = riskDueMin(d.due, k ? k.due : '', k && k.created ? k.created : '', today);
+  const dueErr = dueMin ? t('errRiskDue').replace('{date}', fmtDate(dueMin)) : '';
+  const overdue = edit && !dueErr && !!d.due && d.due < today && d.status !== 'Закрито';
 
   const save = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault(); if (!edit) return;
     const v = validateRisk(d);
     if (v) { setErr(t(v)); return; }
+    if (dueErr) { setErr(dueErr); const el = document.getElementById('k-due'); if (el) el.focus(); return; }
     setBusy(true); setErr('');
     try {
       const owner: Person | null = d.owner && !d.owner.id ? { ...d.owner, id: await c.repo.ensureUser(d.owner.email) } : d.owner;
@@ -87,7 +94,8 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
           <PeoplePicker id="k-owner" multi={false} disabled={!edit} value={d.owner ? [d.owner] : []} search={q => c.repo.searchPeople(q)} onChange={v => set({ owner: v[0] || null })} /></div>
         <div><label className="t" htmlFor="k-status">{fl('kStatus')}</label>
           <select id="k-status" disabled={!edit} value={d.status} onChange={e => set({ status: e.target.value })}><Opts values={STATUSES} /></select></div>
-        <div><label className="t" htmlFor="k-due">{fl('kDue')}</label><DateIn id="k-due" disabled={!edit} value={d.due} onChange={v => set({ due: v })} /></div>
+        <div><label className="t" htmlFor="k-due">{fl('kDue')}</label><DateIn id="k-due" disabled={!edit} value={d.due} onChange={v => set({ due: v })} />
+          {dueErr ? <p className="ferr">{dueErr}</p> : overdue ? <p className="fwarn">{t('riskOverdue')}</p> : null}</div>
       </div>
       <fieldset className="ragpick"><legend>{fl('kStrategy')}</legend>
         <SegPick name="k-str" options={STRATEGIES} value={d.strategy} disabled={!edit} onChange={v => set({ strategy: d.strategy === v ? '' : v })} /></fieldset>

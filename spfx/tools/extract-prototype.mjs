@@ -20,6 +20,15 @@ const EXTRA = {
   feedback: ['Відгук', 'Feedback', 'Отзыв'],
   help: ['Довідка', 'Help', 'Справка'],
   overview: ['Детальний огляд системи', 'Detailed system overview', 'Подробный обзор системы'],
+  // #90: версия портала и «Що змінилося» (заметки docs/RELEASES.{uk,en,ru}.md)
+  relTitle: ['Що змінилося', "What's new", 'Что изменилось'],
+  relBack: ['← Довідка', '← Help', '← Справка'],
+  relVer: ['Версія {v}', 'Version {v}', 'Версия {v}'],
+  relCurrent: ['поточна', 'current', 'текущая'],
+  // колокольчик: разбор моего отзыва и новый выпуск портала
+  nkFeedback: ['Відгук розглянуто', 'Feedback reviewed', 'Отзыв рассмотрен'],
+  nkRelease: ['Новий випуск порталу', 'New portal release', 'Новый выпуск портала'],
+  fbNumT: ['Ваш відгук #{n}', 'Your feedback #{n}', 'Ваш отзыв #{n}'],
   overviewLead: ['Хочете більше? Детальний огляд: навіщо система, з чого складається, усі екрани зі скриншотами, правила й безпека.', 'Want more? The detailed overview (in Ukrainian): why the system exists, its parts, every screen with screenshots, rules and security.', 'Хотите больше? Подробный обзор (на украинском): зачем система, из чего состоит, все экраны со скриншотами, правила и безопасность.'],
   overviewBack: ['← До довідки', '← Back to help', '← К справке'],
   overviewPdf: ['Завантажити PDF', 'Download PDF', 'Скачать PDF'],

@@ -289,8 +289,10 @@ test('меню прототипа: значок и название у кажд�
 test('шапка: название — своей строкой, ниже меню и кнопки; на телефоне меню отдельной строкой (перекрытие на 1440 px)', () => {
   const css = Array.from(w.document.querySelectorAll('style')).map((x: W) => x.textContent).join('\n');
   expect(css).toMatch(/\.brand\{[^}]*flex:1 0 100%\}/);
-  expect(css).toMatch(/\.nav\{[^}]*flex:1 1 0;min-width:0\}/);   // меню занимает место до кнопок и прокручивается внутри, кнопки не уходят ниже
-  expect(css).toMatch(/@media \(max-width:1279px\)\{\.nav\{order:3;flex:1 0 100%\}\}/);
+  // меню по ширине своих разделов (без пустого места справа), сжимается и прокручивается внутри — кнопки не уходят ниже
+  expect(css).toMatch(/\.nav\{[^}]*flex:0 1 auto;min-width:0\}/);
+  // меню своей строкой — разделы делят ширину поровну
+  expect(css).toMatch(/@media \(max-width:1279px\)\{\.nav\{order:3;flex:1 0 100%\}\.nav button\{flex:1 1 auto;justify-content:center\}\}/);
   const ov = fs.readFileSync(path.join(__dirname, '../src/webparts/pmoPortal/theme/overrides.scss'), 'utf8');
   expect(ov).not.toMatch(/\.pmo-app \.brand \{ flex:/);   // приложение не меняет строку названия
   expect(ov).not.toMatch(/\.top-in \{ flex-wrap: nowrap/);  // название и меню в одну строку — не помещается
@@ -338,4 +340,52 @@ test('#72 телефон: главная кнопка списка — на вс
   expect(css).toMatch(/@media \(max-width:720px\)\{\.cmdbar \.cmd\.primary\{flex:1 1 100%;justify-content:center\}/);
   expect(css).toMatch(/\.actbar \.btn\{flex:1 1 100%;justify-content:center\}/);
   expect(css).toMatch(/\.actions \.btn\{flex:1 1 120px;justify-content:center;white-space:nowrap\}/);
+});
+
+describe('раунд 5: прототип', () => {
+  const openCard = (min: number): W => {
+    q('[data-act="nav"][data-page="projects"]').click();
+    const ids = Array.from(w.document.querySelectorAll('[data-act="openp"]')).map((x: W) => x.dataset.id).filter((v: string, i: number, a: string[]) => a.indexOf(v) === i);
+    for (const id of ids) {
+      (q(`[data-act="openp"][data-id="${id}"]`) as W).click();
+      const sec = Array.from(w.document.querySelectorAll('#panel .sec')).find((s2: W) => s2.querySelector('h3').textContent.indexOf('Статус-звіти') === 0) as W;
+      const n = sec ? Number((sec.querySelector('h3').textContent.match(/\((\d+)\)/) || [])[1]) : 0;
+      if (n > min) return { sec: () => Array.from(w.document.querySelectorAll('#panel .sec')).find((s2: W) => s2.querySelector('h3').textContent.indexOf('Статус-звіти') === 0) as W, n };
+    }
+    return null;
+  };
+  test('#82 карточка: 3 последних статус-отчёта, «Показати всі звіти (N)» — все, «Згорнути» — снова 3', () => {
+    const c = openCard(3); expect(c).toBeTruthy();
+    expect(c.sec().querySelectorAll('.rep').length).toBe(3);
+    const b = c.sec().querySelector('[data-act="togglerp"]'); expect(b.textContent).toBe(`Показати всі звіти (${c.n})`);
+    b.click(); expect(c.sec().querySelectorAll('.rep').length).toBe(c.n);
+    c.sec().querySelector('[data-act="togglerp"]').click(); expect(c.sec().querySelectorAll('.rep').length).toBe(3);
+  });
+  test('#85 метка «Звіт»: подсказка «Подано … · автор»', () => {
+    q('[data-act="nav"][data-page="projects"]').click();
+    const m = q('#main .rep-ap'); expect(m).toBeTruthy(); expect(m.getAttribute('title')).toMatch(/^Подано \d\d\.\d\d\.\d{4} · \S/);
+  });
+  test('#88 новый риск: срок в прошлом — ошибка, запись не добавлена; сегодня — можно', () => {
+    q('[data-act="nav"][data-page="risks"]').click();
+    q('[data-act="newrisk"]').click();
+    const f = q('#kform'); f.querySelector('#k-title').value = 'Ризик тесту рунд 5'; f.querySelector('#k-due').value = '2000-01-01'; ev(f.querySelector('#k-due'), 'change');
+    expect(f.querySelector('#k-due-e').hidden).toBe(false);
+    f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    expect(err(f)).toMatch(/^Термін не може бути раніше/); expect(q('#kform')).toBeTruthy();
+    const d = new Date(); f.querySelector('#k-due').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; ev(f.querySelector('#k-due'), 'change');
+    expect(f.querySelector('#k-due-e').hidden).toBe(true);
+    f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    expect(w.document.body.textContent).toContain('Ризик тесту рунд 5');
+  });
+  test('#81 форма отчёта: подсказка о реестре рисков', () => {
+    q('[data-act="nav"][data-page="reports"]').click(); q('[data-act="newrep"]:not([data-id])').click();
+    expect(q('#f-iss-h').textContent).toMatch(/відкритих: \d+\)/);
+  });
+});
+
+test('#89 таблицы: своё окно прокрутки на компьютере, заголовки колонок закреплены', () => {
+  const css = Array.from(w.document.querySelectorAll('style')).map((x: W) => x.textContent).join('\n');
+  expect(css).toMatch(/@media \(min-width:721px\)\{\.tablewrap\.dt\{overflow:auto;max-height:max\(360px,calc\(100vh - 300px\)\)\}\}/);
+  expect(css).toMatch(/\.dt thead th\{position:sticky;top:0;z-index:2;background:var\(--bg\);[^}]*\}/);
+  expect(css).not.toMatch(/\.dt th\{position:relative\}/);   // относительное положение сбило бы закрепление
 });

@@ -13,6 +13,9 @@ import { Regional, regionalFrom, toFormValues } from './formValues';
 import { applyState, parseState, StateJson } from '../logic/state';
 import { Fresh } from '../logic/guard';
 
+/** Поля «Відгуки — загальні» для страницы «Відгуки» (fpDecidedAt — отдельно: его может ещё не быть на сайте). */
+const FP_SELECT = 'Id,fpId,fpCreated,fpAuthor,fpScreen,fpText,fpStatus,fpAnswer,fpShots';
+
 export type WritableList = 'Projects' | 'StatusReports' | 'RisksIssues' | 'ProjectComments' | 'Feedback' | 'ProjectTeam' | 'ReportApprovals' | 'ProjectAssignments' | 'NotifyState';
 
 export interface PortalData { projects: Project[]; reports: StatusReport[]; risks: Risk[]; comments: Comment[];
@@ -125,17 +128,19 @@ export class SpRepo {
   /** Отзывы: общий список (все видят все) + «Відгуки» (свои или все — у администратора) со скриншотами; свежие, ещё не скопированные синхронизацией, — тоже. */
   private async loadFeedback(): Promise<FeedbackRow[]> {
     const [pub, own] = await Promise.all([
-      this.items('FeedbackPublic', 'Id,fpId,fpCreated,fpAuthor,fpScreen,fpText,fpStatus,fpAnswer,fpShots', '').catch(() => [] as any[]),
+      // поля «Розглянуто» (fpDecidedAt) может ещё не быть (приложение установили раньше Deploy-PMO.ps1) — тогда без него, список не пропадает
+      this.items('FeedbackPublic', FP_SELECT + ',fpDecidedAt', '').catch(() => this.items('FeedbackPublic', FP_SELECT, '')).catch(() => [] as any[]),
       this.items('Feedback', 'Id,Created,fbScreen,fbText,fbStatus,fbAnswer,Author/Title,Author/EMail,AttachmentFiles', 'Author,AttachmentFiles')]);
     const me = (this.me || '').toLowerCase();
     const byId: Record<number, FeedbackRow> = {};
     for (const x of pub) byId[x.fpId] = { id: x.fpId, created: String(x.fpCreated || ''), author: String(x.fpAuthor || ''), screen: String(x.fpScreen || ''),
       text: String(x.fpText || ''), status: String(x.fpStatus || 'Новий'), answer: String(x.fpAnswer || ''), shots: Number(x.fpShots) || 0, mine: false, files: [] };
+    const decided: Record<number, string> = {}; for (const x of pub) if (x.fpDecidedAt) decided[x.fpId] = String(x.fpDecidedAt);
     for (const x of own) {
       const files = (x.AttachmentFiles || []).map((a: any) => ({ name: String(a.FileName), url: String(a.ServerRelativeUrl) }));
       byId[x.Id] = { id: x.Id, created: String(x.Created || ''), author: String((x.Author && x.Author.Title) || ''), screen: String(x.fbScreen || ''),
         text: String(x.fbText || ''), status: String(x.fbStatus || 'Новий'), answer: String(x.fbAnswer || ''), shots: files.length,
-        mine: !!x.Author && String(x.Author.EMail || '').toLowerCase() === me, files };
+        mine: !!x.Author && String(x.Author.EMail || '').toLowerCase() === me, files, decidedAt: decided[x.Id] };
     }
     return Object.keys(byId).map(k => byId[Number(k)]).sort((a, b) => b.id - a.id);
   }

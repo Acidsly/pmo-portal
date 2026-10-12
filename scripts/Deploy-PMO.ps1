@@ -347,7 +347,7 @@ F $R srActualCost  Currency "Витрати на дату"    "Cost to date"    
 F $R srKeyReason   Note     "Причина зміни показників" "Reason for changing indicators" "Причина изменения показателей" "NumLines='3' RichText='FALSE'"
 F $R srDone        Note     "Зроблено за період" "Done this period"    "Сделано за период"    "NumLines='5' RichText='FALSE'"
 F $R srNext        Note     "План на наступний період" "Plan for next period" "План на следующий период" "NumLines='5' RichText='FALSE'"
-F $R srIssues      Note     "Проблеми та ризики" "Issues and risks"    "Проблемы и риски"     "NumLines='5' RichText='FALSE'"
+F $R srIssues      Note     "Проблеми та ризики за період" "Issues and risks for the period" "Проблемы и риски за период" "NumLines='5' RichText='FALSE'"
 F $R srDecision    Boolean  "Потрібне рішення керівництва" "Management decision needed" "Требуется решение руководства" "" "<Default>0</Default>"
 F $R srDecisionText Note    "Яке рішення потрібне" "Decision required" "Какое решение нужно"  "NumLines='3' RichText='FALSE'"
 F $R srApplied     Boolean  "Службове: застосовано" "System: applied"  "Служебное: применено" "Hidden='TRUE'" "<Default>0</Default>"
@@ -590,6 +590,8 @@ if ($Feedback) {
     F $FP fpStatus  Text     "Статус розгляду"    "Review status"       "Статус рассмотрения"  "MaxLength='50'"
     F $FP fpAnswer  Note     "Відповідь"          "Answer"              "Ответ"                "NumLines='4' RichText='FALSE'"
     F $FP fpShots   Number   "Скриншотів"         "Screenshots"         "Скриншотов"           "Decimals='0'"
+    # колокольчик автора: когда синхронизация увидела новый статус или ответ
+    F $FP fpDecidedAt DateTime "Розглянуто"       "Reviewed"            "Рассмотрено"          "Format='DateTime'"
     $script:Loc += , @($FP, "Title", "Коротко", "Summary", "Кратко")
     Set-PnPField -List $FP -Identity "Title" -Values @{ Required = $false } | Out-Null
     #region feedback-format

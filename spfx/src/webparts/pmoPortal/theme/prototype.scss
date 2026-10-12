@@ -66,7 +66,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(145deg,#0a84ff,#5e5ce6);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px;letter-spacing:-.02em;flex:none}
 .brand-name{font-weight:600;font-size:17px;letter-spacing:-.01em;line-height:1.2}
 .brand-sub{font-size:12px;color:var(--text-2)}
-.nav{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:12px;overflow-x:auto;max-width:100%;flex:1 1 0;min-width:0}
+.nav{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:12px;overflow-x:auto;max-width:100%;flex:0 1 auto;min-width:0}
 .nav button{border:0;background:none;padding:4px 14px 4px 5px;border-radius:9px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text-2);white-space:nowrap;transition:background-color .2s,color .2s;display:inline-flex;align-items:center;gap:8px}
 /* значок раздела: цветной контур на мягкой подложке; на телефоне — только значки (название — в подсказке) */
 .nav .ni{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none;color:var(--nc);background:color-mix(in srgb,var(--nc) 14%,transparent)}
@@ -74,7 +74,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .nav [data-page=home]{--nc:var(--nv-home)}.nav [data-page=projects]{--nc:var(--nv-projects)}.nav [data-page=reports]{--nc:var(--nv-reports)}
 .nav [data-page=risks]{--nc:var(--nv-risks)}.nav [data-page=archive]{--nc:var(--nv-archive)}.nav [data-page=feedback]{--nc:var(--nv-feedback)}
 /* уже 1280 px меню и кнопки в одну строку не помещаются — меню своей строкой (с подписями; на телефоне — только значки) */
-@media (max-width:1279px){.nav{order:3;flex:1 0 100%}}
+/* меню своей строкой — разделы делят ширину поровну, без пустого места справа */
+@media (max-width:1279px){.nav{order:3;flex:1 0 100%}.nav button{flex:1 1 auto;justify-content:center}}
 @media (max-width:720px){.nav button{flex:1;justify-content:center;padding:5px}.nav .nl{display:none}.nav .ni{width:30px;height:30px}}
 .nav button:hover{color:var(--text)}
 .nav button[aria-current="page"]{background:var(--bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
@@ -126,9 +127,10 @@ tr.grp.collapsed .chev{transform:rotate(-90deg)}
 .dot.sm{width:8px;height:8px}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:999px;font-size:12px;font-weight:600;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--text);white-space:nowrap}
 .pill .dot{background:var(--c)}
-.rep-ap{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px}
+/* #85: метка и дата — один блок, дата своей строкой и не переносится внутри */
+.rep-ap{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin-top:4px;font-size:12px}.rep-ap .muted{white-space:nowrap}
 .rep-ap .pill{font-size:11.5px;padding:1px 8px 1px 6px}
-.tile-upd .ul .rep-ap{display:inline-flex;margin:0 0 0 6px}
+.tile-upd .ul .rep-ap{display:inline-flex;flex-direction:row;align-items:center;gap:6px;margin:0 0 0 6px}
 .pill.st{padding:3px 10px;background:color-mix(in srgb,var(--c) 18%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 35%,transparent)}
 .prog{display:inline-flex;align-items:center;gap:10px;min-width:130px}
 .prog .track{flex:1;height:6px;border-radius:3px;background:var(--track);overflow:hidden;min-width:70px}
@@ -292,6 +294,8 @@ fieldset.ragpick{border:0;margin:0 0 14px;padding:0}
 @media (max-width:520px){.fgrid-k{grid-template-columns:minmax(0,1fr) 92px}.fgrid-k .k-cost{grid-column:1/-1}}
 .err{color:var(--r);font-weight:600;margin:8px 0}
 .ferr{color:var(--r);font-size:12.5px;font-weight:500;margin:4px 0 0}
+/* предупреждение у поля — сохранять не мешает (#88 «Термін минув») */
+.fwarn{color:var(--nv-risks);font-size:12.5px;font-weight:500;margin:4px 0 0}
 [aria-invalid=true]{box-shadow:0 0 0 2px var(--r) !important;border-radius:12px}
 fieldset[aria-invalid=true]{padding:4px 6px}
 .date-in:has(.date-native[aria-invalid=true]) input[type=text]{box-shadow:0 0 0 2px var(--r)}
@@ -403,6 +407,10 @@ form .fsec:first-child{margin-top:0}
 .c2 .pill{font-size:11px}
 .clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .strat-t{color:var(--strat);font-weight:600}
+/* #89: длинный список прокручивается внутри своего окна (высота — экран без шапок SharePoint и портала): заголовки колонок закреплены,
+   горизонтальная полоса — внизу видимой части таблицы; на телефоне — без своего окна (карточки или обычная прокрутка) */
+@media (min-width:721px){.tablewrap.dt{overflow:auto;max-height:max(360px,calc(100vh - 300px))}}
+.dt thead th{position:sticky;top:0;z-index:2;background:var(--bg);box-shadow:inset 0 -1px 0 var(--line)}
 .dt table td{white-space:normal;vertical-align:top;padding:12px 14px}
 .dt table td .prog{margin-top:4px}
 .dt th{padding:6px 10px 10px;vertical-align:bottom}
@@ -561,7 +569,7 @@ form .fsec:first-child{margin-top:0}
 .sec-h .more{display:inline-flex;align-items:center;gap:4px}
 .rlist{display:grid;gap:6px}
 /* #35, #49: ширина колонки — перетаскиванием границы заголовка (широкий экран) */
-.dt th{position:relative}
+.dt th{position:sticky}  /* закреплённый заголовок (#89) — он же опора для ручки ширины */
 .col-rs{position:absolute;top:0;right:-2px;width:6px;height:100%;cursor:col-resize;z-index:2;touch-action:none}
 .col-rs:hover,.col-rs.on{background:var(--theme-soft)}
 /* #58: на телефоне статус-звіти й ризики — картками (те самі рядки, фільтри й сортування, що в таблиці) */

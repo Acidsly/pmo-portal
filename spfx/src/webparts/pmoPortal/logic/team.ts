@@ -67,6 +67,33 @@ export const teamText = (rows: { user: Person | null; role: string }[]): string 
   rows.filter(r => r.user).map(r => `${r.user!.name} — ${r.role}`).join('; ');
 export const linksText = (links: Link[]): string => links.map(l => l.t).join(', ');
 
+/** #84: служебные отметки правки команды — кого добавили и у кого сменилась роль (e-mail через «; »).
+ *  Их видит в колокольчике только сам человек (teamNotice); в истории не показываются (HIDDEN_DIFFS). Векторы tests/cases/team-notify.json. */
+export const HIDDEN_DIFFS = ['teamIn', 'teamRole'];
+export const shownDiffs = <T extends { f: string }>(diffs: T[]): T[] => diffs.filter(d => HIDDEN_DIFFS.indexOf(d.f) < 0);
+/** Правка карточки только из служебных отметок (например, человека в строке заменили тёзкой) — в истории не показывается. */
+export const onlyHidden = (ev: { kind: string; diffs: { f: string }[]; reason?: string }): boolean =>
+  ev.kind === 'edit' && ev.diffs.length > 0 && !shownDiffs(ev.diffs).length && !ev.reason;
+export function teamMarks(before: { email: string; role: string }[], after: { email: string; role: string }[]): { f: string; from: string; to: string }[] {
+  const key = (s: string): string => (s || '').trim().toLowerCase();
+  const was: Record<string, string> = {}; before.forEach(r => { if (key(r.email)) was[key(r.email)] = (r.role || '').trim(); });
+  const added: string[] = [], role: string[] = [];
+  after.forEach(r => {
+    const k = key(r.email); if (!k || added.indexOf(k) >= 0 || role.indexOf(k) >= 0) return;
+    if (!(k in was)) added.push(k); else if (was[k] !== (r.role || '').trim()) role.push(k);
+  });
+  const out: { f: string; from: string; to: string }[] = [];
+  if (added.length) out.push({ f: 'teamIn', from: '', to: added.join('; ') });
+  if (role.length) out.push({ f: 'teamRole', from: '', to: role.join('; ') });
+  return out;
+}
+/** Касается ли правка команды меня: добавили — 'teamAdded', сменили роль — 'teamRole', иначе ''. */
+export function teamNotice(diffs: { f: string; to: string }[], me: string): '' | 'teamAdded' | 'teamRole' {
+  const m = (me || '').trim().toLowerCase(); if (!m) return '';
+  const has = (f: string): boolean => diffs.some(d => d.f === f && (d.to || '').split(';').some(x => x.trim().toLowerCase() === m));
+  return has('teamIn') ? 'teamAdded' : has('teamRole') ? 'teamRole' : '';
+}
+
 /** Стейкхолдеры проекта = люди команды (без повторов). */
 export function teamPeople(team: TeamMember[]): Person[] {
   const seen: Record<string, boolean> = {};

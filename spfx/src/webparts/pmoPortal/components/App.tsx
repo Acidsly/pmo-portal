@@ -21,6 +21,7 @@ import { setValueLang } from '../i18n/values';
 import { FeedbackForm } from '../panels/FeedbackForm';
 import { Help } from '../panels/Help';
 import { Overview } from '../panels/Overview';
+import { Releases } from '../panels/Releases';
 import { Feedback, feedbackOrder } from '../pages/Feedback';
 import { FeedbackView } from '../panels/FeedbackView';
 import { AssignForm } from '../panels/AssignForm';
@@ -39,7 +40,7 @@ export const App: React.FC<AppProps> = p => {
   const [route, setRoute] = React.useState<Route>(() => parse(window.location.hash, DEFAULT_VIEWS));
   const [data, setData] = React.useState<PortalData | undefined>(undefined);
   // колокольчик: есть ли новые для меня события — пересчёт только при новых данных
-  const bellUnread = React.useMemo(() => (data ? notifyState(data, p.userEmail).unread : 0), [data, p.userEmail]);
+  const bellUnread = React.useMemo(() => (data ? notifyState(data, p.userEmail, lang).unread : 0), [data, p.userEmail, lang]);
   // переход из «Сповіщень»: вверху «← Сповіщення» — вернуться к списку
   const [ntfRet, setNtfRet] = React.useState(false);
   const [err, setErr] = React.useState('');
@@ -79,13 +80,16 @@ export const App: React.FC<AppProps> = p => {
   formRef.current = route.form;
   const close = (): void => nav({ ...route, projectId: 0, form: '' });
   const back = (): void => nav({ ...route, form: '' });
-  const panelOpen = route.form === 'help' || route.form === 'overview' || (!!data && (!!route.form || !!project));
+  const panelOpen = route.form === 'help' || route.form === 'overview' || route.form === 'releases' || (!!data && (!!route.form || !!project));
   React.useEffect(() => { if (!panelOpen && ntfRet) setNtfRet(false); }, [panelOpen]);
   let panelEl: React.ReactNode = null;
   const openFeedback = data && data.feedback ? () => ctx.openForm('feedback', route.projectId) : undefined;
   if (data && route.form.indexOf('fb:') === 0) { const id = Number(route.form.slice(3)); panelEl = <FeedbackView key={id} row={data.feedbackRows.filter(r => r.id === id)[0]} admin={!!p.admin}
     order={feedbackOrder().length ? feedbackOrder() : data.feedbackRows.map(r => r.id)} onGo={n => ctx.openForm('fb:' + n, route.projectId)} onCancel={back} />; }
-  else if (route.form === 'help') panelEl = <Help onCancel={back} onFeedback={openFeedback} onOverview={() => ctx.openForm('overview', route.projectId)} />;
+  else if (route.form === 'help') panelEl = <Help onCancel={back} onFeedback={openFeedback} onOverview={() => ctx.openForm('overview', route.projectId)}
+    onReleases={() => ctx.openForm('releases', route.projectId)} />;
+  else if (route.form === 'releases') panelEl = <Releases onBack={() => ctx.openForm('help', route.projectId)} onCancel={back}
+    onFeedback={data && data.feedback ? n => ctx.openForm('fb:' + n, route.projectId) : undefined} />;
   else if (route.form === 'overview') panelEl = <Overview onBack={() => ctx.openForm('help', route.projectId)} onCancel={back} />;
   else if (data && route.form === 'feedback') panelEl = <FeedbackForm screen={format({ ...route, form: '' })} onCancel={back} />;
   else if (data && route.form === 'report') panelEl = <ReportForm data={data} projectId={route.projectId} onCancel={project ? back : close} />;

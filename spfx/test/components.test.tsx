@@ -242,7 +242,9 @@ describe('сповіщення: колокольчик и панель', () => {
   const data = (notify: any): any => ({ projects: [{ id: 1, code: 'PRJ-001', title: 'П1', status: 'Реалізація', manager: person('pm@x', 'PM'), owner: null, team: [], stakeholders: [] }],
     risks: [], reports: [], comments: [{ id: 7, projectId: 1, text: 'Новий коментар', author: person('au@x', 'Автор'), created: now }],
     recent: [{ id: 30, projectId: 1, date: now, who: person('au@x', 'Автор'), kind: 'Подання звіту', field: 'srApproval', from: '', to: 'На погодженні', reason: 'Звіт', item: 12 }],
-    canApprove: false, notify });
+    canApprove: false, notify: notify && { ...notify, seen: [...(notify.seen || []), V] } });   // текущий выпуск уже прочитан — в этих тестах не мешает
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const V = 'v' + require('../src/webparts/pmoPortal/help/releases').RELEASES[0][0].ver;
   const head = (bell: any): void => mount(<Header page="home" lang={0} theme="light" userName="PM" userEmail="pm@x" onPage={() => undefined} onLang={() => undefined}
     onTheme={() => undefined} onHelp={() => undefined} bell={bell} />);
   test('шапка: число новых и покачивание только при новых; больше 99 — «99+»', () => {
@@ -259,7 +261,7 @@ describe('сповіщення: колокольчик и панель', () => {
     const marked: any[] = []; const opened: string[] = [];
     const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } }, reload: async () => undefined };
     await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 20, readCmId: 5 })} onOpen={(f, id) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
-    const items = Array.from(root.querySelectorAll('.ntf-i'));
+    const items = Array.from(root.querySelectorAll('.ntf-i:not(.rel-n)'));
     expect(items.length).toBe(1);   // подача отчёта — только PMO; PM видит комментарий
     expect(items[0].className).toContain('new');
     expect(root.textContent).toContain('Новий коментар');
@@ -268,16 +270,16 @@ describe('сповіщення: колокольчик и панель', () => {
     // открыл событие — прочитано именно оно (метки не двигаются)
     await act(async () => { (items[0] as HTMLElement).click(); await Promise.resolve(); });
     expect(opened).toEqual(['@1']);
-    expect(marked).toEqual([{ readId: 20, readCmId: 5, seen: ['c7'] }]);
+    expect(marked).toEqual([{ readId: 20, readCmId: 5, seen: ['c7', V] }]);
     await act(async () => { (root.querySelector('#ntf-all') as HTMLElement).click(); await Promise.resolve(); });
-    expect(marked[1]).toEqual({ readId: 20, readCmId: 7, seen: [] });
+    expect(marked[1]).toEqual({ readId: 20, readCmId: 7, seen: [V] });
   });
   test('открыл уже прочитанное событие — ничего не пишется, «Нових» нет', async () => {
     const marked: any[] = []; const opened: string[] = [];
     const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } }, reload: async () => undefined };
     await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 30, readCmId: 7 })} onOpen={(f, id) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
     expect(root.querySelector('#ntf-n')).toBeNull();
-    await act(async () => { (root.querySelector('.ntf-i') as HTMLElement).click(); await Promise.resolve(); });
+    await act(async () => { (root.querySelector('.ntf-i:not(.rel-n)') as HTMLElement).click(); await Promise.resolve(); });
     expect(opened).toEqual(['@1']); expect(marked).toEqual([]);
   });
   test('строки «Прочитане» ещё нет — подсказка, ничего не пишется', async () => {
@@ -423,5 +425,106 @@ describe('#62 / #69 сохранение отчёта: дата подання �
     expect(bodies[0].srDate).toBe(`${today}T12:00:00Z`);
     expect(bodies[0].srPeriodFrom).toBe('2026-09-01T12:00:00Z');   // отчёт другого проекта (25.09) и повернутий (20.09) — не граница
     expect(bodies[0].srPeriod).toBeUndefined();
+  });
+});
+
+describe('раунд 5: отзывы 81–88', () => {
+  test('#85 метка «Звіт»: подсказка — когда и кем подан отчёт; дата под меткой и не переносится', () => {
+    mount(<RepMark r={{ approval: 'На погодженні', date: '2026-10-08', created: '2026-10-08T14:04:00Z', author: 'Дарина Д' }} />);
+    const el = root.querySelector('.rep-ap') as HTMLElement;
+    const dt = new Date('2026-10-08T14:04:00Z');
+    expect(el.title).toBe(`Подано ${dt.toLocaleDateString('uk-UA')} ${dt.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })} · Дарина Д`);
+    ReactDOM.unmountComponentAtNode(root);
+    mount(<RepMark r={{ approval: 'Повернуто', date: '2026-10-01' }} />);
+    expect((root.querySelector('.rep-ap') as HTMLElement).title).toBe('Подано 01.10.2026 · —');
+    const css = require('fs').readFileSync(require('path').join(__dirname, '../src/webparts/pmoPortal/theme/prototype.scss'), 'utf8');
+    expect(css).toMatch(/\.rep-ap\{display:flex;flex-direction:column;[^}]*\}\.rep-ap \.muted\{white-space:nowrap\}/);
+  });
+
+  const today = (): string => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  const typeDate = (id: string, v: string): void => { act(() => { Simulate.change(root.querySelector('#' + id) as HTMLInputElement, { target: { value: v } } as any); }); };
+  test('#88 новый риск: срок 01.01.2000 — ошибка у поля, сохранить нельзя; сегодня — можно', () => {
+    const data = { projects: [{ id: 5, title: 'Проєкт П', status: 'Реалізація', canEdit: true, manager: { email: 'pm@x', name: 'PM' } }], risks: [], reports: [], comments: [], team: [] } as any;
+    mount(<RiskForm data={data} projectId={5} riskId={0} onCancel={() => undefined} />);
+    typeDate('k-due', '01.01.2000');
+    expect((root.querySelector('.ferr') as HTMLElement).textContent).toMatch(/^Термін не може бути раніше \d\d\.\d\d\.\d{4}\.$/);
+    act(() => { Simulate.change(root.querySelector('#k-title') as HTMLTextAreaElement, { target: { value: 'Ризик' } } as any); });
+    act(() => { Simulate.submit(root.querySelector('form') as HTMLFormElement); });
+    expect(root.querySelector('.err')!.textContent).toMatch(/^Термін не може бути раніше/);
+    const t0 = today().split('-').reverse().join('.');
+    typeDate('k-due', t0); expect(root.querySelector('.ferr')).toBeNull();
+  });
+  test('#88 существующий риск: прежний просроченный срок не блокирует — пометка «Термін минув»; закрытый — без пометки', () => {
+    const k = { id: 9, projectId: 5, title: 'Р', type: 'Ризик', probability: 3, impact: 3, owner: null, status: 'Відкрито', due: '2026-01-10', mitigation: '', strategy: '', contingency: '', created: '2026-01-05T09:00:00Z' };
+    const data = { projects: [{ id: 5, title: 'Проєкт П', status: 'Реалізація', canEdit: true, manager: { email: 'pm@x', name: 'PM' } }], risks: [k], reports: [], comments: [], team: [] } as any;
+    mount(<RiskForm data={data} projectId={5} riskId={9} onCancel={() => undefined} />);
+    expect(root.querySelector('.ferr')).toBeNull();   // не ошибка — предупреждение, сохранять можно
+    expect((root.querySelector('.fwarn') as HTMLElement).textContent).toBe('Термін минув — оновіть його або закрийте запис.');
+    typeDate('k-due', '01.01.2026');   // раньше регистрации (05.01.2026)
+    expect((root.querySelector('.ferr') as HTMLElement).textContent).toBe('Термін не може бути раніше 05.01.2026.');
+    typeDate('k-due', '10.01.2026');
+    act(() => { Simulate.change(root.querySelector('#k-status') as HTMLSelectElement, { target: { value: 'Закрито' } } as any); });
+    expect(root.querySelector('.ferr')).toBeNull(); expect(root.querySelector('.fwarn')).toBeNull();
+  });
+
+  test('#81 форма отчёта: «Проблеми та ризики за період» и подсказка о реестре с числом открытых', () => {
+    const data = { projects: [{ id: 5, title: 'Проєкт П', status: 'Реалізація', type: 'Звичайний', progress: 40, actualCost: 0, start: '2026-03-02', goLive: '', planEnd: '2026-12-01', forecastEnd: '',
+      canEdit: true, manager: { email: 'pm@x', name: 'PM' } }],
+      risks: [{ id: 1, projectId: 5, status: 'Відкрито' }, { id: 2, projectId: 5, status: 'Закрито' }, { id: 3, projectId: 6, status: 'Відкрито' }], reports: [], comments: [], team: [] } as any;
+    mount(<ReportForm data={data} projectId={5} onCancel={() => undefined} />);
+    expect((root.querySelector('label[for="f-iss"]') as HTMLElement).textContent).toBe('Проблеми та ризики за період');
+    expect((root.querySelector('#f-iss') as HTMLElement).parentElement!.querySelector('.hint')!.textContent).toContain('(відкритих: 1)');
+  });
+});
+
+describe('#90 версия портала и «Що змінилося»', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { RELEASES } = require('../src/webparts/pmoPortal/help/releases');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { Help } = require('../src/webparts/pmoPortal/panels/Help');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { Releases, linkFeedback } = require('../src/webparts/pmoPortal/panels/Releases');
+  const pkg = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '../config/package-solution.json'), 'utf8'));
+  test('первый выпуск заметок — версия пакета; три языка — одинаковые версии и даты', () => {
+    expect(RELEASES[0][0].ver).toBe(pkg.solution.version);
+    for (const l of [1, 2]) expect(RELEASES[l].map((r: any) => r.ver + ' ' + r.date)).toEqual(RELEASES[0].map((r: any) => r.ver + ' ' + r.date));
+    expect(RELEASES[0][0].date).toMatch(/^\d\d\.\d\d\.\d{4}$/);
+  });
+  test('«Довідка»: строка версии и кнопка «Що змінилося»; панель — выпуски, текущий помечен, «#84» — ссылка на отзыв', () => {
+    let opened = 0; mount(<Help onCancel={() => undefined} onOverview={() => undefined} onReleases={() => { opened++; }} />);
+    expect((root.querySelector('#rel-ver') as HTMLElement).textContent).toContain(`Версія ${pkg.solution.version} · ${RELEASES[0][0].date}`);
+    act(() => { Simulate.click(root.querySelector('#rel-open') as HTMLElement); }); expect(opened).toBe(1);
+    ReactDOM.unmountComponentAtNode(root);
+    const fb: number[] = []; mount(<Releases onBack={() => undefined} onCancel={() => undefined} onFeedback={(n: number) => fb.push(n)} />);
+    expect(root.querySelectorAll('.rel-i').length).toBe(RELEASES[0].length);
+    expect((root.querySelector('.rel-i h3') as HTMLElement).textContent).toContain('поточна');
+    const a = root.querySelector('a.rel-fb[data-fb="84"]') as HTMLElement; expect(a).not.toBeNull();
+    act(() => { a.dispatchEvent(new MouseEvent('click', { bubbles: true })); }); expect(fb).toEqual([84]);
+    expect(linkFeedback('<li>x (#82, #84)</li>')).toBe('<li>x (<a href="#" class="rel-fb" data-fb="82">#82</a>, <a href="#" class="rel-fb" data-fb="84">#84</a>)</li>');
+  });
+});
+
+describe('колокольчик: отзыв и выпуск в панели', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { NotifyPanel: NP } = require('../src/webparts/pmoPortal/panels/NotifyPanel');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { RELEASES } = require('../src/webparts/pmoPortal/help/releases');
+  test('«Відгук розглянуто» открывает отзыв, «Новий випуск» — «Що змінилося»; открытие — прочитано ключом', async () => {
+    const marked: any[] = []; const opened: string[] = [];
+    const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } }, reload: async () => undefined };
+    const now = new Date().toISOString();
+    const d: any = { projects: [], risks: [], reports: [], comments: [], recent: [], canApprove: false, notify: { id: 1, readId: 0, readCmId: 0, seen: [] },
+      feedbackRows: [{ id: 84, created: '', author: '', screen: '', text: '', status: 'Зроблено', answer: 'Готово, див. 1.7.2.7', shots: 0, mine: true, files: [], decidedAt: now }] };
+    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NP data={d} onOpen={(f: string, id: number) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    const f = root.querySelector('.ntf-i.fb-n') as HTMLElement;
+    expect(f.textContent).toContain('Ваш відгук #84'); expect(f.textContent).toContain('Відгук розглянуто'); expect(f.textContent).toContain('Зроблено'); expect(f.textContent).toContain('Готово, див. 1.7.2.7');
+    await act(async () => { f.click(); await Promise.resolve(); });
+    expect(opened).toEqual(['fb:84@0']); expect(marked[0].seen).toEqual([`f84@${now}`]);
+    const r = root.querySelector('.ntf-i.rel-n') as HTMLElement;
+    if (r && RELEASES[0][0]) {   // выпуск моложе 14 дней — в колокольчике у всех (позже — события нет)
+      expect(r.textContent).toContain('Новий випуск порталу'); expect(r.textContent).toContain(`Версія ${RELEASES[0][0].ver}`);
+      await act(async () => { r.click(); await Promise.resolve(); });
+      expect(opened[1]).toBe('releases@0');
+    }
   });
 });

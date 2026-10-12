@@ -25,7 +25,7 @@ test('withApproval: свежее решение PMO видно сразу, пе�
 describe('метка «Звіт»: погодження самого нового отчёта', () => {
   test('нет отчётов — метки нет', () => { expect(latestReport([])).toBeNull(); });
   test('новее по дате, при равной дате — больший номер', () => {
-    expect(latestReport([R({ id: 1, date: '2026-09-25', approval: 'Погоджено' }), R({ id: 2, date: '2026-10-01', approval: 'Повернуто' })])).toEqual({ approval: 'Повернуто', date: '2026-10-01' });
+    expect(latestReport([R({ id: 1, date: '2026-09-25', approval: 'Погоджено' }), R({ id: 2, date: '2026-10-01', approval: 'Повернуто' })])).toMatchObject({ approval: 'Повернуто', date: '2026-10-01' });
     expect(latestReport([R({ id: 7, date: '2026-10-01', approval: 'На погодженні' }), R({ id: 3, date: '2026-10-01', approval: 'Погоджено' })])!.approval).toBe('На погодженні');
   });
   test('без погодження: применённый — «Погоджено», иначе — «На погодженні»', () => {
