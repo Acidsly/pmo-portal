@@ -294,6 +294,8 @@ fieldset.ragpick{border:0;margin:0 0 14px;padding:0}
 @media (max-width:520px){.fgrid-k{grid-template-columns:minmax(0,1fr) 92px}.fgrid-k .k-cost{grid-column:1/-1}}
 .err{color:var(--r);font-weight:600;margin:8px 0}
 .ferr{color:var(--r);font-size:12.5px;font-weight:500;margin:4px 0 0}
+/* предупреждение у поля — сохранять не мешает (#88 «Термін минув») */
+.fwarn{color:var(--nv-risks);font-size:12.5px;font-weight:500;margin:4px 0 0}
 [aria-invalid=true]{box-shadow:0 0 0 2px var(--r) !important;border-radius:12px}
 fieldset[aria-invalid=true]{padding:4px 6px}
 .date-in:has(.date-native[aria-invalid=true]) input[type=text]{box-shadow:0 0 0 2px var(--r)}

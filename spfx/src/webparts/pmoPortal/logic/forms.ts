@@ -1,6 +1,7 @@
 import { Project, Person, Link, StatusReport } from '../data/types';
 import { TeamRow, teamText, linksText, validateTeamLinks } from './team';
 import { Rag } from './rag';
+import { todayIso } from './dates';
 
 /** Черновик статус-отчёта (форма reportForm прототипа). */
 export interface ReportDraft {
@@ -155,10 +156,16 @@ export const validateRisk = (d: RiskDraft): string => (!d.title.trim() ? 'errRis
 
 /** #88: «Термін виконання заходів» — новый риск не раньше сегодняшнего дня, существующий — не раньше даты регистрации;
  *  пустой и не изменённый срок (даже просроченный) не блокируют. Ответ — дата, раньше которой нельзя, или ''. Векторы tests/cases/risk-due.json. */
+/** Дата регистрации записи — по местному времени (created — ISO UTC из SharePoint или «гггг-мм-дд»); нет — сегодня. */
+function riskDueFloor(created: string, today: string): string {
+  if (!created) return today;
+  if (created.length <= 10) return created;
+  const d = new Date(created);
+  return isNaN(d.getTime()) ? created.slice(0, 10) : todayIso(d);
+}
 export function riskDueMin(due: string, prev: string, created: string, today: string): string {
   if (!due || due === prev) return '';
-  const min = created ? created.slice(0, 10) : today;
-  return due < min ? min : '';
+  return due < riskDueFloor(created, today) ? riskDueFloor(created, today) : '';
 }
 
 /** Изменения карточки для журнала («Редагування картки»); описание не журналируется, как в прототипе. */

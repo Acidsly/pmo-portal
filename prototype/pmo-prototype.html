@@ -300,6 +300,8 @@ fieldset.ragpick{border:0;margin:0 0 14px;padding:0}
 @media (max-width:520px){.fgrid-k{grid-template-columns:minmax(0,1fr) 92px}.fgrid-k .k-cost{grid-column:1/-1}}
 .err{color:var(--r);font-weight:600;margin:8px 0}
 .ferr{color:var(--r);font-size:12.5px;font-weight:500;margin:4px 0 0}
+/* предупреждение у поля — сохранять не мешает (#88 «Термін минув») */
+.fwarn{color:var(--nv-risks);font-size:12.5px;font-weight:500;margin:4px 0 0}
 [aria-invalid=true]{box-shadow:0 0 0 2px var(--r) !important;border-radius:12px}
 fieldset[aria-invalid=true]{padding:4px 6px}
 .date-in:has(.date-native[aria-invalid=true]) input[type=text]{box-shadow:0 0 0 2px var(--r)}
@@ -2171,10 +2173,11 @@ function riskForm(pid, rid, fromList){
     g('k-score').innerHTML = `${scoreHtml(sc)} <b>${t('sc' + scoreBucket(sc))}</b> <span class="muted">= ${pr} × ${im}</span>`;
     g('k-pr-d').textContent = t('p' + pr); g('k-im-d').textContent = t('i' + im); };
   // #88: срок — новый не раньше сегодняшнего дня, существующий не раньше даты регистрации; прежний не проверяется; просроченный открытый — пометка
-  const dueMsg = () => { const v = g('k-due').value, today = iso(TODAY), min = riskDueMin(v, k ? k.due || '' : '', k && k.created ? k.created : '', today);
+  const dueMsg = () => { const v = g('k-due').value, today = iso(TODAY), min = riskDueMin(v, k ? k.due || '' : '', k ? k.created || '1970-01-01' : '', today);
     return min ? t('errRiskDue').replace('{date}', fmt(D(min))) : ''; };
   const dueShow = () => { const m = dueMsg(), v = g('k-due').value, e = g('k-due-e');
-    const late = !m && v && v < iso(TODAY) && g('k-status').value !== 'Закрито'; e.textContent = m || (late ? t('riskOverdue') : ''); e.hidden = !e.textContent; };
+    const late = edit && !m && v && v < iso(TODAY) && g('k-status').value !== 'Закрито'; e.textContent = m || (late ? t('riskOverdue') : ''); e.hidden = !e.textContent;
+    e.className = m ? 'ferr' : 'fwarn'; };
   form.addEventListener('change', sync); sync(); form.addEventListener('change', dueShow); dueShow();
   if (!k) form.addEventListener('change', e => { if (e.target.name === 'k-type') { const h = panel.querySelector('.ph h2'); if (h) h.textContent = newTitle(e.target.value);
     const en = panel.querySelector('.ph .ent'); if (en) en.outerHTML = entTag(e.target.value === 'Проблема' ? 'issue' : 'risk'); } });
@@ -2210,7 +2213,9 @@ function reportPeriodFrom(reports, start, created, today){
 // термін ризику (#88; векторы tests/cases/risk-due.json, те же — riskDueMin приложения)
 function riskDueMin(due, prev, created, today){
   if (!due || due === prev) return '';
-  const min = created ? String(created).slice(0, 10) : today;
+  // дата регистрации — по местному времени; нет — сегодня
+  const c = !created ? '' : String(created).length <= 10 ? String(created) : (d => isNaN(d) ? String(created).slice(0, 10) : iso(d))(new Date(created));
+  const min = c || today;
   return due < min ? min : '';
 }
 window.PPM_RULES = Object.assign(window.PPM_RULES || {}, {reportPeriodFrom, riskDueMin});

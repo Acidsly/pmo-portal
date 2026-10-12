@@ -430,7 +430,8 @@ describe('раунд 5: отзывы 81–88', () => {
   test('#85 метка «Звіт»: подсказка — когда и кем подан отчёт; дата под меткой и не переносится', () => {
     mount(<RepMark r={{ approval: 'На погодженні', date: '2026-10-08', created: '2026-10-08T14:04:00Z', author: 'Дарина Д' }} />);
     const el = root.querySelector('.rep-ap') as HTMLElement;
-    expect(el.title).toMatch(/^Подано 08\.10\.2026 \d\d:04 · Дарина Д$/);
+    const dt = new Date('2026-10-08T14:04:00Z');
+    expect(el.title).toBe(`Подано ${dt.toLocaleDateString('uk-UA')} ${dt.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })} · Дарина Д`);
     ReactDOM.unmountComponentAtNode(root);
     mount(<RepMark r={{ approval: 'Повернуто', date: '2026-10-01' }} />);
     expect((root.querySelector('.rep-ap') as HTMLElement).title).toBe('Подано 01.10.2026 · —');
@@ -455,12 +456,13 @@ describe('раунд 5: отзывы 81–88', () => {
     const k = { id: 9, projectId: 5, title: 'Р', type: 'Ризик', probability: 3, impact: 3, owner: null, status: 'Відкрито', due: '2026-01-10', mitigation: '', strategy: '', contingency: '', created: '2026-01-05T09:00:00Z' };
     const data = { projects: [{ id: 5, title: 'Проєкт П', status: 'Реалізація', canEdit: true, manager: { email: 'pm@x', name: 'PM' } }], risks: [k], reports: [], comments: [], team: [] } as any;
     mount(<RiskForm data={data} projectId={5} riskId={9} onCancel={() => undefined} />);
-    expect((root.querySelector('.ferr') as HTMLElement).textContent).toBe('Термін минув — оновіть його або закрийте запис.');
+    expect(root.querySelector('.ferr')).toBeNull();   // не ошибка — предупреждение, сохранять можно
+    expect((root.querySelector('.fwarn') as HTMLElement).textContent).toBe('Термін минув — оновіть його або закрийте запис.');
     typeDate('k-due', '01.01.2026');   // раньше регистрации (05.01.2026)
     expect((root.querySelector('.ferr') as HTMLElement).textContent).toBe('Термін не може бути раніше 05.01.2026.');
     typeDate('k-due', '10.01.2026');
     act(() => { Simulate.change(root.querySelector('#k-status') as HTMLSelectElement, { target: { value: 'Закрито' } } as any); });
-    expect(root.querySelector('.ferr')).toBeNull();
+    expect(root.querySelector('.ferr')).toBeNull(); expect(root.querySelector('.fwarn')).toBeNull();
   });
 
   test('#81 форма отчёта: «Проблеми та ризики за період» и подсказка о реестре с числом открытых', () => {

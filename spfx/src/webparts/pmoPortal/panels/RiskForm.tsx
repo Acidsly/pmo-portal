@@ -42,7 +42,7 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
   const today = todayIso();
   const dueMin = riskDueMin(d.due, k ? k.due : '', k && k.created ? k.created : '', today);
   const dueErr = dueMin ? t('errRiskDue').replace('{date}', fmtDate(dueMin)) : '';
-  const overdue = !dueErr && !!d.due && d.due < today && d.status !== 'Закрито';
+  const overdue = edit && !dueErr && !!d.due && d.due < today && d.status !== 'Закрито';
 
   const save = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault(); if (!edit) return;
@@ -95,7 +95,7 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
         <div><label className="t" htmlFor="k-status">{fl('kStatus')}</label>
           <select id="k-status" disabled={!edit} value={d.status} onChange={e => set({ status: e.target.value })}><Opts values={STATUSES} /></select></div>
         <div><label className="t" htmlFor="k-due">{fl('kDue')}</label><DateIn id="k-due" disabled={!edit} value={d.due} onChange={v => set({ due: v })} />
-          {dueErr ? <p className="ferr">{dueErr}</p> : overdue ? <p className="ferr">{t('riskOverdue')}</p> : null}</div>
+          {dueErr ? <p className="ferr">{dueErr}</p> : overdue ? <p className="fwarn">{t('riskOverdue')}</p> : null}</div>
       </div>
       <fieldset className="ragpick"><legend>{fl('kStrategy')}</legend>
         <SegPick name="k-str" options={STRATEGIES} value={d.strategy} disabled={!edit} onChange={v => set({ strategy: d.strategy === v ? '' : v })} /></fieldset>
