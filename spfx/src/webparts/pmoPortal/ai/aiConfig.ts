@@ -4,7 +4,7 @@ export const AI_CONFIG = {
   /** Окружение Power Platform «PPM Copilot» (Europe). */
   environmentId: '080c2e69-dd53-e56d-b5aa-febee943ab4b',
   /** Схемное имя агента. */
-  schemaName: 'crb3f_ppmreporthelper_jcO5qZ',
+  schemaName: 'crb3f_PPMReportHelper',
   /** Тенант и регистрация SPA «PPM Copilot Client» — заполняются после блока 4 (регистрация приложения). */
   tenantId: 'faa553e4-cc39-45f2-8dc6-ce0ae64d968b',
   clientId: '8ed067c1-2748-47f9-9d55-1c566ff1d68b',
