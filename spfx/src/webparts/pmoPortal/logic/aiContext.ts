@@ -18,9 +18,9 @@ const RISK_CLOSED = 'Закрито';
 /** Поля журнала, изменения которых попадают в контекст, и их имена в контексте. */
 const KEY_FIELDS: Record<string, string> = { pmStatus: 'phase', pmProgress: 'progress', pmGoLive: 'goLive', pmPlanEnd: 'planEnd', pmForecastEnd: 'forecastEnd' };
 /** Показатели формы и карточки для draft.changed: значение формы, поле карточки, имя в контексте. */
-const CHANGED: [(d: ReportDraft) => unknown, string, string][] = [[d => d.status, 'status', 'phase'], [d => d.type, 'type', 'type'], [d => num(d.progress), 'progress', 'progress'],
+const CHANGED: [(d: ReportDraft) => unknown, string, string][] = [[d => d.status, 'status', 'phase'], [d => d.type, 'type', 'type'], [d => d.progress, 'progress', 'progress'],
   [d => d.start || '', 'start', 'start'], [d => d.goLive || '', 'goLive', 'goLive'], [d => d.planEnd || '', 'planEnd', 'planEnd'],
-  [d => d.forecastEnd || '', 'forecastEnd', 'forecastEnd'], [d => num(d.actualCost), 'actualCost', 'actualCost']];
+  [d => d.forecastEnd || '', 'forecastEnd', 'forecastEnd'], [d => d.actualCost, 'actualCost', 'actualCost']];
 /** Длинный текст при последнем шаге обрезки — не длиннее этого. */
 const TEXT_CAP = 1000;
 /** Маркер блока данных после NFKC: «<<DATA>>» / «<</DATA>>» с пробелами, в любом регистре, со скобками ‹› ＜＞ ﹤﹥ и кириллической «а». */
