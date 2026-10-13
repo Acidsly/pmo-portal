@@ -93,18 +93,21 @@ export function aiView(aiCheck: string | null | undefined, aiCheckedAt: string |
 /** Записи реестра «Ризики та проблеми» проекта, о которых говорит пункт ИИ (название записи есть в тексте пункта; без регистра,
  *  кавычки и лишние пробелы не важны): портал ставит ссылку сам, ИИ ссылок не пишет. Название короче 4 знаков не ищется
  *  (иначе совпадения случайны); длинные названия — первыми. */
-export interface RiskRef { id: number; title: string; type: string; probability: number; impact: number; status: string; due: string }
+export interface RiskRef { id: number; title: string; type: string; probability: number; impact: number; status: string; due: string; mitigation: string }
 const squash = (s: string): string => (s || '').toLowerCase().replace(/[«»"'“”„`’ʼ]/g, '').replace(/\s+/g, ' ').trim();
 export function riskRefs<T extends RiskRef>(item: string, risks: T[]): T[] {
   const t = squash(item);
   return risks.filter(r => squash(r.title).length >= 4 && t.indexOf(squash(r.title)) >= 0)
     .sort((a, b) => b.title.length - a.title.length || a.id - b.id);
 }
-/** Строка-упоминание записи для «Проблеми та ризики за період»: «– Проблема «…» (оцінка 12, термін 01.10.2026): » —
- *  дальше PM пишет, что делает; добавляется новой строкой в конец поля (пустое поле — без пустой строки). */
-export function mentionLine(r: RiskRef, typeText: string, words: { score: string; due: string }, fmtDue: (iso: string) => string): string {
+/** Строка-упоминание записи для «Проблеми та ризики за період» — с действием из самого реестра:
+ *  «– Проблема «…» (оцінка 12, термін 01.10.2026) — заходи: …». В записи нет заходов — null: строку без действия не вставляем
+ *  (PM мог бы ничего не дописать), он описывает вручную. Добавляется новой строкой в конец поля (appendLine). */
+export function mentionLine(r: RiskRef, typeText: string, words: { score: string; due: string; mit: string }, fmtDue: (iso: string) => string): string | null {
+  const mit = (r.mitigation || '').replace(/\s+/g, ' ').trim();
+  if (!mit) return null;
   const parts = [`${words.score} ${riskScore(r.probability, r.impact)}`];
   if (r.due) parts.push(`${words.due} ${fmtDue(r.due)}`);
-  return `– ${typeText} «${r.title}» (${parts.join(', ')}): `;
+  return `– ${typeText} «${r.title}» (${parts.join(', ')}) — ${words.mit}: ${mit}`;
 }
 export const appendLine = (field: string, line: string): string => ((field || '').replace(/\s+$/, '') ? (field || '').replace(/\s+$/, '') + '\n' + line : line);

@@ -177,6 +177,15 @@ describe('поле ИИ в просмотре отчёта', () => {
 });
 
 describe('запись реестра в пункте ИИ', () => {
+  test('в записи нет заходов — кнопки вставки нет, подсказка писать вручную', async () => {
+    const risk = { id: 32, projectId: 5, title: 'Відтік розробника', type: 'Ризик', probability: 5, impact: 4, status: 'Відкрито', due: '', mitigation: '', strategy: '', contingency: '', owner: null };
+    await open('pm@x', { ...data, risks: [risk] }); fill();
+    mockAgent.replies.push({ text: '{"items":["Не згадано ризик «Відтік розробника»."]}' });
+    await submit();
+    act(() => { (root.querySelector('#f-ai button') as HTMLButtonElement).click(); });
+    expect(Array.from(root.querySelectorAll('.ai-rec button')).length).toBe(0);
+    expect($('.ai-rec').textContent).toContain('У записі немає заходів');
+  });
   test('название записи — «Показати запис», карточка и «Додати згадку» в конец «Проблеми та ризики»; кнопка — снова «Перевірити з ШІ»', async () => {
     const risk = { id: 31, projectId: 5, title: 'Ризик чи Проблема ?', type: 'Проблема', probability: 4, impact: 3, status: 'Відкрито', due: '2026-10-01',
       mitigation: 'Розібрати з ІТ', strategy: '', contingency: '', owner: null };
@@ -189,7 +198,7 @@ describe('запись реестра в пункте ИИ', () => {
     act(() => { show.click(); });
     expect($('.ai-rec').textContent).toContain('Розібрати з ІТ'); expect($('.ai-rec').textContent).toContain('01.10.2026');
     act(() => { (Array.from(root.querySelectorAll('.ai-rec button'))[0] as HTMLButtonElement).click(); });
-    expect(($('#f-iss') as HTMLTextAreaElement).value).toBe('– Прогноз зміщено.\n– Проблема «Ризик чи Проблема ?» (оцінка 12, термін 01.10.2026): ');
+    expect(($('#f-iss') as HTMLTextAreaElement).value).toBe('– Прогноз зміщено.\n– Проблема «Ризик чи Проблема ?» (оцінка 12, термін 01.10.2026) — заходи: Розібрати з ІТ');
     expect(btn()).toBe('Перевірити з ШІ');
   });
 });

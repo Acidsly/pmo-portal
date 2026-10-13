@@ -425,7 +425,8 @@
      "probability": 4,
      "impact": 3,
      "status": "Відкрито",
-     "due": "2026-10-01"
+     "due": "2026-10-01",
+     "mitigation": ""
     },
     {
      "id": 4,
@@ -434,7 +435,8 @@
      "probability": 3,
      "impact": 4,
      "status": "Відкрито",
-     "due": ""
+     "due": "",
+     "mitigation": ""
     },
     {
      "id": 5,
@@ -443,7 +445,8 @@
      "probability": 3,
      "impact": 4,
      "status": "Відкрито",
-     "due": ""
+     "due": "",
+     "mitigation": ""
     },
     {
      "id": 6,
@@ -452,7 +455,8 @@
      "probability": 1,
      "impact": 1,
      "status": "Відкрито",
-     "due": ""
+     "due": "",
+     "mitigation": ""
     }
    ],
    "out": [
@@ -470,7 +474,8 @@
      "probability": 4,
      "impact": 3,
      "status": "Відкрито",
-     "due": "2026-10-01"
+     "due": "2026-10-01",
+     "mitigation": ""
     },
     {
      "id": 4,
@@ -479,7 +484,8 @@
      "probability": 3,
      "impact": 4,
      "status": "Відкрито",
-     "due": ""
+     "due": "",
+     "mitigation": ""
     },
     {
      "id": 5,
@@ -488,7 +494,8 @@
      "probability": 3,
      "impact": 4,
      "status": "Відкрито",
-     "due": ""
+     "due": "",
+     "mitigation": ""
     },
     {
      "id": 6,
@@ -497,7 +504,8 @@
      "probability": 1,
      "impact": 1,
      "status": "Відкрито",
-     "due": ""
+     "due": "",
+     "mitigation": ""
     }
    ],
    "out": [
@@ -516,7 +524,8 @@
      "probability": 4,
      "impact": 3,
      "status": "Відкрито",
-     "due": "2026-10-01"
+     "due": "2026-10-01",
+     "mitigation": ""
     },
     {
      "id": 4,
@@ -525,7 +534,8 @@
      "probability": 3,
      "impact": 4,
      "status": "Відкрито",
-     "due": ""
+     "due": "",
+     "mitigation": ""
     },
     {
      "id": 5,
@@ -534,7 +544,8 @@
      "probability": 3,
      "impact": 4,
      "status": "Відкрито",
-     "due": ""
+     "due": "",
+     "mitigation": ""
     },
     {
      "id": 6,
@@ -543,7 +554,8 @@
      "probability": 1,
      "impact": 1,
      "status": "Відкрито",
-     "due": ""
+     "due": "",
+     "mitigation": ""
     }
    ],
    "out": []
@@ -559,7 +571,8 @@
      "probability": 4,
      "impact": 3,
      "status": "Відкрито",
-     "due": "2026-10-01"
+     "due": "2026-10-01",
+     "mitigation": ""
     },
     {
      "id": 4,
@@ -568,7 +581,8 @@
      "probability": 3,
      "impact": 4,
      "status": "Відкрито",
-     "due": ""
+     "due": "",
+     "mitigation": ""
     },
     {
      "id": 5,
@@ -577,7 +591,8 @@
      "probability": 3,
      "impact": 4,
      "status": "Відкрито",
-     "due": ""
+     "due": "",
+     "mitigation": ""
     },
     {
      "id": 6,
@@ -586,7 +601,8 @@
      "probability": 1,
      "impact": 1,
      "status": "Відкрито",
-     "due": ""
+     "due": "",
+     "mitigation": ""
     }
    ],
    "out": []
@@ -594,7 +610,7 @@
  ],
  "mention": [
   {
-   "name": "со сроком",
+   "name": "со сроком и заходами",
    "risk": {
     "id": 3,
     "title": "Ризик чи Проблема ?",
@@ -602,11 +618,12 @@
     "probability": 4,
     "impact": 3,
     "status": "Відкрито",
-    "due": "2026-10-01"
+    "due": "2026-10-01",
+    "mitigation": "Розібрати з ІТ\n до п'ятниці"
    },
    "type": "Проблема",
    "field": "– Прогноз зміщено.",
-   "out": "– Прогноз зміщено.\n– Проблема «Ризик чи Проблема ?» (оцінка 12, термін 01.10.2026): "
+   "out": "– Прогноз зміщено.\n– Проблема «Ризик чи Проблема ?» (оцінка 12, термін 01.10.2026) — заходи: Розібрати з ІТ до п'ятниці"
   },
   {
    "name": "без срока, пустое поле",
@@ -617,11 +634,28 @@
     "probability": 3,
     "impact": 4,
     "status": "Відкрито",
-    "due": ""
+    "due": "",
+    "mitigation": "Щотижневий контроль"
    },
    "type": "Ризик",
    "field": "  ",
-   "out": "– Ризик «Затримка постачальника» (оцінка 12): "
+   "out": "– Ризик «Затримка постачальника» (оцінка 12) — заходи: Щотижневий контроль"
+  },
+  {
+   "name": "в записи нет заходов — строку не вставляем (PM пишет сам)",
+   "risk": {
+    "id": 5,
+    "title": "Без заходів",
+    "type": "Ризик",
+    "probability": 5,
+    "impact": 4,
+    "status": "Відкрито",
+    "due": "",
+    "mitigation": "  "
+   },
+   "type": "Ризик",
+   "field": "x",
+   "out": null
   }
  ]
 }

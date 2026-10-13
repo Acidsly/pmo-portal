@@ -174,8 +174,9 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
   // запись реестра, названная в пункте ИИ: карточка под пунктом и «Додати згадку» в «Проблеми та ризики за період»
   const projRisks = a.data.risks.filter(k => k.projectId === a.project.id);
   const [openRec, setOpenRec] = React.useState<string>('');
+  const lineOf = (k: Risk): string | null => mentionLine(k, tv(k.type), { score: t('aiMentionScore'), due: t('aiMentionDue'), mit: t('aiMentionMit') }, fmtDate);
   const mention = (k: Risk): void => {
-    const line = mentionLine(k, tv(k.type), { score: t('aiMentionScore'), due: t('aiMentionDue') }, fmtDate);
+    const line = lineOf(k); if (!line) return;
     a.setD({ ...dRef.current, issues: appendLine(dRef.current.issues, line) });
     setMsg({ at: 'bottom', kind: 'ok', text: t('aiMentioned') });
     setTimeout(() => { const el = document.getElementById('f-iss') as HTMLTextAreaElement | null; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 0);
@@ -187,7 +188,7 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
       <p><b>{tv(k.type)} «{k.title}»</b> · {fl('kScore')} {riskScore(k.probability, k.impact)} · {fl('kStatus')}: {tv(k.status)}{k.due ? ` · ${fl('kDue')}: ${fmtDate(k.due)}` : ''}</p>
       {k.strategy ? <p>{fl('kStrategy')}: {tv(k.strategy)}</p> : null}
       {k.mitigation ? <p>{fl('kMit')}: {k.mitigation}</p> : null}
-      <button type="button" className="btn primary" onClick={() => mention(k)}>{t('aiMention')}</button>
+      {lineOf(k) ? <button type="button" className="btn primary" onClick={() => mention(k)}>{t('aiMention')}</button> : <p className="hint">{t('aiNoMit')}</p>}
     </div> : null}
   </div>;
   const box = checked ? (checked.items.length

@@ -18,6 +18,7 @@ describe('записи реестра в пунктах ИИ', () => { (c.riskRe
 describe('упоминание записи в «Проблеми та ризики»', () => {
   const fmt = (iso: string): string => iso.split('-').reverse().join('.');
   (c.mention as any[]).forEach(x => test(x.name, () => {
-    expect(appendLine(x.field, mentionLine(x.risk, x.type, { score: 'оцінка', due: 'термін' }, fmt))).toBe(x.out);
+    const line = mentionLine(x.risk, x.type, { score: 'оцінка', due: 'термін', mit: 'заходи' }, fmt);
+    expect(line === null ? null : appendLine(x.field, line)).toBe(x.out);
   }));
 });

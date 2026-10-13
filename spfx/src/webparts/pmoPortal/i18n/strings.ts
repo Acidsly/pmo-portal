@@ -426,10 +426,20 @@ export const T: Record<string, L3> = {
   "due",
   "срок"
  ],
+ "aiMentionMit": [
+  "заходи",
+  "actions",
+  "меры"
+ ],
+ "aiNoMit": [
+  "У записі немає заходів — опишіть у «Проблеми та ризики за період», що робите, або доповніть запис у реєстрі.",
+  "The record has no actions — describe in «Issues and risks for the period» what you are doing, or complete the record in the register.",
+  "В записи нет мер — опишите в «Проблемы и риски за период», что делаете, или дополните запись в реестре."
+ ],
  "aiMentioned": [
-  "Згадку додано — допишіть, що робите, і перевірте ще раз.",
-  "Mention added — add what you are doing and check again.",
-  "Упоминание добавлено — допишите, что делаете, и проверьте ещё раз."
+  "Згадку із заходами з реєстру додано — за потреби уточніть і перевірте ще раз.",
+  "Mention with the register actions added — adjust if needed and check again.",
+  "Упоминание с мерами из реестра добавлено — при необходимости уточните и проверьте ещё раз."
  ],
  "aiFill": [
   "Заповнити з ШІ",
