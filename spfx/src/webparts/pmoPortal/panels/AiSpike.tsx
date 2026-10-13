@@ -37,6 +37,8 @@ export const AiSpike: React.FC<{ onCancel(): void; aadToken?: (resource: string)
     const m = await load();
     const t = await aadToken(m.aiScope().replace('/.default', ''));
     add(`Шлях A (AadTokenProvider): токен ${t.length} символів`);
+    const cv = new m.AiConversation(t); const r = await cv.start(); conv.current = cv;
+    add(`Шлях A: розмову почато за ${r.ms} мс; activity: ${r.types.join(', ')}; привітання: ${r.texts.join(' | ').slice(0, 200)}`);
   });
   const test = (kb: number) => run(async () => {
     if (!conv.current) { add('Спершу «Підключитися»'); return; }
