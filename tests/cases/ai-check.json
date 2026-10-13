@@ -1,0 +1,385 @@
+{
+  "_doc": "Проверка отчёта ИИ (logic/aiCheck.ts; план помощника 2.2, 4.2). print: отпечаток черновика draft и черновика с изменением change — same: совпадают ли (дата подання, период, основа, поле ИИ не входят; тексты без пробелов по краям). button: какая кнопка показана (aiButton). reply: принимается ли ответ ИИ (отпечаток на момент запроса = текущий). unavailable: текст поля ИИ, если проверка не выполнена.",
+  "draft": {
+    "projectId": 1,
+    "date": "2026-10-13",
+    "periodFrom": "2026-09-01",
+    "schedule": "Жовтий",
+    "budget": "Зелений",
+    "resources": "Зелений",
+    "status": "Реалізація",
+    "type": "Стратегічний",
+    "progress": 50,
+    "start": "2026-03-01",
+    "goLive": "2026-11-01",
+    "planEnd": "2026-12-15",
+    "forecastEnd": "2027-01-20",
+    "actualCost": 230000,
+    "actualEnd": "",
+    "title": "Резюме",
+    "done": "Зроблено",
+    "next": "План",
+    "issues": "Проблеми",
+    "decision": false,
+    "decisionText": "",
+    "keyReason": ""
+  },
+  "print": [
+    {
+      "name": "дата подання не входит",
+      "change": {
+        "date": "2026-10-14"
+      },
+      "same": true
+    },
+    {
+      "name": "период не входит",
+      "change": {
+        "periodFrom": "2026-08-01"
+      },
+      "same": true
+    },
+    {
+      "name": "номер повернутого (основа) не входит",
+      "change": {
+        "basedOn": 12
+      },
+      "same": true
+    },
+    {
+      "name": "поле ИИ и время проверки не входят",
+      "change": {
+        "aiCheck": "1. Суперечність",
+        "aiCheckedAt": "2026-10-13T10:00:00Z",
+        "aiFilled": true
+      },
+      "same": true
+    },
+    {
+      "name": "пробелы по краям текстов не меняют отпечаток",
+      "change": {
+        "done": "  Зроблено \n",
+        "title": "Резюме "
+      },
+      "same": true
+    },
+    {
+      "name": "оценка «Терміни»",
+      "change": {
+        "schedule": "Червоний"
+      },
+      "same": false
+    },
+    {
+      "name": "оценка «Бюджет»",
+      "change": {
+        "budget": "Жовтий"
+      },
+      "same": false
+    },
+    {
+      "name": "оценка «Ресурси»",
+      "change": {
+        "resources": ""
+      },
+      "same": false
+    },
+    {
+      "name": "фаза",
+      "change": {
+        "status": "Призупинено"
+      },
+      "same": false
+    },
+    {
+      "name": "тип",
+      "change": {
+        "type": "Операційний"
+      },
+      "same": false
+    },
+    {
+      "name": "% виконання",
+      "change": {
+        "progress": 55
+      },
+      "same": false
+    },
+    {
+      "name": "дата старту",
+      "change": {
+        "start": "2026-03-02"
+      },
+      "same": false
+    },
+    {
+      "name": "дата запуску",
+      "change": {
+        "goLive": "2026-11-02"
+      },
+      "same": false
+    },
+    {
+      "name": "плановий кінець",
+      "change": {
+        "planEnd": "2026-12-16"
+      },
+      "same": false
+    },
+    {
+      "name": "прогноз",
+      "change": {
+        "forecastEnd": "2027-01-21"
+      },
+      "same": false
+    },
+    {
+      "name": "фактична дата завершення",
+      "change": {
+        "actualEnd": "2026-10-10"
+      },
+      "same": false
+    },
+    {
+      "name": "витрати",
+      "change": {
+        "actualCost": 230001
+      },
+      "same": false
+    },
+    {
+      "name": "причина зміни показників",
+      "change": {
+        "keyReason": "Затримка постачальника"
+      },
+      "same": false
+    },
+    {
+      "name": "«Зроблено»",
+      "change": {
+        "done": "Зроблено більше"
+      },
+      "same": false
+    },
+    {
+      "name": "«План»",
+      "change": {
+        "next": "План 2"
+      },
+      "same": false
+    },
+    {
+      "name": "«Проблеми та ризики за період»",
+      "change": {
+        "issues": "Нові проблеми"
+      },
+      "same": false
+    },
+    {
+      "name": "резюме",
+      "change": {
+        "title": "Інше резюме"
+      },
+      "same": false
+    },
+    {
+      "name": "потрібне рішення (галочка)",
+      "change": {
+        "decision": true
+      },
+      "same": false
+    },
+    {
+      "name": "текст рішення",
+      "change": {
+        "decisionText": "Погодити бюджет"
+      },
+      "same": false
+    },
+    {
+      "name": "текст переходит из одного поля в другое — отпечаток другой",
+      "change": {
+        "done": "",
+        "next": "Зроблено"
+      },
+      "same": false
+    }
+  ],
+  "button": [
+    {
+      "name": "вне пилота — «Зберегти», как сейчас (даже без проверки, во время проверки и при недоступном ИИ)",
+      "in": {
+        "pilot": false,
+        "checkedPrint": null,
+        "currentPrint": "A",
+        "busy": true,
+        "unavailable": true
+      },
+      "out": "save"
+    },
+    {
+      "name": "пилот, проверки не было — «Перевірити з ШІ»",
+      "in": {
+        "pilot": true,
+        "checkedPrint": null,
+        "currentPrint": "A",
+        "busy": false,
+        "unavailable": false
+      },
+      "out": "check"
+    },
+    {
+      "name": "форма не менялась после проверки — «Зберегти»",
+      "in": {
+        "pilot": true,
+        "checkedPrint": "A",
+        "currentPrint": "A",
+        "busy": false,
+        "unavailable": false
+      },
+      "out": "save"
+    },
+    {
+      "name": "форма изменилась после проверки — снова «Перевірити з ШІ»",
+      "in": {
+        "pilot": true,
+        "checkedPrint": "A",
+        "currentPrint": "B",
+        "busy": false,
+        "unavailable": false
+      },
+      "out": "check"
+    },
+    {
+      "name": "идёт проверка — «ШІ аналізує…» (повторно не нажать)",
+      "in": {
+        "pilot": true,
+        "checkedPrint": "A",
+        "currentPrint": "A",
+        "busy": true,
+        "unavailable": false
+      },
+      "out": "busy"
+    },
+    {
+      "name": "проверка идёт важнее недоступности",
+      "in": {
+        "pilot": true,
+        "checkedPrint": null,
+        "currentPrint": "A",
+        "busy": true,
+        "unavailable": true
+      },
+      "out": "busy"
+    },
+    {
+      "name": "ИИ недоступен — «Зберегти без перевірки»",
+      "in": {
+        "pilot": true,
+        "checkedPrint": null,
+        "currentPrint": "A",
+        "busy": false,
+        "unavailable": true
+      },
+      "out": "saveWithout"
+    },
+    {
+      "name": "ИИ недоступен и форма проверена — всё равно «Зберегти без перевірки» (поле получает причину)",
+      "in": {
+        "pilot": true,
+        "checkedPrint": "A",
+        "currentPrint": "A",
+        "busy": false,
+        "unavailable": true
+      },
+      "out": "saveWithout"
+    },
+    {
+      "name": "пустой отпечаток проверки не совпадает с отсутствием проверки",
+      "in": {
+        "pilot": true,
+        "checkedPrint": null,
+        "currentPrint": "",
+        "busy": false,
+        "unavailable": false
+      },
+      "out": "check"
+    }
+  ],
+  "reply": [
+    {
+      "name": "ответ на ту же форму — принимается",
+      "request": "A",
+      "current": "A",
+      "out": true
+    },
+    {
+      "name": "форма изменилась, пока ИИ отвечал — ответ отбрасывается",
+      "request": "A",
+      "current": "B",
+      "out": false
+    }
+  ],
+  "unavailable": [
+    {
+      "reason": "credits",
+      "lang": "uk",
+      "out": "Перевірку ШІ не виконано: вичерпано ліміт ШІ"
+    },
+    {
+      "reason": "error",
+      "lang": "uk",
+      "out": "Перевірку ШІ не виконано: помилка сервісу ШІ"
+    },
+    {
+      "reason": "timeout",
+      "lang": "uk",
+      "out": "Перевірку ШІ не виконано: ШІ не відповів за 60 с"
+    },
+    {
+      "reason": "denied",
+      "lang": "uk",
+      "out": "Перевірку ШІ не виконано: немає доступу до помічника ШІ"
+    },
+    {
+      "reason": "credits",
+      "lang": "en",
+      "out": "AI check not performed: AI credit limit reached"
+    },
+    {
+      "reason": "error",
+      "lang": "en",
+      "out": "AI check not performed: AI service error"
+    },
+    {
+      "reason": "timeout",
+      "lang": "en",
+      "out": "AI check not performed: no AI response within 60 s"
+    },
+    {
+      "reason": "denied",
+      "lang": "en",
+      "out": "AI check not performed: no access to the AI assistant"
+    },
+    {
+      "reason": "credits",
+      "lang": "ru",
+      "out": "Проверка ИИ не выполнена: исчерпан лимит ИИ"
+    },
+    {
+      "reason": "error",
+      "lang": "ru",
+      "out": "Проверка ИИ не выполнена: ошибка сервиса ИИ"
+    },
+    {
+      "reason": "timeout",
+      "lang": "ru",
+      "out": "Проверка ИИ не выполнена: ИИ не ответил за 60 с"
+    },
+    {
+      "reason": "denied",
+      "lang": "ru",
+      "out": "Проверка ИИ не выполнена: нет доступа к помощнику ИИ"
+    }
+  ]
+}
