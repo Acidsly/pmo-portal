@@ -17,6 +17,10 @@ const has = (o: any, path: string): boolean => {
 };
 
 describe('контекст помощника отчёта', () => {
+  // даты журнала — по местному времени: векторы около полуночи рассчитаны на Киев
+  const tz = process.env.TZ;
+  beforeAll(() => { process.env.TZ = 'Europe/Kyiv'; });
+  afterAll(() => { if (tz === undefined) delete process.env.TZ; else process.env.TZ = tz; });
   (cases.cases as any[]).forEach(c => test(c.name, () => {
     const r = buildReportContext(inputOf(c), c.maxChars || 50000);
     const o = JSON.parse(r.json);
@@ -28,13 +32,15 @@ describe('контекст помощника отчёта', () => {
     if (c.truncated !== undefined) expect(r.truncated).toBe(c.truncated);
     if (c.maxChars && c.truncated && !c.overLimit) expect(r.json.length).toBeLessThanOrEqual(c.maxChars);
     expect(!!o.truncated).toBe(r.truncated);
+    expect(r.tooLarge).toBe(!!c.tooLarge);
+    expect(!!o.tooLarge).toBe(r.tooLarge);
   }));
   (cases.cases as any[]).forEach(c => test('порядок входа не важен: ' + c.name, () => {
     const a = inputOf(c), b = { ...a, reports: a.reports.slice().reverse(), risks: a.risks.slice().reverse(), changes: a.changes.slice().reverse() };
     expect(buildReportContext(b, c.maxChars || 50000).json).toBe(buildReportContext(a, c.maxChars || 50000).json);
   }));
   test('обрезка — по порядку: каждый следующий шаг только если предыдущего мало', () => {
-    const t = (cases.cases as any[]).filter(c => /^обрезка \d/.test(c.name)).map(c => c.maxChars);
+    const t = (cases.cases as any[]).filter(c => /^обрезка [123]:/.test(c.name)).map(c => c.maxChars);
     const full = (cases.cases as any[]).filter(c => c.truncated === false && c.length && c.length.changes === 20)[0];
     expect(buildReportContext(inputOf(full), 50000).json.length).toBeGreaterThan(t[0]);
     expect(t.length).toBe(3);

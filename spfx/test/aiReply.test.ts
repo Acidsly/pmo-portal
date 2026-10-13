@@ -14,6 +14,12 @@ describe('разбор ответа «Перевірити з ШІ»', () => {
 describe('только текст', () => {
   (cases.plain as any[]).forEach(c => test(c.name, () => { expect(c.max ? toPlain(c.in, c.max) : toPlain(c.in)).toBe(c.out); }));
   test('по умолчанию — не длиннее 4000', () => { expect(toPlain('я'.repeat(5000)).length).toBe(4000); });
+  test('60000 × «<script» и «<a» — быстро (без квадратичной работы)', () => {
+    const t0 = Date.now();
+    expect(toPlain('<script'.repeat(60000))).toBe('');
+    toPlain('<a'.repeat(60000)); toPlain('[x](' + '['.repeat(60000)); toPlain('**a'.repeat(60000));
+    expect(Date.now() - t0).toBeLessThan(500);
+  });
 });
 describe('вставка в поле', () => {
   (cases.insert as any[]).forEach(c => test(c.name, () => { expect(insertText(c.current, c.proposed)).toEqual(c.out); }));

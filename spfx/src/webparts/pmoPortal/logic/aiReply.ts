@@ -8,19 +8,60 @@ export interface AiDraft {
 }
 export interface AiFail { ok: false; error: string }
 
-/** Только текст для полей отчёта и экрана (план помощника, раздел 3 «Вывод — только текст»; векторы tests/cases/ai-reply.json):
- *  без HTML (скрипты и стили — вместе с содержимым), ссылки Markdown — их текст, адреса http(s) убираются,
- *  без выделения Markdown, не больше двух пустых строк подряд; длиннее max — обрезка с «…». */
-export function toPlain(s: string, max: number = 4000): string {
-  let t = String(s === undefined || s === null ? '' : s).replace(/\r\n?/g, '\n');
-  t = t.replace(/<(script|style)\b[\s\S]*?<\/\1\s*>/gi, '').replace(/<(script|style)\b[\s\S]*$/gi, '');
-  t = t.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|li|h[1-6])\s*>/gi, '\n').replace(/<[^>]*>/g, '');
-  t = t.replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1');
-  t = t.replace(/\bhttps?:\/\/[^\s<>"')\]]+/gi, '');
-  t = t.replace(/\*\*|__/g, '').replace(/^[ \t]*#{1,6}[ \t]+/gm, '');
-  t = t.split('\n').map(l => l.replace(/[ \t]+$/, '')).join('\n').replace(/\n{3,}/g, '\n\n').trim();
-  return t.length > max ? t.slice(0, Math.max(0, max - 1)).replace(/\s+$/, '') + '…' : t;
+/** Невидимые и управляющие символы: нулевой ширины и направления текста (U+200B–U+200F, U+2028–U+202E, U+2060–U+2069, U+FEFF),
+ *  C0 / C1, кроме перевода строки и табуляции. */
+// eslint-disable-next-line no-control-regex
+const INVISIBLE = /[\u0000-\u0008\u000B-\u001F\u007F-\u009F\u200B-\u200F\u2028-\u202E\u2060-\u2069\uFEFF]/g;
+export const stripInvisible = (s: string): string => s.replace(INVISIBLE, '');
+
+/** Обрезка до n знаков с «…» (вместе с ним — n); суррогатная пара не разрывается. */
+export function cutText(s: string, n: number): string {
+  if (s.length <= n) return s;
+  let k = Math.max(0, n - 1);
+  const c = s.charCodeAt(k - 1);
+  if (k > 0 && c >= 0xd800 && c <= 0xdbff) k--;
+  return s.slice(0, k).replace(/\s+$/, '') + '…';
 }
+
+/** Блоки <script> / <style> вместе с содержимым — за один проход (незакрытый — до конца текста). */
+function dropBlocks(t: string): string {
+  const low = t.toLowerCase();
+  let out = '', i = 0;
+  for (;;) {
+    const a = low.indexOf('<script', i), b = low.indexOf('<style', i);
+    const at = a < 0 ? b : b < 0 ? a : Math.min(a, b);
+    if (at < 0) return out + t.slice(i);
+    out += t.slice(i, at);
+    const tag = at === a ? '</script' : '</style';
+    const end = low.indexOf(tag, at);
+    if (end < 0) return out;
+    const close = low.indexOf('>', end);
+    if (close < 0) return out;
+    i = close + 1;
+  }
+}
+
+/** Только текст для полей отчёта и экрана (план помощника, раздел 3 «Вывод — только текст»; векторы tests/cases/ai-reply.json):
+ *  вход обрезается до max × 4 (без квадратичной работы); без невидимых и управляющих символов; без HTML — только настоящие теги
+ *  («<10% і >5» остаётся), скрипты и стили — вместе с содержимым; ссылки и картинки Markdown — их текст; адреса http(s)://, www.,
+ *  javascript:, data:, vbscript: убираются; парное выделение **…** убирается, __…__ — только у фразы с пробелом (__init__ остаётся);
+ *  заголовки «#» убираются; не больше двух пустых строк подряд; длиннее max — обрезка с «…». */
+export function toPlain(s: string, max: number = 4000): string {
+  let t = String(s === undefined || s === null ? '' : s);
+  t = t.slice(0, max * 4).replace(/\r\n?/g, '\n');
+  t = stripInvisible(dropBlocks(t));
+  t = t.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|li|h[1-6])\s*>/gi, '\n').replace(/<\/?[a-zA-Z!][^<>]*>/g, '');
+  t = t.replace(/!?\[([^\]\n]*)\]\([^)\n]*\)/g, '$1');
+  t = t.replace(/\b(?:https?:\/\/|www\.)[^\s<>"')\]]+/gi, '').replace(/\b(?:javascript|data|vbscript):[^\s<>"']+/gi, '');
+  t = t.replace(/\*\*(?=\S)([^*\n]*?\S)\*\*/g, '$1').replace(/(^|[^\w])__(?=\S)([^_\n]*\s[^_\n]*?\S)__(?!\w)/g, '$1$2');
+  t = t.replace(/^[ \t]*#{1,6}[ \t]+/gm, '');
+  t = t.split('\n').map(l => l.replace(/[ \t]+$/, '')).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  return cutText(t, max);
+}
+/** Пункт списка («Що не забути», противоречия) — одной строкой: переводы строк → пробел. */
+const oneLine = (s: string, max: number): string => toPlain(s, max).replace(/\s*\n\s*/g, ' ');
+/** Пунктов в списке — не больше. */
+const MAX_ITEMS = 20;
 
 /** Разбор JSON ответа агента: допускается обёртка ```json … ```; не объект или обрезанный JSON — ошибка. */
 function parseObject(raw: string): { o?: Record<string, unknown>; error?: string } {
@@ -40,7 +81,8 @@ const DRAFT_KEYS = ['done', 'next', 'issues', 'summary', 'remember', 'ratings'];
 const RATING_KEYS = ['schedule', 'budget', 'resources', 'reason'];
 /** Строгая проверка ответа «Заповнити з ШІ»: ровно поля done / next / issues / summary (строки), remember (список строк),
  *  ratings { schedule? budget? resources? — Зелений / Жовтий / Червоний или нет (null и '' — нет); reason — строка }.
- *  Лишний ключ, не тот тип, чужое значение оценки — ошибка (код в error). Тексты очищаются toPlain. */
+ *  Лишний ключ, не тот тип, чужое значение оценки — ошибка (код в error). Тексты очищаются toPlain;
+ *  пункты «Що не забути» — одной строкой, не больше 20. */
 export function parseDraft(raw: string): AiDraft | AiFail {
   const p = parseObject(raw);
   if (!p.o) return { ok: false, error: p.error! };
@@ -62,17 +104,18 @@ export function parseDraft(raw: string): AiDraft | AiFail {
     ratings[k] = v;
   }
   return { ok: true, done: toPlain(o.done as string), next: toPlain(o.next as string), issues: toPlain(o.issues as string),
-    summary: toPlain(o.summary as string, 255), remember: (o.remember as string[]).map(x => toPlain(x, 500)).filter(x => !!x), ratings };
+    summary: toPlain(o.summary as string, 255), remember: (o.remember as string[]).map(x => oneLine(x, 500)).filter(x => !!x).slice(0, MAX_ITEMS), ratings };
 }
 
-/** Строгая проверка ответа «Перевірити з ШІ»: ровно { items: [строки] }; пустой список — противоречий нет. */
+/** Строгая проверка ответа «Перевірити з ШІ»: ровно { items: [строки] }; пустой список — противоречий нет.
+ *  Пункты — одной строкой, не больше 20. */
 export function parseCheck(raw: string): { ok: true; items: string[] } | AiFail {
   const p = parseObject(raw);
   if (!p.o) return { ok: false, error: p.error! };
   const extra = extraKey(p.o, ['items']);
   if (extra) return { ok: false, error: 'extraKey:' + extra };
   if (!isStrList(p.o.items)) return { ok: false, error: 'badField:items' };
-  return { ok: true, items: (p.o.items as string[]).map(x => toPlain(x, 1000)).filter(x => !!x) };
+  return { ok: true, items: (p.o.items as string[]).map(x => oneLine(x, 1000)).filter(x => !!x).slice(0, MAX_ITEMS) };
 }
 
 /** Вставка текста ИИ в поле: пустое (пробелы — пусто) — сразу; заполненное — confirm: спросить «Замінити текст?».
@@ -83,8 +126,9 @@ export function insertText(current: string, proposed: string): { value: string; 
 }
 
 const NONE: Record<AiLang, string> = { uk: 'Суперечностей не знайдено.', en: 'No contradictions found.', ru: 'Противоречий не найдено.' };
-/** Текст поля «Суперечності (аналіз ШІ)» (только для чтения): пункты «1. …» по строкам; пусто — «Суперечностей не знайдено.». */
+/** Текст поля «Суперечності (аналіз ШІ)» (только для чтения): пункты «1. …» по строкам (перевод строки внутри пункта — пробел,
+ *  не больше 20 пунктов); пусто — «Суперечностей не знайдено.». */
 export function checkText(items: string[], lang: AiLang): string {
-  const list = (items || []).map(x => (x || '').trim()).filter(x => !!x);
+  const list = (items || []).map(x => (x || '').replace(/\s*\n\s*/g, ' ').trim()).filter(x => !!x).slice(0, MAX_ITEMS);
   return list.length ? list.map((x, i) => `${i + 1}. ${x}`).join('\n') : NONE[lang] || NONE.uk;
 }

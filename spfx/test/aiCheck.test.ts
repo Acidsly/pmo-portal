@@ -15,7 +15,8 @@ describe('кнопка внизу формы', () => {
   (cases.button as any[]).forEach(c => test(c.name, () => { expect(aiButton(c.in)).toBe(c.out); }));
 });
 describe('опоздавший ответ ИИ', () => {
-  (cases.reply as any[]).forEach(c => test(c.name, () => { expect(acceptReply(c.request, c.current)).toBe(c.out); }));
+  const pr = (ch: any): string => reportPrint({ ...draft, ...ch } as ReportDraft);
+  (cases.reply as any[]).forEach(c => test(c.name, () => { expect(acceptReply(pr(c.request), pr(c.current))).toBe(c.out); }));
 });
 describe('ИИ недоступен — текст поля', () => {
   (cases.unavailable as any[]).forEach(c => test(c.lang + ' ' + c.reason, () => {

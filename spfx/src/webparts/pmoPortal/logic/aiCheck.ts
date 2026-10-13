@@ -7,13 +7,13 @@ export type AiUnavailable = 'credits' | 'error' | 'timeout' | 'denied';
 /** Кнопка внизу формы отчёта: «Зберегти», «Перевірити з ШІ», «ШІ аналізує…», «Зберегти без перевірки». */
 export type AiButton = 'save' | 'check' | 'busy' | 'saveWithout';
 
-/** Отпечаток формы отчёта (план помощника, 2.2; векторы tests/cases/ai-check.json): оценки, ключевые показатели,
+/** Отпечаток формы отчёта (план помощника, 2.2; векторы tests/cases/ai-check.json): проект, оценки, ключевые показатели,
  *  «Причина зміни показників», тексты, резюме, запрос решения. Тексты — без пробелов по краям.
- *  Не входят: дата подання и период (вычисляются), состояние интерфейса и само поле ИИ. */
+ *  Пробелы внутри текстов значимы. Не входят: дата подання и период (вычисляются), состояние интерфейса и само поле ИИ. */
 export function reportPrint(d: ReportDraft): string {
   const t = (s: string | undefined | null): string => String(s === undefined || s === null ? '' : s).trim();
   const n = (x: number | undefined | null): string => (x === undefined || x === null ? '' : String(x));
-  return JSON.stringify([t(d.schedule), t(d.budget), t(d.resources), t(d.status), t(d.type), n(d.progress), t(d.start), t(d.goLive),
+  return JSON.stringify([n(d.projectId), t(d.schedule), t(d.budget), t(d.resources), t(d.status), t(d.type), n(d.progress), t(d.start), t(d.goLive),
     t(d.planEnd), t(d.forecastEnd), t(d.actualEnd), n(d.actualCost), t(d.keyReason), t(d.done), t(d.next), t(d.issues), t(d.title),
     d.decision ? '1' : '0', t(d.decisionText)]);
 }
@@ -28,7 +28,9 @@ export function aiButton(s: { pilot: boolean; checkedPrint: string | null; curre
   return s.checkedPrint !== null && s.checkedPrint === s.currentPrint ? 'save' : 'check';
 }
 
-/** Ответ ИИ принимается, только если форма не менялась с момента запроса (опоздавший ответ отбрасывается). */
+/** Ответ ИИ принимается, только если форма не менялась с момента запроса (опоздавший ответ отбрасывается); отпечаток
+ *  включает проект — ответ по прежнему проекту после смены проекта в форме тоже отбрасывается. Та же проверка — для ответов
+ *  и «Перевірити з ШІ», и «Заповнити з ШІ» (вставлять тексты в форму, изменённую после запроса, нельзя). */
 export const acceptReply = (requestPrint: string, currentPrint: string): boolean => requestPrint === currentPrint;
 
 const UNAVAILABLE: Record<AiLang, { head: string } & Record<AiUnavailable, string>> = {
