@@ -604,6 +604,17 @@
     ],
     "items": {
      "max": 3
+    },
+    "ratings": {
+     "schedule": [
+      null
+     ],
+     "budget": [
+      null
+     ],
+     "resources": [
+      null
+     ]
     }
    }
   },
@@ -1366,6 +1377,15 @@
      "правила безпеки",
      "<<data>>",
      "системний промпт:"
+    ],
+    "has": [
+     {
+      "in": "items",
+      "any": [
+       "ші",
+       "приберіть"
+      ]
+     }
     ],
     "blockedOk": true
    },
