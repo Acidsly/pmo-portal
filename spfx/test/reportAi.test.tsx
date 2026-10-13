@@ -5,6 +5,7 @@ import { act, Simulate } from 'react-dom/test-utils';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
 import { makeT } from '../src/webparts/pmoPortal/i18n/i18n';
 import { ReportForm } from '../src/webparts/pmoPortal/panels/ReportForm';
+import { ReportView } from '../src/webparts/pmoPortal/panels/ReportView';
 
 // Помощник ИИ в форме отчёта (план этапа 4, задача 4): поведение формы с заглушкой агента
 const mockAgent = { replies: [] as any[], allows: [] as any[], asked: [] as string[], hold: null as null | Promise<void> };
@@ -153,5 +154,24 @@ describe('помощник ИИ в форме отчёта', () => {
     await act(async () => { release(); }); await flush();
     expect(root.textContent).toContain('Звіт змінився, поки ШІ працював');
     expect($('#f-ai')).toBeNull(); expect(btn()).toBe('Перевірити з ШІ');
+  });
+});
+
+describe('поле ИИ в просмотре отчёта', () => {
+  const rep = (o: any): any => ({ ...data.reports[0], id: 3, author: { email: 'pm@x', name: 'PM' }, approval: 'Погоджено', approvedBy: null, approvedAt: '', approvalNote: '', ...o });
+  const view = async (r: any): Promise<void> => {
+    await act(async () => { ReactDOM.render(<AppCtx.Provider value={ctxFor('boss@x')}><ReportView data={{ ...data, reports: [r], approvals: [] }} report={r} onCancel={() => undefined} /></AppCtx.Provider>, root); });
+  };
+  test('проверено — текст и «Перевірено ШІ: дата»', async () => {
+    await view(rep({ aiCheck: '1. Пункт', aiCheckedAt: '2026-10-14T09:30:00Z' }));
+    expect($('#rv-ai').textContent).toContain('1. Пункт'); expect($('#rv-ai').textContent).toContain('Перевірено ШІ:');
+  });
+  test('без проверки — причина и «Збережено без перевірки ШІ»', async () => {
+    await view(rep({ aiCheck: 'Перевірку ШІ не виконано: помилка сервісу ШІ', aiCheckedAt: '' }));
+    expect($('#rv-ai').textContent).toContain('Збережено без перевірки ШІ');
+  });
+  test('старый отчёт или вне пилота — блока нет', async () => {
+    await view(rep({ aiCheck: '', aiCheckedAt: '' }));
+    expect($('#rv-ai')).toBeNull();
   });
 });

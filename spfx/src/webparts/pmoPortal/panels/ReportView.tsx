@@ -11,6 +11,8 @@ import { RagPick, Err, Frow, errText, guardText } from '../components/fields';
 import { guard } from '../logic/guard';
 import { RagPill, RagDot, ApBadge, fmtDate, fmtDT, money, PersonCell, periodText } from '../components/Bits';
 import { Plus } from '../components/Icons';
+import { Lucide } from '../components/LucideIcons';
+import { aiView } from '../logic/aiFlow';
 
 type Ind = 'status' | 'type' | 'progress' | 'start' | 'goLive' | 'planEnd' | 'forecastEnd' | 'actualEnd' | 'actualCost';
 const IND: [Ind, string][] = [['status', 'status'], ['type', 'type'], ['progress', 'progress'], ['start', 'start'], ['goLive', 'golive'],
@@ -94,6 +96,13 @@ export const ReportView: React.FC<{ data: PortalData; report: StatusReport | und
       <div className="rep-h"><PersonCell p={r.author} />{r.decision ? <span className="flag">{t('needDecision')}</span> : null}</div>
       {txt(fl('rDone'), r.done)}{txt(fl('rNext'), r.next)}{txt(fl('rIssues'), r.issues)}{r.decision ? txt(fl('rDecText'), r.decisionText || '—') : null}
     </div></div>
+    {/* помощник ИИ (план этапа 4, задача 5): поле видят все, кто видит отчёт; на погодження не влияет — подсказка */}
+    {aiView(r.aiCheck, r.aiCheckedAt) !== 'none' ? <div className="sec ai-field" id="rv-ai"><div className="ai-panel">
+      <h4 className="ai-label"><Lucide k="ai" />{fl('rAi')}</h4>
+      <p className="rv-ai-text" style={{ whiteSpace: 'pre-wrap', margin: '4px 0' }}>{r.aiCheck}</p>
+      <p className="note">{aiView(r.aiCheck, r.aiCheckedAt) === 'without' ? t('aiWithout')
+        : r.aiCheckedAt ? t('aiCheckedAt').replace('{date}', fmtDT(r.aiCheckedAt)) : null}</p>
+    </div></div> : null}
 
     {!pend && r.approvedBy ? <div className="sec"><h3>{t('apDecided')}</h3><div className="apdone">
       <div className="rep-h"><ApBadge v={state} /><span className="muted">{t('apBy')}:</span><PersonCell p={r.approvedBy} /><span className="muted">{fmtDT(r.approvedAt)}</span></div>
