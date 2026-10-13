@@ -42,9 +42,10 @@ describe('тексты prompt', () => {
 });
 
 describe('набор проверок', () => {
-  test('15 случаев «Чернетки», 15 «Перевірки», негативные — с обеих сторон; номера не повторяются', () => {
-    expect(cases.filter(c => c.kind === 'draft' && !c.negative).length).toBe(15);
-    expect(cases.filter(c => c.kind === 'check' && !c.negative).length).toBe(15);
+  test('не меньше 15 случаев на prompt, «чистых» проверок — не меньше 5, негативные — с обеих сторон; номера не повторяются', () => {
+    expect(cases.filter(c => c.kind === 'draft' && !c.negative).length).toBeGreaterThanOrEqual(15);
+    expect(cases.filter(c => c.kind === 'check' && !c.negative).length).toBeGreaterThanOrEqual(15);
+    expect(cases.filter(c => c.kind === 'check' && c.expect.items && c.expect.items.max === 0).length).toBeGreaterThanOrEqual(5);
     expect(cases.filter(c => c.negative && c.kind === 'draft').length).toBeGreaterThanOrEqual(2);
     expect(cases.filter(c => c.negative && c.kind === 'check').length).toBeGreaterThanOrEqual(2);
     expect(new Set(cases.map(c => c.id)).size).toBe(cases.length);
@@ -58,9 +59,11 @@ describe('набор проверок', () => {
     // вирішальний ризик — останній у даних
     if (c.input.fill) expect(JSON.parse(r.json).risks.pop().title).toMatch(/банку/);
   });
-  test('«Чернетка» получает форму с пустыми текстами, «Перевірка» — форму целиком; null — без формы', () => {
+  test('«Чернетка» получает показатели проекта случая и пустые тексты, «Перевірка» — форму целиком; null — без формы', () => {
     const d = cases.filter(c => c.kind === 'draft')[0], k = cases.filter(c => c.kind === 'check')[0];
     expect(evalInput(base, d).draft!.done).toBe('');
+    const d13 = evalInput(base, cases.filter(c => c.id === 'd13')[0]).draft!;
+    expect([d13.status, d13.progress, d13.actualCost]).toEqual(['Ініціація', 0, 0]);
     expect(evalInput(base, k).draft!.done).toBe((base.draft as any).done);
     expect(evalInput(base, { ...d, input: { ...d.input, draft: null } }).draft).toBeUndefined();
   });
@@ -69,6 +72,11 @@ describe('набор проверок', () => {
 describe('оценка ответа', () => {
   const draft = (o: object = {}): string => JSON.stringify({ done: '– Налаштовано обмін з 1С', next: '– Навчання', issues: '– Ризик постачальника',
     summary: 'Іде за планом', remember: ['Відповісти на запит рішення'], ratings: { schedule: 'Жовтий', budget: 'Зелений', resources: null, reason: 'прогноз' }, ...o });
+  test('латинские двойники — как кириллица («1C» = «1С»)', () => {
+    expect(scoreReply('draft', draft({ done: '– Обмін з 1C' }), { has: [{ in: 'done', any: ['1с'] }] }).pass).toBe(true);
+    expect(scoreReply('draft', draft({ done: '– Обмін з 1C' }), { not: ['1с'] }).fails).toEqual(['not:1с']);
+    expect(scoreReply('check', '{"items":["The forecast is later"]}', { has: [{ in: 'items', any: ['forecast'] }] }).pass).toBe(true);
+  });
   test('слова — без регистра, в нужном поле', () => {
     expect(scoreReply('draft', draft(), { has: [{ in: 'done', any: ['1С'] }] }).pass).toBe(true);
     expect(scoreReply('draft', draft(), { has: [{ in: 'done', any: ['навчан'] }] }).fails).toEqual(['has:done:навчан']);

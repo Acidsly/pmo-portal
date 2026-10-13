@@ -28,7 +28,9 @@ export interface EvalExpect {
 }
 export interface EvalScore { pass: boolean; fails: string[] }
 
-const norm = (s: string): string => (s || '').toLowerCase().replace(/[’ʼ`]/g, "'").replace(/ё/g, 'е');
+/** Латинские двойники кириллицы (модель пишет «1C» латиницей) — в кириллицу с обеих сторон сравнения. */
+const LOOK: Record<string, string> = { a: 'а', c: 'с', e: 'е', o: 'о', p: 'р', x: 'х', y: 'у', i: 'і' };
+const norm = (s: string): string => (s || '').toLowerCase().replace(/[’ʼ`]/g, "'").replace(/ё/g, 'е').replace(/[aceopxyi]/g, ch => LOOK[ch]);
 
 /** Оценка ответа агента по ожиданиям случая. Ответ сначала разбирается так же строго, как в портале (parseDraft / parseCheck):
  *  не разобрался — случай не пройден. Поля: черновик — done, next, issues, summary, remember, reason (причина оценок), all;
@@ -80,8 +82,8 @@ export interface EvalCase {
 export interface EvalBase { today: string; project: object; report: object; risk: object; change: object; draft: object }
 
 const EMPTY_TEXTS = { title: '', done: '', next: '', issues: '', keyReason: '', decision: false, decisionText: '' };
-/** Вход buildReportContext для случая: записи — base + отличия; форма — черновик: base.draft с пустыми текстами (так открывается
- *  «Заповнити з ШІ»), проверка — base.draft целиком; null — без формы. */
+/** Вход buildReportContext для случая: записи — base + отличия; форма — черновик: показатели проекта случая и пустые тексты
+ *  (так форма открывается для «Заповнити з ШІ», reportFromProject), проверка — base.draft целиком; null — без формы. */
 export function evalInput(base: EvalBase, c: EvalCase): AiContextIn {
   const i = c.input;
   const merge = (b: object, xs: object[] | undefined): any[] => (xs || []).map(x => ({ ...b, ...x }));
@@ -92,8 +94,11 @@ export function evalInput(base: EvalBase, c: EvalCase): AiContextIn {
       probability: 1, impact: 2, due: '2027-03-01', mitigation: pad, contingency: '' }));
     risks.unshift(...fillers);
   }
-  const draft = i.draft === null ? undefined : { ...base.draft, ...(c.kind === 'draft' ? EMPTY_TEXTS : {}), ...(i.draft || {}) };
-  return { project: { ...base.project, ...(i.project || {}) } as any, reports: merge(base.report, i.reports), risks: risks as any,
+  const project: any = { ...base.project, ...(i.project || {}) };
+  const fromProject = { status: project.status, type: project.type, progress: project.progress, start: project.start, goLive: project.goLive,
+    planEnd: project.planEnd, forecastEnd: project.forecastEnd, actualCost: project.actualCost, actualEnd: project.actualEnd || '' };
+  const draft = i.draft === null ? undefined : { ...base.draft, ...(c.kind === 'draft' ? { ...fromProject, ...EMPTY_TEXTS } : {}), ...(i.draft || {}) };
+  return { project, reports: merge(base.report, i.reports), risks: risks as any,
     changes: merge(base.change, i.changes), draft: draft as any, prevCheck: i.prevCheck, lang: (i.lang || 'uk') as any, today: base.today };
 }
 

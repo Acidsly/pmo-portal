@@ -71,11 +71,12 @@ export const AiSpike: React.FC<{ onCancel(): void; aadToken?: (resource: string)
       const msg = aiMessage(c.kind, buildReportContext(evalInput(set.base, c)).json);
       let r: Turn;
       try { r = await withTimeout(conv.current.send(msg)); } catch (e) {
+        // запрос не отменяется: следующий случай в том же разговоре наложился бы на опоздавший ответ — набор останавливается
         out.push({ id: c.id, kind: c.kind, negative: !!c.negative, pass: false, fails: ['error:' + String((e as Error).message || e)], ms: TIMEOUT, raw: '' });
-        setResults(out.slice()); continue;
+        setResults(out.slice()); add(`${c.id} помилка — набір зупинено; «Підключитися» і запустіть знову`); break;
       }
       if (r.consent) { note(r); add('набір зупинено: натисніть «Дозволити» і запустіть знову'); break; }
-      const raw = r.texts.join('\n');
+      const raw = r.texts.filter(t => !!t.trim()).pop() || '';  // ответ prompt — последнее непустое сообщение
       const sc = scoreReply(c.kind, raw, c.expect);
       out.push({ id: c.id, kind: c.kind, negative: !!c.negative, pass: sc.pass, fails: sc.fails, ms: r.ms, raw: raw.slice(0, 3000) });
       add(`${c.id} ${sc.pass ? 'так' : 'НІ'} · ${r.ms} мс${sc.fails.length ? ' · ' + sc.fails.join('; ') : ''}`);
