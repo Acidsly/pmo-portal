@@ -20,8 +20,8 @@ export const AiSpike: React.FC<{ onCancel(): void; aadToken?: (resource: string)
   type Turn = { texts: string[]; ms: number; types: string[]; raw: string; consent?: Record<string, unknown> };
   const conv = React.useRef<{ send(t: string): Promise<Turn>; sendValue(v: Record<string, unknown>): Promise<Turn> } | null>(null);
   const [consent, setConsent] = React.useState<Record<string, unknown> | undefined>(undefined);
-  const note = (r: Turn): void => { setConsent(r.consent); if (r.consent) add('агент просить згоду на використання даних — натисніть «Дозволити»'); };
   const add = (s: string): void => setLog(l => l.concat(`${new Date().toLocaleTimeString('uk-UA')} ${s}`));
+  const note = (r: Turn): void => { setConsent(r.consent); if (r.consent) add('агент просить згоду на використання даних — натисніть «Дозволити»'); };
   const load = (): Promise<Agent> => import(/* webpackChunkName: 'pmo-ai' */ '../ai/aiAgent');
   const run = (f: () => Promise<void>) => async (): Promise<void> => {
     setBusy(true);
