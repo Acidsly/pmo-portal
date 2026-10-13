@@ -1,0 +1,63 @@
+# Тема Fallback агента «PPM ReportHelper» (классический агент, классическая оркестрация) — copilot/README.md.
+# Copilot Studio → «Теми» → «Системні» → Fallback → «Більше» → «Відкрити редактор коду» → вставить целиком.
+# <ID …> — aIModelId prompt: появляется в коде темы, когда prompt добавлен узлом на полотно («+» → «Додати інструмент»).
+kind: AdaptiveDialog
+beginDialog:
+  kind: OnUnknownIntent
+  id: main
+  actions:
+    # текст сохраняется до prompt: после карточки согласия тема продолжается на нажатии кнопки, где текста нет
+    - kind: SetVariable
+      id: setVariable_Msg
+      variable: Topic.Msg
+      value: =System.Activity.Text
+
+    - kind: ConditionGroup
+      id: route
+      conditions:
+        - id: isDraft
+          condition: =StartsWith(Topic.Msg, "ЧЕРНЕТКА")
+          actions:
+            - kind: InvokeAIBuilderModelAction
+              id: invoke_Draft
+              input:
+                binding:
+                  msg: =Topic.Msg
+              output:
+                binding:
+                  predictionOutput: Topic.Draft
+              aIModelId: <ID «Чернетка звіту»>
+            - kind: SendActivity
+              id: send_Draft
+              activity: "{Topic.Draft.text}"
+
+        - id: isCheck
+          condition: =StartsWith(Topic.Msg, "ПЕРЕВІРКА")
+          actions:
+            - kind: InvokeAIBuilderModelAction
+              id: invoke_Check
+              input:
+                binding:
+                  msg: =Topic.Msg
+              output:
+                binding:
+                  predictionOutput: Topic.Check
+              aIModelId: <ID «Перевірка звіту»>
+            - kind: SendActivity
+              id: send_Check
+              activity: "{Topic.Check.text}"
+
+      elseActions:
+        # «ТЕСТ:» и всё остальное — технический prompt «Перевірка ТЕСТ» (страница проверки)
+        - kind: InvokeAIBuilderModelAction
+          id: invokeAIBuilderModelAction_IpBXXh
+          input:
+            binding:
+              msg: =Topic.Msg
+          output:
+            binding:
+              predictionOutput: Topic.Var1
+          aIModelId: 0aef319b-fbb7-448c-b5fa-d0fdd7c92edf
+        - kind: SendActivity
+          id: sendActivity_Reply
+          activity: "{Topic.Var1.text}"

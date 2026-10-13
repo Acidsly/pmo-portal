@@ -2,10 +2,16 @@ import * as React from 'react';
 import { EntTag } from '../components/EntTag';
 import { AppCtx } from '../components/ctx';
 import { AI_CONFIG } from '../ai/aiConfig';
+import { buildReportContext } from '../logic/aiContext';
+import { aiMessage, scoreReply, evalInput, evalSummary, EvalCase, EvalBase, EvalResult } from '../logic/aiEval';
 
 /** Технический прототип помощника отчёта (этап 1, «да / нет»): вход, вызов агента, объём данных, формат ответа.
  *  Только пилотной группе, по адресу …#…///ai-spike; формы портала не меняет. Временный — убирается после этапа 1. */
 type Agent = typeof import('../ai/aiAgent');
+type Cases = { base: EvalBase; cases: EvalCase[] };
+const TIMEOUT = 60000;
+const withTimeout = <T,>(p: Promise<T>): Promise<T> => Promise.race([p,
+  new Promise<T>((_resolve, reject) => setTimeout(() => reject(new Error('немає відповіді за 60 с')), TIMEOUT))]);
 const sizes = [1, 5, 20, 50, 150, 300];
 const payload = (kb: number): string => {
   const head = '{"project":{"code":"PRJ-TEST","title":"Перевірка обсягу"},"pad":"';
@@ -53,6 +59,35 @@ export const AiSpike: React.FC<{ onCancel(): void; aadToken?: (resource: string)
     const r = await conv.current.sendValue(consent);
     add(`згода → ${r.ms} мс; activity: ${r.types.join(', ')}; відповідь: ${r.texts.join(' | ').slice(0, 600)}\nсире: ${r.raw}`); note(r);
   });
+  const [results, setResults] = React.useState<EvalResult[]>([]);
+  // набор проверок агента (copilot/README.md): все случаи по очереди, ответ — тем же строгим разбором, что в портале
+  const runEval = run(async () => {
+    if (!conv.current) { add('Спершу «Підключитися»'); return; }
+    const data = (await import(/* webpackChunkName: 'pmo-ai-eval' */ '../ai/evalCases.json')) as unknown as Cases;
+    const set = (data as unknown as { default?: Cases }).default || data;
+    const out: EvalResult[] = [];
+    setResults([]);
+    for (const c of set.cases) {
+      const msg = aiMessage(c.kind, buildReportContext(evalInput(set.base, c)).json);
+      let r: Turn;
+      try { r = await withTimeout(conv.current.send(msg)); } catch (e) {
+        out.push({ id: c.id, kind: c.kind, negative: !!c.negative, pass: false, fails: ['error:' + String((e as Error).message || e)], ms: TIMEOUT, raw: '' });
+        setResults(out.slice()); continue;
+      }
+      if (r.consent) { note(r); add('набір зупинено: натисніть «Дозволити» і запустіть знову'); break; }
+      const raw = r.texts.join('\n');
+      const sc = scoreReply(c.kind, raw, c.expect);
+      out.push({ id: c.id, kind: c.kind, negative: !!c.negative, pass: sc.pass, fails: sc.fails, ms: r.ms, raw: raw.slice(0, 3000) });
+      add(`${c.id} ${sc.pass ? 'так' : 'НІ'} · ${r.ms} мс${sc.fails.length ? ' · ' + sc.fails.join('; ') : ''}`);
+      setResults(out.slice());
+    }
+    const s = evalSummary(out);
+    add(`ПІДСУМОК: чернетка ${s.draft[0]}/${s.draft[1]}, перевірка ${s.check[0]}/${s.check[1]}, негативні ${s.negative[0]}/${s.negative[1]} — ${s.ok ? 'поріг пройдено' : 'поріг НЕ пройдено'}`);
+  });
+  const copy = (): void => {
+    const text = JSON.stringify({ at: new Date().toISOString(), summary: evalSummary(results), results }, null, 1);
+    navigator.clipboard.writeText(text).then(() => add('результат скопійовано'), () => add('не вдалося скопіювати — виділіть журнал вручну'));
+  };
   const [free, setFree] = React.useState('');
   const sendFree = run(async () => {
     if (!conv.current) { add('Спершу «Підключитися»'); return; }
@@ -72,6 +107,10 @@ export const AiSpike: React.FC<{ onCancel(): void; aadToken?: (resource: string)
       <textarea aria-label="Текст для агента" rows={2} style={{ flex: 1 }} value={free} onChange={e => setFree(e.target.value)} />
       <button className="btn" disabled={busy || !free.trim()} onClick={sendFree}>Надіслати текст</button>
       {consent && <button className="btn primary" disabled={busy} onClick={allow}>Дозволити</button>}
+    </div>
+    <div className="actions top">
+      <button className="btn" disabled={busy} onClick={runEval}>Набір перевірок</button>
+      <button className="btn" disabled={busy || !results.length} onClick={copy}>Копіювати результат</button>
     </div>
     {busy && <p className="note">Чекаю відповідь агента…</p>}
     <pre className="ai-log" style={{ whiteSpace: 'pre-wrap', fontSize: 12, maxHeight: '60vh', overflow: 'auto' }}>{log.join('\n') || '—'}</pre>
