@@ -125,10 +125,12 @@ export function insertText(current: string, proposed: string): { value: string; 
   return { value: proposed || '', confirm: !!cur.trim(), previous: cur };
 }
 
+/** Поле «Суперечності (аналіз ШІ)» — не длиннее (план этапа 4: отчёт не раздувается). */
+export const CHECK_MAX = 4000;
 const NONE: Record<AiLang, string> = { uk: 'Суперечностей не знайдено.', en: 'No contradictions found.', ru: 'Противоречий не найдено.' };
 /** Текст поля «Суперечності (аналіз ШІ)» (только для чтения): пункты «1. …» по строкам (перевод строки внутри пункта — пробел,
- *  не больше 20 пунктов); пусто — «Суперечностей не знайдено.». */
+ *  не больше 20 пунктов, весь текст — не длиннее CHECK_MAX с «…»); пусто — «Суперечностей не знайдено.». */
 export function checkText(items: string[], lang: AiLang): string {
   const list = (items || []).map(x => (x || '').replace(/\s*\n\s*/g, ' ').trim()).filter(x => !!x).slice(0, MAX_ITEMS);
-  return list.length ? list.map((x, i) => `${i + 1}. ${x}`).join('\n') : NONE[lang] || NONE.uk;
+  return list.length ? cutText(list.map((x, i) => `${i + 1}. ${x}`).join('\n'), CHECK_MAX) : NONE[lang] || NONE.uk;
 }

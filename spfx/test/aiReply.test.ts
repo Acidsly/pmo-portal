@@ -1,5 +1,5 @@
 import cases from '../../tests/cases/ai-reply.json';
-import { parseDraft, parseCheck, toPlain, insertText, checkText } from '../src/webparts/pmoPortal/logic/aiReply';
+import { parseDraft, parseCheck, toPlain, insertText, checkText, CHECK_MAX } from '../src/webparts/pmoPortal/logic/aiReply';
 import { AiLang } from '../src/webparts/pmoPortal/logic/aiCheck';
 
 // Ответы помощника отчёта (план помощника 2.1, 3, 4.2): общие векторы tests/cases/ai-reply.json
@@ -26,4 +26,11 @@ describe('вставка в поле', () => {
 });
 describe('поле «Суперечності (аналіз ШІ)»', () => {
   (cases.check as any[]).forEach(c => test(c.name, () => { expect(checkText(c.items, c.lang as AiLang)).toBe(c.out); }));
+});
+
+describe('поле ИИ не длиннее CHECK_MAX', () => {
+  test('20 длинных пунктов — обрезано до CHECK_MAX с «…»', () => {
+    const r = checkText(Array.from({ length: 20 }, (_, i) => `Пункт ${i + 1}: ` + 'суперечність '.repeat(40)), 'uk');
+    expect(r.length).toBe(CHECK_MAX); expect(r.endsWith('…')).toBe(true); expect(r.startsWith('1. Пункт 1:')).toBe(true);
+  });
 });
