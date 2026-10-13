@@ -52,6 +52,7 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
   const [unav, setUnav] = React.useState<{ print: string; reason: AiUnavailable } | null>(null);
   const [prevCheck, setPrevCheck] = React.useState('');
   const [assist, setAssist] = React.useState<AiDraft | null>(null);
+  const [assistOpen, setAssistOpen] = React.useState(true);
   const [asks, setAsks] = React.useState<{ field: string; value: string }[]>([]);
   const [ins, setIns] = React.useState<{ after: string; before: Record<string, string> } | null>(null);
   const [filled, setFilled] = React.useState(false);
@@ -117,7 +118,7 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
     const plan = draftInsert({ title: cur.title, done: cur.done, next: cur.next, issues: cur.issues },
       { summary: dr.summary, done: dr.done, next: dr.next, issues: dr.issues });
     const nd = { ...cur, ...plan.now };
-    a.setD(nd); setIns({ after: reportPrint(nd), before: plan.before }); setAsks(plan.ask); setAssist(dr); setFilled(true);
+    a.setD(nd); setIns({ after: reportPrint(nd), before: plan.before }); setAsks(plan.ask); setAssist(dr); setAssistOpen(true); setFilled(true);
     setMsg({ at, kind: 'ok', text: t('aiDraftDone') });
   };
   const cancel = (): void => { req.current++; setBusy(null); if (consent) consent.answer(false); setConsent(null); };
@@ -160,7 +161,10 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
       <div className="ai-rate"><button type="button" className="btn primary" onClick={() => answerAsk(true)}>{t('aiYes')}</button>
         <button type="button" className="btn" onClick={() => answerAsk(false)}>{t('aiNo')}</button></div></div> : null}
     {msgEl('top')}
-    {assist && (assist.remember.length || RATE.some(x => assist.ratings[x.k])) ? <div className="ai-panel">
+    {/* подсказки ИИ — сворачиваются, чтобы форма не растягивалась (замечание с теста) */}
+    {assist && (assist.remember.length || RATE.some(x => assist.ratings[x.k])) ? <details className="ai-panel" id="ai-assist" open={assistOpen}
+      onToggle={e => setAssistOpen((e.target as HTMLDetailsElement).open)}>
+      <summary>{t('aiAssist').replace('{n}', String(assist.remember.length))}</summary>
       {assist.remember.length ? <><h4 className="ai-label"><Lucide k="ai" />{t('aiRemember')}</h4><ul>{assist.remember.map((x, i) => <li key={i}>{x}</li>)}</ul></> : null}
       {RATE.some(x => assist.ratings[x.k]) ? <><h4 className="ai-label"><Lucide k="ai" />{t('aiRatings')}</h4>
         {RATE.filter(x => assist.ratings[x.k]).map(x => <div className="ai-rate" key={x.k}>
@@ -168,7 +172,7 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
           {a.d[x.k] !== assist.ratings[x.k] ? <button type="button" className="btn" onClick={() => a.setD({ ...dRef.current, [x.k]: assist.ratings[x.k] as Rag })}>{t('aiAccept')}</button> : null}
         </div>)}
         {assist.ratings.reason ? <p className="note">{assist.ratings.reason}</p> : null}</> : null}
-    </div> : null}
+    </details> : null}
   </>;
 
   // запись реестра, названная в пункте ИИ: карточка под пунктом и «Додати згадку» в «Проблеми та ризики за період»

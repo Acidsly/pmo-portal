@@ -125,6 +125,9 @@ describe('помощник ИИ в форме отчёта', () => {
     expect(($('#f-done') as HTMLTextAreaElement).value).toBe('– Моє');
     expect(root.textContent).toContain('Замінити текст у полі «Зроблено за період»');
     expect(root.textContent).toContain('Не забути');
+    // подсказки сворачиваются (замечание с теста): заголовок — сколько пунктов «Що не забути»
+    expect(($('#ai-assist') as HTMLDetailsElement).open).toBe(true);
+    expect($('#ai-assist summary').textContent).toBe('Підказки ШІ: що не забути (1) і пропоновані оцінки');
     const click = (txt: string): void => { act(() => { (Array.from(root.querySelectorAll('button')).filter(b => b.textContent === txt)[0] as HTMLButtonElement).click(); }); };
     click('Замінити');
     expect(($('#f-done') as HTMLTextAreaElement).value).toBe('– ШІ зроблено');

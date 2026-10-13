@@ -627,6 +627,8 @@ form .fsec:first-child{margin-top:0}
 .ai-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px}
 .ai-panel{border:1px solid var(--line);border-left:4px solid var(--nv-ai);border-radius:10px;padding:10px 14px;margin:0 0 14px;background:var(--bg-alt)}
 .ai-panel h4{margin:6px 0 4px;font-size:13px;color:var(--nv-ai)}
+.ai-panel>summary{cursor:pointer;font-weight:600;color:var(--nv-ai);font-size:13px;list-style:revert}
+.ai-panel:not([open]){padding-top:8px;padding-bottom:8px}
 .ai-panel ul{margin:0 0 6px;padding-left:18px}
 .ai-rate{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin:4px 0}
 .ai-rate .btn{padding:4px 12px;font-size:13px}

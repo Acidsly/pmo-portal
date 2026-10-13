@@ -441,6 +441,11 @@ export const T: Record<string, L3> = {
   "Mention with the register actions added — adjust if needed and check again.",
   "Упоминание с мерами из реестра добавлено — при необходимости уточните и проверьте ещё раз."
  ],
+ "aiAssist": [
+  "Підказки ШІ: що не забути ({n}) і пропоновані оцінки",
+  "AI hints: don't forget ({n}) and suggested ratings",
+  "Подсказки ИИ: что не забыть ({n}) и предлагаемые оценки"
+ ],
  "aiFill": [
   "Заповнити з ШІ",
   "Fill with AI",
