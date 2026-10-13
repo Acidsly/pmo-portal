@@ -8,7 +8,10 @@ import { reportPrint, aiButton, acceptReply, unavailableNote, AiLang, AiUnavaila
 import { buildReportContext } from '../logic/aiContext';
 import { parseDraft, parseCheck, checkText, AiDraft } from '../logic/aiReply';
 import { aiMessage, AiKind } from '../logic/aiEval';
-import { aiUnavailable, aiSaveFields, nextPrevCheck, draftInsert, undoAvailable, AiResult } from '../logic/aiFlow';
+import { aiUnavailable, aiSaveFields, nextPrevCheck, draftInsert, undoAvailable, AiResult, riskRefs, mentionLine, appendLine } from '../logic/aiFlow';
+import { riskScore } from '../logic/status';
+import { fmtDate } from '../components/Bits';
+import { Risk } from '../data/types';
 import { isAiPilot } from '../ai/aiConfig';
 import { aiRun } from '../ai/aiRun';
 import { tv } from '../i18n/values';
@@ -168,10 +171,31 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
     </div> : null}
   </>;
 
-  const shown = checked ? checkText(checked.items, lang) : unav ? unavailableNote(unav.reason, lang) : '';
+  // запись реестра, названная в пункте ИИ: карточка под пунктом и «Додати згадку» в «Проблеми та ризики за період»
+  const projRisks = a.data.risks.filter(k => k.projectId === a.project.id);
+  const [openRec, setOpenRec] = React.useState<string>('');
+  const mention = (k: Risk): void => {
+    const line = mentionLine(k, tv(k.type), { score: t('aiMentionScore'), due: t('aiMentionDue') }, fmtDate);
+    a.setD({ ...dRef.current, issues: appendLine(dRef.current.issues, line) });
+    setMsg({ at: 'bottom', kind: 'ok', text: t('aiMentioned') });
+    setTimeout(() => { const el = document.getElementById('f-iss') as HTMLTextAreaElement | null; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 0);
+  };
+  const refEl = (k: Risk, key: string): React.ReactNode => <div className="ai-ref" key={key}>
+    <button type="button" className="btn" aria-expanded={openRec === key} onClick={() => setOpenRec(openRec === key ? '' : key)}>
+      {openRec === key ? t('aiHideRec') : t('aiShowRec').replace('{t}', k.title)}</button>
+    {openRec === key ? <div className="ai-rec">
+      <p><b>{tv(k.type)} «{k.title}»</b> · {fl('kScore')} {riskScore(k.probability, k.impact)} · {fl('kStatus')}: {tv(k.status)}{k.due ? ` · ${fl('kDue')}: ${fmtDate(k.due)}` : ''}</p>
+      {k.strategy ? <p>{fl('kStrategy')}: {tv(k.strategy)}</p> : null}
+      {k.mitigation ? <p>{fl('kMit')}: {k.mitigation}</p> : null}
+      <button type="button" className="btn primary" onClick={() => mention(k)}>{t('aiMention')}</button>
+    </div> : null}
+  </div>;
+  const box = checked ? (checked.items.length
+    ? checked.items.map((it, i) => <div className="ai-item" role="listitem" key={i}>{i + 1}. {it}{riskRefs(it, projRisks).map(k => refEl(k, i + ':' + k.id))}</div>)
+    : <div className="ai-item">{checkText([], lang)}</div>) : unav ? <div className="ai-item">{unavailableNote(unav.reason, lang)}</div> : null;
   const bottom = !pilot ? null : <>
-    {shown ? <div className="frow ai-field"><label className="t ai-label" htmlFor="f-ai"><Lucide k="ai" />{fl('rAi')}</label>
-      <textarea id="f-ai" readOnly={true} value={shown} />
+    {box ? <div className="frow ai-field"><span className="t ai-label"><Lucide k="ai" />{fl('rAi')}</span>
+      <div className="ai-box" id="f-ai" role="list" aria-readonly="true">{box}</div>
       <p className="hint">{t('aiFieldHint')}</p></div> : null}
     {msgEl('bottom')}
   </>;

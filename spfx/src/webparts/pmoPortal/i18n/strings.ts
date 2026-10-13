@@ -401,6 +401,36 @@ export const T: Record<string, L3> = {
   "Status report saved, project card updated.",
   "Статус-отчёт сохранён, карточка проекта обновлена."
  ],
+ "aiShowRec": [
+  "Показати запис «{t}»",
+  "Show record «{t}»",
+  "Показать запись «{t}»"
+ ],
+ "aiHideRec": [
+  "Сховати",
+  "Hide",
+  "Скрыть"
+ ],
+ "aiMention": [
+  "Додати згадку в «Проблеми та ризики за період»",
+  "Add a mention to «Issues and risks for the period»",
+  "Добавить упоминание в «Проблемы и риски за период»"
+ ],
+ "aiMentionScore": [
+  "оцінка",
+  "score",
+  "оценка"
+ ],
+ "aiMentionDue": [
+  "термін",
+  "due",
+  "срок"
+ ],
+ "aiMentioned": [
+  "Згадку додано — допишіть, що робите, і перевірте ще раз.",
+  "Mention added — add what you are doing and check again.",
+  "Упоминание добавлено — допишите, что делаете, и проверьте ещё раз."
+ ],
  "aiFill": [
   "Заповнити з ШІ",
   "Fill with AI",

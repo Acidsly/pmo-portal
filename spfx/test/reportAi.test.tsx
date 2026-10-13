@@ -59,8 +59,8 @@ describe('помощник ИИ в форме отчёта', () => {
     mockAgent.replies.push({ text: '{"items":["Терміни зелені, а прогноз пізніше плану"]}' });
     await submit();
     expect(mockAgent.asked.length).toBe(1); expect(mockAgent.asked[0].indexOf('ПЕРЕВІРКА\n<<DATA>>\n')).toBe(0);
-    expect(($('#f-ai') as HTMLTextAreaElement).value).toBe('1. Терміни зелені, а прогноз пізніше плану');
-    expect(($('#f-ai') as HTMLTextAreaElement).readOnly).toBe(true);
+    expect($('#f-ai').textContent).toBe('1. Терміни зелені, а прогноз пізніше плану');
+    expect($('#f-ai').getAttribute('aria-readonly')).toBe('true'); expect($('#f-ai').querySelector('textarea,input')).toBeNull();
     expect(root.textContent).toContain('ШІ знайшов суперечностей: 1');
     expect(btn()).toBe('Зберегти');
     await submit();
@@ -173,5 +173,23 @@ describe('поле ИИ в просмотре отчёта', () => {
   test('старый отчёт или вне пилота — блока нет', async () => {
     await view(rep({ aiCheck: '', aiCheckedAt: '' }));
     expect($('#rv-ai')).toBeNull();
+  });
+});
+
+describe('запись реестра в пункте ИИ', () => {
+  test('название записи — «Показати запис», карточка и «Додати згадку» в конец «Проблеми та ризики»; кнопка — снова «Перевірити з ШІ»', async () => {
+    const risk = { id: 31, projectId: 5, title: 'Ризик чи Проблема ?', type: 'Проблема', probability: 4, impact: 3, status: 'Відкрито', due: '2026-10-01',
+      mitigation: 'Розібрати з ІТ', strategy: '', contingency: '', owner: null };
+    await open('pm@x', { ...data, risks: [risk] }); fill();
+    act(() => { Simulate.change($('#f-iss') as HTMLTextAreaElement, { target: { value: '– Прогноз зміщено.' } } as any); });
+    mockAgent.replies.push({ text: '{"items":["Не згадано відкриту проблему «Ризик чи Проблема ?» — додайте рядок."]}' });
+    await submit();
+    const show = Array.from(root.querySelectorAll('#f-ai button')).filter(b => (b.textContent || '').indexOf('Показати запис') === 0)[0] as HTMLButtonElement;
+    expect(show.textContent).toBe('Показати запис «Ризик чи Проблема ?»');
+    act(() => { show.click(); });
+    expect($('.ai-rec').textContent).toContain('Розібрати з ІТ'); expect($('.ai-rec').textContent).toContain('01.10.2026');
+    act(() => { (Array.from(root.querySelectorAll('.ai-rec button'))[0] as HTMLButtonElement).click(); });
+    expect(($('#f-iss') as HTMLTextAreaElement).value).toBe('– Прогноз зміщено.\n– Проблема «Ризик чи Проблема ?» (оцінка 12, термін 01.10.2026): ');
+    expect(btn()).toBe('Перевірити з ШІ');
   });
 });

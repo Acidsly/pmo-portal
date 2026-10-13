@@ -1,5 +1,6 @@
 import { AiButton, AiLang, AiUnavailable, unavailableNote, UNAVAILABLE_HEADS } from './aiCheck';
 import { checkText, insertText } from './aiReply';
+import { riskScore } from './status';
 
 /** Сценарий помощника в форме статус-отчёта (план этапа 4, задача 1; векторы tests/cases/ai-flow.json): чистые функции,
  *  компонент формы только вызывает их. */
@@ -88,3 +89,22 @@ export function aiView(aiCheck: string | null | undefined, aiCheckedAt: string |
   if (t && UNAVAILABLE_HEADS.some(h => t.indexOf(h) === 0)) return 'without';
   return t || aiCheckedAt ? 'checked' : 'none';
 }
+
+/** Записи реестра «Ризики та проблеми» проекта, о которых говорит пункт ИИ (название записи есть в тексте пункта; без регистра,
+ *  кавычки и лишние пробелы не важны): портал ставит ссылку сам, ИИ ссылок не пишет. Название короче 4 знаков не ищется
+ *  (иначе совпадения случайны); длинные названия — первыми. */
+export interface RiskRef { id: number; title: string; type: string; probability: number; impact: number; status: string; due: string }
+const squash = (s: string): string => (s || '').toLowerCase().replace(/[«»"'“”„`’ʼ]/g, '').replace(/\s+/g, ' ').trim();
+export function riskRefs<T extends RiskRef>(item: string, risks: T[]): T[] {
+  const t = squash(item);
+  return risks.filter(r => squash(r.title).length >= 4 && t.indexOf(squash(r.title)) >= 0)
+    .sort((a, b) => b.title.length - a.title.length || a.id - b.id);
+}
+/** Строка-упоминание записи для «Проблеми та ризики за період»: «– Проблема «…» (оцінка 12, термін 01.10.2026): » —
+ *  дальше PM пишет, что делает; добавляется новой строкой в конец поля (пустое поле — без пустой строки). */
+export function mentionLine(r: RiskRef, typeText: string, words: { score: string; due: string }, fmtDue: (iso: string) => string): string {
+  const parts = [`${words.score} ${riskScore(r.probability, r.impact)}`];
+  if (r.due) parts.push(`${words.due} ${fmtDue(r.due)}`);
+  return `– ${typeText} «${r.title}» (${parts.join(', ')}): `;
+}
+export const appendLine = (field: string, line: string): string => ((field || '').replace(/\s+$/, '') ? (field || '').replace(/\s+$/, '') + '\n' + line : line);

@@ -633,6 +633,12 @@ form .fsec:first-child{margin-top:0}
 .ai-label{display:inline-flex;align-items:center;gap:6px;color:var(--nv-ai);font-weight:600}
 .ai-field textarea[readonly]{border-color:var(--nv-ai);background:var(--bg-alt);cursor:default}
 .ai-msg{margin:8px 4px 0;font-size:13px}
+.ai-box{border:1.5px solid var(--nv-ai);border-radius:10px;padding:10px 12px;background:var(--bg-alt);font-size:14px;line-height:1.45}
+.ai-item+.ai-item{margin-top:8px}
+.ai-ref{margin:6px 0 0 18px}
+.ai-ref .btn{padding:3px 10px;font-size:12px;font-weight:500}
+.ai-rec{margin:6px 0 0;padding:8px 10px;border-radius:8px;background:var(--bg);border:1px solid var(--line);font-size:13px}
+.ai-rec p{margin:2px 0}
 .ai-msg.warn{color:var(--nv-risks)} .ai-msg.err{color:#b91c1c} .ai-msg.ok{color:var(--nv-reports)}
 @media (max-width:720px){.ai-bar .btn{flex:1 1 100%;justify-content:center}}
 
