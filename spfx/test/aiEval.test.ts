@@ -107,6 +107,11 @@ describe('оценка ответа', () => {
     expect(scoreReply('draft', raw, { blockedOk: true })).toEqual({ pass: true, fails: ['blocked'] });
     expect(scoreReply('draft', raw, {})).toEqual({ pass: false, fails: ['blocked'] });
   });
+  test('«Чернетка»: пункты без переводов строки — формат не пройден, один пункт — можно', () => {
+    expect(scoreReply('draft', draft({ next: '– Навчання – Тестування' }), {}).fails).toEqual(['format:next']);
+    expect(scoreReply('draft', draft({ next: '– Навчання\n– Тестування' }), {}).pass).toBe(true);
+    expect(scoreReply('draft', draft({ next: '– Навчання' }), {}).pass).toBe(true);
+  });
   test('неразобранный ответ — не пройден (как в портале)', () => {
     expect(scoreReply('draft', 'Ось чернетка: …', {}).fails).toEqual(['parse:notJson']);
     expect(scoreReply('check', '{"items":[],"note":"x"}', {}).fails).toEqual(['parse:extraKey:note']);

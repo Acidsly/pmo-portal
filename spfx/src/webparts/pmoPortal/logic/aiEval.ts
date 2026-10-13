@@ -35,7 +35,8 @@ const LOOK: Record<string, string> = { a: 'а', c: 'с', e: 'е', o: 'о', p: '�
 const norm = (s: string): string => (s || '').toLowerCase().replace(/[’ʼ`]/g, "'").replace(/ё/g, 'е').replace(/[aceopxyi]/g, ch => LOOK[ch]);
 
 /** Оценка ответа агента по ожиданиям случая. Ответ сначала разбирается так же строго, как в портале (parseDraft / parseCheck):
- *  не разобрался — случай не пройден. Поля: черновик — done, next, issues, summary, remember, reason (причина оценок), all;
+ *  не разобрался — случай не пройден. «Чернетка»: несколько пунктов «– » в одной строке (без переводов строки) — не пройден.
+ *  Поля: черновик — done, next, issues, summary, remember, reason (причина оценок), all;
  *  проверка — items, all. */
 export function scoreReply(kind: AiKind, raw: string, exp: EvalExpect): EvalScore {
   if (/AIModelActionBadRequest/.test(raw || '')) return exp.blockedOk ? { pass: true, fails: ['blocked'] } : { pass: false, fails: ['blocked'] };
@@ -49,6 +50,8 @@ export function scoreReply(kind: AiKind, raw: string, exp: EvalExpect): EvalScor
     fields.done = d.done; fields.next = d.next; fields.issues = d.issues; fields.summary = d.summary;
     fields.remember = d.remember.join('\n'); fields.reason = d.ratings.reason;
     count = d.remember.length;
+    // пункты «– » — каждый с новой строки: несколько пунктов в одной строке — в поле формы слипнутся
+    ['done', 'next', 'issues'].forEach(k => { const t = fields[k]; if ((t.match(/– /g) || []).length > 1 && t.indexOf('\n') < 0) fails.push('format:' + k); });
     ratings.schedule = d.ratings.schedule || null; ratings.budget = d.ratings.budget || null; ratings.resources = d.ratings.resources || null;
   } else {
     const c = parseCheck(raw);
