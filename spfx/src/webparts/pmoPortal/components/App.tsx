@@ -22,6 +22,8 @@ import { FeedbackForm } from '../panels/FeedbackForm';
 import { Help } from '../panels/Help';
 import { Overview } from '../panels/Overview';
 import { Releases } from '../panels/Releases';
+import { AiSpike } from '../panels/AiSpike';
+import { isAiPilot } from '../ai/aiConfig';
 import { Feedback, feedbackOrder } from '../pages/Feedback';
 import { FeedbackView } from '../panels/FeedbackView';
 import { AssignForm } from '../panels/AssignForm';
@@ -31,7 +33,9 @@ import { Toast, useToast } from './Toast';
 
 export interface AppProps { repo: SpRepo; culture: string; userName: string; userEmail: string; webUrl: string;
   /** Администратор сайта (право «Керування веб-сайтом»): ставит статусы и ответы на отзывы. */
-  admin?: boolean; }
+  admin?: boolean;
+  /** Токен Entra ID через AadTokenProvider SharePoint (прототип помощника отчёта, «шлях A»). */
+  aadToken?: (resource: string) => Promise<string>; }
 
 /** Корень приложения: язык, тема, маршрут, данные; весь CSS прототипа действует внутри .pmo-app. */
 export const App: React.FC<AppProps> = p => {
@@ -80,7 +84,7 @@ export const App: React.FC<AppProps> = p => {
   formRef.current = route.form;
   const close = (): void => nav({ ...route, projectId: 0, form: '' });
   const back = (): void => nav({ ...route, form: '' });
-  const panelOpen = route.form === 'help' || route.form === 'overview' || route.form === 'releases' || (!!data && (!!route.form || !!project));
+  const panelOpen = route.form === 'help' || route.form === 'overview' || route.form === 'releases' || (route.form === 'ai-spike' && isAiPilot(p.userEmail)) || (!!data && (!!route.form || !!project));
   React.useEffect(() => { if (!panelOpen && ntfRet) setNtfRet(false); }, [panelOpen]);
   let panelEl: React.ReactNode = null;
   const openFeedback = data && data.feedback ? () => ctx.openForm('feedback', route.projectId) : undefined;
@@ -88,6 +92,7 @@ export const App: React.FC<AppProps> = p => {
     order={feedbackOrder().length ? feedbackOrder() : data.feedbackRows.map(r => r.id)} onGo={n => ctx.openForm('fb:' + n, route.projectId)} onCancel={back} />; }
   else if (route.form === 'help') panelEl = <Help onCancel={back} onFeedback={openFeedback} onOverview={() => ctx.openForm('overview', route.projectId)}
     onReleases={() => ctx.openForm('releases', route.projectId)} />;
+  else if (route.form === 'ai-spike' && isAiPilot(p.userEmail)) panelEl = <AiSpike onCancel={back} aadToken={p.aadToken} />;
   else if (route.form === 'releases') panelEl = <Releases onBack={() => ctx.openForm('help', route.projectId)} onCancel={back}
     onFeedback={data && data.feedback ? n => ctx.openForm('fb:' + n, route.projectId) : undefined} />;
   else if (route.form === 'overview') panelEl = <Overview onBack={() => ctx.openForm('help', route.projectId)} onCancel={back} />;

@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.2.11 · 13.10.2026
+
+**Changed**
+- The report freshness dot tooltip: yellow — 9–14 days (was "8–14"), as the portal calculates it.
+
 ## 1.7.2.10 · 12.10.2026
 
 **New**

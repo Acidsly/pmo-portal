@@ -4,10 +4,18 @@ import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 import { SPPermission } from '@microsoft/sp-page-context';
 import { App } from './components/App';
 import { SpRepo } from './data/SpRepo';
+import { isAuthResponse } from './ai/aiConfig';
 
 /** Портфель проєктів: приложение по прототипу prototype/pmo-prototype.html. */
 export default class PmoPortalWebPart extends BaseClientSideWebPart<{}> {
   public render(): void {
+    // страница открылась как ответ входа Microsoft (всплывающее окно / скрытый фрейм MSAL помощника отчёта):
+    // приложение не рисуем — передаём ответ основному окну
+    if ((window.opener || window.parent !== window) && isAuthResponse(window.location.hash, window.location.search)) {
+      import(/* webpackChunkName: 'pmo-ai-bridge' */ '@azure/msal-browser/redirect-bridge')
+        .then(m => m.broadcastResponseToMainFrame(), e => console.warn('MSAL bridge', e));
+      return;
+    }
     const pc = this.context.pageContext;
     const admin = pc.web.permissions.hasPermission(SPPermission.manageWeb);
     // всем, кроме администраторов сайта (право «Керування веб-сайтом»), прячем штатные полосы SharePoint:
@@ -19,7 +27,8 @@ export default class PmoPortalWebPart extends BaseClientSideWebPart<{}> {
     }
     const repo = new SpRepo(this.context.spHttpClient, pc.web.absoluteUrl, pc.web.serverRelativeUrl, pc.user.email);
     ReactDom.render(React.createElement(App, { repo, culture: pc.cultureInfo.currentUICultureName,
-      userName: pc.user.displayName, userEmail: pc.user.email, webUrl: pc.web.absoluteUrl, admin }), this.domElement);
+      userName: pc.user.displayName, userEmail: pc.user.email, webUrl: pc.web.absoluteUrl, admin,
+      aadToken: res => this.context.aadTokenProviderFactory.getTokenProvider().then(t => t.getToken(res)) }), this.domElement);
   }
 
   protected onDispose(): void {

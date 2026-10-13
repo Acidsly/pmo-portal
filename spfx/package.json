@@ -16,7 +16,9 @@
     "overview": "node tools/overview.mjs"
   },
   "dependencies": {
+    "@azure/msal-browser": "5.22.0",
     "@fluentui/react": "^8.106.4",
+    "@microsoft/agents-copilotstudio-client": "1.9.1",
     "@microsoft/sp-component-base": "1.23.2",
     "@microsoft/sp-core-library": "1.23.2",
     "@microsoft/sp-lodash-subset": "1.23.2",

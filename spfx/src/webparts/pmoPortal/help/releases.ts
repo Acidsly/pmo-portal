@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.2.11",
+   "date": "13.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Підказка до кольорової крапки свіжості звіту: жовтий — 9–14 днів (було «8–14»), як і рахує портал.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.2.10",
    "date": "12.10.2026",
    "html": "<p><b>Нове</b></p>\n<ul>\n<li>Сповіщення «Вас додано до команди проєкту» з вашою роллю, а також про зміну вашої ролі в команді (#84).</li>\n<li>Довгі таблиці прокручуються у своєму вікні: заголовки колонок закріплені, горизонтальна смуга прокрутки завжди видна внизу таблиці (#89).</li>\n<li>Номер версії порталу й «Що змінилося» — у «Довідці» (кнопка <b>?</b>) (#90); про новий випуск повідомляє дзвіночок.</li>\n<li>Дзвіночок: «Відгук розглянуто» — коли змінився статус або відповідь на ваш відгук.</li>\n<li>У картці проєкту — три останні статус-звіти й «Показати всі звіти (N)» (#82).</li>\n</ul>\n<p><b>Змінено</b></p>\n<ul>\n<li>Колонка «Звіт»: мітка погодження й дата — один блок, дата окремим рядком; підказка «Подано … · автор» (#85).</li>\n<li>Поле звіту «Проблеми та ризики» → «Проблеми та ризики за період», з підказкою, де реєстр ризиків (#81).</li>\n<li>«Термін виконання заходів» ризику: для нового запису — не раніше сьогодні, при зміні — не раніше дати реєстрації; прострочений позначається «Термін минув» (#88).</li>\n<li>Меню без порожнього місця після «Відгуки»; у формі проєкту — права учасникам з'являються протягом ~15 хвилин (#83).</li>\n</ul>\n<p><b>Перевірте повторно</b></p>\n<ul>\n<li>Додайте учасника до команди проєкту — через ~15 хвилин у нього в дзвіночку «Вас додано до команди».</li>\n<li>Форма ризику: термін раніше сьогодні (новий запис) — помилка біля поля.</li>\n<li>Довгі списки: заголовки колонок і горизонтальна смуга прокрутки лишаються видимими.</li>\n<li>Дзвіночок: «Новий випуск порталу» відкриває «Що змінилося»; автор відгуку отримує «Відгук розглянуто» після зміни статусу чи відповіді.</li>\n<li>Картка проєкту: три останні звіти й «Показати всі звіти (N)»; колонка «Звіт» — підказка «Подано … · автор».</li>\n</ul>"
@@ -25,6 +30,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.2.11",
+   "date": "13.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>The report freshness dot tooltip: yellow — 9–14 days (was \"8–14\"), as the portal calculates it.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.2.10",
    "date": "12.10.2026",
    "html": "<p><b>New</b></p>\n<ul>\n<li>Notification \"You were added to the project team\" with your role, and when your role in the team changes (#84).</li>\n<li>Long tables scroll in their own window: column headers stay pinned, the horizontal scroll bar is always visible at the bottom of the table (#89).</li>\n<li>The portal version and \"What's new\" are in Help (the <b>?</b> button) (#90); the bell announces a new release.</li>\n<li>Bell: \"Feedback reviewed\" — when the status of or answer to your feedback changes.</li>\n<li>The project card shows the three latest status reports and \"Show all reports (N)\" (#82).</li>\n</ul>\n<p><b>Changed</b></p>\n<ul>\n<li>\"Report\" column: the approval label and the date form one block, the date on its own line; tooltip \"Submitted … · author\" (#85).</li>\n<li>The report field \"Issues and risks\" → \"Issues and risks for the period\", with a hint where the risk register is (#81).</li>\n<li>Risk \"Mitigation due date\": for a new record — not earlier than today, when changed — not earlier than the registration date; an overdue one is marked \"The due date has passed\" (#88).</li>\n<li>No empty space in the menu after \"Feedback\"; the project form says team members get access within ~15 minutes (#83).</li>\n</ul>\n<p><b>Re-check</b></p>\n<ul>\n<li>Add a member to a project team — within ~15 minutes their bell shows \"You were added to the team\".</li>\n<li>Risk form: a due date earlier than today (new record) — an error next to the field.</li>\n<li>Long lists: column headers and the horizontal scroll bar stay visible.</li>\n<li>Bell: \"New portal release\" opens \"What's new\"; the feedback author gets \"Feedback reviewed\" after the status or answer changes.</li>\n<li>Project card: the three latest reports and \"Show all reports (N)\"; \"Report\" column — tooltip \"Submitted … · author\".</li>\n</ul>"
@@ -46,6 +56,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.2.11",
+   "date": "13.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Подсказка к цветной точке свежести отчёта: жёлтый — 9–14 дней (было «8–14»), как и считает портал.</li>\n</ul>"
+  },
   {
    "ver": "1.7.2.10",
    "date": "12.10.2026",
