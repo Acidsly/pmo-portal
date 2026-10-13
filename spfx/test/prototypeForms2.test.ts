@@ -34,6 +34,11 @@ function newProject(title: string, start: string, golive: string): W {
   return f;
 }
 const err = (f: W): string => { const e = f.querySelector('.err'); return e && !e.hidden ? e.textContent : ''; };
+/** #91: обязательные поля новой записи реестра — стратегия, заходи, план дій. */
+function fillRisk(f: W, o: { strategy?: string; mit?: string; cont?: string } = {}): void {
+  const s = f.querySelector(`input[name="k-str"][value="${o.strategy || 'Прийняття'}"]`); s.checked = true; ev(s, 'change');
+  for (const [id, v] of [['k-mit', o.mit || 'Заходи'], ['k-cont', o.cont || 'План дій']]) { const t = f.querySelector('#' + id); t.value = v; ev(t, 'input'); }
+}
 
 test('#27: название, совпадающее с существующим (без учёта регистра и пробелов), — ошибка', () => {
   // название — из ссылки в таблице главной (у плитки в тексте вся плитка)
@@ -185,7 +190,7 @@ describe('#46 / #48 события отчётов и рисков в истор�
     card(1);
     q('[data-act="newrisk"][data-id="1"]').click();
     let f = q('#kform');
-    f.querySelector('#k-title').value = 'Новий ризик історії'; ev(f.querySelector('#k-title'), 'input');
+    f.querySelector('#k-title').value = 'Новий ризик історії'; ev(f.querySelector('#k-title'), 'input'); fillRisk(f);
     f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
     card(1);
     expect(history()).toContain('Додано: Новий ризик історії');
@@ -193,14 +198,14 @@ describe('#46 / #48 события отчётов и рисков в истор�
     expect(open).toBeDefined(); open.click();
     f = q('#kform');
     expect(f.querySelector('#k-title').value).toBe('Новий ризик історії');
+    // #92: в сохранённой записи меняется только статус — оценку не изменить
+    expect(f.querySelector('input[name="k-pr"][value="5"]').disabled).toBe(true);
     const st = f.querySelector('#k-status'); st.value = 'Закрито'; ev(st, 'change');
-    const pr = f.querySelector('input[name="k-pr"][value="5"]'); pr.checked = true; ev(pr, 'change');
     f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
     card(1);
     const h = history();
     expect(h).toContain('Закрито: Новий ризик історії');
-    expect(h).toMatch(/Ймовірність\s*3\s*→\s*5/);
-    expect(h).toMatch(/Оцінка\s*9\s*→\s*15/);
+    expect(h).toMatch(/Статус\s*Відкрито\s*→\s*Закрито/);
   });
 });
 
@@ -368,7 +373,7 @@ describe('раунд 5: прототип', () => {
   test('#88 новый риск: срок в прошлом — ошибка, запись не добавлена; сегодня — можно', () => {
     q('[data-act="nav"][data-page="risks"]').click();
     q('[data-act="newrisk"]').click();
-    const f = q('#kform'); f.querySelector('#k-title').value = 'Ризик тесту рунд 5'; f.querySelector('#k-due').value = '2000-01-01'; ev(f.querySelector('#k-due'), 'change');
+    const f = q('#kform'); f.querySelector('#k-title').value = 'Ризик тесту рунд 5'; fillRisk(f); f.querySelector('#k-due').value = '2000-01-01'; ev(f.querySelector('#k-due'), 'change');
     expect(f.querySelector('#k-due-e').hidden).toBe(false);
     f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
     expect(err(f)).toMatch(/^Термін не може бути раніше/); expect(q('#kform')).toBeTruthy();
@@ -396,4 +401,54 @@ test('колонки по умолчанию — те же, что в прило
   const proto = (k: string): string[] => JSON.parse((HTML.match(new RegExp(`TDEFAULTS\\.${k} = (\\[[^\\]]*\\])`)) as RegExpMatchArray)[1].replace(/'/g, '"'));
   expect(proto('reports')).toEqual(app(/lock: 'proj', cols, defaults: (\['strat', 'prio', 'proj', 'date'[^\]]*\])/));
   expect(proto('risks')).toEqual(app(/lock: 'proj', cols, defaults: (\['strat', 'prio', 'proj', 'title'[^\]]*\])/));
+});
+
+// #91 / #92: форма записи реестра — те же векторы, что riskForm.test.ts приложения (tests/cases/risk-form.json)
+describe('реєстр ризиків (#91, #92): прототип', () => {
+  const RF = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '../../tests/cases/risk-form.json'), 'utf8'));
+  const ID: Record<string, string> = { title: 'k-title-e', strategy: 'k-str-e', mitigation: 'k-mit-e', contingency: 'k-cont-e' };
+  const openNew = (): W => { q('[data-act="nav"][data-page="risks"]').click(); q('[data-act="newrisk"]').click(); return q('#kform'); };
+  (RF.errors as any[]).filter(x => x.isNew).forEach(x => test('обязательные поля: ' + x.name, () => {
+    const f = openNew();
+    const ty = f.querySelector(`input[name="k-type"][value="${x.draft.type}"]`); ty.checked = true; ev(ty, 'change');
+    f.querySelector('#k-title').value = x.draft.title; ev(f.querySelector('#k-title'), 'input');
+    if (x.draft.strategy) { const s = f.querySelector(`input[name="k-str"][value="${x.draft.strategy}"]`); s.checked = true; ev(s, 'change'); }
+    f.querySelector('#k-mit').value = x.draft.mitigation; f.querySelector('#k-cont').value = x.draft.contingency;
+    f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    const shown = Object.keys(ID).filter(k => !f.querySelector('#' + ID[k]).hidden);
+    expect(shown.sort()).toEqual(x.out.slice().sort());
+    // сохранено — запись в списке; нет — сообщение об ошибке в форме
+    if (x.out.length) expect(err(f)).not.toBe(''); else expect(q('#main').textContent).toContain(x.draft.title);
+  }));
+  test('звёздочки — по типу: «Проблема» без стратегії й плану дій', () => {
+    const f = openNew();
+    expect(q('#k-noap').textContent).toContain('не погоджуються');
+    expect(f.querySelector('#k-str-l').textContent).toMatch(/\*$/); expect(f.querySelector('label[for="k-cont"]').textContent).toMatch(/\*$/);
+    const ty = f.querySelector('input[name="k-type"][value="Проблема"]'); ty.checked = true; ev(ty, 'change');
+    expect(f.querySelector('#k-str-l').textContent).not.toMatch(/\*$/); expect(f.querySelector('label[for="k-mit"]').textContent).toMatch(/\*$/);
+  });
+  test('сохранённая запись — только статус; «Копіювати ризик» — новая запись со всеми полями, прошедший срок не копируется', () => {
+    const f = openNew();
+    f.querySelector('#k-title').value = 'Ризик для копії'; fillRisk(f, { strategy: 'Передача', mit: 'Страхування', cont: 'Резерв' });
+    f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    const mine = (): W[] => Array.from(w.document.querySelectorAll('#main [data-act="riskopen"]')).filter((b: W) => (b.textContent || '').indexOf('Ризик для копії') >= 0);
+    const n0 = mine().length; expect(n0).toBeGreaterThan(0);
+    const open = mine()[0] as W;
+    expect(open).toBeDefined(); open.click();
+    let k = q('#kform');
+    const ed = (RF.editable as any[]).filter(x => !x.isNew)[0];
+    const sel: Record<string, string> = { title: '#k-title', type: 'input[name="k-type"]', probability: 'input[name="k-pr"]', impact: 'input[name="k-im"]', owner: '#k-owner',
+      status: '#k-status', due: '#k-due', strategy: 'input[name="k-str"]', mitigation: '#k-mit', contingency: '#k-cont' };
+    expect(ed.fields.map((fl: string) => !k.querySelector(sel[fl]).disabled)).toEqual(ed.out);
+    expect(q('#k-only')).toBeTruthy();
+    q('#k-copy-btn').click();
+    k = q('#kform');
+    expect(q('.ph h2').textContent).toBe('Новий ризик'); expect(q('#k-copy').textContent).toContain('Ризик для копії');
+    expect(k.querySelector('#k-title').value).toBe('Ризик для копії'); expect(k.querySelector('#k-mit').value).toBe('Страхування');
+    expect(k.querySelector('input[name="k-str"][value="Передача"]').checked).toBe(true); expect(k.querySelector('#k-status').value).toBe('Відкрито');
+    expect(k.querySelector('#k-title').disabled).toBe(false);
+    k.querySelector('#k-mit').value = 'Нові заходи'; ev(k.querySelector('#k-mit'), 'input');
+    k.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    expect(mine().length).toBe(n0 * 2);
+  });
 });

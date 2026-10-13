@@ -1,0 +1,218 @@
+{
+  "_doc": "Форма записи реестра «Ризики та проблеми» (#91, #92; logic/forms.ts — riskErrors, riskEditable, riskCopy; прототип — те же правила через форму, spfx/test/prototypeForms2.test.ts). errors: незаполненные обязательные поля по порядку формы (новая запись и копия; существующая — без проверки). editable: какие поля можно менять. copy: копия записи (today — сегодня).",
+  "errors": [
+    {
+      "name": "новый ризик — пусто: опис, стратегія, заходи, план дій",
+      "isNew": true,
+      "draft": {
+        "type": "Ризик",
+        "title": "",
+        "strategy": "",
+        "mitigation": "",
+        "contingency": ""
+      },
+      "out": [
+        "title",
+        "strategy",
+        "mitigation",
+        "contingency"
+      ]
+    },
+    {
+      "name": "новый ризик — только пробелы не считаются",
+      "isNew": true,
+      "draft": {
+        "type": "Ризик",
+        "title": "Опис",
+        "strategy": "Прийняття",
+        "mitigation": "  ",
+        "contingency": "\n"
+      },
+      "out": [
+        "mitigation",
+        "contingency"
+      ]
+    },
+    {
+      "name": "новый ризик с низкой оценкой — те же обязательные (независимо от рівня)",
+      "isNew": true,
+      "draft": {
+        "type": "Ризик",
+        "title": "Дрібний",
+        "strategy": "",
+        "mitigation": "Заходи",
+        "contingency": "План"
+      },
+      "out": [
+        "strategy"
+      ]
+    },
+    {
+      "name": "новый ризик заполнен",
+      "isNew": true,
+      "draft": {
+        "type": "Ризик",
+        "title": "Опис",
+        "strategy": "Зниження (пом'якшення)",
+        "mitigation": "Заходи",
+        "contingency": "План"
+      },
+      "out": []
+    },
+    {
+      "name": "новая проблема — опис і заходи; стратегія й план не потрібні",
+      "isNew": true,
+      "draft": {
+        "type": "Проблема",
+        "title": "",
+        "strategy": "",
+        "mitigation": "",
+        "contingency": ""
+      },
+      "out": [
+        "title",
+        "mitigation"
+      ]
+    },
+    {
+      "name": "существующая запись — поля не проверяются (меняется только статус)",
+      "isNew": false,
+      "draft": {
+        "type": "Ризик",
+        "title": "Старий",
+        "strategy": "",
+        "mitigation": "",
+        "contingency": ""
+      },
+      "out": []
+    }
+  ],
+  "editable": [
+    {
+      "name": "новая запись — все поля",
+      "isNew": true,
+      "fields": [
+        "title",
+        "type",
+        "probability",
+        "impact",
+        "owner",
+        "status",
+        "due",
+        "strategy",
+        "mitigation",
+        "contingency"
+      ],
+      "out": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "name": "существующая — только статус",
+      "isNew": false,
+      "fields": [
+        "title",
+        "type",
+        "probability",
+        "impact",
+        "owner",
+        "status",
+        "due",
+        "strategy",
+        "mitigation",
+        "contingency"
+      ],
+      "out": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  ],
+  "copy": [
+    {
+      "name": "копия — все поля, статус «Відкрито», будущий срок сохраняется",
+      "today": "2026-10-14",
+      "risk": {
+        "projectId": 1,
+        "title": "Затримка постачальника",
+        "type": "Ризик",
+        "probability": 4,
+        "impact": 5,
+        "owner": {
+          "id": 7,
+          "name": "PM",
+          "email": "pm@x"
+        },
+        "status": "Закрито",
+        "due": "2026-11-30",
+        "mitigation": "Контроль",
+        "strategy": "Зниження (пом'якшення)",
+        "contingency": "Резерв"
+      },
+      "out": {
+        "projectId": 1,
+        "title": "Затримка постачальника",
+        "type": "Ризик",
+        "probability": 4,
+        "impact": 5,
+        "owner": {
+          "id": 7,
+          "name": "PM",
+          "email": "pm@x"
+        },
+        "status": "Відкрито",
+        "due": "2026-11-30",
+        "mitigation": "Контроль",
+        "strategy": "Зниження (пом'якшення)",
+        "contingency": "Резерв"
+      }
+    },
+    {
+      "name": "срок уже прошёл — не копируется",
+      "today": "2026-10-14",
+      "risk": {
+        "projectId": 1,
+        "title": "Сервер",
+        "type": "Проблема",
+        "probability": 5,
+        "impact": 3,
+        "owner": null,
+        "status": "В роботі",
+        "due": "2026-10-01",
+        "mitigation": "ІТ",
+        "strategy": "",
+        "contingency": ""
+      },
+      "out": {
+        "projectId": 1,
+        "title": "Сервер",
+        "type": "Проблема",
+        "probability": 5,
+        "impact": 3,
+        "owner": null,
+        "status": "Відкрито",
+        "due": "",
+        "mitigation": "ІТ",
+        "strategy": "",
+        "contingency": ""
+      }
+    }
+  ]
+}

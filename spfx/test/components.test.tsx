@@ -449,20 +449,22 @@ describe('раунд 5: отзывы 81–88', () => {
     typeDate('k-due', '01.01.2000');
     expect((root.querySelector('.ferr') as HTMLElement).textContent).toMatch(/^Термін не може бути раніше \d\d\.\d\d\.\d{4}\.$/);
     act(() => { Simulate.change(root.querySelector('#k-title') as HTMLTextAreaElement, { target: { value: 'Ризик' } } as any); });
+    // #91: обязательные поля новой записи
+    act(() => { Simulate.change(root.querySelector('input[name="k-str"][value="Прийняття"]') as HTMLInputElement); });
+    act(() => { Simulate.change(root.querySelector('#k-mit') as HTMLTextAreaElement, { target: { value: 'Заходи' } } as any); });
+    act(() => { Simulate.change(root.querySelector('#k-cont') as HTMLTextAreaElement, { target: { value: 'План' } } as any); });
     act(() => { Simulate.submit(root.querySelector('form') as HTMLFormElement); });
     expect(root.querySelector('.err')!.textContent).toMatch(/^Термін не може бути раніше/);
     const t0 = today().split('-').reverse().join('.');
     typeDate('k-due', t0); expect(root.querySelector('.ferr')).toBeNull();
   });
-  test('#88 существующий риск: прежний просроченный срок не блокирует — пометка «Термін минув»; закрытый — без пометки', () => {
+  test('#88 / #92 существующий риск: просроченный срок — пометка «Термін минув», срок не меняется (только статус); закрытый — без пометки', () => {
     const k = { id: 9, projectId: 5, title: 'Р', type: 'Ризик', probability: 3, impact: 3, owner: null, status: 'Відкрито', due: '2026-01-10', mitigation: '', strategy: '', contingency: '', created: '2026-01-05T09:00:00Z' };
     const data = { projects: [{ id: 5, title: 'Проєкт П', status: 'Реалізація', canEdit: true, manager: { email: 'pm@x', name: 'PM' } }], risks: [k], reports: [], comments: [], team: [] } as any;
     mount(<RiskForm data={data} projectId={5} riskId={9} onCancel={() => undefined} />);
     expect(root.querySelector('.ferr')).toBeNull();   // не ошибка — предупреждение, сохранять можно
-    expect((root.querySelector('.fwarn') as HTMLElement).textContent).toBe('Термін минув — оновіть його або закрийте запис.');
-    typeDate('k-due', '01.01.2026');   // раньше регистрации (05.01.2026)
-    expect((root.querySelector('.ferr') as HTMLElement).textContent).toBe('Термін не може бути раніше 05.01.2026.');
-    typeDate('k-due', '10.01.2026');
+    expect((root.querySelector('.fwarn') as HTMLElement).textContent).toBe('Термін минув — закрийте запис або створіть копію з новим терміном.');
+    expect((root.querySelector('#k-due') as HTMLInputElement).disabled).toBe(true);
     act(() => { Simulate.change(root.querySelector('#k-status') as HTMLSelectElement, { target: { value: 'Закрито' } } as any); });
     expect(root.querySelector('.ferr')).toBeNull(); expect(root.querySelector('.fwarn')).toBeNull();
   });
@@ -526,5 +528,33 @@ describe('колокольчик: отзыв и выпуск в панели', (
       await act(async () => { r.click(); await Promise.resolve(); });
       expect(opened[1]).toBe('releases@0');
     }
+  });
+});
+
+describe('#91 / #92 запись реестра в приложении', () => {
+  const pr = { id: 5, title: 'Проєкт П', status: 'Реалізація', canEdit: true, manager: { email: 'pm@x', name: 'PM' } };
+  test('новый ризик: обязательные — у полей, звёздочки по типу', () => {
+    mount(<RiskForm data={{ projects: [pr], risks: [], reports: [], comments: [], team: [] } as any} projectId={5} riskId={0} onCancel={() => undefined} />);
+    expect((root.querySelector('#k-str-l') as HTMLElement).textContent).toBe('Стратегія реагування *');
+    // #87: в форме новой записи — как обрабатываются риски
+    expect(root.querySelector('#k-noap')!.textContent).toContain('не погоджуються');
+    act(() => { Simulate.submit(root.querySelector('form') as HTMLFormElement); });
+    expect(Array.from(root.querySelectorAll('.ferr')).map(e => e.textContent)).toEqual(['Опишіть ризик або проблему.', 'Оберіть стратегію реагування.', 'Опишіть заходи.', 'Опишіть план дій у разі настання.']);
+    expect(root.querySelector('.err')!.textContent).toBe("Заповніть обов'язкові поля (*).");
+    act(() => { Simulate.change(root.querySelector('input[name="k-type"][value="Проблема"]') as HTMLInputElement); });
+    expect((root.querySelector('#k-str-l') as HTMLElement).textContent).toBe('Стратегія реагування');
+  });
+  test('сохранённая запись — только статус; «Копіювати ризик» — новая запись со всеми полями', () => {
+    const k = { id: 9, projectId: 5, title: 'Р', type: 'Ризик', probability: 4, impact: 5, owner: null, status: 'В роботі', due: '2000-01-10', mitigation: 'М', strategy: 'Передача', contingency: 'П', created: '2000-01-05T09:00:00Z' };
+    mount(<RiskForm data={{ projects: [pr], risks: [k], reports: [], comments: [], team: [] } as any} projectId={5} riskId={9} onCancel={() => undefined} />);
+    const dis = (s: string): boolean => (root.querySelector(s) as HTMLInputElement).disabled;
+    expect([dis('#k-title'), dis('input[name="k-pr"]'), dis('#k-mit'), dis('#k-cont'), dis('input[name="k-str"]'), dis('#k-due'), dis('#k-status')]).toEqual([true, true, true, true, true, true, false]);
+    act(() => { (root.querySelector('#k-copy-btn') as HTMLButtonElement).click(); });
+    expect((root.querySelector('.ph h2') as HTMLElement).textContent).toBe('Новий ризик');
+    expect((root.querySelector('#k-title') as HTMLTextAreaElement).disabled).toBe(false);
+    expect((root.querySelector('#k-mit') as HTMLTextAreaElement).value).toBe('М');
+    expect((root.querySelector('#k-status') as HTMLSelectElement).value).toBe('Відкрито');
+    expect((root.querySelector('#k-due') as HTMLInputElement).value).toBe('');
+    expect(root.querySelector('#k-copy')!.textContent).toContain('«Р»');
   });
 });

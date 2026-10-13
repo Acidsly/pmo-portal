@@ -1587,9 +1587,54 @@ export const T: Record<string, L3> = {
   "Срок не может быть раньше {date}."
  ],
  "riskOverdue": [
-  "Термін минув — оновіть його або закрийте запис.",
-  "The due date has passed — update it or close the record.",
-  "Срок истёк — обновите его или закройте запись."
+  "Термін минув — закрийте запис або створіть копію з новим терміном.",
+  "The due date has passed — close the record or create a copy with a new due date.",
+  "Срок истёк — закройте запись или создайте копию с новым сроком."
+ ],
+ "errRiskStrategy": [
+  "Оберіть стратегію реагування.",
+  "Choose the response strategy.",
+  "Выберите стратегию реагирования."
+ ],
+ "errRiskMit": [
+  "Опишіть заходи.",
+  "Describe the actions.",
+  "Опишите меры."
+ ],
+ "errRiskCont": [
+  "Опишіть план дій у разі настання.",
+  "Describe the contingency plan.",
+  "Опишите план действий при наступлении."
+ ],
+ "errRiskReq": [
+  "Заповніть обов'язкові поля (*).",
+  "Fill in the required fields (*).",
+  "Заполните обязательные поля (*)."
+ ],
+ "riskCopyBtn": [
+  "Копіювати ризик",
+  "Copy risk",
+  "Копировать риск"
+ ],
+ "issueCopyBtn": [
+  "Копіювати проблему",
+  "Copy issue",
+  "Копировать проблему"
+ ],
+ "riskCopyNote": [
+  "Копія запису «{t}»: змініть потрібні поля й збережіть — буде новий запис. Вихідний запис закрийте окремо (статус «Закрито»).",
+  "Copy of «{t}»: change what you need and save — a new record is created. Close the original separately (status «Closed»).",
+  "Копия записи «{t}»: измените нужные поля и сохраните — будет новая запись. Исходную запись закройте отдельно (статус «Закрито»)."
+ ],
+ "riskOnlyStatus": [
+  "У збереженому записі змінюється лише «Статус». Щоб змінити інші поля — «Копіювати»: нова картка з усіма полями, а цю закрийте.",
+  "In a saved record only «Status» can be changed. To change other fields — «Copy»: a new card with all fields; close this one.",
+  "В сохранённой записи меняется только «Статус». Чтобы изменить другие поля — «Копировать»: новая карточка со всеми полями, а эту закройте."
+ ],
+ "riskNoApproval": [
+  "Ризики й проблеми не погоджуються: нові високі ризики (від 15) і всі проблеми, а також зміну їх статусу PMO бачить у сповіщеннях; зворотний зв'язок — коментарем у картці проєкту.",
+  "Risks and issues are not approved: PMO sees new high risks (15+) and all issues, and their status changes, in notifications; feedback — as a comment in the project card.",
+  "Риски и проблемы не согласуются: новые высокие риски (от 15) и все проблемы, а также смену их статуса PMO видит в уведомлениях; обратная связь — комментарием в карточке проекта."
  ],
  "errRiskTitle": [
   "Опишіть ризик або проблему.",

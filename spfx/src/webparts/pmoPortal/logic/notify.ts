@@ -28,8 +28,8 @@ export interface NotifyCtx {
   me: string;
   /** участник группы PMO или владелец сайта */
   isPmo: boolean;
-  /** риск события сейчас: оценка и власник (риска нет — null) */
-  risk?: { score: number; owner: string } | null;
+  /** риск события сейчас: оценка, власник и тип (риска нет — null) */
+  risk?: { score: number; owner: string; type?: string } | null;
 }
 const low = (s: string | undefined | null): string => (s || '').trim().toLowerCase();
 
@@ -50,6 +50,10 @@ export function notifyFor(kind: NotifyKind, author: string, diffs: { f: string; 
       if (pm) return true;
       if (ctx.risk && low(ctx.risk.owner) === me) return true;
       const sc = ctx.risk ? ctx.risk.score : Number((diffs.filter(d => d.f === 'kScore').pop() || { to: '0' }).to) || 0;
+      // #87: PMO — новые высокие риски (от 15) и все проблемы, а также смена их статуса (не прочие правки)
+      const isNew = diffs.some(d => d.f === 'kNew'), statusCh = diffs.some(d => d.f === 'kStatus');
+      const type = (ctx.risk && ctx.risk.type) || (diffs.filter(d => d.f === 'kNew').pop() || { to: '' }).to;
+      if (ctx.isPmo && (isNew || statusCh) && (sc >= 15 || type === 'Проблема')) return true;
       return (owner || team) && sc >= 15;
     }
     default: return false;
@@ -141,7 +145,7 @@ export function notifyItems(d: { projects: Project[]; risks: Risk[]; comments: C
     const tn = kind === 'cardEdit' ? teamNotice(ev.diffs, me) : '';
     if (tn) kind = tn; else if (onlyHidden(ev)) continue;   // правка из одних служебных отметок — показывать нечего
     const rk = ev.ref && ev.ref.type === 'risk' ? d.risks.filter(x => x.id === ev.ref!.id)[0] : undefined;
-    const risk = rk ? { score: rk.probability * rk.impact, owner: rk.owner ? rk.owner.email : '' } : null;
+    const risk = rk ? { score: rk.probability * rk.impact, owner: rk.owner ? rk.owner.email : '', type: rk.type } : null;
     if (!notifyFor(kind, ev.who ? ev.who.email : '', ev.diffs, notifyProject(p), { me, isPmo, risk })) continue;
     out.push({ key: 'j' + (ev.lastId || ev.id), source: 'journal', id: ev.lastId || ev.id, projectId: p.id, kind, date: ev.date, who: ev.who, ev });
   }
