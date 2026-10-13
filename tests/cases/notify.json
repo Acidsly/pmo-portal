@@ -1212,6 +1212,218 @@
       "isPmo": false,
       "risk": null,
       "out": false
+    },
+    {
+      "name": "risk: PMO — новий високий ризик (від 15)",
+      "kind": "risk",
+      "author": "pm@x",
+      "diffs": [
+        {
+          "f": "kNew",
+          "to": "Ризик"
+        }
+      ],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pmo@x",
+      "isPmo": true,
+      "risk": {
+        "score": 16,
+        "owner": "pm@x",
+        "type": "Ризик"
+      },
+      "out": true
+    },
+    {
+      "name": "risk: PMO — новий низький ризик — ні",
+      "kind": "risk",
+      "author": "pm@x",
+      "diffs": [
+        {
+          "f": "kNew",
+          "to": "Ризик"
+        }
+      ],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pmo@x",
+      "isPmo": true,
+      "risk": {
+        "score": 6,
+        "owner": "pm@x",
+        "type": "Ризик"
+      },
+      "out": false
+    },
+    {
+      "name": "risk: PMO — нова проблема (будь-яка оцінка)",
+      "kind": "risk",
+      "author": "pm@x",
+      "diffs": [
+        {
+          "f": "kNew",
+          "to": "Проблема"
+        }
+      ],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pmo@x",
+      "isPmo": true,
+      "risk": {
+        "score": 4,
+        "owner": "pm@x",
+        "type": "Проблема"
+      },
+      "out": true
+    },
+    {
+      "name": "risk: PMO — зміна статусу проблеми",
+      "kind": "risk",
+      "author": "pm@x",
+      "diffs": [
+        {
+          "f": "kStatus",
+          "to": "Закрито"
+        }
+      ],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pmo@x",
+      "isPmo": true,
+      "risk": {
+        "score": 4,
+        "owner": "pm@x",
+        "type": "Проблема"
+      },
+      "out": true
+    },
+    {
+      "name": "risk: PMO — зміна статусу високого ризику",
+      "kind": "risk",
+      "author": "pm@x",
+      "diffs": [
+        {
+          "f": "kStatus",
+          "to": "В роботі"
+        }
+      ],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pmo@x",
+      "isPmo": true,
+      "risk": {
+        "score": 20,
+        "owner": "pm@x",
+        "type": "Ризик"
+      },
+      "out": true
+    },
+    {
+      "name": "risk: PMO — інша правка високого ризику (не статус) — ні",
+      "kind": "risk",
+      "author": "pm@x",
+      "diffs": [
+        {
+          "f": "kDue",
+          "to": "01.12.2026"
+        }
+      ],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pmo@x",
+      "isPmo": true,
+      "risk": {
+        "score": 20,
+        "owner": "pm@x",
+        "type": "Ризик"
+      },
+      "out": false
+    },
+    {
+      "name": "risk: не PMO — нова проблема з низькою оцінкою — ні",
+      "kind": "risk",
+      "author": "pm@x",
+      "diffs": [
+        {
+          "f": "kNew",
+          "to": "Проблема"
+        }
+      ],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "x@x",
+      "isPmo": false,
+      "risk": {
+        "score": 4,
+        "owner": "pm@x",
+        "type": "Проблема"
+      },
+      "out": false
+    },
+    {
+      "name": "risk: PMO — тип із запису журналу, якщо запису ризику вже немає",
+      "kind": "risk",
+      "author": "pm@x",
+      "diffs": [
+        {
+          "f": "kNew",
+          "to": "Проблема"
+        }
+      ],
+      "project": {
+        "status": "Реалізація",
+        "pm": "pm@x",
+        "owner": "own@x",
+        "team": [
+          "tm@x"
+        ]
+      },
+      "me": "pmo@x",
+      "isPmo": true,
+      "risk": null,
+      "out": true
     }
   ]
 }

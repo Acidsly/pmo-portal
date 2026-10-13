@@ -1,5 +1,21 @@
 # What's new
 
+## 1.7.3.0 · 14.10.2026
+
+**New**
+- "Copy risk" / "Copy issue" in a saved record: a new record opens with all fields — change what you need and save, then close the original (#92).
+- The PMO gets new high risks (15+) and all issues, and their status changes, in the bell (#87).
+
+**Changed**
+- Risk: "Response strategy", "Risk reduction actions" and "Contingency plan" are required at any score; issue — description and actions. Required fields are marked *, the explanation is next to the field (#91, #88).
+- A saved risk or issue can only change its status; other fields — via "Copy" (#92).
+- The new record form explains how risks are handled: they are not approved, the PMO sees them in notifications, feedback is a comment in the card (#87).
+
+**Check again**
+- A new risk without strategy, actions or contingency plan — errors next to the fields; a new issue — only description and actions.
+- A saved risk: only "Status" can be changed; "Copy risk" opens a new record with all fields.
+- PMO: about 15 minutes after a new high risk or issue from a PM, or its status change — an event in the bell.
+
 ## 1.7.2.31 · 14.10.2026
 
 **Changed**

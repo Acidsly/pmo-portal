@@ -154,6 +154,27 @@ export const validateProject = (d: ProjectDraft, otherCodes: string[] = [], othe
     : codeTaken(d.code, otherCodes) ? 'errCode' : isNew && datesBeforeStart(d).length ? 'errDatesOrder' : validateTeamLinks(d.team, d.links));
 export const validateRisk = (d: RiskDraft): string => (!d.title.trim() ? 'errRiskTitle' : '');
 
+/** #91: обязательные поля новой записи реестра (и копии) — «Ризик»: опис, стратегія, заходи, план дій у разі настання
+ *  (при любой оценке); «Проблема»: опис и заходи (стратегия и план на случай наступления к случившемуся неприменимы).
+ *  Пробелы — пусто. Существующая запись меняется только статусом (#92) — поля не проверяются. Векторы tests/cases/risk-form.json. */
+export type RiskField = 'title' | 'strategy' | 'mitigation' | 'contingency';
+export const RISK_REQUIRED: Record<string, RiskField[]> = { 'Ризик': ['title', 'strategy', 'mitigation', 'contingency'], 'Проблема': ['title', 'mitigation'] };
+export const RISK_ERR: Record<RiskField, string> = { title: 'errRiskTitle', strategy: 'errRiskStrategy', mitigation: 'errRiskMit', contingency: 'errRiskCont' };
+export const riskRequired = (type: string): RiskField[] => RISK_REQUIRED[type] || RISK_REQUIRED['Ризик'];
+export function riskErrors(d: RiskDraft, isNew: boolean): RiskField[] {
+  if (!isNew) return [];
+  return riskRequired(d.type).filter(f => !String(d[f] || '').trim());
+}
+/** #92: в сохранённой записи меняется только «Статус»; остальное — через «Копіювати ризик» (новая запись). */
+export const riskEditable = (field: string, isNew: boolean): boolean => isNew || field === 'status';
+/** #92: «Копіювати ризик» — новая запись со всеми полями исходной: статус «Відкрито»; срок, который уже прошёл, не копируется
+ *  (новый срок — не раньше сегодняшнего дня, #88). */
+export function riskCopy(k: { projectId: number; title: string; type: string; probability: number; impact: number; owner: Person | null; due: string;
+  mitigation: string; strategy: string; contingency: string }, today: string): RiskDraft {
+  return { projectId: k.projectId, title: k.title, type: k.type || 'Ризик', probability: k.probability || 3, impact: k.impact || 3, owner: k.owner,
+    status: 'Відкрито', due: k.due && k.due >= today ? k.due : '', mitigation: k.mitigation || '', strategy: k.strategy || '', contingency: k.contingency || '' };
+}
+
 /** #88: «Термін виконання заходів» — новый риск не раньше сегодняшнего дня, существующий — не раньше даты регистрации;
  *  пустой и не изменённый срок (даже просроченный) не блокируют. Ответ — дата, раньше которой нельзя, или ''. Векторы tests/cases/risk-due.json. */
 /** Дата регистрации записи — по местному времени (created — ISO UTC из SharePoint или «гггг-мм-дд»); нет — сегодня. */
