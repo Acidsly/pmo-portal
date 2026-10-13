@@ -89,7 +89,7 @@ export interface EvalBase { today: string; project: object; report: object; risk
 
 const EMPTY_TEXTS = { title: '', done: '', next: '', issues: '', keyReason: '', decision: false, decisionText: '' };
 /** Вход buildReportContext для случая: записи — base + отличия; форма — черновик: показатели проекта случая и пустые тексты
- *  (так форма открывается для «Заповнити з ШІ», reportFromProject), проверка — base.draft целиком; null — без формы. */
+ *  (так форма открывается для «Заповнити з ШІ», reportFromProject), проверка — base.draft целиком и без журнала (как портал); null — без формы. */
 export function evalInput(base: EvalBase, c: EvalCase): AiContextIn {
   const i = c.input;
   const merge = (b: object, xs: object[] | undefined): any[] => (xs || []).map(x => ({ ...b, ...x }));
@@ -105,7 +105,7 @@ export function evalInput(base: EvalBase, c: EvalCase): AiContextIn {
     planEnd: project.planEnd, forecastEnd: project.forecastEnd, actualCost: project.actualCost, actualEnd: project.actualEnd || '' };
   const draft = i.draft === null ? undefined : { ...base.draft, ...(c.kind === 'draft' ? { ...fromProject, ...EMPTY_TEXTS } : {}), ...(i.draft || {}) };
   return { project, reports: merge(base.report, i.reports), risks: risks as any,
-    changes: merge(base.change, i.changes), draft: draft as any, prevCheck: i.prevCheck, lang: (i.lang || 'uk') as any, today: base.today };
+    changes: c.kind === 'check' ? [] : merge(base.change, i.changes), draft: draft as any, prevCheck: i.prevCheck, lang: (i.lang || 'uk') as any, today: base.today };
 }
 
 export interface EvalResult { id: string; kind: AiKind; negative: boolean; pass: boolean; fails: string[]; ms: number; raw: string }

@@ -85,7 +85,8 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
     let token: string;
     try { token = await m.aiToken(c.me, () => undefined); }
     catch (e) { fail('error', /popup|interaction|blocked/i.test(String((e as Error).message || e)) ? t('aiPopup') : undefined); return; }
-    const changes: ChangeEntry[] = await c.repo.loadChanges(a.project.id).catch(() => [] as ChangeEntry[]);
+    // журнал — только для черновика («Зроблено за період»); проверке он мешает: ИИ принимает прежние изменения за правки этой формы
+    const changes: ChangeEntry[] = kind === 'draft' ? await c.repo.loadChanges(a.project.id).catch(() => [] as ChangeEntry[]) : [];
     if (id !== req.current) return;
     const ctx = buildReportContext({ project: a.project, reports: a.data.reports, risks: a.data.risks, changes, draft: dRef.current,
       prevCheck: kind === 'check' && prevCheck ? prevCheck : undefined, lang, today: c.today });
