@@ -422,6 +422,7 @@ describe('реєстр ризиків (#91, #92): прототип', () => {
   }));
   test('звёздочки — по типу: «Проблема» без стратегії й плану дій', () => {
     const f = openNew();
+    expect(q('#k-noap').textContent).toContain('не погоджуються');
     expect(f.querySelector('#k-str-l').textContent).toMatch(/\*$/); expect(f.querySelector('label[for="k-cont"]').textContent).toMatch(/\*$/);
     const ty = f.querySelector('input[name="k-type"][value="Проблема"]'); ty.checked = true; ev(ty, 'change');
     expect(f.querySelector('#k-str-l').textContent).not.toMatch(/\*$/); expect(f.querySelector('label[for="k-mit"]').textContent).toMatch(/\*$/);

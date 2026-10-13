@@ -536,6 +536,8 @@ describe('#91 / #92 запись реестра в приложении', () => 
   test('новый ризик: обязательные — у полей, звёздочки по типу', () => {
     mount(<RiskForm data={{ projects: [pr], risks: [], reports: [], comments: [], team: [] } as any} projectId={5} riskId={0} onCancel={() => undefined} />);
     expect((root.querySelector('#k-str-l') as HTMLElement).textContent).toBe('Стратегія реагування *');
+    // #87: в форме новой записи — как обрабатываются риски
+    expect(root.querySelector('#k-noap')!.textContent).toContain('не погоджуються');
     act(() => { Simulate.submit(root.querySelector('form') as HTMLFormElement); });
     expect(Array.from(root.querySelectorAll('.ferr')).map(e => e.textContent)).toEqual(['Опишіть ризик або проблему.', 'Оберіть стратегію реагування.', 'Опишіть заходи.', 'Опишіть план дій у разі настання.']);
     expect(root.querySelector('.err')!.textContent).toBe("Заповніть обов'язкові поля (*).");
