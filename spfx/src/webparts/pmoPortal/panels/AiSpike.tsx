@@ -17,7 +17,7 @@ export const AiSpike: React.FC<{ onCancel(): void; aadToken?: (resource: string)
   const c = React.useContext(AppCtx);
   const [log, setLog] = React.useState<string[]>([]);
   const [busy, setBusy] = React.useState(false);
-  const conv = React.useRef<{ send(t: string): Promise<{ texts: string[]; ms: number; types: string[] }> } | null>(null);
+  const conv = React.useRef<{ send(t: string): Promise<{ texts: string[]; ms: number; types: string[]; raw: string }> } | null>(null);
   const add = (s: string): void => setLog(l => l.concat(`${new Date().toLocaleTimeString('uk-UA')} ${s}`));
   const load = (): Promise<Agent> => import(/* webpackChunkName: 'pmo-ai' */ '../ai/aiAgent');
   const run = (f: () => Promise<void>) => async (): Promise<void> => {
@@ -49,7 +49,7 @@ export const AiSpike: React.FC<{ onCancel(): void; aadToken?: (resource: string)
   const sendFree = run(async () => {
     if (!conv.current) { add('Спершу «Підключитися»'); return; }
     const r = await conv.current.send(free);
-    add(`текст (${free.length} символів) → ${r.ms} мс; activity: ${r.types.join(', ')}; відповідь: ${r.texts.join(' | ').slice(0, 600)}`);
+    add(`текст (${free.length} символів) → ${r.ms} мс; activity: ${r.types.join(', ')}; відповідь: ${r.texts.join(' | ').slice(0, 600)}\nсире: ${r.raw}`);
   });
   return <>
     <div className="ph"><div><div className="k"><EntTag kind="help" /><span>Copilot Studio · {AI_CONFIG.schemaName}</span></div><h2>Перевірка ШІ (прототип)</h2></div>

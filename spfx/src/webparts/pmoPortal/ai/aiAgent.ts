@@ -34,20 +34,25 @@ export async function aiToken(email: string, log: (s: string) => void): Promise<
 }
 
 /** Разговор с агентом: начать и отправить текст; ответ — тексты сообщений агента и время. */
-export interface AiTurn { texts: string[]; ms: number; types: string[] }
+export interface AiTurn { texts: string[]; ms: number; types: string[]; raw: string }
+/** Сырые активности ответа (для проверки: где лежит текст) — без служебных идентификаторов, урезано. */
+const rawOf = (acts: unknown[]): string => JSON.stringify(acts.map(a => {
+  const { type, text, name, valueType, value, attachments, entities, channelData, textFormat } = a as Record<string, unknown>;
+  return { type, text, name, valueType, value, attachments, entities, channelData, textFormat };
+})).slice(0, 4000);
 export class AiConversation {
   private client: CopilotStudioClient; private id = '';
   public constructor(token: string) { this.client = new CopilotStudioClient(settings(), token); }
   public async start(): Promise<AiTurn> {
     const t0 = Date.now(); const r = await this.client.startConversationWithResponse(true);
     this.id = r.conversationId;
-    return { texts: r.activities.filter(x => x.type === 'message').map(x => x.text || ''), types: r.activities.map(x => x.type), ms: Date.now() - t0 };
+    return { texts: r.activities.filter(x => x.type === 'message').map(x => x.text || ''), types: r.activities.map(x => x.type), raw: rawOf(r.activities), ms: Date.now() - t0 };
   }
   public async send(text: string): Promise<AiTurn> {
     const t0 = Date.now();
     // простой объект активности: SDK сериализует его в JSON (браузерная сборка SDK класс Activity не экспортирует)
     const act = { type: 'message', text } as unknown as Parameters<CopilotStudioClient['executeWithResponse']>[0];
     const r = await this.client.executeWithResponse(act, this.id);
-    return { texts: r.activities.filter(x => x.type === 'message').map(x => x.text || ''), types: r.activities.map(x => x.type), ms: Date.now() - t0 };
+    return { texts: r.activities.filter(x => x.type === 'message').map(x => x.text || ''), types: r.activities.map(x => x.type), raw: rawOf(r.activities), ms: Date.now() - t0 };
   }
 }
