@@ -350,6 +350,10 @@ F $R srNext        Note     "План на наступний період" "Pla
 F $R srIssues      Note     "Проблеми та ризики за період" "Issues and risks for the period" "Проблемы и риски за период" "NumLines='5' RichText='FALSE'"
 F $R srDecision    Boolean  "Потрібне рішення керівництва" "Management decision needed" "Требуется решение руководства" "" "<Default>0</Default>"
 F $R srDecisionText Note    "Яке рішення потрібне" "Decision required" "Какое решение нужно"  "NumLines='3' RichText='FALSE'"
+# помощник отчёта (copilot/README.md): пишет приложение; синхронизация не читает и не пишет, в журнал не попадает
+F $R srAiCheck     Note     "Суперечності (аналіз ШІ)" "Contradictions (AI analysis)" "Противоречия (анализ ИИ)" "NumLines='5' RichText='FALSE'"
+F $R srAiCheckedAt DateTime "Перевірено ШІ"      "AI checked at"       "Проверено ИИ"         "Format='DateTime'"
+F $R srAiFilled    Boolean  "Заповнено з ШІ"     "Filled with AI"      "Заполнено с ИИ"       "" "<Default>0</Default>"
 F $R srApplied     Boolean  "Службове: застосовано" "System: applied"  "Служебное: применено" "Hidden='TRUE'" "<Default>0</Default>"
 F $R pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='64'"
 # погодження PMO: пишет синхронизация из «Погодження звітів»; в карточку попадает только «Погоджено»
@@ -671,6 +675,8 @@ Set-FormVisibility $P @("pmRAG","pmForecastEnd","pmActualEnd","pmActualCost","pm
 # «Стратегічний» в отчётах и рисках заполняет синхронизация
 # «Стратегічний» и «Пріоритет» в отчётах и рисках — копия из проекта, заполняет синхронизация
 Set-FormVisibility $R @("srProjectType","srProjectPriority","srApproval","srApprovedBy","srApprovedAt","srApprovalNote") $false $false
+# поле ИИ — только для чтения: пишет приложение по результату проверки
+Set-FormVisibility $R @("srAiCheck","srAiCheckedAt","srAiFilled") $false $false
 Set-FormVisibility $K @("riProjectType","riProjectPriority") $false $false
 
 # Права списков. Участники сайта: «Проєкти» — только чтение (новый проект заводит PMO), журнал — только чтение (пишет синхронизация);
