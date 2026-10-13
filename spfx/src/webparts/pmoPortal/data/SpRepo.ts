@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- ответы REST SharePoint */
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { Project, StatusReport, Risk, Comment, ChangeEntry, Person, FeedbackRow, Approval } from './types';
-import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, REPORT_SELECT, REPORT_EXPAND, RISK_SELECT, RISK_EXPAND,
+import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, REPORT_SELECT, REPORT_EXPAND, REPORT_AI, RISK_SELECT, RISK_EXPAND,
   COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, TEAM_SELECT, TEAM_EXPAND, mapTeam, APPROVAL_SELECT, APPROVAL_EXPAND, mapApproval, ASSIGN_SELECT, ASSIGN_EXPAND, mapAssign, canAdd, canManage,
   withoutFolders, CHANGES_ON_LOAD, changesOf, changesSince, NOTIFY_SELECT, mapNotify } from './map';
 import { withApproval, approvedIds as approvedOf, pendingReports, latestReport } from '../logic/approval';
@@ -66,7 +66,7 @@ export class SpRepo {
     const since = new Date(Date.now() - NOTIFY_DAYS * 864e5).toISOString();
     const [p, r, k, c, h, tm, ap, ps, perm, fbPerm, pa, rc, ns] = await Promise.all([
       this.items('Projects', PROJECT_SELECT, PROJECT_EXPAND),
-      this.items('StatusReports', REPORT_SELECT, REPORT_EXPAND),
+      this.reportRows(),
       this.items('RisksIssues', RISK_SELECT, RISK_EXPAND),
       this.items('ProjectComments', COMMENT_SELECT, COMMENT_EXPAND),
       this.items('KeyChanges', CHANGE_SELECT, CHANGE_EXPAND, CHANGES_ON_LOAD),
@@ -190,6 +190,19 @@ export class SpRepo {
 
   /** Новый элемент сразу в папке проекта P<ID> (права папки: в чужой проект и в корень записать нельзя). users — e-mail полей «Користувач».
    *  Ошибки: notReady — папки ещё нет (новый проект, синхронизация не прошла); noRights — нет права добавлять. */
+  /** Все статус-отчёты с полями помощника ИИ; полей ещё нет на сайте (приложение раньше Deploy-PMO.ps1) — без них, отчёты не пропадают. */
+  reportRows(): Promise<any[]> {
+    return this.items('StatusReports', REPORT_SELECT + REPORT_AI, REPORT_EXPAND).catch(() => this.items('StatusReports', REPORT_SELECT, REPORT_EXPAND));
+  }
+
+  /** Время UTC (ISO) → время по поясу сайта («2026-10-13T11:30:00») — для полей «дата и время» в createIn (formDateTime). */
+  async siteLocalTime(isoUtc: string): Promise<string> {
+    const r = await this.http.get(`${this.webUrl}/_api/web/RegionalSettings/TimeZone/utcToLocalTime(@d)?@d='${encodeURIComponent(isoUtc)}'`,
+      SPHttpClient.configurations.v1, { headers: { Accept: 'application/json;odata=nometadata' } });
+    if (!r.ok) throw new Error('siteLocalTime ' + r.status);
+    return String((await r.json()).value || '');
+  }
+
   async createIn(list: WritableList, projectId: number, body: Record<string, unknown>, users: Record<string, string> = {}): Promise<number> {
     const listRel = `${this.webRelUrl.replace(/\/$/, '')}/Lists/${list}`;
     const payload = { listItemCreateInfo: { FolderPath: { DecodedUrl: `${listRel}/P${projectId}` }, UnderlyingObjectType: 0 },

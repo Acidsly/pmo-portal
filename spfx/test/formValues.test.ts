@@ -1,4 +1,4 @@
-import { toFormValues, formDate, formNumber, formUser, regionalFrom, DEFAULT_REGIONAL } from '../src/webparts/pmoPortal/data/formValues';
+import { toFormValues, formDate, formDateTime, formNumber, formUser, regionalFrom, DEFAULT_REGIONAL } from '../src/webparts/pmoPortal/data/formValues';
 import { reportBody, riskBody, commentBody, teamBody } from '../src/webparts/pmoPortal/data/write';
 import { reportFromProject } from '../src/webparts/pmoPortal/logic/forms';
 import { Project } from '../src/webparts/pmoPortal/data/types';
@@ -46,4 +46,18 @@ test('риск, комментарий, команда: пользователь
   expect(toFormValues('ProjectComments', commentBody(3, ' Текст '), uk)).toEqual([{ FieldName: 'cmProject', FieldValue: '3' }, { FieldName: 'cmText', FieldValue: 'Текст' }]);
   const t = toFormValues('ProjectTeam', teamBody(3, { user: { id: 4, name: 'U', email: 'u@x' }, role: 'Архітектор', topics: '' }), uk, { tmUserId: 'u@x' });
   expect(get(t, 'tmProject')).toBe('3'); expect(get(t, 'tmUser')).toBe('[{"Key":"i:0#.f|membership|u@x"}]'); expect(get(t, 'tmRole')).toBe('Архітектор');
+});
+
+describe('дата и время по поясу сайта (поле «Перевірено ШІ»)', () => {
+  test('время сайта → «дд.мм.рррр гг:хв» по порядку сайта; пусто — пусто', () => {
+    expect(formDateTime('2026-10-13T11:30:00', DEFAULT_REGIONAL)).toBe('13.10.2026 11:30');
+    expect(formDateTime('2026-10-13T11:30:00', { dec: '.', order: 0, sep: '/' })).toBe('10/13/2026 11:30');
+    expect(formDateTime('', DEFAULT_REGIONAL)).toBe('');
+  });
+  test('поля ИИ отчёта: время, признак вставки, текст', () => {
+    const fv = toFormValues('StatusReports', { srAiCheckedAt: '2026-10-13T11:30:00', srAiFilled: true, srAiCheck: '1. Пункт' }, DEFAULT_REGIONAL);
+    expect(fv).toEqual([{ FieldName: 'srAiCheckedAt', FieldValue: '13.10.2026 11:30' }, { FieldName: 'srAiFilled', FieldValue: '1' },
+      { FieldName: 'srAiCheck', FieldValue: '1. Пункт' }]);
+    expect(toFormValues('StatusReports', { srAiCheckedAt: null }, DEFAULT_REGIONAL)).toEqual([{ FieldName: 'srAiCheckedAt', FieldValue: '' }]);
+  });
 });

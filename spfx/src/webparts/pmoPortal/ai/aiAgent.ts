@@ -1,6 +1,8 @@
 import { PublicClientApplication, InteractionRequiredAuthError, AccountInfo } from '@azure/msal-browser';
 import { CopilotStudioClient, ConnectionSettings, ScopeHelper } from '@microsoft/agents-copilotstudio-client';
 import { AI_CONFIG } from './aiConfig';
+import { AiPort } from './aiRun';
+import { AiCallOut } from '../logic/aiFlow';
 
 /** Вызов агента Copilot Studio из браузера от имени пользователя: вход MSAL (SPA «PPM Copilot Client»), токен Power Platform API,
  *  разговор через SDK агентов. Модуль загружается отдельным чанком только у пилотной группы. */
@@ -77,4 +79,27 @@ export class AiConversation {
     return { texts: r.activities.filter(x => x.type === 'message').map(x => x.text || ''), types: r.activities.map(x => x.type), raw: rawOf(r.activities),
       consent: allowOf(r.activities), ms: Date.now() - t0 };
   }
+}
+
+/** Разговор для формы отчёта (AiPort, ai/aiRun.ts): ответ — последнее непустое сообщение агента; карточка согласия prompt —
+ *  { consent }, значение её кнопки «Allow» запоминается для allow(); нет ответа timeoutMs — { timeout } (запрос не отменяется,
+ *  но разговор больше не используется: новый разговор на каждый запрос). */
+export class AiSession implements AiPort {
+  private allowValue: Record<string, unknown> | undefined;
+  private constructor(private conv: AiConversation, private timeoutMs: number) {}
+  public static async open(token: string, timeoutMs: number = 60000): Promise<AiSession> {
+    const c = new AiConversation(token); await c.start(); return new AiSession(c, timeoutMs);
+  }
+  private async wrap(p: Promise<AiTurn>): Promise<AiCallOut> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const late = new Promise<'timeout'>(resolve => { timer = setTimeout(() => resolve('timeout'), this.timeoutMs); });
+    try {
+      const r = await Promise.race([p, late]);
+      if (r === 'timeout') return { timeout: true };
+      if (r.consent) { this.allowValue = r.consent; return { consent: true }; }
+      return { text: r.texts.filter(t => !!(t || '').trim()).pop() || '' };
+    } finally { if (timer) clearTimeout(timer); }
+  }
+  public ask(text: string): Promise<AiCallOut> { return this.wrap(this.conv.send(text)); }
+  public allow(): Promise<AiCallOut> { return this.allowValue ? this.wrap(this.conv.sendValue(this.allowValue)) : Promise.resolve({ error: 'no consent card' }); }
 }

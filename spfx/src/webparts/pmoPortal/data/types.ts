@@ -54,6 +54,8 @@ export interface StatusReport {
   created?: string;
   /** Погодження PMO: На погодженні / Погоджено / Повернуто; кто, когда, комментарий. approvalFresh — решение ещё не перенесено синхронизацией. */
   approval: string; approvedBy: Person | null; approvedAt: string; approvalNote: string; approvalFresh?: boolean;
+  /** Помощник ИИ (этап 4): «Суперечності (аналіз ШІ)» и время проверки (ISO, UTC); пусто — старые отчёты, вне пилота, поля нет. */
+  aiCheck?: string; aiCheckedAt?: string;
 }
 
 /** Решение PMO по статус-отчёту («Погодження звітів»): только цвета (пусто — без изменений), решение, комментарий. */

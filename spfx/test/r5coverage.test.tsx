@@ -4,6 +4,7 @@ import * as ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
 import { makeT } from '../src/webparts/pmoPortal/i18n/i18n';
+import { mapReport } from '../src/webparts/pmoPortal/data/map';
 
 // Сверка покрытия раунда 5 (отзывы 81–90, колокольчик): поведение в приложении, которого не было в других тестах
 jest.mock('@microsoft/sp-http', () => ({ SPHttpClient: { configurations: { v1: {} } } }));
@@ -104,4 +105,23 @@ test('#89 окно прокрутки таблицы — фокусируемо�
   expect(src).toMatch(/className=\{'tablewrap dt'[^}]*\} ref=\{tableRef\} tabIndex=\{0\}/);
   const proto = require('fs').readFileSync(require('path').join(__dirname, '../../prototype/pmo-prototype.html'), 'utf8');
   expect(proto).toMatch(/class="tablewrap dt\$\{[^}]*\}" data-tkey="\$\{key\}" tabindex="0"/);
+});
+
+describe('отчёты и поля помощника ИИ', () => {
+  const fake = (withField: boolean): any => {
+    const repo = new SpRepo(null as any, 'https://x/sites/t', '/sites/t', 'me@x');
+    repo.items = async (list: string, select: string) => {
+      if (select.indexOf('srAiCheck') >= 0 && !withField) throw new Error('400: field srAiCheck does not exist');
+      return [{ Id: 5, srProjectId: 1, srDate: '2026-10-13', srAiCheck: withField ? '1. Пункт' : undefined, srAiCheckedAt: withField ? '2026-10-13T18:30:00Z' : undefined }];
+    };
+    return repo;
+  };
+  test('полей ИИ ещё нет на сайте — отчёты читаются без них (не пропадают)', async () => {
+    const rows = (await fake(false).reportRows()).map(mapReport);
+    expect(rows.map((r: any) => r.id)).toEqual([5]); expect(rows[0].aiCheck).toBe('');
+  });
+  test('поля есть — текст и время проверки', async () => {
+    const r = (await fake(true).reportRows()).map(mapReport)[0];
+    expect([r.aiCheck, r.aiCheckedAt]).toEqual(['1. Пункт', '2026-10-13T18:30:00Z']);
+  });
 });

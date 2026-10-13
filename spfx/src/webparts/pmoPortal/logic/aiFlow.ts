@@ -1,4 +1,4 @@
-import { AiButton, AiLang, AiUnavailable, unavailableNote } from './aiCheck';
+import { AiButton, AiLang, AiUnavailable, unavailableNote, UNAVAILABLE_HEADS } from './aiCheck';
 import { checkText, insertText } from './aiReply';
 
 /** Сценарий помощника в форме статус-отчёта (план этапа 4, задача 1; векторы tests/cases/ai-flow.json): чистые функции,
@@ -80,9 +80,11 @@ export function draftInsert(form: Record<string, string>, ai: Record<string, str
 export const undoAvailable = (afterInsertPrint: string | null, currentPrint: string): boolean =>
   afterInsertPrint !== null && afterInsertPrint === currentPrint;
 
-/** Что показать в просмотре и погодженні: есть дата — «Перевірено ШІ: …»; текст без даты — «Збережено без перевірки ШІ»
- *  (у пилота при недоступности ИИ всегда пишется причина); пусто — блока нет (старые отчёты и отчёты вне пилота). */
+/** Что показать в просмотре и погодженні: текст «Перевірку ШІ не виконано: …» (любой язык) — «Збережено без перевірки ШІ»;
+ *  другой текст или есть время — проверено (время могло не записаться — текст всё равно показывается как проверка);
+ *  пусто — блока нет (старые отчёты и отчёты вне пилота). */
 export function aiView(aiCheck: string | null | undefined, aiCheckedAt: string | null | undefined): 'checked' | 'without' | 'none' {
-  if (aiCheckedAt) return 'checked';
-  return (aiCheck || '').trim() ? 'without' : 'none';
+  const t = (aiCheck || '').trim();
+  if (t && UNAVAILABLE_HEADS.some(h => t.indexOf(h) === 0)) return 'without';
+  return t || aiCheckedAt ? 'checked' : 'none';
 }

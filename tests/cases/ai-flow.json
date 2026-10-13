@@ -1,67 +1,416 @@
 {
  "_doc": "Сценарий помощника в форме отчёта (logic/aiFlow.ts; план этапа 4, задача 1). action — что делает нажатие нижней кнопки (на погодженні → ошибки формы → кнопка aiButton). unavailable — ИИ недоступен только для того отпечатка, на котором была ошибка. errorKind — почему ИИ не ответил (только Jest: в прототипе агента нет). consent — шаг согласия. save — поля ИИ при записи отчёта (вне пилота — ничего). prevCheck — что передаётся следующей проверке. insert — вставка черновика (now — сразу, ask — по вопросу, before — для отмены). undo — «Скасувати вставку» доступна. view — что показать в просмотре.",
  "action": [
-  {"name": "звіт уже на погодженні — ничего, даже при ошибках формы", "in": {"pending": true, "hasErrors": true, "button": "check"}, "out": "blocked"},
-  {"name": "ошибки формы — показать у полей, ИИ не вызывается", "in": {"pending": false, "hasErrors": true, "button": "check"}, "out": "showErrors"},
-  {"name": "ошибки формы и «Зберегти без перевірки» — тоже сначала ошибки", "in": {"pending": false, "hasErrors": true, "button": "saveWithout"}, "out": "showErrors"},
-  {"name": "форма в порядке — проверка ИИ", "in": {"pending": false, "hasErrors": false, "button": "check"}, "out": "check"},
-  {"name": "проверено, форма не менялась — сохранение", "in": {"pending": false, "hasErrors": false, "button": "save"}, "out": "save"},
-  {"name": "ИИ недоступен — сохранение без проверки", "in": {"pending": false, "hasErrors": false, "button": "saveWithout"}, "out": "saveWithout"},
-  {"name": "идёт запрос — ничего", "in": {"pending": false, "hasErrors": false, "button": "busy"}, "out": "none"}
+  {
+   "name": "звіт уже на погодженні — ничего, даже при ошибках формы",
+   "in": {
+    "pending": true,
+    "hasErrors": true,
+    "button": "check"
+   },
+   "out": "blocked"
+  },
+  {
+   "name": "ошибки формы — показать у полей, ИИ не вызывается",
+   "in": {
+    "pending": false,
+    "hasErrors": true,
+    "button": "check"
+   },
+   "out": "showErrors"
+  },
+  {
+   "name": "ошибки формы и «Зберегти без перевірки» — тоже сначала ошибки",
+   "in": {
+    "pending": false,
+    "hasErrors": true,
+    "button": "saveWithout"
+   },
+   "out": "showErrors"
+  },
+  {
+   "name": "форма в порядке — проверка ИИ",
+   "in": {
+    "pending": false,
+    "hasErrors": false,
+    "button": "check"
+   },
+   "out": "check"
+  },
+  {
+   "name": "проверено, форма не менялась — сохранение",
+   "in": {
+    "pending": false,
+    "hasErrors": false,
+    "button": "save"
+   },
+   "out": "save"
+  },
+  {
+   "name": "ИИ недоступен — сохранение без проверки",
+   "in": {
+    "pending": false,
+    "hasErrors": false,
+    "button": "saveWithout"
+   },
+   "out": "saveWithout"
+  },
+  {
+   "name": "идёт запрос — ничего",
+   "in": {
+    "pending": false,
+    "hasErrors": false,
+    "button": "busy"
+   },
+   "out": "none"
+  }
  ],
  "unavailable": [
-  {"name": "ошибка на этом виде формы — недоступен", "at": "A", "current": "A", "out": true},
-  {"name": "форма изменена после ошибки — можно повторить", "at": "A", "current": "B", "out": false},
-  {"name": "ошибок не было", "at": null, "current": "A", "out": false}
+  {
+   "name": "ошибка на этом виде формы — недоступен",
+   "at": "A",
+   "current": "A",
+   "out": true
+  },
+  {
+   "name": "форма изменена после ошибки — можно повторить",
+   "at": "A",
+   "current": "B",
+   "out": false
+  },
+  {
+   "name": "ошибок не было",
+   "at": null,
+   "current": "A",
+   "out": false
+  }
  ],
  "errorKind": [
-  {"name": "ответ prompt", "in": {"text": "{\"items\": []}"}, "out": null},
-  {"name": "карточка согласия", "in": {"consent": true}, "out": "consent"},
-  {"name": "нет ответа 60 с", "in": {"timeout": true}, "out": "timeout"},
-  {"name": "нет доступа к агенту (ответ агента)", "in": {"text": "You don't have access to talk to this bot, contact the owner."}, "out": "denied"},
-  {"name": "нет доступа к агенту (код)", "in": {"text": "x", "error": "AccessToBotDenied"}, "out": "denied"},
-  {"name": "403 при вызове", "in": {"error": "[-140032] - Copilot Studio request failed with status 403"}, "out": "denied"},
-  {"name": "фильтр Microsoft отклонил вход", "in": {"text": "An error has occurred.\nError code: AIModelActionBadRequest\nConversation Id: x"}, "out": "error"},
-  {"name": "кончилась ёмкость", "in": {"text": "An error has occurred.\nError code: CapacityExceeded"}, "out": "credits"},
-  {"name": "превышен лимит", "in": {"error": "Rate limit reached"}, "out": "credits"},
-  {"name": "сеть", "in": {"error": "Failed to fetch"}, "out": "error"}
+  {
+   "name": "ответ prompt",
+   "in": {
+    "text": "{\"items\": []}"
+   },
+   "out": null
+  },
+  {
+   "name": "карточка согласия",
+   "in": {
+    "consent": true
+   },
+   "out": "consent"
+  },
+  {
+   "name": "нет ответа 60 с",
+   "in": {
+    "timeout": true
+   },
+   "out": "timeout"
+  },
+  {
+   "name": "нет доступа к агенту (ответ агента)",
+   "in": {
+    "text": "You don't have access to talk to this bot, contact the owner."
+   },
+   "out": "denied"
+  },
+  {
+   "name": "нет доступа к агенту (код)",
+   "in": {
+    "text": "x",
+    "error": "AccessToBotDenied"
+   },
+   "out": "denied"
+  },
+  {
+   "name": "403 при вызове",
+   "in": {
+    "error": "[-140032] - Copilot Studio request failed with status 403"
+   },
+   "out": "denied"
+  },
+  {
+   "name": "фильтр Microsoft отклонил вход",
+   "in": {
+    "text": "An error has occurred.\nError code: AIModelActionBadRequest\nConversation Id: x"
+   },
+   "out": "error"
+  },
+  {
+   "name": "кончилась ёмкость",
+   "in": {
+    "text": "An error has occurred.\nError code: CapacityExceeded"
+   },
+   "out": "credits"
+  },
+  {
+   "name": "превышен лимит",
+   "in": {
+    "error": "Rate limit reached"
+   },
+   "out": "credits"
+  },
+  {
+   "name": "сеть",
+   "in": {
+    "error": "Failed to fetch"
+   },
+   "out": "error"
+  }
  ],
  "consent": [
-  {"name": "первая карточка — спросить PM", "kind": "consent", "after": false, "out": "ask"},
-  {"name": "карточка после «Дозволити» — недоступно", "kind": "consent", "after": true, "out": "fail"},
-  {"name": "ответ после «Дозволити» — принять", "kind": null, "after": true, "out": "reply"},
-  {"name": "ошибка — недоступно", "kind": "timeout", "after": false, "out": "fail"}
+  {
+   "name": "первая карточка — спросить PM",
+   "kind": "consent",
+   "after": false,
+   "out": "ask"
+  },
+  {
+   "name": "карточка после «Дозволити» — недоступно",
+   "kind": "consent",
+   "after": true,
+   "out": "fail"
+  },
+  {
+   "name": "ответ после «Дозволити» — принять",
+   "kind": null,
+   "after": true,
+   "out": "reply"
+  },
+  {
+   "name": "ошибка — недоступно",
+   "kind": "timeout",
+   "after": false,
+   "out": "fail"
+  }
  ],
  "save": [
-  {"name": "вне пилота — поля ИИ не пишутся", "in": {"pilot": false, "result": {"kind": "checked", "items": ["Пункт"], "at": "2026-10-14T09:00:00Z"}, "filled": true, "lang": "uk"}, "out": {}},
-  {"name": "проверено — текст и время", "in": {"pilot": true, "result": {"kind": "checked", "items": ["Терміни зелені, а прогноз пізніше плану"], "at": "2026-10-14T09:00:00Z"}, "filled": true, "lang": "uk"},
-   "out": {"srAiFilled": true, "srAiCheck": "1. Терміни зелені, а прогноз пізніше плану", "srAiCheckedAt": "2026-10-14T09:00:00Z"}},
-  {"name": "проверено, противоречий нет", "in": {"pilot": true, "result": {"kind": "checked", "items": [], "at": "2026-10-14T09:00:00Z"}, "filled": false, "lang": "en"},
-   "out": {"srAiFilled": false, "srAiCheck": "No contradictions found.", "srAiCheckedAt": "2026-10-14T09:00:00Z"}},
-  {"name": "без проверки — причина, время пусто", "in": {"pilot": true, "result": {"kind": "without", "reason": "timeout"}, "filled": false, "lang": "uk"},
-   "out": {"srAiFilled": false, "srAiCheck": "Перевірку ШІ не виконано: ШІ не відповів за 60 с", "srAiCheckedAt": null}}
+  {
+   "name": "вне пилота — поля ИИ не пишутся",
+   "in": {
+    "pilot": false,
+    "result": {
+     "kind": "checked",
+     "items": [
+      "Пункт"
+     ],
+     "at": "2026-10-14T09:00:00Z"
+    },
+    "filled": true,
+    "lang": "uk"
+   },
+   "out": {}
+  },
+  {
+   "name": "проверено — текст и время",
+   "in": {
+    "pilot": true,
+    "result": {
+     "kind": "checked",
+     "items": [
+      "Терміни зелені, а прогноз пізніше плану"
+     ],
+     "at": "2026-10-14T09:00:00Z"
+    },
+    "filled": true,
+    "lang": "uk"
+   },
+   "out": {
+    "srAiFilled": true,
+    "srAiCheck": "1. Терміни зелені, а прогноз пізніше плану",
+    "srAiCheckedAt": "2026-10-14T09:00:00Z"
+   }
+  },
+  {
+   "name": "проверено, противоречий нет",
+   "in": {
+    "pilot": true,
+    "result": {
+     "kind": "checked",
+     "items": [],
+     "at": "2026-10-14T09:00:00Z"
+    },
+    "filled": false,
+    "lang": "en"
+   },
+   "out": {
+    "srAiFilled": false,
+    "srAiCheck": "No contradictions found.",
+    "srAiCheckedAt": "2026-10-14T09:00:00Z"
+   }
+  },
+  {
+   "name": "без проверки — причина, время пусто",
+   "in": {
+    "pilot": true,
+    "result": {
+     "kind": "without",
+     "reason": "timeout"
+    },
+    "filled": false,
+    "lang": "uk"
+   },
+   "out": {
+    "srAiFilled": false,
+    "srAiCheck": "Перевірку ШІ не виконано: ШІ не відповів за 60 с",
+    "srAiCheckedAt": null
+   }
+  }
  ],
  "prevCheck": [
-  {"name": "после проверки — её текст", "result": {"kind": "checked", "items": ["Пункт"], "at": "x"}, "lang": "uk", "out": "1. Пункт"},
-  {"name": "после «без перевірки» — пусто", "result": {"kind": "without", "reason": "error"}, "lang": "uk", "out": ""},
-  {"name": "проверок не было — пусто", "result": null, "lang": "uk", "out": ""}
+  {
+   "name": "после проверки — её текст",
+   "result": {
+    "kind": "checked",
+    "items": [
+     "Пункт"
+    ],
+    "at": "x"
+   },
+   "lang": "uk",
+   "out": "1. Пункт"
+  },
+  {
+   "name": "после «без перевірки» — пусто",
+   "result": {
+    "kind": "without",
+    "reason": "error"
+   },
+   "lang": "uk",
+   "out": ""
+  },
+  {
+   "name": "проверок не было — пусто",
+   "result": null,
+   "lang": "uk",
+   "out": ""
+  }
  ],
  "insert": [
-  {"name": "пустые поля — сразу", "form": {"title": "", "done": "", "next": " ", "issues": ""}, "ai": {"summary": "Резюме", "done": "– Зроблено", "next": "– План", "issues": ""},
-   "out": {"now": {"title": "Резюме", "done": "– Зроблено", "next": "– План"}, "ask": [], "before": {"title": "", "done": "", "next": " "}}},
-  {"name": "заполненное поле — по вопросу; тот же текст — не спрашивать", "form": {"title": "Моє резюме", "done": "– Зроблено", "next": "", "issues": ""}, "ai": {"summary": "Резюме ШІ", "done": "– Зроблено", "next": "– План", "issues": "– Ризик"},
-   "out": {"now": {"next": "– План", "issues": "– Ризик"}, "ask": [{"field": "title", "value": "Резюме ШІ"}], "before": {"title": "Моє резюме", "done": "– Зроблено", "next": "", "issues": ""}}}
+  {
+   "name": "пустые поля — сразу",
+   "form": {
+    "title": "",
+    "done": "",
+    "next": " ",
+    "issues": ""
+   },
+   "ai": {
+    "summary": "Резюме",
+    "done": "– Зроблено",
+    "next": "– План",
+    "issues": ""
+   },
+   "out": {
+    "now": {
+     "title": "Резюме",
+     "done": "– Зроблено",
+     "next": "– План"
+    },
+    "ask": [],
+    "before": {
+     "title": "",
+     "done": "",
+     "next": " "
+    }
+   }
+  },
+  {
+   "name": "заполненное поле — по вопросу; тот же текст — не спрашивать",
+   "form": {
+    "title": "Моє резюме",
+    "done": "– Зроблено",
+    "next": "",
+    "issues": ""
+   },
+   "ai": {
+    "summary": "Резюме ШІ",
+    "done": "– Зроблено",
+    "next": "– План",
+    "issues": "– Ризик"
+   },
+   "out": {
+    "now": {
+     "next": "– План",
+     "issues": "– Ризик"
+    },
+    "ask": [
+     {
+      "field": "title",
+      "value": "Резюме ШІ"
+     }
+    ],
+    "before": {
+     "title": "Моє резюме",
+     "done": "– Зроблено",
+     "next": "",
+     "issues": ""
+    }
+   }
+  }
  ],
  "undo": [
-  {"name": "сразу после вставки — можно отменить", "after": "A", "current": "A", "out": true},
-  {"name": "PM правил после вставки — нельзя", "after": "A", "current": "B", "out": false},
-  {"name": "вставки не было", "after": null, "current": "A", "out": false}
+  {
+   "name": "сразу после вставки — можно отменить",
+   "after": "A",
+   "current": "A",
+   "out": true
+  },
+  {
+   "name": "PM правил после вставки — нельзя",
+   "after": "A",
+   "current": "B",
+   "out": false
+  },
+  {
+   "name": "вставки не было",
+   "after": null,
+   "current": "A",
+   "out": false
+  }
  ],
  "view": [
-  {"name": "проверено — дата", "check": "1. Пункт", "at": "2026-10-14T09:00:00Z", "out": "checked"},
-  {"name": "проверено, противоречий нет", "check": "Суперечностей не знайдено.", "at": "2026-10-14T09:00:00Z", "out": "checked"},
-  {"name": "без проверки — текст без даты", "check": "Перевірку ШІ не виконано: помилка сервісу ШІ", "at": "", "out": "without"},
-  {"name": "старый отчёт или вне пилота — блока нет", "check": "", "at": "", "out": "none"},
-  {"name": "поля нет на сайте (null)", "check": null, "at": null, "out": "none"}
+  {
+   "name": "проверено — дата",
+   "check": "1. Пункт",
+   "at": "2026-10-14T09:00:00Z",
+   "out": "checked"
+  },
+  {
+   "name": "проверено, противоречий нет",
+   "check": "Суперечностей не знайдено.",
+   "at": "2026-10-14T09:00:00Z",
+   "out": "checked"
+  },
+  {
+   "name": "проверено, время не записалось — всё равно проверено",
+   "check": "1. Пункт",
+   "at": "",
+   "out": "checked"
+  },
+  {
+   "name": "без проверки (en)",
+   "check": "AI check not performed: AI service error",
+   "at": "",
+   "out": "without"
+  },
+  {
+   "name": "без проверки — текст без даты",
+   "check": "Перевірку ШІ не виконано: помилка сервісу ШІ",
+   "at": "",
+   "out": "without"
+  },
+  {
+   "name": "старый отчёт или вне пилота — блока нет",
+   "check": "",
+   "at": "",
+   "out": "none"
+  },
+  {
+   "name": "поля нет на сайте (null)",
+   "check": null,
+   "at": null,
+   "out": "none"
+  }
  ]
 }

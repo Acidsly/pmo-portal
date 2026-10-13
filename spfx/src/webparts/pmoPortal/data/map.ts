@@ -15,6 +15,8 @@ export const REPORT_SELECT = ['Id', 'Title', 'srProjectId', 'srDate', 'srPeriod'
   'srProgress', 'srStart', 'srGoLive', 'srPlanEnd', 'srForecastEnd', 'srActualEnd', 'srActualCost', 'srKeyReason', 'srDone', 'srNext', 'srIssues',
   'srDecision', 'srDecisionText', 'srApplied', 'srApproval', 'srApprovedAt', 'srApprovalNote', 'Created', ...people('Author', 'srApprovedBy')].join(',');
 export const REPORT_EXPAND = 'Author,srApprovedBy';
+/** Поля помощника ИИ (этап 4) — отдельно: их может ещё не быть на сайте (тогда отчёты читаются без них). */
+export const REPORT_AI = ',srAiCheck,srAiCheckedAt';
 export const RISK_SELECT = ['Id', 'Title', 'riProjectId', 'riType', 'riProbability', 'riImpact', 'riStatus', 'riDue', 'riMitigation', 'riStrategy', 'riContingency', 'Created',
   ...people('riOwner')].join(',');
 export const RISK_EXPAND = 'riOwner';
@@ -59,7 +61,8 @@ export function mapReport(r: any): StatusReport {
     planEnd: dateOnly(r.srPlanEnd), forecastEnd: dateOnly(r.srForecastEnd), actualEnd: dateOnly(r.srActualEnd), actualCost: nn(r.srActualCost), keyReason: s(r.srKeyReason),
     title: s(r.Title), done: s(r.srDone), next: s(r.srNext), issues: s(r.srIssues), decision: r.srDecision === true,
     decisionText: s(r.srDecisionText), applied: r.srApplied === true, author: mapPerson(r.Author), created: s(r.Created),
-    approval: s(r.srApproval), approvedBy: mapPerson(r.srApprovedBy), approvedAt: s(r.srApprovedAt), approvalNote: s(r.srApprovalNote) };
+    approval: s(r.srApproval), approvedBy: mapPerson(r.srApprovedBy), approvedAt: s(r.srApprovedAt), approvalNote: s(r.srApprovalNote),
+    aiCheck: s(r.srAiCheck), aiCheckedAt: s(r.srAiCheckedAt) };
 }
 
 export function mapRisk(r: any): Risk {

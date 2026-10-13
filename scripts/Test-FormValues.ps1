@@ -39,11 +39,16 @@ if (-not $l) {
     Add-PnPFieldFromXml -List $url -FieldXml "<Field Type='Note' Name='pbNote' StaticName='pbNote' DisplayName='pbNote' RichText='FALSE'/>" | Out-Null
     Write-Host "+ служебный список $url"
 }
+# дата и время (srAiCheckedAt помощника отчёта) — поле добавляется и в уже созданный служебный список
+if (-not (Get-PnPField -List $url -Identity "pbDateTime" -ErrorAction SilentlyContinue)) {
+    Add-PnPFieldFromXml -List $url -FieldXml "<Field Type='DateTime' Name='pbDateTime' StaticName='pbDateTime' DisplayName='pbDateTime' Format='DateTime'/>" | Out-Null
+}
 if (-not (Get-PnPFolder -Url "$url/P0" -ErrorAction SilentlyContinue)) { $null = Add-PnPFolder -Name "P0" -Folder $url }
 
 $rs = Invoke-PnPSPRestMethod -Method Get -Url "/_api/web/RegionalSettings?`$select=LocaleId,DecimalSeparator,DateFormat,DateSeparator,TimeZone/Description&`$expand=TimeZone"
 Write-Host ("Регіональні налаштування: LocaleId={0}, DecimalSeparator='{1}', DateFormat={2}, DateSeparator='{3}', TimeZone={4}" -f $rs.LocaleId, $rs.DecimalSeparator, $rs.DateFormat, $rs.DateSeparator, $rs.TimeZone.Description)
 
+try { $lt = Invoke-PnPSPRestMethod -Method Get -Url "/_api/web/RegionalSettings/TimeZone/utcToLocalTime(@d)?@d='2026-10-13T18:30:00Z'"; Write-Host ("utcToLocalTime(2026-10-13T18:30:00Z) = {0}" -f ($lt.value, $lt | Where-Object { $_ } | Select-Object -First 1)) } catch { Write-Host "utcToLocalTime: $($_.Exception.Message)" }
 $web = Get-PnPWeb
 $projId = (Get-PnPListItem -List "Lists/Projects" -PageSize 1 | Select-Object -First 1).Id
 $userKey = "[{'Key':'i:0#.f|membership|$UserEmail'}]"
@@ -62,6 +67,9 @@ $cases = @(
     @{ t = "choice";      v = @{ pbChoice = "Жовтий" } ;     check = { param($i) $i["pbChoice"] -eq "Жовтий" } }
     @{ t = "note-cyr";    v = @{ pbNote = "Рядок 1`nРядок 2 — «лапки» & <теги>" } ; check = { param($i) $i["pbNote"] -eq "Рядок 1`nРядок 2 — «лапки» & <теги>" } }
     @{ t = "empty-date";  v = @{ pbDate = "" } ;             check = { param($i) -not $i["pbDate"] } }
+    # время по поясу сайта (13.10.2026 21:30 Киев = 18:30 UTC) и ISO в UTC
+    @{ t = "dt-local";    v = @{ pbDateTime = "13.10.2026 21:30" } ; check = { param($i) $i["pbDateTime"] -and ([datetime]$i["pbDateTime"]).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm") -eq "2026-10-13T18:30" } }
+    @{ t = "dt-iso-z";    v = @{ pbDateTime = "2026-10-13T18:30:00Z" } ; check = { param($i) $i["pbDateTime"] -and ([datetime]$i["pbDateTime"]).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm") -eq "2026-10-13T18:30" } }
 )
 $ok = 0
 foreach ($c in $cases) {

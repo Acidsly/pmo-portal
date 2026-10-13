@@ -2,8 +2,9 @@ import { ReportDraft } from './forms';
 
 /** Язык интерфейса — на нём агент отвечает и пишется поле «Суперечності (аналіз ШІ)». */
 export type AiLang = 'uk' | 'en' | 'ru';
-/** Почему проверка ИИ не выполнена (план помощника, 2.2): кончились кредиты, ошибка, нет ответа 60 с, нет доступа к агенту. */
-export type AiUnavailable = 'credits' | 'error' | 'timeout' | 'denied';
+/** Почему проверка ИИ не выполнена (план помощника, 2.2; этап 4): кончились кредиты, ошибка, нет ответа 60 с, нет доступа к агенту,
+ *  данных для ИИ слишком много (контекст tooLarge), PM не дал согласие на обработку данных. */
+export type AiUnavailable = 'credits' | 'error' | 'timeout' | 'denied' | 'tooLarge' | 'declined';
 /** Кнопка внизу формы отчёта: «Зберегти», «Перевірити з ШІ», «ШІ аналізує…», «Зберегти без перевірки». */
 export type AiButton = 'save' | 'check' | 'busy' | 'saveWithout';
 
@@ -35,12 +36,14 @@ export const acceptReply = (requestPrint: string, currentPrint: string): boolean
 
 const UNAVAILABLE: Record<AiLang, { head: string } & Record<AiUnavailable, string>> = {
   uk: { head: 'Перевірку ШІ не виконано: ', credits: 'вичерпано ліміт ШІ', error: 'помилка сервісу ШІ', timeout: 'ШІ не відповів за 60 с',
-    denied: 'немає доступу до помічника ШІ' },
+    denied: 'немає доступу до помічника ШІ', tooLarge: 'забагато даних для ШІ', declined: 'немає дозволу на обробку даних ШІ' },
   en: { head: 'AI check not performed: ', credits: 'AI credit limit reached', error: 'AI service error', timeout: 'no AI response within 60 s',
-    denied: 'no access to the AI assistant' },
+    denied: 'no access to the AI assistant', tooLarge: 'too much data for AI', declined: 'no consent to AI data processing' },
   ru: { head: 'Проверка ИИ не выполнена: ', credits: 'исчерпан лимит ИИ', error: 'ошибка сервиса ИИ', timeout: 'ИИ не ответил за 60 с',
-    denied: 'нет доступа к помощнику ИИ' }
+    denied: 'нет доступа к помощнику ИИ', tooLarge: 'слишком много данных для ИИ', declined: 'нет согласия на обработку данных ИИ' }
 };
+/** Начала текста «ИИ не выполнен» на всех языках — по ним просмотр отличает «без проверки» (aiView). */
+export const UNAVAILABLE_HEADS: string[] = Object.keys(UNAVAILABLE).map(k => UNAVAILABLE[k as AiLang].head);
 /** Текст поля «Суперечності (аналіз ШІ)» при «Зберегти без перевірки» — PMO видит причину. Неизвестный язык — украинский. */
 export function unavailableNote(reason: AiUnavailable, lang: AiLang): string {
   const d = UNAVAILABLE[lang] || UNAVAILABLE.uk;

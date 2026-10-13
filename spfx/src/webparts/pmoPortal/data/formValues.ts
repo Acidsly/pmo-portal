@@ -3,12 +3,12 @@
 export interface Regional { dec: string; order: 0 | 1 | 2; sep: string; }   // order: 0 — м/д/г, 1 — д/м/г, 2 — г/м/д (DateFormat SharePoint)
 export const DEFAULT_REGIONAL: Regional = { dec: ',', order: 1, sep: '.' };   // uk-UA, как тест-сайт
 export interface FormValue { FieldName: string; FieldValue: string; }
-type Kind = 'lookup' | 'user' | 'date' | 'number' | 'bool';
+type Kind = 'lookup' | 'user' | 'date' | 'datetime' | 'number' | 'bool';
 
 /** Типы полей тел записи (write.ts) по спискам; остальное — текст и выбор. Ключи — как в теле JSON (lookup и пользователь с «Id»). */
 const SCHEMA: Record<string, Record<string, Kind>> = {
   StatusReports: { srProjectId: 'lookup', srDate: 'date', srPeriodFrom: 'date', srStart: 'date', srGoLive: 'date', srPlanEnd: 'date', srForecastEnd: 'date', srActualEnd: 'date',
-    srProgress: 'number', srActualCost: 'number', srBasedOn: 'number', srDecision: 'bool', srApplied: 'bool' },
+    srProgress: 'number', srActualCost: 'number', srBasedOn: 'number', srDecision: 'bool', srApplied: 'bool', srAiCheckedAt: 'datetime', srAiFilled: 'bool' },
   RisksIssues: { riProjectId: 'lookup', riOwnerId: 'user', riDue: 'date', riProbability: 'number', riImpact: 'number' },
   ProjectTeam: { tmProjectId: 'lookup', tmUserId: 'user' },
   ProjectComments: { cmProjectId: 'lookup' },
@@ -22,6 +22,12 @@ export function formDate(v: unknown, r: Regional): string {
   if (!m) return '';
   const [y, mo, d] = [m[1], m[2], m[3]];
   return (r.order === 0 ? [mo, d, y] : r.order === 2 ? [y, mo, d] : [d, mo, y]).join(r.sep);
+}
+/** Дата и время по поясу сайта («2026-10-13T11:30:00», SpRepo.siteLocalTime) → «13.10.2026 11:30» по порядку и разделителю
+ *  сайта: форма SharePoint понимает время только в поясе сайта, ISO с «Z» не принимает (проба probe-formvalues); пусто — ''. */
+export function formDateTime(v: unknown, r: Regional): string {
+  const m = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/.exec(String(v || ''));
+  return m ? `${formDate(m[1], r)} ${m[2]}:${m[3]}` : '';
 }
 /** Число без разделителей групп, дробная часть — через разделитель сайта. */
 export function formNumber(v: unknown, r: Regional): string {
@@ -43,6 +49,7 @@ export function toFormValues(list: string, body: Record<string, unknown>, r: Reg
     if (kind === 'lookup') s = v === null || v === undefined ? '' : String(v);
     else if (kind === 'user') s = formUser(users[key] || '');
     else if (kind === 'date') s = formDate(v, r);
+    else if (kind === 'datetime') s = formDateTime(v, r);
     else if (kind === 'number') s = formNumber(v, r);
     else if (kind === 'bool') s = v ? '1' : '0';
     else s = v === null || v === undefined ? '' : String(v);

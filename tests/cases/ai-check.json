@@ -412,6 +412,36 @@
       "reason": "denied",
       "lang": "ru",
       "out": "Проверка ИИ не выполнена: нет доступа к помощнику ИИ"
+    },
+    {
+      "reason": "tooLarge",
+      "lang": "uk",
+      "out": "Перевірку ШІ не виконано: забагато даних для ШІ"
+    },
+    {
+      "reason": "declined",
+      "lang": "uk",
+      "out": "Перевірку ШІ не виконано: немає дозволу на обробку даних ШІ"
+    },
+    {
+      "reason": "tooLarge",
+      "lang": "en",
+      "out": "AI check not performed: too much data for AI"
+    },
+    {
+      "reason": "declined",
+      "lang": "en",
+      "out": "AI check not performed: no consent to AI data processing"
+    },
+    {
+      "reason": "tooLarge",
+      "lang": "ru",
+      "out": "Проверка ИИ не выполнена: слишком много данных для ИИ"
+    },
+    {
+      "reason": "declined",
+      "lang": "ru",
+      "out": "Проверка ИИ не выполнена: нет согласия на обработку данных ИИ"
     }
   ]
 }
