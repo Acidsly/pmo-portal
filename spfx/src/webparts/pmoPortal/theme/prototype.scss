@@ -15,7 +15,7 @@
   --strat-bg:rgba(175,82,222,.12); --strat:#8e44c9;
   --pick-off:transparent; --pick-hover:rgba(0,0,0,.05);
   /* цвет раздела меню (значки Lucide), он же — метка сущности бокового окна */
-  --nv-home:#2563eb; --nv-projects:#7c3aed; --nv-reports:#0f766e; --nv-risks:#b45309; --nv-archive:#64748b; --nv-feedback:#be185d;
+  --nv-home:#2563eb; --nv-projects:#7c3aed; --nv-reports:#0f766e; --nv-risks:#b45309; --nv-archive:#64748b; --nv-feedback:#be185d; --nv-ai:#6d28d9;
   --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.06);
   --shadow-hi:0 2px 6px rgba(0,0,0,.06),0 18px 40px rgba(0,0,0,.10);
   --radius:20px;
@@ -31,7 +31,7 @@
     --g:#30d158; --y:#ffd60a; --r:#ff453a; --na:#48484a;
     --strat-bg:rgba(191,90,242,.2); --strat:#da8fff;
     --pick-off:rgba(255,255,255,.07); --pick-hover:rgba(255,255,255,.13);
-    --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-archive:#94a3b8; --nv-feedback:#f472b6;
+    --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-archive:#94a3b8; --nv-feedback:#f472b6; --nv-ai:#c4b5fd;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
     --shadow-hi:0 2px 6px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.5);
   }
@@ -46,7 +46,7 @@
   --g:#30d158; --y:#ffd60a; --r:#ff453a; --na:#48484a;
   --strat-bg:rgba(191,90,242,.2); --strat:#da8fff;
   --pick-off:rgba(255,255,255,.07); --pick-hover:rgba(255,255,255,.13);
-  --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-archive:#94a3b8; --nv-feedback:#f472b6;
+  --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-archive:#94a3b8; --nv-feedback:#f472b6; --nv-ai:#c4b5fd;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
   --shadow-hi:0 2px 6px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.5);
 }

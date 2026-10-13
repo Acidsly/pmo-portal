@@ -22,7 +22,7 @@
   --strat-bg:rgba(175,82,222,.12); --strat:#8e44c9;
   --pick-off:transparent; --pick-hover:rgba(0,0,0,.05);
   /* цвет раздела меню (значки Lucide), он же — метка сущности бокового окна */
-  --nv-home:#2563eb; --nv-projects:#7c3aed; --nv-reports:#0f766e; --nv-risks:#b45309; --nv-archive:#64748b; --nv-feedback:#be185d;
+  --nv-home:#2563eb; --nv-projects:#7c3aed; --nv-reports:#0f766e; --nv-risks:#b45309; --nv-archive:#64748b; --nv-feedback:#be185d; --nv-ai:#6d28d9;
   --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.06);
   --shadow-hi:0 2px 6px rgba(0,0,0,.06),0 18px 40px rgba(0,0,0,.10);
   --radius:20px;
@@ -38,7 +38,7 @@
     --g:#30d158; --y:#ffd60a; --r:#ff453a; --na:#48484a;
     --strat-bg:rgba(191,90,242,.2); --strat:#da8fff;
     --pick-off:rgba(255,255,255,.07); --pick-hover:rgba(255,255,255,.13);
-    --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-archive:#94a3b8; --nv-feedback:#f472b6;
+    --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-archive:#94a3b8; --nv-feedback:#f472b6; --nv-ai:#c4b5fd;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
     --shadow-hi:0 2px 6px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.5);
   }
@@ -53,7 +53,7 @@
   --g:#30d158; --y:#ffd60a; --r:#ff453a; --na:#48484a;
   --strat-bg:rgba(191,90,242,.2); --strat:#da8fff;
   --pick-off:rgba(255,255,255,.07); --pick-hover:rgba(255,255,255,.13);
-  --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-archive:#94a3b8; --nv-feedback:#f472b6;
+  --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-archive:#94a3b8; --nv-feedback:#f472b6; --nv-ai:#c4b5fd;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
   --shadow-hi:0 2px 6px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.5);
 }
@@ -1307,7 +1307,10 @@ const LUC = {
   risks:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
   archive:'<rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
   feedback:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M13 8H7"/><path d="M17 12H7"/>',
-  issue:'<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>'};
+  issue:'<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
+  aiFill:'<path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/>',
+  aiCheck:'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/><path d="m16 16-1.9-1.9"/>',
+  ai:'<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>'};
 const lucide = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LUC[k]}</svg>`;
 // метка сущности бокового окна (EntTag приложения): цвет и значок по виду; проект, отчёт, риск — как раздел меню
 const ENT = {
