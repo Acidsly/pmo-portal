@@ -621,6 +621,20 @@ form .fsec:first-child{margin-top:0}
 .date-btn:hover:not(:disabled){background:var(--bg-hover);color:var(--text)}
 .date-btn:disabled{opacity:.4;cursor:default}
 .date-native{position:absolute;right:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
+/* помощник ИИ в форме отчёта (план этапа 4): свой цвет --nv-ai, значки Lucide wand-sparkles / scan-search / sparkles */
+.btn.ai{background:transparent;border:1.5px solid var(--nv-ai);color:var(--nv-ai)}
+.btn.ai svg,.ai-label svg{width:16px;height:16px;flex:none}
+.ai-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px}
+.ai-panel{border:1px solid var(--line);border-left:4px solid var(--nv-ai);border-radius:10px;padding:10px 14px;margin:0 0 14px;background:var(--bg-alt)}
+.ai-panel h4{margin:6px 0 4px;font-size:13px;color:var(--nv-ai)}
+.ai-panel ul{margin:0 0 6px;padding-left:18px}
+.ai-rate{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin:4px 0}
+.ai-rate .btn{padding:4px 12px;font-size:13px}
+.ai-label{display:inline-flex;align-items:center;gap:6px;color:var(--nv-ai);font-weight:600}
+.ai-field textarea[readonly]{border-color:var(--nv-ai);background:var(--bg-alt);cursor:default}
+.ai-msg{margin:8px 4px 0;font-size:13px}
+.ai-msg.warn{color:var(--nv-risks)} .ai-msg.err{color:#b91c1c} .ai-msg.ok{color:var(--nv-reports)}
+@media (max-width:720px){.ai-bar .btn{flex:1 1 100%;justify-content:center}}
 
 }
 }

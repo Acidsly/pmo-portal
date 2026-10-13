@@ -14,6 +14,9 @@ import { todayIso } from '../logic/dates';
 import { guard } from '../logic/guard';
 import { ofProject } from '../logic/views';
 import { RagDot } from '../components/Bits';
+import { Lucide } from '../components/LucideIcons';
+import { aiAction } from '../logic/aiFlow';
+import { useReportAi } from './useReportAi';
 
 const REPORT_STATUSES = ['Ініціація', 'Планування', 'Реалізація', 'Призупинено'];
 const TYPES = ['Стратегічний', 'Звичайний'];
@@ -53,25 +56,31 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
   };
   // #51: по проекту уже есть отчёт на погодженні — новый подать нельзя (сохранение заблокировано)
   const pendingBlock = p.pendingDate ? guardText(t, 'gPending', { date: fmtDate(p.pendingDate) }) : '';
+  // помощник ИИ (пилот, план этапа 4): «Заповнити з ШІ», «Перевірити з ШІ», поле «Суперечності (аналіз ШІ)»
+  const ai = useReportAi({ data, project: p, d, setD: nd => { setD(nd); if (errs.length) setErrs([]); }, blocked: !!pendingBlock });
   const rag = calcRag(d.schedule, d.budget, d.resources);
   const keyCh = keyChanged(d, p);
 
   const save = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    if (pendingBlock) { setErr(pendingBlock); return; }
     // #40: все ошибки сразу — общее сообщение и подсветка полей
     // #62 / #69: дата подання — день сохранения, период — от последнего погодженого отчёта (считаются сейчас, а не при открытии)
     const today = todayIso();
     const sub: ReportDraft = { ...d, date: today, periodFrom: reportPeriodFrom(data.reports.filter(r => r.projectId === p.id), p.start, p.created || '', today) };
     const es = reportErrors(sub, p, prTxt);
-    if (es.length) { setErrs(es); setErr(formErrorText(es) === 'errReqAll' ? t('errReqAll') : errMsg(es[0])); return; }
+    // порядок (logic/aiFlow): на погодженні → ошибки формы → ИИ; вне пилота кнопка всегда «Зберегти», как раньше
+    const act = aiAction({ pending: !!pendingBlock, hasErrors: es.length > 0, button: ai.button });
+    if (act === 'blocked') { setErr(pendingBlock); return; }
+    if (act === 'showErrors') { setErrs(es); setErr(formErrorText(es) === 'errReqAll' ? t('errReqAll') : errMsg(es[0])); return; }
+    if (act === 'none') return;
+    if (act === 'check') { setErr(''); setErrs([]); ai.check(); return; }
     setBusy(true); setErr(''); setErrs([]);
     try {
       // свежая проверка: PM на месте, проект не в архиве, по проекту нет другого отчёта на погодженні, дата не раньше погодженого
       const f = await c.repo.fresh(p.id);
       const g = guard('report', c.me, f, { reportDate: sub.date });
-      if (!g.ok) { setErr(guardText(t, g.key, g.args)); setBusy(false); await c.reload(); return; }
-      await c.repo.createIn('StatusReports', p.id, reportBody(reportToSave(sub), f.project));
+      if (!g.ok) { setErr(guardText(t, g.key, g.args)); setBusy(false); ai.reset(); await c.reload(); return; }
+      await c.repo.createIn('StatusReports', p.id, { ...reportBody(reportToSave(sub), f.project), ...(await ai.saveFields()) });
       await c.reload();
       c.toast(t('savedReportPending'));
       c.openProject(p.id);
@@ -82,6 +91,7 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
     <div className="ph"><div><div className="k"><EntTag kind="report" /><span>{t('listLabel')} «{t('navReports')}»</span></div><h2>{t('newReport')}</h2></div>
       <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     <form onSubmit={save} noValidate={true}>
+      {ai.top}
       {fixed ? <Frow label={fl('rProj')}><div className="fixedval">{fixed.title}</div></Frow>
         : <Frow label={fl('rProj')} htmlFor="f-p" req={true}>
           <select id="f-p" value={d.projectId} onChange={e => { const np = act.filter(x => x.id === Number(e.target.value))[0]; if (np) { const nd = switchProject(d, np); setD(nd); setPrTxt(String(nd.progress)); setPrevPr(null); setErrs([]); setErr(''); } }}>
@@ -143,9 +153,12 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
       {d.decision ? <Frow label={fl('rDecText')} htmlFor="f-dect" req={true} err={fErr('decisionText') || (decTouched && !d.decisionText.trim() ? t('errDecision') : '')}>
         <textarea id="f-dect" aria-invalid={bad('decisionText') || (decTouched && !d.decisionText.trim()) || undefined} value={d.decisionText}
           onChange={e => set({ decisionText: e.target.value })} onBlur={() => setDecTouched(true)} /></Frow> : null}
+      {ai.bottom}
       <Err msg={err} />
       <div className="actions">
-        <button type="submit" className="btn primary" disabled={busy || !!pendingBlock}>{t('save')}</button>
+        <button type="submit" className="btn primary" id="f-submit" disabled={busy || !!pendingBlock || ai.button === 'busy'}>
+          {ai.button === 'check' ? <><Lucide k="aiCheck" />{t('aiCheckBtn')}</> : ai.button === 'busy' ? t('aiCheckBusy')
+            : ai.button === 'saveWithout' ? t('aiSaveWithout') : t('save')}</button>
         <button type="button" className="btn" onClick={onCancel}>{t('cancel')}</button>
       </div>
     </form>
