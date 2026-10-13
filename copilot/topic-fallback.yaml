@@ -1,6 +1,6 @@
 # Тема Fallback агента «PPM ReportHelper» (классический агент, классическая оркестрация) — copilot/README.md.
 # Copilot Studio → «Теми» → «Системні» → Fallback → «Більше» → «Відкрити редактор коду» → вставить целиком.
-# <ID …> — aIModelId prompt: появляется в коде темы, когда prompt добавлен узлом на полотно («+» → «Додати інструмент»).
+# aIModelId — ID prompt в окружении «PPM Copilot»: новый prompt — добавить узлом на полотно («+» → «Додати інструмент»), ID появится в коде.
 kind: AdaptiveDialog
 beginDialog:
   kind: OnUnknownIntent
@@ -26,7 +26,7 @@ beginDialog:
               output:
                 binding:
                   predictionOutput: Topic.Draft
-              aIModelId: <ID «Чернетка звіту»>
+              aIModelId: 7ca0d60e-f7ad-4fdd-8c9c-7f326c317d1c
             - kind: SendActivity
               id: send_Draft
               activity: "{Topic.Draft.text}"
@@ -42,7 +42,7 @@ beginDialog:
               output:
                 binding:
                   predictionOutput: Topic.Check
-              aIModelId: <ID «Перевірка звіту»>
+              aIModelId: 6ba2bd84-ef49-40a2-9056-50d9ee694ebe
             - kind: SendActivity
               id: send_Check
               activity: "{Topic.Check.text}"
