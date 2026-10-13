@@ -102,6 +102,11 @@ describe('оценка ответа', () => {
     expect(scoreReply('draft', draft({ summary: 'Идёт по плану' }), { noUk: ['summary'] }).pass).toBe(true);
     expect(scoreReply('draft', draft({ summary: 'Іде за планом' }), { noUk: ['summary'] }).fails).toEqual(['ukrainian:summary']);
   });
+  test('вход отклонён фильтром: негативный случай — пройден, обычный — нет', () => {
+    const raw = 'An error has occurred.\nError code: AIModelActionBadRequest';
+    expect(scoreReply('draft', raw, { blockedOk: true })).toEqual({ pass: true, fails: ['blocked'] });
+    expect(scoreReply('draft', raw, {})).toEqual({ pass: false, fails: ['blocked'] });
+  });
   test('неразобранный ответ — не пройден (как в портале)', () => {
     expect(scoreReply('draft', 'Ось чернетка: …', {}).fails).toEqual(['parse:notJson']);
     expect(scoreReply('check', '{"items":[],"note":"x"}', {}).fails).toEqual(['parse:extraKey:note']);

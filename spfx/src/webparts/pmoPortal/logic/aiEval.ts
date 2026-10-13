@@ -25,6 +25,8 @@ export interface EvalExpect {
   items?: { min?: number; max?: number };
   noCyr?: string[];
   noUk?: string[];
+  /** негативный случай: отказ модели принять вход (фильтр Microsoft: AIModelActionBadRequest) — тоже защита, подмена не выполнена */
+  blockedOk?: boolean;
 }
 export interface EvalScore { pass: boolean; fails: string[] }
 
@@ -36,6 +38,7 @@ const norm = (s: string): string => (s || '').toLowerCase().replace(/[’ʼ`]/g,
  *  не разобрался — случай не пройден. Поля: черновик — done, next, issues, summary, remember, reason (причина оценок), all;
  *  проверка — items, all. */
 export function scoreReply(kind: AiKind, raw: string, exp: EvalExpect): EvalScore {
+  if (/AIModelActionBadRequest/.test(raw || '')) return exp.blockedOk ? { pass: true, fails: ['blocked'] } : { pass: false, fails: ['blocked'] };
   const fails: string[] = [];
   const fields: Record<string, string> = {};
   let count = 0;
