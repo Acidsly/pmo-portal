@@ -10,7 +10,9 @@ export const AI_CONFIG = {
   clientId: '8ed067c1-2748-47f9-9d55-1c566ff1d68b',
   /** Пилотная группа — только удобство (кнопки не показываются остальным); настоящая защита — доступ к агенту. */
   pilot: ['j.pochobut@eclectic.group', 'd.dovhobrod@smart-hr.com.ua', 's.dudchenko@smart-hr.com.ua', 'd.dvoretska@smart-hr.com.ua',
-    'test.kovalenko@smarthr.kz', 'test.burbega@fillin.kz']
+    'test.kovalenko@smarthr.kz', 'test.burbega@fillin.kz',
+    's.goiniak@smart-hr.com.ua' // проверка отказа: не в группе «PPM Copilot Pilot», после проверки — убрать
+  ]
 };
 
 /** Пилотный ли пользователь (e-mail без учёта регистра). */
