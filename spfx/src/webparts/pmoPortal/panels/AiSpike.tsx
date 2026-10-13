@@ -6,7 +6,7 @@ import { AI_CONFIG } from '../ai/aiConfig';
 /** Технический прототип помощника отчёта (этап 1, «да / нет»): вход, вызов агента, объём данных, формат ответа.
  *  Только пилотной группе, по адресу …#…///ai-spike; формы портала не меняет. Временный — убирается после этапа 1. */
 type Agent = typeof import('../ai/aiAgent');
-const sizes = [20, 50, 150, 300];
+const sizes = [1, 5, 20, 50, 150, 300];
 const payload = (kb: number): string => {
   const head = '{"project":{"code":"PRJ-TEST","title":"Перевірка обсягу"},"pad":"';
   const pad = 'абвгґдеєжзиіїйклмнопрстуфхцчшщьюя '.repeat(Math.ceil((kb * 1024) / 34)).slice(0, kb * 1024);
@@ -45,6 +45,12 @@ export const AiSpike: React.FC<{ onCancel(): void; aadToken?: (resource: string)
     const r = await conv.current.send(payload(kb));
     add(`${kb} КБ → ${r.ms} мс; activity: ${r.types.join(', ')}; відповідь: ${r.texts.join(' | ').slice(0, 300)}`);
   });
+  const [free, setFree] = React.useState('');
+  const sendFree = run(async () => {
+    if (!conv.current) { add('Спершу «Підключитися»'); return; }
+    const r = await conv.current.send(free);
+    add(`текст (${free.length} символів) → ${r.ms} мс; activity: ${r.types.join(', ')}; відповідь: ${r.texts.join(' | ').slice(0, 600)}`);
+  });
   return <>
     <div className="ph"><div><div className="k"><EntTag kind="help" /><span>Copilot Studio · {AI_CONFIG.schemaName}</span></div><h2>Перевірка ШІ (прототип)</h2></div>
       <button className="x" aria-label={c.t('close')} onClick={onCancel}>×</button></div>
@@ -53,6 +59,10 @@ export const AiSpike: React.FC<{ onCancel(): void; aadToken?: (resource: string)
       <button className="btn primary" disabled={busy} onClick={connect}>Підключитися</button>
       <button className="btn" disabled={busy} onClick={pathA}>Шлях A (без реєстрації)</button>
       {sizes.map(k => <button key={k} className="btn" disabled={busy} onClick={test(k)}>Тест {k} КБ</button>)}
+    </div>
+    <div className="actions top">
+      <textarea aria-label="Текст для агента" rows={2} style={{ flex: 1 }} value={free} onChange={e => setFree(e.target.value)} />
+      <button className="btn" disabled={busy || !free.trim()} onClick={sendFree}>Надіслати текст</button>
     </div>
     <pre className="ai-log" style={{ whiteSpace: 'pre-wrap', fontSize: 12, maxHeight: '60vh', overflow: 'auto' }}>{log.join('\n') || '—'}</pre>
   </>;
