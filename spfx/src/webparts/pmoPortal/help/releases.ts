@@ -3,9 +3,9 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
-   "ver": "1.7.3.6",
+   "ver": "1.7.3.7",
    "date": "14.10.2026",
-   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Ім'я в колонках «PM» і «Автор» більше не розривається посеред слова на третій рядок.</li>\n</ul>"
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Кнопки «Прийняти» й «Показати запис» у підказках помічника ШІ виділено рамкою.</li>\n<li>Ім'я в колонках «PM» і «Автор» більше не розривається посеред слова на третій рядок.</li>\n</ul>"
   },
   {
    "ver": "1.7.3.1",
@@ -140,9 +140,9 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
-   "ver": "1.7.3.6",
+   "ver": "1.7.3.7",
    "date": "14.10.2026",
-   "html": "<p><b>Changed</b></p>\n<ul>\n<li>Names in the «PM» and «Author» columns no longer break mid-word onto a third line.</li>\n</ul>"
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>The «Accept» and «Show record» buttons in the AI assistant hints are now outlined.</li>\n<li>Names in the «PM» and «Author» columns no longer break mid-word onto a third line.</li>\n</ul>"
   },
   {
    "ver": "1.7.3.1",
@@ -277,9 +277,9 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
-   "ver": "1.7.3.6",
+   "ver": "1.7.3.7",
    "date": "14.10.2026",
-   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Имя в колонках «PM» и «Автор» больше не разрывается посреди слова на третью строку.</li>\n</ul>"
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Кнопки «Принять» и «Показать запись» в подсказках помощника ИИ выделены рамкой.</li>\n<li>Имя в колонках «PM» и «Автор» больше не разрывается посреди слова на третью строку.</li>\n</ul>"
   },
   {
    "ver": "1.7.3.1",

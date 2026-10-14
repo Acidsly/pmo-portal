@@ -566,6 +566,66 @@ export const T: Record<string, L3> = {
   "the Microsoft sign-in window was blocked — allow pop-ups for the site",
   "окно входа Microsoft заблокировано — разрешите всплывающие окна для сайта"
  ],
+ "aiDemo": [
+  "Помічник ШІ (демо)",
+  "AI assistant (demo)",
+  "Помощник ИИ (демо)"
+ ],
+ "aiDemoOff": [
+  "вимкнено — форма як поза пілотом",
+  "off — form as outside the pilot",
+  "выключен — форма как вне пилота"
+ ],
+ "aiDemoOn": [
+  "ШІ відповідає",
+  "AI responds",
+  "ИИ отвечает"
+ ],
+ "aiDemoDown": [
+  "ШІ недоступний",
+  "AI unavailable",
+  "ИИ недоступен"
+ ],
+ "aiDemoNoDone": [
+  "Немає даних про виконане за період — допишіть",
+  "No data on work done this period — add it",
+  "Нет данных о сделанном за период — допишите"
+ ],
+ "aiDemoNext": [
+  "Опишіть план на наступний період",
+  "Describe the plan for the next period",
+  "Опишите план на следующий период"
+ ],
+ "aiDemoSummary": [
+  "Проєкт іде за планом",
+  "The project is on track",
+  "Проект идёт по плану"
+ ],
+ "aiDemoSummaryDev": [
+  "Є відхилення від плану — див. «Проблеми та ризики за період»",
+  "There are deviations from the plan — see «Issues and risks for the period»",
+  "Есть отклонения от плана — см. «Проблемы и риски за период»"
+ ],
+ "aiDemoReason": [
+  "Оцінки — за прогнозом проти плану, витратами проти бюджету та простроченими заходами.",
+  "Ratings follow the forecast vs plan, cost vs budget and overdue actions.",
+  "Оценки — по прогнозу против плана, затратам против бюджета и просроченным мерам."
+ ],
+ "aiDemoRemember": [
+  "У записі «{t}» реєстру немає заходів — опишіть, що робите.",
+  "Record «{t}» in the register has no actions — describe what you are doing.",
+  "В записи «{t}» реестра нет мер — опишите, что делаете."
+ ],
+ "aiDemoDecision": [
+  "Відповісти на запит рішення з попереднього звіту: «{t}».",
+  "Follow up on the decision request from the previous report: «{t}».",
+  "Ответить на запрос решения из прошлого отчёта: «{t}»."
+ ],
+ "aiDemoMention": [
+  "{type} «{t}» (оцінка {n}) з реєстру «Ризики та проблеми» в картці не згадано — додайте рядок про нього в «Проблеми та ризики за період» (що це і що робите) або закрийте запис у реєстрі, якщо він уже неактуальний.",
+  "{type} «{t}» (score {n}) from the «Risks and issues» register in the card is not mentioned — add a line about it to «Issues and risks for the period» (what it is and what you are doing) or close the record if it is no longer relevant.",
+  "{type} «{t}» (оценка {n}) из реестра «Риски и проблемы» в карточке не упомянут — добавьте строку о нём в «Проблемы и риски за период» (что это и что делаете) или закройте запись, если она уже неактуальна."
+ ],
  "savedReportPending": [
   "Звіт надіслано на погодження PMO",
   "Report sent to PMO for approval",

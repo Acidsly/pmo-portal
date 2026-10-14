@@ -1,8 +1,9 @@
 # What's new
 
-## 1.7.3.6 · 14.10.2026
+## 1.7.3.7 · 14.10.2026
 
 **Changed**
+- The «Accept» and «Show record» buttons in the AI assistant hints are now outlined.
 - Names in the «PM» and «Author» columns no longer break mid-word onto a third line.
 
 ## 1.7.3.1 · 14.10.2026

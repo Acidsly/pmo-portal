@@ -2,73 +2,34 @@ import evalCases from '../src/webparts/pmoPortal/ai/evalCases.json';
 import { ruleItems, mustMention, buildCheckContext, checkItems } from '../src/webparts/pmoPortal/logic/aiRules';
 import { evalInput, scoreReply, evalReply, EvalCase, EvalBase } from '../src/webparts/pmoPortal/logic/aiEval';
 import { AiContextIn } from '../src/webparts/pmoPortal/logic/aiContext';
+import V from '../../tests/cases/ai-rules.json';
 
 // Гибридная проверка: сравнения чисел и дат — кодом, ИИ — смысловые правила (план помощника, этап 4)
 const base = (evalCases as any).base as EvalBase;
 const cases = (evalCases as any).cases as EvalCase[];
 const checks = cases.filter(c => c.kind === 'check');
+/** Вход ruleItems из вектора ai-rules.json: base + отличия случая (draft: null — без формы). */
+const vin = (c: any): AiContextIn => {
+  const B = (V as any).base;
+  return { project: { ...B.project, ...(c.project || {}) }, reports: [], changes: [], lang: c.lang || 'uk', today: B.today,
+    risks: (c.risks || [{}]).map((x: object) => ({ ...B.risk, ...x })), draft: c.draft === null ? undefined : { ...B.draft, ...(c.draft || {}) } } as any;
+};
 const inp = (o: { project?: object; draft?: object; risks?: object[]; reports?: object[]; lang?: string } = {}): AiContextIn => {
   const project: any = { ...base.project, ...(o.project || {}) };
   return { project, reports: (o.reports || [{}]).map(x => ({ ...base.report, ...x })) as any, risks: (o.risks || [{}]).map(x => ({ ...base.risk, ...x })) as any,
     changes: [], draft: { ...base.draft, ...(o.draft || {}) } as any, lang: (o.lang || 'uk') as any, today: base.today };
 };
 
-describe('пункты кода', () => {
-  test('чистый отчёт — пунктов нет', () => expect(ruleItems(inp())).toEqual([]));
-  test('«Терміни» зелёные, прогноз позже плана — пункт с датами; жёлтые — нет', () => {
-    expect(ruleItems(inp({ draft: { forecastEnd: '2027-01-20' } }))).toEqual(['«Терміни» — зелений, а «Прогноз завершення» 20.01.2027 пізніше «Дата завершення (план)» 15.12.2026 — змініть оцінку «Терміни» або «Прогноз завершення».']);
-    expect(ruleItems(inp({ draft: { forecastEnd: '2027-01-20', schedule: 'Жовтий' } }))).toEqual([]);
-    expect(ruleItems(inp({ draft: { forecastEnd: '' } }))).toEqual([]);
-  });
-  test('«Терміни» зелёные, срок открытых записей прошёл — до трёх записей и «…»; закрытые и чужие — не считаются', () => {
-    const late = (id: number, title: string, o: object = {}): object => ({ id, title, due: '2026-10-0' + id, ...o });
-    const one = ruleItems(inp({ risks: [{}, late(1, 'А'), late(2, 'Б', { status: 'Закрито' }), late(3, 'В', { projectId: 9 })] }));
-    expect(one).toEqual(['«Терміни» — зелений, а термін заходів минув: Ризик «А» (термін 01.10.2026) (реєстр «Ризики та проблеми» в картці) — змініть оцінку «Терміни» або оновіть записи в реєстрі.']);
-    const many = ruleItems(inp({ risks: [late(1, 'А'), late(2, 'Б', { type: 'Проблема' }), late(3, 'В'), late(4, 'Г')] }));
-    expect(many[0]).toContain('Ризик «А» (термін 01.10.2026), Проблема «Б» (термін 02.10.2026), Ризик «В» (термін 03.10.2026), …');
-    expect(ruleItems(inp({ risks: [late(1, 'А')], draft: { schedule: 'Червоний' } }))).toEqual([]);
-  });
-  test('«Бюджет» зелёный, затраты больше бюджета проекта — пункт с суммами; рост затрат в пределах бюджета — нет', () => {
-    expect(ruleItems(inp({ draft: { actualCost: 560000 } }))).toEqual(['«Бюджет» — зелений, а «Витрати на дату» 560 000 більше бюджету проєкту 500 000 — змініть оцінку «Бюджет» або «Витрати на дату».']);
-    expect(ruleItems(inp({ draft: { actualCost: 499000 } }))).toEqual([]);
-    expect(ruleItems(inp({ draft: { actualCost: 560000, budget: 'Жовтий' } }))).toEqual([]);
-    expect(ruleItems(inp({ project: { budget: null }, draft: { actualCost: 560000 } }))).toEqual([]);
-  });
-  test('«Потрібне рішення» без текста — пункт; с текстом — нет', () => {
-    expect(ruleItems(inp({ draft: { decision: true, decisionText: '  ' } }))).toEqual(['Позначено «Потрібне рішення керівництва», але не описано, яке рішення потрібне, — заповніть «Яке рішення потрібне».']);
-    expect(ruleItems(inp({ draft: { decision: true, decisionText: 'Погодити бюджет' } }))).toEqual([]);
-  });
-  test('«% виконання» изменён в форме и меньше карточки — пункт; больше или как в карточке — нет', () => {
-    expect(ruleItems(inp({ draft: { progress: 30 } }))).toEqual(['«% виконання» зменшено з 45% до 30% — перевірте «% виконання» або поясніть зниження в «Проблеми та ризики за період».']);
-    expect(ruleItems(inp({ draft: { progress: 88 } }))).toEqual([]);
-    expect(ruleItems(inp({ draft: { progress: 45 } }))).toEqual([]);
-  });
-  test('языки: en — без кириллицы в шаблоне, ru — без і ї є ґ', () => {
-    const all = { forecastEnd: '2027-01-20', actualCost: 560000, decision: true, decisionText: '', progress: 30 };
-    const risks = [{ title: 'X', due: '2026-10-01' }];
-    const en = ruleItems(inp({ lang: 'en', draft: all, risks }));
-    expect(en.length).toBe(5); en.forEach(x => expect(x).not.toMatch(/[а-яіїєґ]/i));
-    const ru = ruleItems(inp({ lang: 'ru', draft: all, risks }));
-    expect(ru.length).toBe(5); ru.forEach(x => expect(x).not.toMatch(/[іїєґ]/i));
-  });
-  test('без формы или форма другого проекта — пунктов нет', () => {
-    expect(ruleItems({ ...inp({ draft: { actualCost: 560000 } }), draft: undefined })).toEqual([]);
-    expect(ruleItems(inp({ draft: { actualCost: 560000, projectId: 2 } }))).toEqual([]);
-  });
+describe('пункты кода (общие векторы tests/cases/ai-rules.json — их же прогоняет прототип)', () => {
+  test.each(V.rules.map((c: any) => [c.name, c]))('%s', (_, c: any) => expect(ruleItems(vin(c))).toEqual(c.out));
+  test.each(V.mention.map((c: any) => [c.name, c]))('обязательные записи: %s', (_, c: any) => expect(mustMention(vin(c)).map(k => k.id)).toEqual(c.out));
   test('итог — пункты кода, затем ИИ, не больше 10', () => {
     expect(checkItems(['к'], ['и'])).toEqual(['к', 'и']);
     expect(checkItems(['к', 'к'], Array.from({ length: 12 }, () => 'и')).length).toBe(10);
   });
 });
 
-describe('границы', () => {
-  test('прогноз = план, срок = сегодня, затраты = бюджет — пунктов нет; % меньше карточки, но не изменён в форме — нет', () => {
-    expect(ruleItems(inp({ draft: { forecastEnd: '2026-12-15' } }))).toEqual([]);
-    expect(ruleItems(inp({ risks: [{ due: base.today }] }))).toEqual([]);
-    expect(ruleItems(inp({ draft: { actualCost: 500000 } }))).toEqual([]);
-    expect(ruleItems(inp({ project: { progress: 45 }, draft: { progress: 45 } }))).toEqual([]);
-  });
-  test('неизвестный язык — украинский', () => expect(ruleItems(inp({ lang: 'de', draft: { decision: true, decisionText: '' } }))[0]).toContain('Позначено'));
+describe('контекст «Перевірки»', () => {
   test('keyChanges — фаза, тип, все даты (было → стало); % и затраты — нет', () => {
     const o = JSON.parse(buildCheckContext(inp({ draft: { status: 'Призупинено', type: 'Звичайний', start: '2026-04-01', goLive: '2026-12-01',
       planEnd: '2027-01-15', forecastEnd: '2027-02-01', progress: 60, actualCost: 300000 } })).json);
@@ -79,17 +40,6 @@ describe('границы', () => {
     const en = JSON.parse(buildCheckContext(inp({ lang: 'en', project: { forecastEnd: '' }, draft: { forecastEnd: '2027-02-01' } })).json);
     expect(en.draft.keyChanges).toEqual([{ field: 'Forecast completion', from: '', to: '01.02.2027' }]);
   });
-});
-
-describe('записи, которые отчёт обязан упомянуть', () => {
-  test('открытые: высокий риск (от 15), проблема, прошедший срок; закрытые и низкие — нет', () => {
-    const r = mustMention(inp({ risks: [{ id: 1 }, { id: 2, probability: 4, impact: 4 }, { id: 3, type: 'Проблема', probability: 1, impact: 1 },
-      { id: 4, due: '2026-10-01' }, { id: 5, probability: 5, impact: 5, status: 'Закрито' }, { id: 6, probability: 5, impact: 5, projectId: 9 }] }));
-    expect(r.map(k => k.id)).toEqual([2, 3, 4]);
-  });
-});
-
-describe('контекст «Перевірки»', () => {
   test('только смысловое: план прошлого отчёта, обязательные записи, форма, изменённые фаза / тип / даты', () => {
     const o = JSON.parse(buildCheckContext(inp({ project: { forecastEnd: '2026-12-15' }, draft: { planEnd: '2027-02-01', progress: 30 },
       risks: [{ id: 1 }, { id: 2, title: 'Відтік', probability: 4, impact: 4 }], reports: [{}, { id: 2, date: '2026-08-01' }] })).json);
