@@ -2,6 +2,8 @@ import { ReportDraft } from './forms';
 
 /** Язык интерфейса — на нём агент отвечает и пишется поле «Суперечності (аналіз ШІ)». */
 export type AiLang = 'uk' | 'en' | 'ru';
+/** Язык интерфейса (номер: 0 — UA, 1 — EN, 2 — RU) — код языка ответа ИИ; неизвестный — uk. */
+export const aiLangOf = (l: number | undefined): AiLang => ((['uk', 'en', 'ru'] as AiLang[])[l || 0] || 'uk');
 /** Почему проверка ИИ не выполнена (план помощника, 2.2; этап 4): кончились кредиты, ошибка, нет ответа 60 с, нет доступа к агенту,
  *  данных для ИИ слишком много (контекст tooLarge), PM не дал согласие на обработку данных. */
 export type AiUnavailable = 'credits' | 'error' | 'timeout' | 'denied' | 'tooLarge' | 'declined';

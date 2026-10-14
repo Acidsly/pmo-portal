@@ -4,7 +4,7 @@ import { Lucide } from '../components/LucideIcons';
 import { PortalData } from '../data/SpRepo';
 import { Project, ChangeEntry } from '../data/types';
 import { ReportDraft } from '../logic/forms';
-import { reportPrint, aiButton, acceptReply, unavailableNote, AiLang, AiUnavailable, AiButton } from '../logic/aiCheck';
+import { reportPrint, aiButton, acceptReply, unavailableNote, aiLangOf, AiUnavailable, AiButton } from '../logic/aiCheck';
 import { buildReportContext } from '../logic/aiContext';
 import { buildCheckContext, ruleItems, checkItems } from '../logic/aiRules';
 import { parseDraft, parseCheck, checkText, AiDraft } from '../logic/aiReply';
@@ -13,7 +13,6 @@ import { aiUnavailable, aiSaveFields, nextPrevCheck, draftInsert, undoAvailable,
 import { riskScore } from '../logic/status';
 import { fmtDate } from '../components/Bits';
 import { Risk } from '../data/types';
-import { isAiPilot } from '../ai/aiConfig';
 import { aiRun } from '../ai/aiRun';
 import { tv } from '../i18n/values';
 import { Rag } from '../logic/rag';
@@ -31,7 +30,7 @@ export interface ReportAi {
   pilot: boolean;
   /** Нижняя кнопка: «Зберегти», «Перевірити з ШІ», «ШІ аналізує…», «Зберегти без перевірки». */
   button: AiButton;
-  /** Верх формы: «Заповнити з ШІ», панель помощника, вопросы о замене, согласие. */
+  /** Верх формы: «Заповнити з ШІ», панель помощника, вопросы о замене. */
   top: React.ReactNode;
   /** Низ формы: поле «Суперечності (аналіз ШІ)» и сообщение проверки. */
   bottom: React.ReactNode;
@@ -44,8 +43,9 @@ export interface ReportAi {
 
 export function useReportAi(a: { data: PortalData; project: Project; d: ReportDraft; setD(d: ReportDraft): void; blocked: boolean }): ReportAi {
   const c = React.useContext(AppCtx); const { t, fl } = c;
-  const pilot = isAiPilot(c.me);
-  const lang = (c.lang || 'uk') as AiLang;
+  // пилотная группа и переключатель «Помічник ШІ» включён (согласие дано при включении — components/Header, ai/useAiSwitch)
+  const pilot = !!c.ai;
+  const lang = aiLangOf(c.lang);
   const dRef = React.useRef(a.d); dRef.current = a.d;
   const print = reportPrint(a.d);
   const [busy, setBusy] = React.useState<AiKind | null>(null);
@@ -58,7 +58,6 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
   const [ins, setIns] = React.useState<{ after: string; before: Record<string, string> } | null>(null);
   const [filled, setFilled] = React.useState(false);
   const [msg, setMsg] = React.useState<Msg>(null);
-  const [consent, setConsent] = React.useState<{ answer(ok: boolean): void } | null>(null);
   const req = React.useRef(0);
   const agent = React.useRef<Agent | null>(null);
 
@@ -67,7 +66,7 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
 
   const reset = (): void => {
     req.current++; setBusy(null); setChecked(null); setUnav(null); setPrevCheck(''); setAssist(null); setAsks([]); setIns(null);
-    setFilled(false); setMsg(null); setConsent(null);
+    setFilled(false); setMsg(null);
   };
   // смена проекта в форме — всё, что относилось к ИИ, сбрасывается
   const pid = a.d.projectId;
@@ -81,7 +80,7 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
     setBusy(kind); setMsg(null);
     const fail = (reason: AiUnavailable, detail?: string): void => {
       if (id !== req.current) return;
-      setBusy(null); setConsent(null);
+      setBusy(null);
       if (kind === 'check') setUnav({ print: reqPrint, reason });
       const head = unavailableNote(reason, lang);
       setMsg({ at, kind: 'err', text: (detail ? head.replace(/:.*$/, ': ' + detail) : head) + (kind === 'check' ? ' ' + t('aiUnavailHint') : '') });
@@ -105,7 +104,8 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
       : (raw: string): string[] | null => { const r = parseCheck(raw); return r.ok ? r.items : null; };
     const agentMod = m;
     const r = await aiRun<AiDraft | string[]>(() => agentMod.AiSession.open(token), aiMessage(kind, ctx.json), parse,
-      () => new Promise<boolean>(resolve => setConsent({ answer: ok => { setConsent(null); resolve(ok); } })));
+      // карточка согласия Copilot Studio — подтверждается сама: PM дал согласие при включении «Помічник ШІ»
+      () => Promise.resolve(true));
     if (id !== req.current) return;
     if (!r.ok) { fail(r.reason); return; }
     setBusy(null);
@@ -127,7 +127,7 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
     a.setD(nd); setIns({ after: reportPrint(nd), before: plan.before }); setAsks(plan.ask); setAssist(dr); setAssistOpen(true); setFilled(true);
     setMsg({ at, kind: 'ok', text: t('aiDraftDone') });
   };
-  const cancel = (): void => { req.current++; setBusy(null); if (consent) consent.answer(false); setConsent(null); };
+  const cancel = (): void => { req.current++; setBusy(null); };
 
   const answerAsk = (replace: boolean): void => {
     const [q, ...rest] = asks;
@@ -160,9 +160,6 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
       {busy !== null ? <button type="button" className="btn" onClick={cancel}>{t('cancel')}</button> : null}
       {canUndo ? <button type="button" className="btn" onClick={undo}>{t('aiUndo')}</button> : null}
     </div>
-    {consent ? <div className="ai-panel" role="alertdialog" aria-label={t('aiAllow')}><p>{t('aiConsent')}</p>
-      <div className="ai-rate"><button type="button" className="btn primary" onClick={() => consent.answer(true)}>{t('aiAllow')}</button>
-        <button type="button" className="btn" onClick={() => consent.answer(false)}>{t('cancel')}</button></div></div> : null}
     {asks.length ? <div className="ai-panel" role="alertdialog"><p>{t('aiReplace').replace('{f}', fl(TEXT_LABEL[asks[0].field]))}</p>
       <div className="ai-rate"><button type="button" className="btn primary" onClick={() => answerAsk(true)}>{t('aiYes')}</button>
         <button type="button" className="btn" onClick={() => answerAsk(false)}>{t('aiNo')}</button></div></div> : null}

@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.3.8",
+   "date": "14.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення без змін у роботі порталу.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.3.7",
    "date": "14.10.2026",
    "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Кнопки «Прийняти» й «Показати запис» у підказках помічника ШІ виділено рамкою.</li>\n<li>Ім'я в колонках «PM» і «Автор» більше не розривається посеред слова на третій рядок.</li>\n</ul>"
@@ -140,6 +145,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.3.8",
+   "date": "14.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update with no changes to how the portal works.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.3.7",
    "date": "14.10.2026",
    "html": "<p><b>Changed</b></p>\n<ul>\n<li>The «Accept» and «Show record» buttons in the AI assistant hints are now outlined.</li>\n<li>Names in the «PM» and «Author» columns no longer break mid-word onto a third line.</li>\n</ul>"
@@ -276,6 +286,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.3.8",
+   "date": "14.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Техническое обновление без изменений в работе портала.</li>\n</ul>"
+  },
   {
    "ver": "1.7.3.7",
    "date": "14.10.2026",

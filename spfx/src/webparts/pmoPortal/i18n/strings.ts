@@ -566,10 +566,25 @@ export const T: Record<string, L3> = {
   "the Microsoft sign-in window was blocked — allow pop-ups for the site",
   "окно входа Microsoft заблокировано — разрешите всплывающие окна для сайта"
  ],
- "aiDemo": [
+ "aiSwitch": [
   "Помічник ШІ",
   "AI assistant",
   "Помощник ИИ"
+ ],
+ "aiSwitchOn": [
+  "Увімкнено: у формі статус-звіту — «Заповнити з ШІ» і «Перевірити з ШІ».",
+  "On: the status report form has «Fill with AI» and «Check with AI».",
+  "Включён: в форме статус-отчёта — «Заполнить с ИИ» и «Проверить с ИИ»."
+ ],
+ "aiSwitchOff": [
+  "Вимкнено: форма статус-звіту без ШІ.",
+  "Off: the status report form works without AI.",
+  "Выключен: форма статус-отчёта без ИИ."
+ ],
+ "aiEnabling": [
+  "Підключення…",
+  "Connecting…",
+  "Подключение…"
  ],
  "aiDemoFail": [
   "Імітувати збій ШІ (демо)",

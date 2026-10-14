@@ -59,8 +59,8 @@ const q = (s: string): W => w.document.querySelector(s);
 const ev = (el: W, t: string): void => { el.dispatchEvent(new w.Event(t, { bubbles: true })); };
 /** Кнопка меню пользователя (обработчик — по data-act на документе). */
 function menu(act: string, v?: string): void { const b = w.document.createElement('button'); b.dataset.act = act; if (v) b.dataset.v = v; w.document.body.appendChild(b); b.click(); b.remove(); }
-/** «Помічник ШІ» вкл / викл; «down» — вкл и «Імітувати збій ШІ». */
-function demo(v: 'off' | 'on' | 'down'): void { menu('aidemo', v === 'off' ? 'off' : 'on'); if (v === 'down') menu('aifail'); }
+/** «Помічник ШІ» вкл (с согласием) / викл; «down» — вкл и «Імітувати збій ШІ». */
+function demo(v: 'off' | 'on' | 'down'): void { menu('aidemo', v === 'off' ? 'off' : 'on'); if (v !== 'off') menu('aiallow'); if (v === 'down') menu('aifail'); }
 function openForm(): W {
   q('[data-act="nav"][data-page="reports"]').click();
   q('[data-act="newrep"]:not([data-id])').click();
@@ -82,16 +82,24 @@ describe('прототип: переключатели в меню пользо�
     openMenu();
     expect([sw('aidemo').getAttribute('role'), sw('aidemo').getAttribute('aria-checked'), sw('aifail').disabled]).toEqual(['switch', 'false', true]);
     sw('aidemo').click();
+    // первое включение — согласие в меню; «Скасувати» — остаётся выключенным
+    expect(q('#pop').textContent).toContain(T.aiConsent[0]); expect(sw('aidemo').getAttribute('aria-checked')).toBe('false');
+    q('[data-act="aideny"]').click();
+    expect(q('#pop').textContent).not.toContain(T.aiConsent[0]); expect(sw('aidemo').getAttribute('aria-checked')).toBe('false');
+    sw('aidemo').click(); q('[data-act="aiallow"]').click();
     expect([sw('aidemo').getAttribute('aria-checked'), sw('aifail').disabled, sw('aifail').getAttribute('aria-checked')]).toEqual(['true', false, 'false']);
+    expect(q('#pop').textContent).toContain(T.aiSwitchOn[0]);
     sw('aifail').click();
     expect(sw('aifail').getAttribute('aria-checked')).toBe('true');
     sw('aidemo').click();   // выключение помощника сбрасывает сбой
     expect([sw('aidemo').getAttribute('aria-checked'), sw('aifail').getAttribute('aria-checked'), sw('aifail').disabled]).toEqual(['false', 'false', true]);
+    sw('aidemo').click();   // согласие уже дано — включается сразу
+    expect(sw('aidemo').getAttribute('aria-checked')).toBe('true'); expect(q('#pop').textContent).not.toContain(T.aiConsent[0]);
   });
   test('переключение при открытой форме — форма сразу с ИИ / без ИИ', () => {
     const f = openForm();
     expect(f.querySelector('#ai-fill')).toBeNull();
-    openMenu(); sw('aidemo').click();
+    openMenu(); sw('aidemo').click(); q('[data-act="aiallow"]').click();
     expect(f.querySelector('#ai-fill')).not.toBeNull(); expect(q('#f-submit').textContent).toBe(T.aiCheckBtn[0]);
     sw('aidemo').click();
     expect(f.querySelector('#ai-fill')).toBeNull(); expect(q('#f-submit').textContent).toBe(T.save[0]);
@@ -105,13 +113,12 @@ describe('прототип: помощник в форме отчёта', () => 
     expect(f.querySelector('#ai-fill')).toBeNull();
     expect([sub().className, sub().textContent]).toEqual(['btn primary', T.save[0]]);
   });
-  test('«Заповнити з ШІ»: согласие один раз → пустые поля заполнены, «Що не забути» и оценки; «Прийняти» ставит оценку; «Скасувати вставку»', async () => {
+  test('«Заповнити з ШІ» (согласие дано при включении — в форме не спрашивается) → пустые поля заполнены, «Що не забути» и оценки; «Прийняти» ставит оценку; «Скасувати вставку»', async () => {
     demo('on'); const f = openForm();
     expect(sub().className).toBe('btn ai'); expect(sub().textContent).toBe(T.aiCheckBtn[0]);
     expect(sub().querySelector('svg').innerHTML).toBe(q('#ai-fill svg').innerHTML);
     q('#ai-fill').click(); await flush();
-    expect(f.textContent).toContain(T.aiConsent[0]);
-    Array.from(f.querySelectorAll('[data-ai="allow"]')).forEach((b: W) => b.click()); await flush();
+    expect(f.textContent).not.toContain(T.aiConsent[0]);
     expect(f.querySelector('#f-t').value).not.toBe('');
     expect(f.querySelector('#f-next').value).toContain(T.aiDemoNext[0]);
     expect(q('#ai-assist')).not.toBeNull();
@@ -120,15 +127,14 @@ describe('прототип: помощник в форме отчёта', () => 
     const k = acc.dataset.k, name = { schedule: 'sched', budget: 'budget', resources: 'res' }[k as 'schedule'];
     acc.click();
     expect(f.querySelector(`input[name="${name}"]:checked`)).not.toBeNull();
-    // второй вызов — без согласия; поле с другим текстом — вопрос «Замінити текст?»
+    // поле с другим текстом — вопрос «Замінити текст?»
     const t = f.querySelector('#f-t'); t.value = 'Моє резюме'; ev(t, 'input');
     q('#ai-fill').click(); await flush();
-    expect(f.textContent).not.toContain(T.aiConsent[0]);
     expect(f.querySelector('[data-ai="yes"]')).not.toBeNull();
   });
   test('«Скасувати вставку» возвращает пустые поля', async () => {
     demo('on'); const f = openForm();
-    q('#ai-fill').click(); await flush(); q('[data-ai="allow"]').click(); await flush();
+    q('#ai-fill').click(); await flush();
     q('[data-ai="undo"]').click();
     expect([f.querySelector('#f-t').value, f.querySelector('#f-next').value]).toEqual(['', '']);
   });
@@ -137,7 +143,7 @@ describe('прототип: помощник в форме отчёта', () => 
     await submit(f);
     expect(q('#f-ai')).toBeNull(); expect(f.textContent).not.toContain(T.aiConsent[0]);
     fill(f);
-    await submit(f); q('[data-ai="allow"]').click(); await flush();
+    await submit(f);
     expect(q('#f-ai')).not.toBeNull(); expect(q('#f-ai').getAttribute('aria-readonly')).toBe('true');
     expect([sub().className, sub().textContent]).toEqual(['btn primary', T.save[0]]);
     // изменил отчёт — снова «Перевірити з ШІ»
@@ -153,17 +159,12 @@ describe('прототип: помощник в форме отчёта', () => 
   });
   test('«Помічник ШІ» включён, ИИ не ответил — «Зберегти без перевірки», в записи причина без времени; в просмотре — «Збережено без перевірки ШІ»', async () => {
     demo('down'); const f = openForm(); fill(f);
-    await submit(f); q('[data-ai="allow"]').click(); await flush();
+    await submit(f);
     expect(sub().textContent).toBe(T.aiSaveWithout[0]);
     expect(q('#f-ai').textContent).toBe('Перевірку ШІ не виконано: помилка сервісу ШІ');
     await submit(f);
     openSaved();
     expect(q('.rv-ai-text').textContent).toBe('Перевірку ШІ не виконано: помилка сервісу ШІ');
     expect(q('#rv-ai').textContent).toContain(T.aiWithout[0]); expect(q('#rv-ai').textContent).not.toContain(T.aiCheckedAt[0].replace('{date}', '').trim());
-  });
-  test('«Скасувати» в согласии — ИИ недоступен (нет согласия)', async () => {
-    demo('on'); const f = openForm(); fill(f);
-    await submit(f); q('[data-ai="deny"]').click(); await flush();
-    expect(q('#f-ai').textContent).toBe('Перевірку ШІ не виконано: немає дозволу на обробку даних ШІ');
   });
 });

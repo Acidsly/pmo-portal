@@ -464,6 +464,9 @@ main{padding-bottom:40px}
 .pop-sw[aria-checked="true"] .sw{background:var(--nv-ai)}
 .pop-sw[aria-checked="true"] .sw::after{left:18px}
 .pop-sw:disabled{opacity:.45;cursor:default}
+.pop-hint{margin:4px 8px 6px;max-width:300px;font-size:12px}
+.pop-user-menu{width:320px;max-width:calc(100vw - 24px)}
+.pop-user-menu .ai-panel{margin:6px 4px}
 .me{border:0;background:none;padding:0;border-radius:50%;cursor:pointer;display:grid;place-items:center}
 .bell{position:relative;border:0;background:var(--bg-alt);cursor:pointer;color:var(--text-2);width:34px;height:34px;border-radius:10px;display:grid;place-items:center}
 .bell:hover{color:var(--text)}
@@ -769,7 +772,7 @@ const T = {
  aiShowRec:['Показати запис «{t}»','Show record «{t}»','Показать запись «{t}»'], aiHideRec:['Сховати','Hide','Скрыть'], aiMention:['Додати згадку в «Проблеми та ризики за період»','Add a mention to «Issues and risks for the period»','Добавить упоминание в «Проблемы и риски за период»'], aiMentionScore:['оцінка','score','оценка'], aiMentionDue:['термін','due','срок'], aiMentionMit:['заходи','actions','меры'], aiNoMit:['У записі немає заходів — опишіть у «Проблеми та ризики за період», що робите, або створіть копію запису із заходами («Копіювати»).','The record has no actions — describe in «Issues and risks for the period» what you are doing, or create a copy of the record with actions («Copy»).','В записи нет мер — опишите в «Проблемы и риски за период», что делаете, или создайте копию записи с мерами («Копировать»).'], aiMentioned:['Згадку із заходами з реєстру додано — за потреби уточніть і перевірте ще раз.','Mention with the register actions added — adjust if needed and check again.','Упоминание с мерами из реестра добавлено — при необходимости уточните и проверьте ещё раз.'],
  aiAssist:['Підказки ШІ: що не забути ({n}) і пропоновані оцінки','AI hints: don\'t forget ({n}) and suggested ratings','Подсказки ИИ: что не забыть ({n}) и предлагаемые оценки'],
  aiFill:['Заповнити з ШІ','Fill with AI','Заполнить с ИИ'], aiFillBusy:['ШІ готує чернетку…','AI is drafting…','ИИ готовит черновик…'], aiCheckBtn:['Перевірити з ШІ','Check with AI','Проверить с ИИ'], aiCheckBusy:['ШІ аналізує…','AI is analysing…','ИИ анализирует…'], aiSaveWithout:['Зберегти без перевірки','Save without check','Сохранить без проверки'], aiFound:['ШІ знайшов суперечностей: {n} — виправте звіт або збережіть як є.','AI found contradictions: {n} — fix the report or save as is.','ИИ нашёл противоречий: {n} — исправьте отчёт или сохраните как есть.'], aiNone:['Суперечностей не знайдено — можна зберегти.','No contradictions found — you can save.','Противоречий не найдено — можно сохранить.'], aiUnavailHint:['Можна зберегти без перевірки — PMO побачить причину. Змініть звіт, щоб спробувати ще раз.','You can save without the check — PMO will see the reason. Change the report to try again.','Можно сохранить без проверки — PMO увидит причину. Измените отчёт, чтобы попробовать ещё раз.'], aiRemember:['Що не забути','Don\'t forget','Что не забыть'], aiRatings:['ШІ пропонує оцінки (оцінку обираєте ви)','AI suggests ratings (you choose the rating)','ИИ предлагает оценки (оценку выбираете вы)'], aiSuggest:['ШІ: {v}','AI: {v}','ИИ: {v}'], aiAccept:['Прийняти','Accept','Принять'], aiReplace:['Замінити текст у полі «{f}» чернеткою ШІ?','Replace the text in «{f}» with the AI draft?','Заменить текст в поле «{f}» черновиком ИИ?'], aiYes:['Замінити','Replace','Заменить'], aiNo:['Залишити мій','Keep mine','Оставить мой'], aiUndo:['Скасувати вставку ШІ','Undo AI insert','Отменить вставку ИИ'], aiDraftDone:['Чернетку ШІ вставлено — перевірте й виправте тексти.','AI draft inserted — review and edit the texts.','Черновик ИИ вставлен — проверьте и исправьте тексты.'], aiStale:['Звіт змінився, поки ШІ працював, — відповідь не застосовано.','The report changed while AI was working — the reply was discarded.','Отчёт изменился, пока ИИ работал, — ответ не применён.'], aiConsent:['Помічник ШІ надішле дані цього звіту й проєкту в Microsoft Copilot Studio (Європа; обробка моделлю може відбуватися за її межами). Дозволити? Запитуємо один раз.','The AI assistant will send this report and project data to Microsoft Copilot Studio (Europe; model processing may take place outside it). Allow? We ask once.','Помощник ИИ отправит данные этого отчёта и проекта в Microsoft Copilot Studio (Европа; обработка моделью может идти за её пределами). Разрешить? Спрашиваем один раз.'], aiAllow:['Дозволити','Allow','Разрешить'], aiCheckedAt:['Перевірено ШІ: {date}','AI checked: {date}','Проверено ИИ: {date}'], aiWithout:['Збережено без перевірки ШІ','Saved without AI check','Сохранено без проверки ИИ'], aiFieldHint:['Коментар ШІ — лише для читання. Виправте поля звіту, названі в пунктах, — кнопка зміниться на «Перевірити з ШІ»; або збережіть як є, якщо згодні.','AI comment — read-only. Fix the report fields named in the items — the button will change to «Check with AI»; or save as is if you agree.','Комментарий ИИ — только для чтения. Исправьте поля отчёта, названные в пунктах, — кнопка сменится на «Проверить с ИИ»; или сохраните как есть, если согласны.'], aiPopup:['вікно входу Microsoft заблоковано — дозвольте спливаючі вікна для сайту','the Microsoft sign-in window was blocked — allow pop-ups for the site','окно входа Microsoft заблокировано — разрешите всплывающие окна для сайта'],
- aiDemo:['Помічник ШІ','AI assistant','Помощник ИИ'], aiDemoFail:['Імітувати збій ШІ (демо)','Simulate AI failure (demo)','Имитировать сбой ИИ (демо)'],
+ aiSwitch:['Помічник ШІ','AI assistant','Помощник ИИ'], aiSwitchOn:['Увімкнено: у формі статус-звіту — «Заповнити з ШІ» і «Перевірити з ШІ».','On: the status report form has «Fill with AI» and «Check with AI».','Включён: в форме статус-отчёта — «Заполнить с ИИ» и «Проверить с ИИ».'], aiSwitchOff:['Вимкнено: форма статус-звіту без ШІ.','Off: the status report form works without AI.','Выключен: форма статус-отчёта без ИИ.'], aiEnabling:['Підключення…','Connecting…','Подключение…'], aiDemoFail:['Імітувати збій ШІ (демо)','Simulate AI failure (demo)','Имитировать сбой ИИ (демо)'],
  aiDemoNoDone:['Немає даних про виконане за період — допишіть','No data on work done this period — add it','Нет данных о сделанном за период — допишите'], aiDemoNext:['Опишіть план на наступний період','Describe the plan for the next period','Опишите план на следующий период'],
  aiDemoSummary:['Проєкт іде за планом','The project is on track','Проект идёт по плану'], aiDemoSummaryDev:['Є відхилення від плану — див. «Проблеми та ризики за період»','There are deviations from the plan — see «Issues and risks for the period»','Есть отклонения от плана — см. «Проблемы и риски за период»'],
  aiDemoReason:['Оцінки — за прогнозом проти плану, витратами проти бюджету та простроченими заходами.','Ratings follow the forecast vs plan, cost vs budget and overdue actions.','Оценки — по прогнозу против плана, затратам против бюджета и просроченным мерам.'],
@@ -1651,9 +1654,11 @@ function renderPop(){
   } else if (POP.kind === 'user'){
     pop.innerHTML = `<div class="pop-me">${avatar(VIEWER, 'lg')}<span class="pn"><b>${esc(VIEWER)}</b><small>${esc(roleOf(VIEWER))}</small><small>${esc(email(VIEWER))}</small></span></div>
       <div class="pop-list pop-sws">
-        <button class="pop-row pop-sw" role="switch" aria-checked="${AI_DEMO === 'on'}" data-act="aidemo" data-v="${AI_DEMO === 'on' ? 'off' : 'on'}"><span>${lucide('ai')}${t('aiDemo')}</span><span class="sw" aria-hidden="true"></span></button>
+        <button class="pop-row pop-sw" role="switch" id="ai-switch" aria-checked="${AI_DEMO === 'on'}" data-act="aidemo" data-v="${AI_DEMO === 'on' ? 'off' : 'on'}"><span>${lucide('ai')}${t('aiSwitch')}</span><span class="sw" aria-hidden="true"></span></button>
         <button class="pop-row pop-sw" role="switch" aria-checked="${AI_FAIL}" data-act="aifail"${AI_DEMO === 'on' ? '' : ' disabled'}><span>${t('aiDemoFail')}</span><span class="sw" aria-hidden="true"></span></button>
       </div>
+      ${AI_ASK ? `<div class="ai-panel" role="alertdialog" aria-label="${t('aiAllow')}"><p>${t('aiConsent')}</p><div class="ai-rate"><button type="button" class="btn primary" data-act="aiallow">${t('aiAllow')}</button><button type="button" class="btn" data-act="aideny">${t('cancel')}</button></div></div>` : ''}
+      <p class="hint pop-hint">${t(AI_DEMO === 'on' ? 'aiSwitchOn' : 'aiSwitchOff')}</p>
       <div class="pop-sep">${t('switchUser')}</div>
       <div class="pop-list">${Object.keys(ORG).filter(n => n !== VIEWER).map(n => `<button class="pop-row pop-user" data-act="asuser" data-n="${esc(n)}">${person(n, roleOf(n))}</button>`).join('')}</div>`;
   }
@@ -2463,7 +2468,7 @@ window.PPM_RULES = Object.assign(window.PPM_RULES || {}, {reportPrint, aiButton,
   draftInsert, undoAvailable, aiView, riskRefs, mentionLine, appendLine, ruleItems, mustMention, checkItems, checkText});
 // демо-режим помощника (меню пользователя): off — форма как вне пилота, on — ИИ отвечает, down — ИИ недоступен
 // AI_DEMO — «Помічник ШІ» вкл / викл (в приложении — пилотная группа); AI_FAIL — при «вкл» ИИ не отвечает (сбой: сохранение без проверки)
-let AI_DEMO = 'off', AI_FAIL = false, AI_CONSENTED = false;
+let AI_DEMO = 'off', AI_FAIL = false, AI_CONSENTED = false, AI_ASK = false;
 const aiDelay = () => window.PPM_AI_DELAY != null ? window.PPM_AI_DELAY : 700;
 // данные прототипа — в форме приложения (вход правил и контекста)
 const aiProject = p => ({id:p.id, code:p.code, title:p.title, status:p.status, type:p.type, progress:p.progress, start:p.start || '', goLive:p.golive || '',
@@ -2491,7 +2496,7 @@ const AI_TEXT = {title:'f-t', done:'f-done', next:'f-next', issues:'f-iss'}, AI_
 const AI_RATE = [['schedule','sched','rSched'], ['budget','budget','rBudget'], ['resources','res','rRes']];
 // помощник в форме отчёта — как panels/useReportAi.tsx приложения; draftOf — форма в виде черновика приложения
 function aiFormInit(form, g, curP, draftOf){
-  const st = {busy:null, checked:null, unav:null, prevCheck:'', assist:null, assistOpen:true, asks:[], ins:null, filled:false, msg:null, consent:null, openRec:''};
+  const st = {busy:null, checked:null, unav:null, prevCheck:'', assist:null, assistOpen:true, asks:[], ins:null, filled:false, msg:null, openRec:''};
   let req = 0;
   const pilot = () => AI_DEMO !== 'off';
   const lang = () => aiLang();
@@ -2502,11 +2507,11 @@ function aiFormInit(form, g, curP, draftOf){
   const print = () => reportPrint(draftOf());
   const button = () => aiButton({pilot:pilot(), checkedPrint:st.checked ? st.checked.print : null, currentPrint:print(), busy:st.busy !== null,
     unavailable:aiUnavailable(st.unav ? st.unav.print : null, print())});
-  const reset = () => { req++; Object.assign(st, {busy:null, checked:null, unav:null, prevCheck:'', assist:null, asks:[], ins:null, filled:false, msg:null, consent:null, openRec:''}); render(); };
+  const reset = () => { req++; Object.assign(st, {busy:null, checked:null, unav:null, prevCheck:'', assist:null, asks:[], ins:null, filled:false, msg:null, openRec:''}); render(); };
   function run(kind){
     const id = ++req, d0 = draftOf(), reqPrint = reportPrint(d0), at = kind === 'draft' ? 'top' : 'bottom';
     st.busy = kind; st.msg = null;
-    const fail = reason => { if (id !== req) return; st.busy = null; st.consent = null; if (kind === 'check') st.unav = {print:reqPrint, reason};
+    const fail = reason => { if (id !== req) return; st.busy = null; if (kind === 'check') st.unav = {print:reqPrint, reason};
       st.msg = {at, kind:'err', text:unavailableNote(reason, lang()) + (kind === 'check' ? ' ' + t('aiUnavailHint') : '')}; render(); };
     const go = () => setTimeout(() => {
       if (id !== req) return;
@@ -2529,8 +2534,6 @@ function aiFormInit(form, g, curP, draftOf){
       Object.assign(st, {ins:{after:print(), before:plan.before}, asks:plan.ask, assist:dr, assistOpen:true, filled:true, msg:{at, kind:'ok', text:t('aiDraftDone')}});
       render();
     }, aiDelay());
-    // первый вызов — согласие (карточка Copilot Studio в приложении)
-    if (!AI_CONSENTED){ st.consent = ok => { st.consent = null; if (!ok) return fail('declined'); AI_CONSENTED = true; render(); go(); }; return render(); }
     render(); go();
   }
   const result = () => {
@@ -2549,7 +2552,6 @@ function aiFormInit(form, g, curP, draftOf){
     const b = button(), dr = draftOf(), canUndo = !!st.ins && !st.asks.length && undoAvailable(st.ins.after, print()), a = st.assist;
     top.innerHTML = !on ? '' : `<div class="ai-bar"><button type="button" class="btn ai" id="ai-fill" data-ai="fill"${st.busy !== null || pendDate(curP()) ? ' disabled' : ''}>${lucide('ai')}${st.busy === 'draft' ? t('aiFillBusy') : t('aiFill')}</button>
       ${st.busy !== null ? `<button type="button" class="btn" data-ai="cancel">${t('cancel')}</button>` : ''}${canUndo ? `<button type="button" class="btn" data-ai="undo">${t('aiUndo')}</button>` : ''}</div>
-      ${st.consent ? `<div class="ai-panel" role="alertdialog" aria-label="${t('aiAllow')}"><p>${t('aiConsent')}</p><div class="ai-rate"><button type="button" class="btn primary" data-ai="allow">${t('aiAllow')}</button><button type="button" class="btn" data-ai="deny">${t('cancel')}</button></div></div>` : ''}
       ${st.asks.length ? `<div class="ai-panel" role="alertdialog"><p>${esc(t('aiReplace').replace('{f}', fl(AI_TEXT_LABEL[st.asks[0].field])))}</p><div class="ai-rate"><button type="button" class="btn primary" data-ai="yes">${t('aiYes')}</button><button type="button" class="btn" data-ai="no">${t('aiNo')}</button></div></div>` : ''}
       ${msgEl('top')}
       ${a && (a.remember.length || AI_RATE.some(([k]) => a.ratings[k])) ? `<details class="ai-panel" id="ai-assist"${st.assistOpen ? ' open' : ''}><summary>${esc(t('aiAssist').replace('{n}', a.remember.length))}</summary>
@@ -2570,10 +2572,8 @@ function aiFormInit(form, g, curP, draftOf){
     const el = e.target.closest && e.target.closest('[data-ai]'); if (!el) return;
     const a = el.dataset.ai;
     if (a === 'fill') run('draft');
-    else if (a === 'cancel'){ req++; st.busy = null; if (st.consent) st.consent = null; render(); }
+    else if (a === 'cancel'){ req++; st.busy = null; render(); }
     else if (a === 'undo'){ Object.keys(st.ins.before).forEach(k => setText(k, st.ins.before[k])); st.ins = null; render(); }
-    else if (a === 'allow' && st.consent) st.consent(true);
-    else if (a === 'deny' && st.consent) st.consent(false);
     else if (a === 'yes' || a === 'no'){ const [q, ...rest] = st.asks; st.asks = rest; if (q && a === 'yes'){ setText(q.field, q.value); if (st.ins) st.ins.after = print(); } render(); }
     else if (a === 'accept'){ setRate(el.dataset.k, st.assist.ratings[el.dataset.k]); render(); }
     else if (a === 'rec'){ st.openRec = st.openRec === el.dataset.key ? '' : el.dataset.key; render(); }
@@ -2866,8 +2866,15 @@ document.addEventListener('click', e => {
   else if (a === 'me'){ if (POP && POP.kind === 'user') closePop(); else openPop(el, 'user'); }
   else if (a === 'asuser'){ VIEWER = el.dataset.n; closePop(); render(); }
   // переключатели «Помічник ШІ» и «Імітувати збій ШІ»: меню не закрывается, открытая форма отчёта перестраивается
+  else if (a === 'aiallow' || a === 'aideny'){
+    if (a === 'aiallow'){ AI_CONSENTED = true; AI_DEMO = 'on'; }
+    AI_ASK = false;
+    if (POP && POP.kind === 'user') renderPop();
+    const rf = document.getElementById('repform'); if (rf) rf.dispatchEvent(new Event('change', {bubbles:true})); }
   else if (a === 'aidemo' || a === 'aifail'){
-    if (a === 'aidemo'){ AI_DEMO = el.dataset.v === 'on' ? 'on' : 'off'; if (AI_DEMO === 'off') AI_FAIL = false; } else if (AI_DEMO === 'on') AI_FAIL = !AI_FAIL;
+    // включение — согласие один раз (как в приложении: components/Header, ai/useAiSwitch); в форме отчёта согласия нет
+    if (a === 'aidemo'){ if (el.dataset.v === 'on' && !AI_CONSENTED) AI_ASK = true; else { AI_DEMO = el.dataset.v === 'on' ? 'on' : 'off'; AI_ASK = false; if (AI_DEMO === 'off') AI_FAIL = false; } }
+    else if (AI_DEMO === 'on') AI_FAIL = !AI_FAIL;
     if (POP && POP.kind === 'user') renderPop();
     const rf = document.getElementById('repform'); if (rf) rf.dispatchEvent(new Event('change', {bubbles:true})); }
   else if (a === 'grp'){ el.classList.toggle('collapsed'); const h = el.classList.contains('collapsed'); document.querySelectorAll(`[data-gk="${el.dataset.g}"]`).forEach(r => r.hidden = h); }

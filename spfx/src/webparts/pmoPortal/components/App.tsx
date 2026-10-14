@@ -24,6 +24,9 @@ import { Overview } from '../panels/Overview';
 import { Releases } from '../panels/Releases';
 import { AiSpike } from '../panels/AiSpike';
 import { isAiPilot } from '../ai/aiConfig';
+import { useAiSwitch } from '../ai/useAiSwitch';
+import { aiEnable } from '../ai/aiEnable';
+import { aiLangOf } from '../logic/aiCheck';
 import { Feedback, feedbackOrder } from '../pages/Feedback';
 import { FeedbackView } from '../panels/FeedbackView';
 import { AssignForm } from '../panels/AssignForm';
@@ -65,6 +68,8 @@ export const App: React.FC<AppProps> = p => {
     return () => { window.clearInterval(tm); document.removeEventListener('visibilitychange', check); };
   }, []);
   const [toastMsg, showToast] = useToast();
+  // «Помічник ШІ» — переключатель у пилотной группы; согласие — при включении
+  const aiSw = useAiSwitch(p.userEmail, isAiPilot(p.userEmail), () => aiEnable(p.userEmail, aiLangOf(lang)));
   React.useEffect(() => {
     const on = (): void => setRoute(r => parse(window.location.hash, r.views));
     window.addEventListener('hashchange', on);
@@ -73,7 +78,7 @@ export const App: React.FC<AppProps> = p => {
   const nav = (r: Route): void => { const h = format(r); if (window.location.hash !== h) window.location.hash = h; setRoute(r); };
   const tt = makeT(lang);
   setValueLang(lang);   // значения выбора — на языке интерфейса (i18n/values.ts)
-  const ctx: Ctx = { ...tt, lang, today: todayIso(), me: p.userEmail, webUrl: p.webUrl, views: route.views, canCreate: !!data && data.canCreate,
+  const ctx: Ctx = { ...tt, lang, today: todayIso(), me: p.userEmail, ai: !!aiSw && aiSw.on, webUrl: p.webUrl, views: route.views, canCreate: !!data && data.canCreate,
     // без вида (вкладка в шапке) — вид страницы по умолчанию, а не запомненный (#23, #24); показатели главной передают вид
     go: (page, view) => { nav(goRoute(route, page, view)); window.scrollTo(0, 0); },
     setView: (page, view) => nav({ ...route, views: { ...route.views, [page]: view } }),
@@ -117,7 +122,7 @@ export const App: React.FC<AppProps> = p => {
       <Header page={route.page} lang={lang} theme={theme} userName={p.userName} userEmail={p.userEmail}
         onPage={pg => ctx.go(pg)} onLang={l => { setLang(l); saveLang(l); }} onTheme={v => { setTheme(v); saveTheme(v); }}
         onFeedback={openFeedback} onHelp={() => ctx.openForm('help', route.projectId)}
-        bell={data ? { unread: bellUnread, onOpen: () => { setNtfRet(false); ctx.openForm('notifications', route.projectId); } } : undefined} />
+        bell={data ? { unread: bellUnread, onOpen: () => { setNtfRet(false); ctx.openForm('notifications', route.projectId); } } : undefined} ai={aiSw} />
       <main className="pmo-main">
         {err ? <p className="empty">{tt.t('loadErr')}: {err}</p> : !data ? <p className="empty">…</p> : pageEl}
       </main>

@@ -23,7 +23,8 @@ const pr: any = { id: 5, title: 'Проєкт П', code: 'PRJ-005', status: 'Р�
 const data: any = { projects: [pr], reports: [{ id: 1, projectId: 5, date: '2026-09-01', approval: 'Погоджено', applied: true, schedule: 'Зелений', budget: 'Зелений', resources: 'Зелений',
   title: '', done: '', next: '– План', issues: '', decision: false, decisionText: '' }], risks: [], comments: [], team: [] };
 let root: HTMLDivElement; let bodies: any[];
-const ctxFor = (me: string, project = pr): any => ({ ...tt, lang: 0, today: '2026-10-14', me, webUrl: '', views: {}, go() { /* */ }, setView() { /* */ }, openProject() { /* */ },
+// ai — пилот и включённый «Помічник ШІ» (App: useAiSwitch)
+const ctxFor = (me: string, project = pr): any => ({ ...tt, lang: 0, today: '2026-10-14', me, ai: me === 'pm@x', webUrl: '', views: {}, go() { /* */ }, setView() { /* */ }, openProject() { /* */ },
   openForm() { /* */ }, canCreate: false, reload: async () => undefined, toast() { /* */ },
   repo: { loadChanges: async () => [], siteLocalTime: async () => '2026-10-14T02:30:00',
     fresh: async () => ({ project, etag: '"1"', owner: false, pending: [], lastApprovedDate: '2026-09-01' }), createIn: async (_l: string, _id: number, b: any) => { bodies.push(b); } } });
@@ -99,6 +100,16 @@ describe('помощник ИИ в форме отчёта', () => {
     expect(JSON.parse(mockAgent.asked[1].split('\n')[2]).prevCheck).toBe('1. Пункт ШІ');
   });
 
+  test('язык интерфейса EN — ИИ получает lang «en», пункты портала по-английски', async () => {
+    const late = { id: 7, projectId: 5, title: 'Server down', type: 'Ризик', probability: 1, impact: 1, status: 'Відкрито', due: '2026-10-01', mitigation: 'Fix' };
+    await act(async () => { ReactDOM.render(<AppCtx.Provider value={{ ...ctxFor('pm@x'), lang: 1 }}><ReportForm data={{ ...data, risks: [late] }} projectId={5} onCancel={() => undefined} /></AppCtx.Provider>, root); });
+    await flush(); fill();
+    mockAgent.replies.push({ text: '{"items":[]}' });
+    await submit();
+    expect(JSON.parse(mockAgent.asked[0].split('\n')[2]).lang).toBe('en');
+    expect($('#f-ai').textContent).toContain('«Schedule» is green, but actions are overdue');
+  });
+
   test('после проверки PM изменил отчёт — снова «Перевірити з ШІ»', async () => {
     await open(); fill();
     mockAgent.replies.push({ text: '{"items":[]}' }); await submit();
@@ -134,13 +145,11 @@ describe('помощник ИИ в форме отчёта', () => {
     expect([bodies[0].srAiCheck, bodies[0].srAiCheckedAt]).toEqual(['Перевірку ШІ не виконано: ШІ не відповів за 60 с', null]);
   });
 
-  test('согласие: карточка → «Дозволити» → ответ', async () => {
+  test('карточка согласия Copilot Studio — подтверждается сама (согласие дано при включении), PM не спрашивают', async () => {
     await open(); fill();
     mockAgent.replies.push({ consent: true }); mockAgent.allows.push({ text: '{"items":[]}' });
     await submit();
-    expect(root.textContent).toContain('Microsoft Copilot Studio');
-    const allow = Array.from(root.querySelectorAll('button')).filter(b => b.textContent === 'Дозволити')[0] as HTMLButtonElement;
-    await act(async () => { allow.click(); }); await flush();
+    expect(root.textContent).not.toContain('Microsoft Copilot Studio');
     expect(root.textContent).toContain('Суперечностей не знайдено'); expect(btn()).toBe('Зберегти');
   });
 

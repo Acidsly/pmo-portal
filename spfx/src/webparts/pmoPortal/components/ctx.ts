@@ -24,5 +24,7 @@ export interface Ctx {
   /** Перечитать данные после сохранения. */
   reload(): Promise<void>;
   toast(m: string): void;
+  /** Помощник ИИ в форме отчёта: пилотная группа и переключатель «Помічник ШІ» включён. */
+  ai?: boolean;
 }
 export const AppCtx = React.createContext<Ctx>(undefined as unknown as Ctx);
