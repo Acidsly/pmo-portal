@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.3.12 · 14.10.2026
+
+**Changed**
+- The «Projects», «Status reports», «Risks» and «Archive» tables fit the window without horizontal scrolling: the page is wider (up to 1440 px), long headers and badges wrap, the rating columns' filter goes under the title when space is short.
+
 ## 1.7.3.11 · 14.10.2026
 
 **Changed**

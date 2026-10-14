@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { T } from '../src/webparts/pmoPortal/i18n/strings';
+import { lockWidths } from '../src/webparts/pmoPortal/logic/ui';
 
 // Прототип — эталон интерфейса: помощник ИИ в форме статус-отчёта (план этапа 4, задача 7). Правила — общими векторами
 // (tests/cases/ai-check.json, ai-flow.json, ai-rules.json) на функциях прототипа (window.PPM_RULES); сценарий — через кнопки.
@@ -27,6 +28,11 @@ afterEach(() => { if (w) w.close(); });
 const R = (): W => w.PPM_RULES;
 /** Случай вектора — отдельный тест: «префикс + имя случая». */
 const each = (xs: any[], label: (c: any) => string, prefix: string, f: (c: any) => void): void => xs.forEach(c => test(prefix + label(c), () => f(c)));
+
+test('прототип: закреплённые ширины колонок — как в приложении (lockWidths)', () => {
+  for (const m of [[120.4, 99.5], [36.3, 40.4, 190.6, 99.2, 99.3, 70.1, 300.4, 120.2], [80]]) expect(R().lockWidths(m)).toEqual(lockWidths(m));
+  expect(R().lockWidths([200.2, 300.1, 830.1], 1328)).toEqual(lockWidths([200.2, 300.1, 830.1], 1328));
+});
 
 describe('прототип: правила помощника — общие векторы', () => {
   const draft = CHECK.draft;

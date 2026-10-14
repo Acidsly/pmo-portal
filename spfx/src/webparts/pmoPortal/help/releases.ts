@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.3.12",
+   "date": "14.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Таблиці «Проєкти», «Статус-звіти», «Ризики» й «Архів» вміщуються у вікно без горизонтальної прокрутки: сторінка ширша (до 1440 px), довгі заголовки й позначки переносяться, фільтр колонок-оцінок — під назвою, якщо місця мало.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.3.11",
    "date": "14.10.2026",
    "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення без змін у роботі порталу.</li>\n</ul>"
@@ -145,6 +150,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.3.12",
+   "date": "14.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>The «Projects», «Status reports», «Risks» and «Archive» tables fit the window without horizontal scrolling: the page is wider (up to 1440 px), long headers and badges wrap, the rating columns' filter goes under the title when space is short.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.3.11",
    "date": "14.10.2026",
    "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update with no changes to how the portal works.</li>\n</ul>"
@@ -286,6 +296,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.3.12",
+   "date": "14.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Таблицы «Проекты», «Статус-отчёты», «Риски» и «Архив» помещаются в окно без горизонтальной прокрутки: страница шире (до 1440 px), длинные заголовки и плашки переносятся, фильтр колонок-оценок — под названием, если места мало.</li>\n</ul>"
+  },
   {
    "ver": "1.7.3.11",
    "date": "14.10.2026",

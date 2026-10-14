@@ -15,7 +15,7 @@ type PopState = { kind: 'filter'; col: string; anchor: HTMLElement } | { kind: '
 export function DataTable<R extends { id: number }>(p: { tkey: string; defs: TableDefs<R>; rows: R[]; empty?: string; left?: React.ReactNode; right?: React.ReactNode;
   /** #58: карточка строки — на узком экране вместо таблицы (те же строки; сортировка и фильтры — заданные на широком экране) */ card?: (r: R) => React.ReactNode;
   /** строки как на экране (фильтры и сортировка) — например, «попередній / наступний» в окне записи */ onShown?: (rows: R[]) => void }): JSX.Element {
-  const { t } = React.useContext(AppCtx);
+  const { t, lang } = React.useContext(AppCtx);
   const { cols: defs, lock, defaults } = p.defs;
   const known = Object.keys(defs);
   const [st, setSt] = React.useState<TableState>(() => loadState(p.tkey, defaults, known, lock));
@@ -67,14 +67,16 @@ export function DataTable<R extends { id: number }>(p: { tkey: string; defs: Tab
   const tableRef = React.useRef<HTMLDivElement>(null);
   // #33: на широком экране ширины колонок закрепляются после первой раскладки по содержимому — фильтры и смена вида их
   // не меняют; пересчёт — при смене набора колонок и размера окна. На телефоне и планшете (< 900 px) — как раньше.
-  const colsKey = shownCols.join(',');
+  // язык — в ключе: другие ширины текста, закреплённые ширины замеряются заново
+  const colsKey = lang + ':' + shownCols.join(',');
   const [lockW, setLockW] = React.useState<{ key: string; w: number[] } | null>(null);
   React.useLayoutEffect(() => {
     // решение — logic/ui.ts nextLock; замер — только когда таблица видна (скрытая вкладка / панель — ширины ещё нет)
     const el = tableRef.current;
     const need = window.innerWidth >= 900 && !(lockW && lockW.key === colsKey) && !!el && !!el.clientWidth;
     const w = need ? Array.prototype.map.call(el!.querySelectorAll('thead th'), (th: Element) => th.getBoundingClientRect().width) as number[] : null;
-    const nl = nextLock(window.innerWidth, lockW, colsKey, shownCols.length, w);
+    const tb = need ? el!.querySelector('table') : null;
+    const nl = nextLock(window.innerWidth, lockW, colsKey, shownCols.length, w, tb ? tb.getBoundingClientRect().width : undefined);
     if (nl !== lockW) setLockW(nl);
   });
   React.useEffect(() => {

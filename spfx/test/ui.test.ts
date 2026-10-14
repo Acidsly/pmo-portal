@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-import { pickerKey, createWithCode, isUniqueError, nextLock, cellText } from '../src/webparts/pmoPortal/logic/ui';
+import { pickerKey, createWithCode, isUniqueError, nextLock, lockWidths, cellText } from '../src/webparts/pmoPortal/logic/ui';
 import { nextCode } from '../src/webparts/pmoPortal/logic/forms';
 
 test('#8: Enter выбирает подсвеченного и не отправляет форму; стрелки в пределах списка; Esc — сброс', () => {
@@ -27,9 +27,18 @@ test('#33: ширины закрепляются один раз на набор
   expect(nextLock(1200, null, 'a,b', 2, [0, 200])).toBeNull();        // скрытая вкладка
   expect(nextLock(1200, null, 'a,b', 2, [100])).toBeNull();
 });
-test('ширины замера — с округлением вверх: колонка не становится уже текста (фамилия PM не рвётся посреди слова)', () => {
-  expect(nextLock(1200, null, 'a,b', 2, [120.4, 99.5])).toEqual({ key: 'a,b', w: [121, 100] });
+test('ширины замера — вверх (фамилия PM не рвётся посреди слова), а лишнее отдаёт самая широкая колонка: таблица не шире замера (без горизонтальной прокрутки)', () => {
+  expect(nextLock(1200, null, 'a,b', 2, [120.4, 99.5])).toEqual({ key: 'a,b', w: [119, 100] });   // 219.9 → не больше 219: лишнее — у широкой
   expect(nextLock(1200, null, 'a', 1, [80])).toEqual({ key: 'a', w: [80] });
+  const m = [36.3, 40.4, 190.6, 99.2, 99.3, 70.1, 300.4, 120.2];
+  const w = nextLock(1200, null, 'k', m.length, m)!.w;
+  expect(w.reduce((a, b) => a + b, 0)).toBe(Math.floor(m.reduce((a, b) => a + b, 0)));   // сумма — не больше замера
+  w.forEach((x, i) => { if (i !== 6) expect(x).toBe(Math.ceil(m[i])); });                  // узкие — не уже текста
+  expect(w[6]).toBeLessThan(m[6]);                                                          // разницу отдала самая широкая
+  expect(lockWidths(m)).toEqual(w);
+  // рамки: сумма заголовков 1330.4, таблица 1328 — закреплённые ширины в сумме 1328
+  const n = lockWidths([200.2, 300.1, 830.1], 1328);
+  expect(n.reduce((a, b) => a + b, 0)).toBe(1328); expect([n[0], n[1]]).toEqual([201, 301]);
 });
 test('#15: CSV — текст ячейки, у значка без текста — подсказка', () => {
   const td = document.createElement('td'); td.innerHTML = '<span title="Стратегічний">🛡</span>';
