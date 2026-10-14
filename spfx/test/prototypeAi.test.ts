@@ -57,8 +57,10 @@ describe('прототип: правила помощника — общие в�
 // сценарий через кнопки
 const q = (s: string): W => w.document.querySelector(s);
 const ev = (el: W, t: string): void => { el.dispatchEvent(new w.Event(t, { bubbles: true })); };
-/** «Помічник ШІ (демо)» в меню пользователя (обработчик — по data-act на документе). */
-function demo(v: 'off' | 'on' | 'down'): void { const b = w.document.createElement('button'); b.dataset.act = 'aidemo'; b.dataset.v = v; w.document.body.appendChild(b); b.click(); b.remove(); }
+/** Кнопка меню пользователя (обработчик — по data-act на документе). */
+function menu(act: string, v?: string): void { const b = w.document.createElement('button'); b.dataset.act = act; if (v) b.dataset.v = v; w.document.body.appendChild(b); b.click(); b.remove(); }
+/** «Помічник ШІ» вкл / викл; «down» — вкл и «Імітувати збій ШІ». */
+function demo(v: 'off' | 'on' | 'down'): void { menu('aidemo', v === 'off' ? 'off' : 'on'); if (v === 'down') menu('aifail'); }
 function openForm(): W {
   q('[data-act="nav"][data-page="reports"]').click();
   q('[data-act="newrep"]:not([data-id])').click();
@@ -74,7 +76,8 @@ const sub = (): W => q('#f-submit');
 const openSaved = (): void => { const el = q('.rep-open[data-act="repopen"]'); if (!el) throw new Error('нет отчёта в карточке'); el.click(); };
 
 describe('прототип: помощник в форме отчёта', () => {
-  test('демо выключено — форма как вне пилота: «Зберегти», кнопок ИИ нет', () => {
+  test('«Помічник ШІ» выключен (по умолчанию и после «вимкнено») — форма без ИИ: «Зберегти», кнопок ИИ нет; сбой при выключении сбрасывается', () => {
+    demo('down'); demo('off');
     const f = openForm();
     expect(f.querySelector('#ai-fill')).toBeNull();
     expect([sub().className, sub().textContent]).toEqual(['btn primary', T.save[0]]);
@@ -125,7 +128,7 @@ describe('прототип: помощник в форме отчёта', () => 
     expect(q('.rv-ai-text').textContent.replace(/\s+/g, '')).toBe(text.replace(/\s+/g, ''));
     expect(q('#rv-ai').textContent).toContain(T.aiCheckedAt[0].replace('{date}', '').trim());
   });
-  test('ИИ недоступен — «Зберегти без перевірки», в записи причина без времени; в просмотре — «Збережено без перевірки ШІ»', async () => {
+  test('«Помічник ШІ» включён, ИИ не ответил — «Зберегти без перевірки», в записи причина без времени; в просмотре — «Збережено без перевірки ШІ»', async () => {
     demo('down'); const f = openForm(); fill(f);
     await submit(f); q('[data-ai="allow"]').click(); await flush();
     expect(sub().textContent).toBe(T.aiSaveWithout[0]);
