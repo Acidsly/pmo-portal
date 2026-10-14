@@ -18,7 +18,7 @@ const LIST_MAX = 3;
 const W: Record<AiLang, {
   type: Record<string, string>; due: string;
   forecast(f: string, p: string): string; overdue(list: string): string; budget(a: string, b: string): string;
-  decision: string; progress(from: string, to: string): string;
+  decision: string; progress(from: string, to: string): string; field: Record<string, string>;
 }> = {
   uk: {
     type: { 'Ризик': 'Ризик', 'Проблема': 'Проблема' }, due: 'термін',
@@ -26,7 +26,8 @@ const W: Record<AiLang, {
     overdue: l => `«Терміни» — зелений, а термін заходів минув: ${l} (реєстр «Ризики та проблеми» в картці) — змініть оцінку «Терміни» або оновіть записи в реєстрі.`,
     budget: (a, b) => `«Бюджет» — зелений, а «Витрати на дату» ${a} більше бюджету проєкту ${b} — змініть оцінку «Бюджет» або «Витрати на дату».`,
     decision: 'Позначено «Потрібне рішення керівництва», але не описано, яке рішення потрібне, — заповніть «Яке рішення потрібне».',
-    progress: (from, to) => `«% виконання» зменшено з ${from} до ${to} — перевірте «% виконання» або поясніть зниження в «Проблеми та ризики за період».`
+    progress: (from, to) => `«% виконання» зменшено з ${from} до ${to} — перевірте «% виконання» або поясніть зниження в «Проблеми та ризики за період».`,
+    field: { phase: 'Фаза проєкту', type: 'Тип проєкту', start: 'Дата старту', goLive: 'Дата запуску (продакшн)', planEnd: 'Дата завершення (план)', forecastEnd: 'Прогноз завершення' }
   },
   en: {
     type: { 'Ризик': 'Risk', 'Проблема': 'Issue' }, due: 'due',
@@ -34,7 +35,8 @@ const W: Record<AiLang, {
     overdue: l => `«Schedule» is green, but actions are overdue: ${l} (the «Risks and issues» register in the card) — change the «Schedule» rating or update the records in the register.`,
     budget: (a, b) => `«Budget» is green, but «Cost to date» ${a} exceeds the project budget ${b} — change the «Budget» rating or «Cost to date».`,
     decision: '«Management decision needed» is ticked, but the decision is not described — fill in «Decision required».',
-    progress: (from, to) => `«% complete» was reduced from ${from} to ${to} — check «% complete» or explain the decrease in «Issues and risks for the period».`
+    progress: (from, to) => `«% complete» was reduced from ${from} to ${to} — check «% complete» or explain the decrease in «Issues and risks for the period».`,
+    field: { phase: 'Project phase', type: 'Project type', start: 'Start date', goLive: 'Go-live date (production)', planEnd: 'Planned completion', forecastEnd: 'Forecast completion' }
   },
   ru: {
     type: { 'Ризик': 'Риск', 'Проблема': 'Проблема' }, due: 'срок',
@@ -42,7 +44,8 @@ const W: Record<AiLang, {
     overdue: l => `«Сроки» — зелёный, а срок мер истёк: ${l} (реестр «Риски и проблемы» в карточке) — измените оценку «Сроки» или обновите записи в реестре.`,
     budget: (a, b) => `«Бюджет» — зелёный, а «Затраты на дату» ${a} больше бюджета проекта ${b} — измените оценку «Бюджет» или «Затраты на дату».`,
     decision: 'Отмечено «Требуется решение руководства», но не описано, какое решение нужно, — заполните «Какое решение нужно».',
-    progress: (from, to) => `«% выполнения» уменьшен с ${from} до ${to} — проверьте «% выполнения» или объясните снижение в «Проблемы и риски за период».`
+    progress: (from, to) => `«% выполнения» уменьшен с ${from} до ${to} — проверьте «% выполнения» или объясните снижение в «Проблемы и риски за период».`,
+    field: { phase: 'Фаза проекта', type: 'Тип проекта', start: 'Дата старта', goLive: 'Дата запуска (продакшн)', planEnd: 'Дата завершения (план)', forecastEnd: 'Прогноз завершения' }
   }
 };
 
@@ -91,7 +94,7 @@ const KEY_CHANGE: Record<string, (x: Record<string, unknown>) => unknown> = { ph
  *  - returned — комментарий PMO, если последний отчёт повернутий;
  *  - mention — записи, которые отчёт обязан упомянуть с действием (mustMention);
  *  - draft — оценки, тексты, «Потрібне рішення», «Причина зміни показників» и keyChanges — фаза, тип и даты, изменённые
- *    в этой форме (было → стало);
+ *    в этой форме (поле — названием формы на языке ответа, было → стало, даты — дд.мм.рррр);
  *  - prevCheck — прежние пункты ИИ (без пунктов кода).
  *  Длиннее maxChars — длинные тексты (от самого длинного) до 1000 знаков с «…»; не помогло — tooLarge. */
 export function buildCheckContext(input: AiContextIn, maxChars: number = 50000): AiContextOut {
@@ -100,13 +103,16 @@ export function buildCheckContext(input: AiContextIn, maxChars: number = 50000):
   const last = reps.filter(isApproved)[0], latest = reps[0];
   const d = input.draft && input.draft.projectId === pid ? input.draft : undefined;
   const pr = p as unknown as Record<string, unknown>, dr = (d || {}) as unknown as Record<string, unknown>;
+  // поле — названием формы на языке ответа, даты — дд.мм.рррр: ИИ пишет пункт словами формы, без ключей данных
+  const w = W[input.lang] || W.uk;
+  const shown = (k: string, v: unknown): string => { const t = String(v ?? ''); return t && k !== 'phase' && k !== 'type' ? formatDmy(t) : t; };
   const o: Record<string, unknown> = { lang: input.lang, project: { code: p.code, title: p.title } };
   if (last) o.plan = last.decision ? { date: last.date, next: last.next, decision: true, decisionText: last.decisionText } : { date: last.date, next: last.next };
   if (latest && latest.approval === AP_RETURNED) o.returned = { date: latest.date, note: latest.approvalNote };
   o.mention = mustMention(input).map(k => ({ type: k.type, title: k.title, score: riskScore(k.probability, k.impact), due: k.due || '', overdue: isOverdue(k, input.today) }));
   if (d) o.draft = { schedule: d.schedule, budget: d.budget, resources: d.resources, summary: d.title, done: d.done, next: d.next, issues: d.issues,
     decision: !!d.decision, decisionText: d.decisionText, keyReason: d.keyReason,
-    keyChanges: draftChanged(p, d).filter(k => !!KEY_CHANGE[k]).map(k => ({ field: k, from: String(KEY_CHANGE[k](pr) ?? ''), to: String(KEY_CHANGE[k](dr) ?? '') })) };
+    keyChanges: draftChanged(p, d).filter(k => !!KEY_CHANGE[k]).map(k => ({ field: w.field[k], from: shown(k, KEY_CHANGE[k](pr)), to: shown(k, KEY_CHANGE[k](dr)) })) };
   if (input.prevCheck) o.prevCheck = input.prevCheck;
   const c = cleanAll(o);
   let j = JSON.stringify(c);

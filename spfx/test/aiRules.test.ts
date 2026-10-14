@@ -72,9 +72,12 @@ describe('границы', () => {
   test('keyChanges — фаза, тип, все даты (было → стало); % и затраты — нет', () => {
     const o = JSON.parse(buildCheckContext(inp({ draft: { status: 'Призупинено', type: 'Звичайний', start: '2026-04-01', goLive: '2026-12-01',
       planEnd: '2027-01-15', forecastEnd: '2027-02-01', progress: 60, actualCost: 300000 } })).json);
-    expect(o.draft.keyChanges).toEqual([{ field: 'phase', from: 'Реалізація', to: 'Призупинено' }, { field: 'type', from: 'Стратегічний', to: 'Звичайний' },
-      { field: 'start', from: '2026-03-01', to: '2026-04-01' }, { field: 'goLive', from: '2026-11-01', to: '2026-12-01' },
-      { field: 'planEnd', from: '2026-12-15', to: '2027-01-15' }, { field: 'forecastEnd', from: '2026-12-15', to: '2027-02-01' }]);
+    expect(o.draft.keyChanges).toEqual([{ field: 'Фаза проєкту', from: 'Реалізація', to: 'Призупинено' }, { field: 'Тип проєкту', from: 'Стратегічний', to: 'Звичайний' },
+      { field: 'Дата старту', from: '01.03.2026', to: '01.04.2026' }, { field: 'Дата запуску (продакшн)', from: '01.11.2026', to: '01.12.2026' },
+      { field: 'Дата завершення (план)', from: '15.12.2026', to: '15.01.2027' }, { field: 'Прогноз завершення', from: '15.12.2026', to: '01.02.2027' }]);
+    // en — названия полей формы по-английски; пустая дата — пусто
+    const en = JSON.parse(buildCheckContext(inp({ lang: 'en', project: { forecastEnd: '' }, draft: { forecastEnd: '2027-02-01' } })).json);
+    expect(en.draft.keyChanges).toEqual([{ field: 'Forecast completion', from: '', to: '01.02.2027' }]);
   });
 });
 
@@ -94,7 +97,7 @@ describe('контекст «Перевірки»', () => {
     expect(o.project).toEqual({ code: 'PRJ-001', title: 'CRM для продажів' });
     expect(o.plan).toEqual({ date: '2026-09-01', next: (base.report as any).next });
     expect(o.mention).toEqual([{ type: 'Ризик', title: 'Відтік', score: 16, due: '2026-11-30', overdue: false }]);
-    expect(o.draft.keyChanges).toEqual([{ field: 'planEnd', from: '2026-12-15', to: '2027-02-01' }]);
+    expect(o.draft.keyChanges).toEqual([{ field: 'Дата завершення (план)', from: '15.12.2026', to: '01.02.2027' }]);
     expect(Object.keys(o.draft)).toEqual(['schedule', 'budget', 'resources', 'summary', 'done', 'next', 'issues', 'decision', 'decisionText', 'keyReason', 'keyChanges']);
   });
   test('запрос решения прошлого отчёта, повернутий отчёт, прежние пункты ИИ', () => {
