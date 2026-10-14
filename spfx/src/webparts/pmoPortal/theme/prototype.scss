@@ -520,11 +520,10 @@ form .fsec:first-child{margin-top:0}
 .dt th{vertical-align:middle;white-space:nowrap}
 .dt th .th,.dt th.w-ico .th{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:2px;white-space:nowrap}
 .dt th.w-ico .th{justify-content:center}
-/* ширина таблицы — по содержимому, а не по запретам переноса: длинные заголовки и плашки («На согласовании», RU) переносятся,
-   иначе таблица шире контейнера (горизонтальная прокрутка, колонки за краем) */
+/* ширина таблицы — по содержимому: длинные заголовки переносятся (иначе таблица шире контейнера — горизонтальная прокрутка,
+   колонки за краем); плашки — одной строкой */
 .dt th:not(.w-ico) .th{white-space:normal}
 .dt th:not(.w-ico) .sortb{white-space:normal;text-align:left}
-.dt td .pill{white-space:normal;line-height:1.25}
 .dt th .sortb,.dt th.w-ico .sortb{padding:4px 4px;font-size:12px;white-space:nowrap}
 .dt th .fbtn{margin-left:0}
 .dt td{vertical-align:middle}
@@ -592,6 +591,10 @@ form .fsec:first-child{margin-top:0}
 .col-rs:hover,.col-rs.on{background:var(--theme-soft)}
 /* у последней колонки ручка — внутри таблицы: выступ на 2 px давал горизонтальную прокрутку */
 .dt th:last-child .col-rs{right:0}
+/* окно до 1440 px: поля ячеек и минимум заголовка поменьше — «Статус-звіти» (12 колонок) помещаются без прокрутки */
+@media (min-width:721px) and (max-width:1439px){.dt table td{padding-left:6px;padding-right:6px}.dt th{padding-left:3px;padding-right:3px}.dt th:not(.w-ico){min-width:64px}.dt table td.w-upd{min-width:150px}}
+/* колонки с точками: не хватает места — воронка фильтра под названием, а не рядом (название не переносится, колонка уже) */
+.dt th.w-ico .th{flex-wrap:wrap;row-gap:0}
 /* #58: на телефоне статус-звіти й ризики — картками (те самі рядки, фільтри й сортування, що в таблиці) */
 .mcards{display:none}
 @media (max-width:600px){.tablewrap.dt.has-cards{display:none}.mcards{display:grid;gap:8px}}

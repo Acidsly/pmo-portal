@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.3.13 · 14.10.2026
+
+**Changed**
+- Approval badges («Awaiting approval», «Approved», «Returned») are on one line again; «Returned for rework» is now «Returned».
+
 ## 1.7.3.12 · 14.10.2026
 
 **Changed**
