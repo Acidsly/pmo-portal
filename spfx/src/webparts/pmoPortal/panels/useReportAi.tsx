@@ -13,7 +13,9 @@ import { aiUnavailable, aiSaveFields, nextPrevCheck, draftInsert, undoAvailable,
 import { riskScore } from '../logic/status';
 import { fmtDate } from '../components/Bits';
 import { Risk } from '../data/types';
-import { aiRun } from '../ai/aiRun';
+import { aiRun, AiTrace } from '../ai/aiRun';
+import { aiFailFeedback, aiFailAllowed } from '../logic/aiFeedback';
+import { RELEASES } from '../help/releases';
 import { tv } from '../i18n/values';
 import { Rag } from '../logic/rag';
 
@@ -78,18 +80,34 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
     const id = ++req.current; const draft0 = dRef.current; const reqPrint = reportPrint(draft0);
     const at = kind === 'draft' ? 'top' : 'bottom';
     setBusy(kind); setMsg(null);
+    const t0 = Date.now(), trace: AiTrace = {};
+    // сбой — автоматический отзыв «Помилка ШІ (автоматично)» (список «Відгуки» есть только на тестовом сайте): техника без данных
+    // отчёта, не чаще одного в день на вид запроса и причину; «Скасувати» в согласии — не сбой
+    const report = (reason: AiUnavailable): void => {
+      if (!a.data.feedback || reason === 'declined') return;
+      const key = `${kind}:${reason}`, store = 'pmo-ai-fail:' + (c.me || '').toLowerCase();
+      let sent: Record<string, string> = {};
+      try { sent = JSON.parse(localStorage.getItem(store) || '{}') || {}; } catch { sent = {}; }
+      if (!aiFailAllowed(sent, key, c.today)) return;
+      sent[key] = c.today;
+      try { localStorage.setItem(store, JSON.stringify(sent)); } catch { /* приватный режим */ }
+      const f = aiFailFeedback({ kind, reason, code: trace.code || '', conv: trace.conv || '', ms: trace.ms ?? Date.now() - t0,
+        project: a.project.code, version: RELEASES[0] && RELEASES[0][0] ? RELEASES[0][0].ver : '', at: new Date().toISOString() });
+      c.repo.create('Feedback', { ...f, fbDevice: `${window.innerWidth}×${window.innerHeight} · ${navigator.userAgent}`.slice(0, 255) }).catch(() => undefined);
+    };
     const fail = (reason: AiUnavailable, detail?: string): void => {
       if (id !== req.current) return;
+      report(reason);
       setBusy(null);
       if (kind === 'check') setUnav({ print: reqPrint, reason });
       const head = unavailableNote(reason, lang);
       setMsg({ at, kind: 'err', text: (detail ? head.replace(/:.*$/, ': ' + detail) : head) + (kind === 'check' ? ' ' + t('aiUnavailHint') : '') });
     };
     let m: Agent;
-    try { m = agent.current || (await loadAgent()); } catch { fail('error'); return; }
+    try { m = agent.current || (await loadAgent()); } catch (e) { trace.code = 'load: ' + String((e as Error)?.message || e).slice(0, 100); fail('error'); return; }
     let token: string;
     try { token = await m.aiToken(c.me, () => undefined); }
-    catch (e) { fail('error', /popup|interaction|blocked/i.test(String((e as Error).message || e)) ? t('aiPopup') : undefined); return; }
+    catch (e) { trace.code = 'token: ' + String((e as Error)?.message || e).slice(0, 100); fail('error', /popup|interaction|blocked/i.test(String((e as Error).message || e)) ? t('aiPopup') : undefined); return; }
     // журнал — только для черновика («Зроблено за період»); проверке он мешает: ИИ принимает прежние изменения за правки этой формы
     const changes: ChangeEntry[] = kind === 'draft' ? await c.repo.loadChanges(a.project.id).catch(() => [] as ChangeEntry[]) : [];
     if (id !== req.current) return;
@@ -105,7 +123,7 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
     const agentMod = m;
     const r = await aiRun<AiDraft | string[]>(() => agentMod.AiSession.open(token), aiMessage(kind, ctx.json), parse,
       // карточка согласия Copilot Studio — подтверждается сама: PM дал согласие при включении «Помічник ШІ»
-      () => Promise.resolve(true));
+      () => Promise.resolve(true), trace);
     if (id !== req.current) return;
     if (!r.ok) { fail(r.reason); return; }
     setBusy(null);

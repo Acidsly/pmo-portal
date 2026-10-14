@@ -1,8 +1,11 @@
 import { AiUnavailable } from '../logic/aiCheck';
 import { AiCallOut, aiErrorKind, consentStep } from '../logic/aiFlow';
+import { aiFailInfo } from '../logic/aiFeedback';
 
 /** Один разговор с агентом (ai/aiAgent.ts, AiSession): отправить текст, ответить «Дозволити» на карточку согласия. */
-export interface AiPort { ask(text: string): Promise<AiCallOut>; allow(): Promise<AiCallOut> }
+export interface AiPort { ask(text: string): Promise<AiCallOut>; allow(): Promise<AiCallOut>; /** номер разговора Copilot Studio */ readonly id?: string }
+/** След запроса для разбора сбоя (автоматический отзыв): номер разговора, код ошибки, длительность. */
+export interface AiTrace { conv?: string; code?: string; ms?: number }
 export type AiRunOut<T> = { ok: true; value: T } | { ok: false; reason: AiUnavailable };
 
 const fromError = (e: unknown): AiUnavailable => {
@@ -15,24 +18,35 @@ const fromError = (e: unknown): AiUnavailable => {
  *  ошибка, таймаут — ИИ недоступен с причиной. Ответ, который не разобрался (parse → null), — один повтор в новом
  *  разговоре, затем error. */
 export async function aiRun<T>(open: () => Promise<AiPort>, text: string, parse: (raw: string) => T | null,
-  confirm: () => Promise<boolean>): Promise<AiRunOut<T>> {
+  confirm: () => Promise<boolean>, trace: AiTrace = {}): Promise<AiRunOut<T>> {
+  const t0 = Date.now();
+  // след сбоя: код из ответа агента или исключения, таймаут, нераспознанный ответ
+  const failed = <R extends AiRunOut<T>>(r: R, out?: AiCallOut, ex?: unknown): R => {
+    const info = aiFailInfo(`${(out && (out.error || out.text)) || ''}\n${ex ? String((ex as Error)?.message || ex) : ''}`);
+    trace.code = info.code || (out && out.timeout ? 'timeout' : ex ? String((ex as Error)?.message || ex).slice(0, 120) : trace.code || '');
+    if (info.conv) trace.conv = info.conv;
+    trace.ms = Date.now() - t0;
+    return r;
+  };
   for (let attempt = 0; attempt < 2; attempt++) {
     let out: AiCallOut;
     try {
       const port = await open();
+      if (port.id) trace.conv = port.id;
       out = await port.ask(text);
       let kind = aiErrorKind(out);
       let step = consentStep(kind, false);
       if (step === 'ask') {
-        if (!(await confirm())) return { ok: false, reason: 'declined' };
+        if (!(await confirm())) return failed({ ok: false, reason: 'declined' });
         out = await port.allow();
         kind = aiErrorKind(out);
         step = consentStep(kind, true);
       }
-      if (step === 'fail') return { ok: false, reason: kind && kind !== 'consent' ? kind : 'error' };
-    } catch (e) { return { ok: false, reason: fromError(e) }; }
+      if (step === 'fail') return failed({ ok: false, reason: kind && kind !== 'consent' ? kind : 'error' }, out);
+    } catch (e) { return failed({ ok: false, reason: fromError(e) }, undefined, e); }
     const v = parse(out.text || '');
     if (v !== null) return { ok: true, value: v };
+    trace.code = 'unparsed';
   }
-  return { ok: false, reason: 'error' };
+  return failed({ ok: false, reason: 'error' });
 }

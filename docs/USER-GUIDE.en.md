@@ -96,7 +96,7 @@ Pilot participants have an AI assistant (Microsoft Copilot Studio) in the status
    - AI checks the content: whether high risks and issues from the register are mentioned with actions, whether the previous plan items and decision request are reflected, whether the summary contradicts the ratings, whether a phase or date change is explained, whether the PMO comment on a returned report is addressed.
    Under an item about a register record — **«Show record»** and **«Add a mention»**: a line with the actions from the register is added to «Issues and risks for the period».
 4. Changed the report — the button is **«Check with AI»** again. No changes — **«Save»**: the report is saved with the check result, even if you disagree with the items.
-5. **AI did not respond** (no connection, limit reached, no access) — the reason and a **«Save without check»** button appear: submitting a report does not depend on AI, and the PMO sees «AI check not performed: …». Change the report to try again.
+5. **AI did not respond** (no connection, limit reached, no access) — the reason and a **«Save without check»** button appear: submitting a report does not depend on AI, and the PMO sees «AI check not performed: …». Change the report to try again. On the test site the failure is also recorded in «Feedback» automatically (technical data only, without the report text) so that we can find the cause.
 6. **What data goes to AI** — this project only: indicators, recent approved reports, risk and issue register records, the form text; no e-mails or team. Processing — Microsoft Copilot Studio (Europe; the model may process data outside it).
 
 ## Approving status reports (for the PMO)

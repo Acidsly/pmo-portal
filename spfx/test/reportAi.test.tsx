@@ -22,13 +22,13 @@ const pr: any = { id: 5, title: 'Проєкт П', code: 'PRJ-005', status: 'Р�
   planEnd: '2026-12-01', forecastEnd: '', canEdit: true, manager: { email: 'pm@x', name: 'PM' } };
 const data: any = { projects: [pr], reports: [{ id: 1, projectId: 5, date: '2026-09-01', approval: 'Погоджено', applied: true, schedule: 'Зелений', budget: 'Зелений', resources: 'Зелений',
   title: '', done: '', next: '– План', issues: '', decision: false, decisionText: '' }], risks: [], comments: [], team: [] };
-let root: HTMLDivElement; let bodies: any[];
+let root: HTMLDivElement; let bodies: any[]; let created: { l: string; b: any }[] = [];
 // ai — пилот и включённый «Помічник ШІ» (App: useAiSwitch)
 const ctxFor = (me: string, project = pr): any => ({ ...tt, lang: 0, today: '2026-10-14', me, ai: me === 'pm@x', webUrl: '', views: {}, go() { /* */ }, setView() { /* */ }, openProject() { /* */ },
   openForm() { /* */ }, canCreate: false, reload: async () => undefined, toast() { /* */ },
   repo: { loadChanges: async () => [], siteLocalTime: async () => '2026-10-14T02:30:00',
-    fresh: async () => ({ project, etag: '"1"', owner: false, pending: [], lastApprovedDate: '2026-09-01' }), createIn: async (_l: string, _id: number, b: any) => { bodies.push(b); } } });
-beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); mockAgent.replies = []; mockAgent.allows = []; mockAgent.asked = []; mockAgent.hold = null; bodies = []; });
+    fresh: async () => ({ project, etag: '"1"', owner: false, pending: [], lastApprovedDate: '2026-09-01' }), createIn: async (_l: string, _id: number, b: any) => { bodies.push(b); }, create: async (l: string, b: any) => { created.push({ l, b }); return 1; } } });
+beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); mockAgent.replies = []; mockAgent.allows = []; mockAgent.asked = []; mockAgent.hold = null; bodies = []; created = []; localStorage.clear(); });
 afterEach(() => { ReactDOM.unmountComponentAtNode(root); root.remove(); });
 
 const flush = async (): Promise<void> => { for (let i = 0; i < 6; i++) await act(async () => { await new Promise(r => setTimeout(r, 0)); }); };
@@ -108,6 +108,28 @@ describe('помощник ИИ в форме отчёта', () => {
     await submit();
     expect(JSON.parse(mockAgent.asked[0].split('\n')[2]).lang).toBe('en');
     expect($('#f-ai').textContent).toContain('«Schedule» is green, but actions are overdue');
+  });
+
+  test('сбой ИИ — автоматический отзыв «Помилка ШІ (автоматично)» (только техника), в тот же день по той же причине — один; без списка «Відгуки» — нет', async () => {
+    const err = { text: 'An error has occurred.\nError code: AIModelActionBadRequest\nConversation Id: conv-42' };
+    await open('pm@x', { ...data, feedback: true }); fill('Секретне резюме');
+    mockAgent.replies.push(err);
+    await submit();
+    expect(created.length).toBe(1);
+    expect(created[0].l).toBe('Feedback');
+    expect(created[0].b.Title).toBe('Помилка ШІ (автоматично): «Перевірка» — помилка сервісу ШІ');
+    expect(created[0].b.fbText).toContain('Код: AIModelActionBadRequest'); expect(created[0].b.fbText).toContain('Розмова: conv-42');
+    expect(created[0].b.fbText).toContain('Проєкт: PRJ-005'); expect(created[0].b.fbText).not.toContain('Секретне');
+    // форма изменена — новая попытка, та же ошибка — отзыв не повторяется
+    act(() => { Simulate.change($('#f-done') as HTMLTextAreaElement, { target: { value: '– Ще' } } as any); });
+    mockAgent.replies.push(err);
+    await submit();
+    expect(created.length).toBe(1);
+    ReactDOM.unmountComponentAtNode(root); localStorage.clear();
+    await open('pm@x', { ...data, feedback: false }); fill();
+    mockAgent.replies.push(err);
+    await submit();
+    expect(created.length).toBe(1);
   });
 
   test('после проверки PM изменил отчёт — снова «Перевірити з ШІ»', async () => {

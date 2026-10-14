@@ -56,6 +56,8 @@ const rawOf = (acts: unknown[]): string => JSON.stringify(acts.map(a => {
 })).slice(0, 4000);
 export class AiConversation {
   private client: CopilotStudioClient; private id = '';
+  /** Номер разговора Copilot Studio (след сбоя, стенограмма в Dataverse). */
+  public get conversationId(): string { return this.id; }
   public constructor(token: string) { this.client = new CopilotStudioClient(settings(), token); }
   public async start(): Promise<AiTurn> {
     const t0 = Date.now(); const r = await this.client.startConversationWithResponse(true);
@@ -87,6 +89,7 @@ export class AiConversation {
 export class AiSession implements AiPort {
   private allowValue: Record<string, unknown> | undefined;
   private constructor(private conv: AiConversation, private timeoutMs: number) {}
+  public get id(): string { return this.conv.conversationId; }
   public static async open(token: string, timeoutMs: number = 60000): Promise<AiSession> {
     const c = new AiConversation(token); await c.start(); return new AiSession(c, timeoutMs);
   }
