@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.4.0 · 14.10.2026
+
+**New**
+- AI assistant for pilot participants: the «AI assistant» switch in the avatar menu (consent once, when turning it on); in the status report form — «Fill with AI» (draft, «Don't forget», suggested ratings) and «Check with AI» (contradictions between the report and project data); the «Contradictions (AI analysis)» field is visible in the report and during approval. Details — «Help», section «AI assistant (pilot)».
+
 ## 1.7.3.13 · 14.10.2026
 
 **Changed**

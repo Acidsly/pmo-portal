@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.4.0",
+   "date": "14.10.2026",
+   "html": "<p><b>Нове</b></p>\n<ul>\n<li>Помічник ШІ для учасників пілоту: перемикач «Помічник ШІ» в меню аватара (згода — один раз, при ввімкненні); у формі статус-звіту — «Заповнити з ШІ» (чернетка, «Що не забути», пропоновані оцінки) і «Перевірити з ШІ» (суперечності між звітом і даними проєкту); поле «Суперечності (аналіз ШІ)» видно у звіті й під час погодження. Докладно — «Довідка», розділ «Помічник ШІ (пілот)».</li>\n</ul>"
+  },
+  {
    "ver": "1.7.3.13",
    "date": "14.10.2026",
    "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Позначки погодження («На погодженні», «Погоджено», «Повернуто») — знову одним рядком.</li>\n</ul>"
@@ -155,6 +160,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.4.0",
+   "date": "14.10.2026",
+   "html": "<p><b>New</b></p>\n<ul>\n<li>AI assistant for pilot participants: the «AI assistant» switch in the avatar menu (consent once, when turning it on); in the status report form — «Fill with AI» (draft, «Don't forget», suggested ratings) and «Check with AI» (contradictions between the report and project data); the «Contradictions (AI analysis)» field is visible in the report and during approval. Details — «Help», section «AI assistant (pilot)».</li>\n</ul>"
+  },
+  {
    "ver": "1.7.3.13",
    "date": "14.10.2026",
    "html": "<p><b>Changed</b></p>\n<ul>\n<li>Approval badges («Awaiting approval», «Approved», «Returned») are on one line again; «Returned for rework» is now «Returned».</li>\n</ul>"
@@ -306,6 +316,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.4.0",
+   "date": "14.10.2026",
+   "html": "<p><b>Новое</b></p>\n<ul>\n<li>Помощник ИИ для участников пилота: переключатель «Помощник ИИ» в меню аватара (согласие — один раз, при включении); в форме статус-отчёта — «Заполнить с ИИ» (черновик, «Что не забыть», предлагаемые оценки) и «Проверить с ИИ» (противоречия между отчётом и данными проекта); поле «Противоречия (анализ ИИ)» видно в отчёте и при согласовании. Подробно — «Справка», раздел «Помощник ИИ (пилот)».</li>\n</ul>"
+  },
   {
    "ver": "1.7.3.13",
    "date": "14.10.2026",
