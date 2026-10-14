@@ -14,6 +14,26 @@ export function aiFailInfo(text: string): { code: string; conv: string } {
   return { code, conv };
 }
 
+/** Код ошибки для публичного отзыва — только из белого списка: код Copilot Studio («Error code»), AADSTS…, AccessToBotDenied,
+ *  timeout, unparsed, popup, network, http <статус>; остальное — «exception». Текст исключений MSAL / SDK не попадает:
+ *  в нём бывают учётная запись, тенант, адреса (ревью 14.10.2026). Префикс места сбоя («token: », «load: ») сохраняется. */
+export function aiSafeCode(raw: string): string {
+  const s = String(raw || '').trim();
+  if (!s) return '';
+  const m = /^(token|load):\s*/i.exec(s), pre = m ? m[1].toLowerCase() + ': ' : '', t = m ? s.slice(m[0].length) : s;
+  const one = (): string => {
+    const aad = /\bAADSTS\d+\b/.exec(t); if (aad) return aad[0];
+    if (/AccessToBotDenied/.test(t)) return 'AccessToBotDenied';
+    if (/^(timeout|unparsed)$/i.test(t)) return t.toLowerCase();
+    if (/popup|interaction/i.test(t)) return 'popup';
+    if (/fetch|network|ChunkLoad|Loading chunk/i.test(t)) return 'network';
+    const st = /\bstatus\s*(\d{3})\b/i.exec(t); if (st) return 'http ' + st[1];
+    if (/^[A-Za-z][A-Za-z0-9_.-]{2,80}$/.test(t)) return t;   // код Copilot Studio («Error code: …»)
+    return 'exception';
+  };
+  return pre + one();
+}
+
 const KIND: Record<AiKind, string> = { draft: 'Чернетка', check: 'Перевірка' };
 const HEAD = 'Помилка ШІ (автоматично)';
 /** Отзыв о сбое: заголовок «Помилка ШІ (автоматично): «Перевірка» — <причина>», строки «Код», «Розмова» (если есть),
@@ -23,7 +43,8 @@ export function aiFailFeedback(x: { kind: AiKind; reason: AiUnavailable; code: s
   const why = unavailableNote(x.reason, 'uk').replace(/^[^:]*:\s*/, '');
   const title = `${HEAD}: «${KIND[x.kind] || x.kind}» — ${why}`;
   const lines = [title + '.'];
-  if (x.code) lines.push('Код: ' + x.code.slice(0, 120));
+  const code = aiSafeCode(x.code);
+  if (code) lines.push('Код: ' + code);
   if (x.conv) lines.push('Розмова: ' + x.conv);
   lines.push(`Тривалість: ${(Math.max(0, x.ms) / 1000).toFixed(1).replace('.', ',')} с`, 'Проєкт: ' + x.project, 'Версія: ' + x.version,
     'Час (UTC): ' + String(x.at).slice(0, 16).replace('T', ' '));

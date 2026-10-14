@@ -29,10 +29,13 @@ export interface AiCallOut { text?: string; error?: string; timeout?: boolean; c
 export function aiErrorKind(x: AiCallOut): AiUnavailable | 'consent' | null {
   if (x.consent) return 'consent';
   if (x.timeout) return 'timeout';
-  const s = `${x.error || ''}\n${x.text || ''}`;
+  // ответ prompt — JSON-объект (возможно в обёртке ```): его текст не классифицируется — «1 403 000», «capacity», «credit»
+  // в пунктах отчёта не ошибка (ревью 14.10.2026); разбирают parseDraft / parseCheck
+  const reply = /^\s*(?:```[a-zA-Z]*\s*)?\{/.test(x.text || '');
+  const s = `${x.error || ''}\n${reply ? '' : x.text || ''}`;
   if (/AccessToBotDenied|don't have access to talk|\b403\b/i.test(s)) return 'denied';
   if (/capacity|quota|rate ?limit|credit/i.test(s)) return 'credits';
-  if (x.error || /Error code:|error has occurred/i.test(x.text || '')) return 'error';
+  if (x.error || (!reply && /Error code:|error has occurred/i.test(x.text || ''))) return 'error';
   return null;
 }
 

@@ -23,6 +23,7 @@ export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: 
   const { t } = React.useContext(AppCtx);
   const [me, setMe] = React.useState<HTMLElement | null>(null);
   const ai = p.ai;
+  const closeMe = React.useCallback(() => setMe(null), []);
   const dark = p.theme === 'dark' || (p.theme === '' && !!window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
   return <><header className="top"><div className="top-in">
     <div className="brand"><div className="logo" aria-hidden="true">PPM</div>
@@ -48,7 +49,7 @@ export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: 
     </div>
   </div></header>
     {/* меню пользователя — вне шапки: у шапки backdrop-filter, fixed внутри неё считался бы от шапки (меню уезжало вниз) */}
-    {ai && me ? <Pop anchor={me} align="right" onClose={() => setMe(null)}><div className="pop-user-menu" id="me-pop">
+    {ai && me ? <Pop anchor={me} align="right" onClose={closeMe}><div className="pop-user-menu" id="me-pop">
         <div className="pop-me"><Avatar name={p.userName} /><span className="pn"><b>{p.userName}</b><small>{p.userEmail}</small></span></div>
         <div className="pop-list pop-sws">
           <button type="button" className="pop-row pop-sw" role="switch" id="ai-switch" aria-checked={ai.on} disabled={ai.busy} onClick={ai.toggle}>

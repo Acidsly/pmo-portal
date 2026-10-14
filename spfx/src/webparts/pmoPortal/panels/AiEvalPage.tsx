@@ -27,7 +27,7 @@ export const AiEvalPage: React.FC<{ onCancel(): void }> = ({ onCancel }) => {
     try {
       const m: Agent = await import(/* webpackChunkName: 'pmo-ai' */ '../ai/aiAgent');
       const tok = await m.aiToken(c.me, () => undefined);
-      const conv = new m.AiConversation(tok); await conv.start();
+      const conv = new m.AiConversation(tok); await withTimeout(conv.start());
       const data = (await import(/* webpackChunkName: 'pmo-ai-eval' */ '../ai/evalCases.json')) as unknown as Cases;
       const set = (data as unknown as { default?: Cases }).default || data;
       const cases = evalSubset(set.cases, part); setTotal(cases.length);

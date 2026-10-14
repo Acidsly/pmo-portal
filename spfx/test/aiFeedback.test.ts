@@ -1,4 +1,4 @@
-import { aiFailInfo, aiFailFeedback, aiFailAllowed } from '../src/webparts/pmoPortal/logic/aiFeedback';
+import { aiFailInfo, aiFailFeedback, aiFailAllowed, aiSafeCode } from '../src/webparts/pmoPortal/logic/aiFeedback';
 import { aiRun, AiPort, AiTrace } from '../src/webparts/pmoPortal/ai/aiRun';
 
 // Сбой помощника ИИ — автоматический отзыв (тестовый сайт, список «Відгуки»): только техника, без данных отчёта —
@@ -9,6 +9,24 @@ describe('сведения об ошибке Copilot Studio', () => {
       .toEqual({ code: 'AIModelActionBadRequest', conv: '613472b0-bc34-4cbb-b32e-c2adf3ac2797' });
     expect(aiFailInfo('AccessToBotDenied: you don\'t have access')).toEqual({ code: 'AccessToBotDenied', conv: '' });
     expect(aiFailInfo('немає відповіді')).toEqual({ code: '', conv: '' });
+  });
+});
+
+describe('код в отзыве — только из белого списка (текст исключений MSAL / SDK может содержать учётную запись и тенант)', () => {
+  test.each([
+    ['AIModelActionBadRequest', 'AIModelActionBadRequest'],
+    ['token: AADSTS50011: The redirect URI https://smarthrua.sharepoint.com/sites/pmo-test for user j.pochobut@eclectic.group', 'token: AADSTS50011'],
+    ['token: popup_window_error: Error opening popup window', 'token: popup'],
+    ['token: interaction_required: user ivan@x.com', 'token: popup'],
+    ['Failed to fetch', 'network'],
+    ['[-140032] - Copilot Studio request failed with status 403 tenant faa553e4', 'http 403'],
+    ['load: ChunkLoadError: Loading chunk pmo-ai failed (https://x/y.js)', 'load: network'],
+    ['timeout', 'timeout'], ['unparsed', 'unparsed'], ['AccessToBotDenied', 'AccessToBotDenied'],
+    ['Something odd for user a@b.c', 'exception'], ['', '']
+  ])('%s → %s', (raw, out) => expect(aiSafeCode(raw)).toBe(out));
+  test('в тексте отзыва — безопасный код', () => {
+    const f = aiFailFeedback({ kind: 'check', reason: 'error', code: 'token: AADSTS50011: user j.pochobut@eclectic.group', conv: '', ms: 10, project: 'PRJ-001', version: '1', at: '2026-10-14T11:33:53Z' });
+    expect(f.fbText).toContain('Код: token: AADSTS50011\n'); expect(f.fbText).not.toContain('@');
   });
 });
 
@@ -49,6 +67,11 @@ describe('след запроса (aiRun)', () => {
     const tr: AiTrace = {};
     await aiRun(port({ text: 'текст' }), 'x', () => null, async () => true, tr);
     expect([tr.conv, tr.code]).toEqual(['conv-7', 'unparsed']);
+  });
+  test('подключение подвисло — timeout (переключатель и форма не остаются «занятыми»)', async () => {
+    const tr: AiTrace = {};
+    const r = await aiRun(() => new Promise<AiPort>(() => undefined), 'x', () => null, async () => true, tr, 20);
+    expect([r, tr.code]).toEqual([{ ok: false, reason: 'timeout' }, 'timeout']);
   });
   test('исключение при подключении — текст исключения в коде (без данных), разговора нет', async () => {
     const tr: AiTrace = {};

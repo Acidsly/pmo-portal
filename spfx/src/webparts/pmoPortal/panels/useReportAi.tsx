@@ -66,6 +66,8 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
   // модуль агента — заранее: окно входа Microsoft открывается только сразу после нажатия (без долгих await до него)
   React.useEffect(() => { if (pilot) loadAgent().then(m => { agent.current = m; }).catch(() => undefined); }, [pilot]);
 
+  // форма закрыта — запрос в работе отменяется: ни setState, ни отзыва о сбое после закрытия
+  React.useEffect(() => () => { req.current++; }, []);
   const reset = (): void => {
     req.current++; setBusy(null); setChecked(null); setUnav(null); setPrevCheck(''); setAssist(null); setAsks([]); setIns(null);
     setFilled(false); setMsg(null);

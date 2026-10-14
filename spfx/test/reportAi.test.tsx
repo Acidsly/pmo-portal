@@ -132,6 +132,16 @@ describe('помощник ИИ в форме отчёта', () => {
     expect(created.length).toBe(1);
   });
 
+  test('форма закрыта во время запроса — ответ и сбой не обрабатываются, отзыва нет', async () => {
+    await open('pm@x', { ...data, feedback: true }); fill();
+    let release: () => void = () => undefined; mockAgent.hold = new Promise<void>(r => { release = r; });
+    mockAgent.replies.push({ text: 'An error has occurred.\nError code: AIModelActionBadRequest' });
+    await submit();
+    act(() => { ReactDOM.unmountComponentAtNode(root); });
+    await act(async () => { release(); }); await flush();
+    expect(created.length).toBe(0);
+  });
+
   test('после проверки PM изменил отчёт — снова «Перевірити з ШІ»', async () => {
     await open(); fill();
     mockAgent.replies.push({ text: '{"items":[]}' }); await submit();

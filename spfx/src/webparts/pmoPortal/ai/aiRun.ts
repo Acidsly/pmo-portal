@@ -9,6 +9,7 @@ export interface AiTrace { conv?: string; code?: string; ms?: number }
 export type AiRunOut<T> = { ok: true; value: T } | { ok: false; reason: AiUnavailable };
 
 const fromError = (e: unknown): AiUnavailable => {
+  if (String((e as Error)?.message || e) === 'timeout') return 'timeout';
   const k = aiErrorKind({ error: String((e as Error)?.message || e || 'error') });
   return k && k !== 'consent' ? k : 'error';
 };
@@ -17,8 +18,15 @@ const fromError = (e: unknown): AiUnavailable => {
  *  (confirm), «Дозволити» — ответ карточки, тема агента продолжает исходный запрос; повторная карточка, «Скасувати»,
  *  ошибка, таймаут — ИИ недоступен с причиной. Ответ, который не разобрался (parse → null), — один повтор в новом
  *  разговоре, затем error. */
+/** Начало разговора не дольше openMs (иначе — timeout): подвисшее подключение не держит форму и переключатель «занятыми». */
+function withOpenTimeout(p: Promise<AiPort>, ms: number): Promise<AiPort> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<AiPort>((_resolve, reject) => { timer = setTimeout(() => reject(new Error('timeout')), ms); });
+  const done = (): void => { if (timer) clearTimeout(timer); };
+  return Promise.race([p, late]).then(v => { done(); return v; }, e => { done(); throw e; });
+}
 export async function aiRun<T>(open: () => Promise<AiPort>, text: string, parse: (raw: string) => T | null,
-  confirm: () => Promise<boolean>, trace: AiTrace = {}): Promise<AiRunOut<T>> {
+  confirm: () => Promise<boolean>, trace: AiTrace = {}, openMs: number = 60000): Promise<AiRunOut<T>> {
   const t0 = Date.now();
   // след сбоя: код из ответа агента или исключения, таймаут, нераспознанный ответ
   const failed = <R extends AiRunOut<T>>(r: R, out?: AiCallOut, ex?: unknown): R => {
@@ -31,7 +39,7 @@ export async function aiRun<T>(open: () => Promise<AiPort>, text: string, parse:
   for (let attempt = 0; attempt < 2; attempt++) {
     let out: AiCallOut;
     try {
-      const port = await open();
+      const port = await withOpenTimeout(open(), openMs);
       if (port.id) trace.conv = port.id;
       out = await port.ask(text);
       let kind = aiErrorKind(out);
