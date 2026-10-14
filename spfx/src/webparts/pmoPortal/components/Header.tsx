@@ -24,7 +24,7 @@ export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: 
   const [me, setMe] = React.useState<HTMLElement | null>(null);
   const ai = p.ai;
   const dark = p.theme === 'dark' || (p.theme === '' && !!window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  return <header className="top"><div className="top-in">
+  return <><header className="top"><div className="top-in">
     <div className="brand"><div className="logo" aria-hidden="true">PPM</div>
       <div><div className="brand-name">{t('siteTitle')}</div><div className="brand-sub">SharePoint · Microsoft 365</div></div></div>
     <nav className="nav" aria-label="Navigation">{NAV.filter(([pg]) => pg !== 'feedback' || !!p.onFeedback).map(([pg, k]) =>
@@ -45,7 +45,10 @@ export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: 
       <button className="me" title={`${t('signedIn')}: ${p.userName} · ${p.userEmail}`} aria-label={`${t('signedIn')}: ${p.userName}`}
         aria-haspopup={ai ? 'dialog' : undefined} aria-expanded={ai ? !!me : undefined}
         onClick={ai ? e => { const el = e.currentTarget; setMe(me ? null : el); } : undefined}><Avatar name={p.userName} /></button>
-      {ai && me ? <Pop anchor={me} align="right" onClose={() => setMe(null)}><div className="pop-user-menu" id="me-pop">
+    </div>
+  </div></header>
+    {/* меню пользователя — вне шапки: у шапки backdrop-filter, fixed внутри неё считался бы от шапки (меню уезжало вниз) */}
+    {ai && me ? <Pop anchor={me} align="right" onClose={() => setMe(null)}><div className="pop-user-menu" id="me-pop">
         <div className="pop-me"><Avatar name={p.userName} /><span className="pn"><b>{p.userName}</b><small>{p.userEmail}</small></span></div>
         <div className="pop-list pop-sws">
           <button type="button" className="pop-row pop-sw" role="switch" id="ai-switch" aria-checked={ai.on} disabled={ai.busy} onClick={ai.toggle}>
@@ -56,6 +59,5 @@ export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: 
         {ai.err ? <p className="ai-msg err" role="status">{unavailableNote(ai.err, aiLangOf(p.lang))}</p> : null}
         <p className="hint pop-hint">{t(ai.on ? 'aiSwitchOn' : 'aiSwitchOff')}</p>
       </div></Pop> : null}
-    </div>
-  </div></header>;
+  </>;
 };

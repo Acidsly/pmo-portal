@@ -1,6 +1,6 @@
 # What's new
 
-## 1.7.3.8 · 14.10.2026
+## 1.7.3.9 · 14.10.2026
 
 **Changed**
 - Technical update with no changes to how the portal works.

@@ -40,6 +40,8 @@ describe('переключатель «Помічник ШІ»', () => {
   test('первое включение — согласие; «Скасувати» — выключен, агент не вызывается', () => {
     mount(); click($('.me'));
     expect([sw().getAttribute('role'), sw().getAttribute('aria-checked')]).toEqual(['switch', 'false']);
+    // меню — вне шапки: у шапки backdrop-filter, position:fixed внутри неё считался бы от шапки (меню уезжало вниз)
+    expect($('header').contains($('#me-pop'))).toBe(false);
     expect($('#me-pop').textContent).toContain(T.aiSwitchOff[0]);
     click(sw());
     expect($('#me-pop').textContent).toContain(T.aiConsent[0]);
