@@ -22,7 +22,7 @@ import { FeedbackForm } from '../panels/FeedbackForm';
 import { Help } from '../panels/Help';
 import { Overview } from '../panels/Overview';
 import { Releases } from '../panels/Releases';
-import { AiSpike } from '../panels/AiSpike';
+import { AiEvalPage } from '../panels/AiEvalPage';
 import { isAiPilot } from '../ai/aiConfig';
 import { useAiSwitch } from '../ai/useAiSwitch';
 import { aiEnable } from '../ai/aiEnable';
@@ -36,9 +36,7 @@ import { Toast, useToast } from './Toast';
 
 export interface AppProps { repo: SpRepo; culture: string; userName: string; userEmail: string; webUrl: string;
   /** Администратор сайта (право «Керування веб-сайтом»): ставит статусы и ответы на отзывы. */
-  admin?: boolean;
-  /** Токен Entra ID через AadTokenProvider SharePoint (прототип помощника отчёта, «шлях A»). */
-  aadToken?: (resource: string) => Promise<string>; }
+  admin?: boolean; }
 
 /** Корень приложения: язык, тема, маршрут, данные; весь CSS прототипа действует внутри .pmo-app. */
 export const App: React.FC<AppProps> = p => {
@@ -97,7 +95,7 @@ export const App: React.FC<AppProps> = p => {
     order={feedbackOrder().length ? feedbackOrder() : data.feedbackRows.map(r => r.id)} onGo={n => ctx.openForm('fb:' + n, route.projectId)} onCancel={back} />; }
   else if (route.form === 'help') panelEl = <Help onCancel={back} onFeedback={openFeedback} onOverview={() => ctx.openForm('overview', route.projectId)}
     onReleases={() => ctx.openForm('releases', route.projectId)} />;
-  else if (route.form === 'ai-spike' && isAiPilot(p.userEmail)) panelEl = <AiSpike onCancel={back} aadToken={p.aadToken} />;
+  else if (route.form === 'ai-spike' && isAiPilot(p.userEmail)) panelEl = <AiEvalPage onCancel={back} />;
   else if (route.form === 'releases') panelEl = <Releases onBack={() => ctx.openForm('help', route.projectId)} onCancel={back}
     onFeedback={data && data.feedback ? n => ctx.openForm('fb:' + n, route.projectId) : undefined} />;
   else if (route.form === 'overview') panelEl = <Overview onBack={() => ctx.openForm('help', route.projectId)} onCancel={back} />;

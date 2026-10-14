@@ -62,6 +62,8 @@ export function toPlain(s: string, max: number = 4000): string {
 const oneLine = (s: string, max: number): string => toPlain(s, max).replace(/\s*\n\s*/g, ' ');
 /** Пунктов в списке — не больше. */
 const MAX_ITEMS = 20;
+/** Пункт «Що не забути» без содержания: «Коментар PMO до повернутого звіту: немає», «…:», none, нет, — (прогоны 11–12). */
+const EMPTY_ITEM = /:\s*(?:—|–|-|немає|нема|нет|none|n\/a)?\s*\.?\s*$/i;
 
 /** Разбор JSON ответа агента: допускается обёртка ```json … ```; не объект или обрезанный JSON — ошибка. */
 function parseObject(raw: string): { o?: Record<string, unknown>; error?: string } {
@@ -104,7 +106,7 @@ export function parseDraft(raw: string): AiDraft | AiFail {
     ratings[k] = v;
   }
   return { ok: true, done: toPlain(o.done as string), next: toPlain(o.next as string), issues: toPlain(o.issues as string),
-    summary: toPlain(o.summary as string, 255), remember: (o.remember as string[]).map(x => oneLine(x, 500)).filter(x => !!x).slice(0, MAX_ITEMS), ratings };
+    summary: toPlain(o.summary as string, 255), remember: (o.remember as string[]).map(x => oneLine(x, 500)).filter(x => !!x && !EMPTY_ITEM.test(x)).slice(0, MAX_ITEMS), ratings };
 }
 
 /** Строгая проверка ответа «Перевірити з ШІ»: ровно { items: [строки] }; пустой список — противоречий нет.

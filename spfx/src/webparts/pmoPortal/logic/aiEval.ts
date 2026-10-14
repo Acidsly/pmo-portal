@@ -111,14 +111,19 @@ export function evalInput(base: EvalBase, c: EvalCase): AiContextIn {
 
 export interface EvalResult { id: string; kind: AiKind; negative: boolean; pass: boolean; fails: string[]; ms: number; raw: string }
 /** Итог набора: черновик и проверка — пройдено из всего (без негативных), негативные — отдельно; порог плана — 14 из 15 на
- *  каждый prompt и все негативные. */
+ *  каждый prompt и все негативные (у части набора — у prompt, который прогоняли). */
 export function evalSummary(rs: EvalResult[]): { draft: [number, number]; check: [number, number]; negative: [number, number]; ok: boolean } {
   const cnt = (xs: EvalResult[]): [number, number] => [xs.filter(x => x.pass).length, xs.length];
   const draft = cnt(rs.filter(x => x.kind === 'draft' && !x.negative)), check = cnt(rs.filter(x => x.kind === 'check' && !x.negative));
   const negative = cnt(rs.filter(x => x.negative));
-  const okOf = (x: [number, number]): boolean => x[1] > 0 && x[0] >= Math.ceil(x[1] * 14 / 15);
-  return { draft, check, negative, ok: okOf(draft) && okOf(check) && negative[0] === negative[1] };
+  // часть набора (evalSubset): порог — по prompt, который прогоняли; пустой прогон — не пройдено
+  const okOf = (x: [number, number]): boolean => x[0] >= Math.ceil(x[1] * 14 / 15);
+  return { draft, check, negative, ok: draft[1] + check[1] > 0 && okOf(draft) && okOf(check) && negative[0] === negative[1] };
 }
+
+/** Часть набора для «Набору перевірок»: после правки одного prompt — только его случаи (с его негативными), дешевле по кредитам. */
+export type EvalPart = 'all' | 'draft' | 'check';
+export const evalSubset = (cases: EvalCase[], part: EvalPart): EvalCase[] => (part === 'all' ? cases.slice() : cases.filter(c => c.kind === part));
 
 /** Сообщение агенту для случая — как в портале: «Чернетка» — полный контекст, «Перевірка» — контекст смысловых правил. */
 export function evalMessage(base: EvalBase, c: EvalCase): string {

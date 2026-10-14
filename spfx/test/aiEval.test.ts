@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import evalCases from '../src/webparts/pmoPortal/ai/evalCases.json';
-import { aiMessage, AI_HEAD, scoreReply, evalInput, evalSummary, EvalCase, EvalBase, EvalResult } from '../src/webparts/pmoPortal/logic/aiEval';
+import { aiMessage, AI_HEAD, scoreReply, evalInput, evalSummary, evalSubset, EvalCase, EvalBase, EvalResult } from '../src/webparts/pmoPortal/logic/aiEval';
 import { buildReportContext } from '../src/webparts/pmoPortal/logic/aiContext';
 import { parseDraft, parseCheck } from '../src/webparts/pmoPortal/logic/aiReply';
 
@@ -130,5 +130,21 @@ describe('итог набора', () => {
     expect(s.ok).toBe(false);
     expect(s.negative).toEqual([0, 1]);
     expect(s.draft).toEqual([15, 15]);
+  });
+});
+
+describe('часть набора (после правки одного prompt — дешевле)', () => {
+  test('«Лише чернетка» / «Лише перевірка» — случаи этого prompt с его негативными; «Усі» — весь набор', () => {
+    expect(evalSubset(cases, 'all').length).toBe(cases.length);
+    expect(evalSubset(cases, 'draft').every(c => c.kind === 'draft')).toBe(true);
+    expect(evalSubset(cases, 'check').every(c => c.kind === 'check')).toBe(true);
+    expect(evalSubset(cases, 'draft').length + evalSubset(cases, 'check').length).toBe(cases.length);
+    expect(evalSubset(cases, 'check').some(c => c.negative)).toBe(true);
+  });
+  test('итог части: порог — по prompt, который прогоняли; пустой прогон — не пройдено', () => {
+    const r = (id: string, kind: 'draft' | 'check', pass: boolean, negative = false): EvalResult => ({ id, kind, pass, negative, fails: [], ms: 1, raw: '' });
+    const checks = Array.from({ length: 20 }, (_, i) => r('c' + i, 'check', i < 19));
+    expect(evalSummary([...checks, r('n', 'check', true, true)]).ok).toBe(true);
+    expect(evalSummary([]).ok).toBe(false);
   });
 });

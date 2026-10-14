@@ -300,6 +300,15 @@ pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action app   # сборка
 
 Ограничения: над приложением остаётся полоса Microsoft 365 (в Teams её нет); размещённый workbench SharePoint снимается 2026-12-01 — отладка на странице тестового сайта с `?debug=true&noredir=true&debugManifestsFile=https://localhost:4321/temp/build/manifests.js` при запущенном `scripts/spfx.sh npm run start`.
 
+## Помощник ИИ (Copilot Studio, пилот)
+
+Агент, prompt и проверка их качества описаны в [copilot/README.md](../copilot/README.md); план — `docs/superpowers/plans/2026-10-12-copilot-report-assistant.md`.
+
+- **Тенант (делает человек):** окружение Power Platform «PPM Copilot» (Европа); лицензия Copilot Studio User License у автора агента; регистрация SPA «PPM Copilot Client» — адрес возврата `https://<тенант>.sharepoint.com/sites/<сайт>/SitePages/Portal.aspx`, делегированное право Power Platform API `CopilotStudio.Copilots.Invoke`, согласие администратора; группа «PPM Copilot» — доступ к агенту.
+- **Агент:** классическая оркестрация; тема Fallback — `copilot/topic-fallback.yaml`; prompt «Чернетка звіту» и «Перевірка звіту» — `copilot/prompts/draft.md`, `check.md` (GPT-5 chat, температура 0). После правки prompt — сохранить, опубликовать агента и запустить «Набір перевірок» (`#home///ai-spike`, только пилот): порог — 14 из 15 на prompt и все негативные.
+- **Приложение:** окружение, схемное имя агента, тенант, регистрация и пилотная группа — `spfx/src/webparts/pmoPortal/ai/aiConfig.ts` (не секреты); поля `srAiCheck`, `srAiCheckedAt`, `srAiFilled` создаёт `Deploy-PMO.ps1`. Пилот включает помощника сам — переключатель «Помічник ШІ» в меню аватара.
+- **Расход:** кредиты Copilot Studio — Power Platform admin center → «Лицензирование» → Copilot Studio → выгрузка по окружению (CSV): вызовы prompt — `MiddleEarthService`, сообщения агента — `RuntimeService`.
+
 ## Обновление с предыдущей версии скрипта
 
 `Deploy-PMO.ps1` сам выполняет миграцию:

@@ -27,8 +27,7 @@ export default class PmoPortalWebPart extends BaseClientSideWebPart<{}> {
     }
     const repo = new SpRepo(this.context.spHttpClient, pc.web.absoluteUrl, pc.web.serverRelativeUrl, pc.user.email);
     ReactDom.render(React.createElement(App, { repo, culture: pc.cultureInfo.currentUICultureName,
-      userName: pc.user.displayName, userEmail: pc.user.email, webUrl: pc.web.absoluteUrl, admin,
-      aadToken: res => this.context.aadTokenProviderFactory.getTokenProvider().then(t => t.getToken(res)) }), this.domElement);
+      userName: pc.user.displayName, userEmail: pc.user.email, webUrl: pc.web.absoluteUrl, admin }), this.domElement);
   }
 
   protected onDispose(): void {

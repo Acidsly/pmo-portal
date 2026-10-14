@@ -85,6 +85,20 @@ You can share a link to the card: the browser address points exactly to it.
 
 The **"Completed — move to archive"** and **"Cancelled — move to archive"** phase options send the project to the archive once the report is approved — after that the project is view-only. They require the **"Actual completion date"** — when the project was actually completed or cancelled: not before the start date and not after the report date.
 
+## AI assistant (pilot)
+
+Pilot participants have an AI assistant (Microsoft Copilot Studio) in the status report form. It suggests but does not decide: the report and ratings are the PM's responsibility and are approved by the PMO.
+
+1. **Turning it on.** Click your avatar at the top right → the **«AI assistant»** switch. The first time, the portal shows which data goes to AI — click **«Allow»** (we ask once). Turned off — the report form works without AI again; you can turn it back on any time without allowing again. The setting is kept in this browser.
+2. **«Fill with AI»** (at the top of the form) drafts the report from project data: «One-line summary», «Done this period», «Plan for next period», «Issues and risks for the period». Empty fields are filled at once, filled ones only after you click «Replace». **«Undo AI insert»** restores the texts until you change them. The **«AI hints»** panel shows what not to forget (items of the previous plan, overdue actions, high risks, a decision request) and suggested ratings: a rating changes only if you click **«Accept»**. Review and correct the texts — it is a draft.
+3. **«Check with AI»** (instead of «Save»). First the usual form checks; then the **«Contradictions (AI analysis)»** field (read-only) lists items, each naming the field to fix:
+   - the portal compares dates and amounts itself: green «Schedule» but the forecast is later than the plan or actions are overdue; green «Budget» but the cost exceeds the project budget; «Management decision needed» without a description; a reduced «% complete»;
+   - AI checks the content: whether high risks and issues from the register are mentioned with actions, whether the previous plan items and decision request are reflected, whether the summary contradicts the ratings, whether a phase or date change is explained, whether the PMO comment on a returned report is addressed.
+   Under an item about a register record — **«Show record»** and **«Add a mention»**: a line with the actions from the register is added to «Issues and risks for the period».
+4. Changed the report — the button is **«Check with AI»** again. No changes — **«Save»**: the report is saved with the check result, even if you disagree with the items.
+5. **AI did not respond** (no connection, limit reached, no access) — the reason and a **«Save without check»** button appear: submitting a report does not depend on AI, and the PMO sees «AI check not performed: …». Change the report to try again.
+6. **What data goes to AI** — this project only: indicators, recent approved reports, risk and issue register records, the form text; no e-mails or team. Processing — Microsoft Copilot Studio (Europe; the model may process data outside it).
+
 ## Approving status reports (for the PMO)
 
 1. Reports waiting for you: the "Awaiting approval" figure on the home page and "Status reports" → "Show: Awaiting approval".
@@ -94,6 +108,8 @@ The **"Completed — move to archive"** and **"Cancelled — move to archive"** 
    - change the schedule, budget or resources rating and click **Approve with changed ratings** — your rating reaches the card; a comment is required;
    - **Return for rework** — the card does not change, the PM sees your comment (required).
 4. The PMO changes only the ratings; the report itself (texts, dates, phase) stays unchanged. The decision is recorded in the project's change history ("Report approval": "old → new", your comment).
+
+If the AI assistant checked the report, it has a **«Contradictions (AI analysis)»** block with the check date or «Saved without AI check» (with the reason). It is a hint for the conversation with the PM, not a decision: it does not affect the approval.
 
 A decided report cannot be approved again: if changes are needed, return it and the PM will submit a new one. A report approved by mistake can only be corrected by the PM's next report.
 
