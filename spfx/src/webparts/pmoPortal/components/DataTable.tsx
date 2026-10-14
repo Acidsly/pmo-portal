@@ -73,7 +73,7 @@ export function DataTable<R extends { id: number }>(p: { tkey: string; defs: Tab
     // решение — logic/ui.ts nextLock; замер — только когда таблица видна (скрытая вкладка / панель — ширины ещё нет)
     const el = tableRef.current;
     const need = window.innerWidth >= 900 && !(lockW && lockW.key === colsKey) && !!el && !!el.clientWidth;
-    const w = need ? Array.prototype.map.call(el!.querySelectorAll('thead th'), (th: Element) => Math.round(th.getBoundingClientRect().width)) as number[] : null;
+    const w = need ? Array.prototype.map.call(el!.querySelectorAll('thead th'), (th: Element) => th.getBoundingClientRect().width) as number[] : null;
     const nl = nextLock(window.innerWidth, lockW, colsKey, shownCols.length, w);
     if (nl !== lockW) setLockW(nl);
   });

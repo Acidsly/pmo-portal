@@ -1,9 +1,9 @@
 # What's new
 
-## 1.7.3.5 · 14.10.2026
+## 1.7.3.6 · 14.10.2026
 
 **Changed**
-- Technical update with no changes to how the portal works.
+- Names in the «PM» and «Author» columns no longer break mid-word onto a third line.
 
 ## 1.7.3.1 · 14.10.2026
 

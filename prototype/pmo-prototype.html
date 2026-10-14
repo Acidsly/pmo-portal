@@ -1576,7 +1576,7 @@ function tLockMeasure(){
   document.querySelectorAll('.dt[data-tkey]').forEach(el => {
     const key = el.dataset.tkey, cols = (TS[key] ? TS[key].cols : []).join(',');
     if (TW[key] && TW[key].cols === cols) return;
-    const w = [...el.querySelectorAll('thead th')].map(th => Math.round(th.getBoundingClientRect().width));
+    const w = [...el.querySelectorAll('thead th')].map(th => Math.ceil(th.getBoundingClientRect().width));   // вверх: на долю пикселя уже — слово рвётся посреди
     if (w.length) TW[key] = { cols, w };
   });
 }

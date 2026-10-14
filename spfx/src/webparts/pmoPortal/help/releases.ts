@@ -3,9 +3,9 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
-   "ver": "1.7.3.5",
+   "ver": "1.7.3.6",
    "date": "14.10.2026",
-   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення без змін у роботі порталу.</li>\n</ul>"
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Ім'я в колонках «PM» і «Автор» більше не розривається посеред слова на третій рядок.</li>\n</ul>"
   },
   {
    "ver": "1.7.3.1",
@@ -140,9 +140,9 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
-   "ver": "1.7.3.5",
+   "ver": "1.7.3.6",
    "date": "14.10.2026",
-   "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update with no changes to how the portal works.</li>\n</ul>"
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>Names in the «PM» and «Author» columns no longer break mid-word onto a third line.</li>\n</ul>"
   },
   {
    "ver": "1.7.3.1",
@@ -277,9 +277,9 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
-   "ver": "1.7.3.5",
+   "ver": "1.7.3.6",
    "date": "14.10.2026",
-   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Техническое обновление без изменений в работе портала.</li>\n</ul>"
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Имя в колонках «PM» и «Автор» больше не разрывается посреди слова на третью строку.</li>\n</ul>"
   },
   {
    "ver": "1.7.3.1",

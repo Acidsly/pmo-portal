@@ -22,13 +22,14 @@ export async function createWithCode(codes: string[], next: (codes: string[]) =>
 }
 
 /** #33 Закрепление ширин колонок: на широком экране (≥ 900 px) — после первой раскладки, только ненулевые замеры
- *  для нового набора колонок; на узком — без закрепления. Возвращает новое состояние (или прежнее). */
+ *  для нового набора колонок; на узком — без закрепления. Замеры — с округлением вверх: колонка на долю пикселя уже текста
+ *  рвала бы слово посреди (фамилия PM на трёх строках). Возвращает новое состояние (или прежнее). */
 export type WidthLock = { key: string; w: number[] } | null;
 export function nextLock(innerWidth: number, lock: WidthLock, colsKey: string, cols: number, measured: number[] | null): WidthLock {
   if (innerWidth < 900) return null;
   if (lock && lock.key === colsKey) return lock;
   if (!measured || measured.length !== cols || !measured.every(x => x > 0)) return lock;
-  return { key: colsKey, w: measured };
+  return { key: colsKey, w: measured.map(x => Math.ceil(x)) };
 }
 
 /** #15 Текст ячейки для CSV: видимый текст, а для значка без текста — его подсказка (title). */

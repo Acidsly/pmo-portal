@@ -27,6 +27,10 @@ test('#33: ширины закрепляются один раз на набор
   expect(nextLock(1200, null, 'a,b', 2, [0, 200])).toBeNull();        // скрытая вкладка
   expect(nextLock(1200, null, 'a,b', 2, [100])).toBeNull();
 });
+test('ширины замера — с округлением вверх: колонка не становится уже текста (фамилия PM не рвётся посреди слова)', () => {
+  expect(nextLock(1200, null, 'a,b', 2, [120.4, 99.5])).toEqual({ key: 'a,b', w: [121, 100] });
+  expect(nextLock(1200, null, 'a', 1, [80])).toEqual({ key: 'a', w: [80] });
+});
 test('#15: CSV — текст ячейки, у значка без текста — подсказка', () => {
   const td = document.createElement('td'); td.innerHTML = '<span title="Стратегічний">🛡</span>';
   expect(cellText(td)).toBe('🛡');
