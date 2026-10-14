@@ -21,8 +21,12 @@ const KEY_FIELDS: Record<string, string> = { pmStatus: 'phase', pmProgress: 'pro
 const CHANGED: [(d: ReportDraft) => unknown, string, string][] = [[d => d.status, 'status', 'phase'], [d => d.type, 'type', 'type'], [d => d.progress, 'progress', 'progress'],
   [d => d.start || '', 'start', 'start'], [d => d.goLive || '', 'goLive', 'goLive'], [d => d.planEnd || '', 'planEnd', 'planEnd'],
   [d => d.forecastEnd || '', 'forecastEnd', 'forecastEnd'], [d => d.actualCost, 'actualCost', 'actualCost']];
+/** Какие показатели PM изменил в форме против карточки (имена контекста: phase, type, progress, start, goLive, planEnd,
+ *  forecastEnd, actualCost) — не история: журнал — это уже внесённое раньше. */
+export const draftChanged = (p: Project, d: ReportDraft): string[] =>
+  CHANGED.filter(([f, pk]) => String(f(d) ?? '') !== String((p as unknown as Record<string, unknown>)[pk] ?? '')).map(x => x[2]);
 /** Длинный текст при последнем шаге обрезки — не длиннее этого. */
-const TEXT_CAP = 1000;
+export const TEXT_CAP = 1000;
 /** Маркер блока данных после NFKC: «<<DATA>>» / «<</DATA>>» с пробелами, в любом регистре, со скобками ‹› ＜＞ ﹤﹥ и кириллической «а». */
 const MARKER = /[<‹＜﹤]\s*[<‹＜﹤]\s*\/?\s*d\s*[aа]\s*t\s*[aа]\s*[>›＞﹥]\s*[>›＞﹥]/gi;
 
@@ -36,7 +40,7 @@ export function cleanText(s: string | null | undefined): string {
   return t;
 }
 /** Все строки объекта — через cleanText (порядок ключей сохраняется). */
-const cleanAll = <T>(o: T): T => JSON.parse(JSON.stringify(o, (k: string, v: unknown) => (typeof v === 'string' ? cleanText(v) : v)));
+export const cleanAll = <T>(o: T): T => JSON.parse(JSON.stringify(o, (k: string, v: unknown) => (typeof v === 'string' ? cleanText(v) : v)));
 const num = (x: number | null | undefined): number | null => (typeof x === 'number' && !isNaN(x) ? x : null);
 /** Дата строки журнала по местному времени: kcDate — дата-время UTC (ISO); «гггг-мм-дд» — как есть. */
 const localDay = (s: string | undefined): string => {
@@ -46,9 +50,9 @@ const localDay = (s: string | undefined): string => {
   return isNaN(d.getTime()) ? v.slice(0, 10) : todayIso(d);
 };
 /** Погоджений отчёт — как reportPeriodFrom: «Погоджено», а до погоджень — применённый. */
-const isApproved = (r: StatusReport): boolean => r.approval === AP_OK || (!r.approval && !!r.applied);
+export const isApproved = (r: StatusReport): boolean => r.approval === AP_OK || (!r.approval && !!r.applied);
 /** Новые сверху: дата, затем номер (порядок не зависит от порядка входа). */
-const newest = (a: { date: string; id: number }, b: { date: string; id: number }): number =>
+export const newest = (a: { date: string; id: number }, b: { date: string; id: number }): number =>
   (a.date < b.date ? 1 : a.date > b.date ? -1 : b.id - a.id);
 
 interface Slot { o: Record<string, unknown>; k: string; n: number; i: number }
@@ -112,7 +116,7 @@ export function buildReportContext(input: AiContextIn, maxChars: number = 50000)
     actualEnd: d.actualEnd || '', actualCost: num(d.actualCost), keyReason: d.keyReason, summary: d.title,
     done: d.done, next: d.next, issues: d.issues, decision: !!d.decision, decisionText: d.decisionText,
     // какие показатели PM изменил в этой форме против карточки (не история: журнал — это уже внесённое раньше)
-    changed: CHANGED.filter(([f, pk]) => String(f(d) ?? '') !== String((p as unknown as Record<string, unknown>)[pk] ?? '')).map(x => x[2]) } : undefined;
+    changed: draftChanged(p, d) } : undefined;
 
   const build = (cut: number): Record<string, unknown> => {
     const o: Record<string, unknown> = {

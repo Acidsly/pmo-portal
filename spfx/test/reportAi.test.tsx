@@ -81,6 +81,24 @@ describe('помощник ИИ в форме отчёта', () => {
     expect(btn()).toBe('Зберегти'); expect(sub().className).toBe('btn primary'); expect(sub().querySelector('svg')).toBeNull();
   });
 
+  test('гибридная проверка: пункты кода первыми, затем ИИ; ИИ получает контекст смысловых правил; prevCheck — только пункты ИИ', async () => {
+    const late = { id: 7, projectId: 5, title: 'Сервер недоступний', type: 'Ризик', probability: 1, impact: 1, status: 'Відкрито', due: '2026-10-01', mitigation: 'Відновити' };
+    await open('pm@x', { ...data, risks: [late] }); fill();
+    mockAgent.replies.push({ text: '{"items":["Пункт ШІ"]}' });
+    await submit();
+    const sent = JSON.parse(mockAgent.asked[0].split('\n')[2]);
+    expect(Object.keys(sent)).toEqual(['lang', 'project', 'plan', 'mention', 'draft']);
+    expect(sent.mention.map((k: any) => k.title)).toEqual(['Сервер недоступний']);
+    const text = $('#f-ai').textContent || '';
+    expect(text.indexOf('1. «Терміни» — зелений, а термін заходів минув: Ризик «Сервер недоступний»')).toBe(0);
+    expect(text).toContain('2. Пункт ШІ');
+    expect(root.textContent).toContain('ШІ знайшов суперечностей: 2');
+    act(() => { Simulate.change($('#f-done') as HTMLTextAreaElement, { target: { value: '– Нове' } } as any); });
+    mockAgent.replies.push({ text: '{"items":[]}' });
+    await submit();
+    expect(JSON.parse(mockAgent.asked[1].split('\n')[2]).prevCheck).toBe('1. Пункт ШІ');
+  });
+
   test('после проверки PM изменил отчёт — снова «Перевірити з ШІ»', async () => {
     await open(); fill();
     mockAgent.replies.push({ text: '{"items":[]}' }); await submit();

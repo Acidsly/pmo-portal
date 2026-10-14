@@ -1,4 +1,5 @@
-import { AiContextIn } from './aiContext';
+import { AiContextIn, buildReportContext } from './aiContext';
+import { buildCheckContext, ruleItems, checkItems } from './aiRules';
 import { parseDraft, parseCheck } from './aiReply';
 
 /** Вид запроса к агенту: «Заповнити з ШІ» (prompt «Чернетка звіту») или «Перевірити з ШІ» (prompt «Перевірка звіту»). */
@@ -117,4 +118,17 @@ export function evalSummary(rs: EvalResult[]): { draft: [number, number]; check:
   const negative = cnt(rs.filter(x => x.negative));
   const okOf = (x: [number, number]): boolean => x[1] > 0 && x[0] >= Math.ceil(x[1] * 14 / 15);
   return { draft, check, negative, ok: okOf(draft) && okOf(check) && negative[0] === negative[1] };
+}
+
+/** Сообщение агенту для случая — как в портале: «Чернетка» — полный контекст, «Перевірка» — контекст смысловых правил. */
+export function evalMessage(base: EvalBase, c: EvalCase): string {
+  const i = evalInput(base, c);
+  return aiMessage(c.kind, (c.kind === 'check' ? buildCheckContext(i) : buildReportContext(i)).json);
+}
+/** Ответ, который оценивается, — как итог в портале: у «Перевірки» пункты кода (ruleItems) + пункты ИИ; ответ не разобран
+ *  (ошибка, отказ фильтра) — как есть. */
+export function evalReply(base: EvalBase, c: EvalCase, raw: string): string {
+  if (c.kind !== 'check') return raw;
+  const r = parseCheck(raw);
+  return r.ok ? JSON.stringify({ items: checkItems(ruleItems(evalInput(base, c)), r.items) }) : raw;
 }

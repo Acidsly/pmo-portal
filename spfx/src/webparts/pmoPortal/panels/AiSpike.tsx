@@ -2,8 +2,7 @@ import * as React from 'react';
 import { EntTag } from '../components/EntTag';
 import { AppCtx } from '../components/ctx';
 import { AI_CONFIG } from '../ai/aiConfig';
-import { buildReportContext } from '../logic/aiContext';
-import { aiMessage, scoreReply, evalInput, evalSummary, EvalCase, EvalBase, EvalResult } from '../logic/aiEval';
+import { scoreReply, evalMessage, evalReply, evalSummary, EvalCase, EvalBase, EvalResult } from '../logic/aiEval';
 
 /** Технический прототип помощника отчёта (этап 1, «да / нет»): вход, вызов агента, объём данных, формат ответа.
  *  Только пилотной группе, по адресу …#…///ai-spike; формы портала не меняет. Временный — убирается после этапа 1. */
@@ -68,7 +67,7 @@ export const AiSpike: React.FC<{ onCancel(): void; aadToken?: (resource: string)
     const out: EvalResult[] = [];
     setResults([]);
     for (const c of set.cases) {
-      const msg = aiMessage(c.kind, buildReportContext(evalInput(set.base, c)).json);
+      const msg = evalMessage(set.base, c);
       let r: Turn;
       try { r = await withTimeout(conv.current.send(msg)); } catch (e) {
         // запрос не отменяется: следующий случай в том же разговоре наложился бы на опоздавший ответ — набор останавливается
@@ -77,7 +76,7 @@ export const AiSpike: React.FC<{ onCancel(): void; aadToken?: (resource: string)
       }
       if (r.consent) { note(r); add('набір зупинено: натисніть «Дозволити» і запустіть знову'); break; }
       const raw = r.texts.filter(t => !!t.trim()).pop() || '';  // ответ prompt — последнее непустое сообщение
-      const sc = scoreReply(c.kind, raw, c.expect);
+      const sc = scoreReply(c.kind, evalReply(set.base, c, raw), c.expect);
       out.push({ id: c.id, kind: c.kind, negative: !!c.negative, pass: sc.pass, fails: sc.fails, ms: r.ms, raw: raw.slice(0, 3000) });
       add(`${c.id} ${sc.pass ? 'так' : 'НІ'} · ${r.ms} мс${sc.fails.length ? ' · ' + sc.fails.join('; ') : ''}`);
       setResults(out.slice());

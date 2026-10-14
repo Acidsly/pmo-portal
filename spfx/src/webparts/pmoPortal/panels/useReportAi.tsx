@@ -6,6 +6,7 @@ import { Project, ChangeEntry } from '../data/types';
 import { ReportDraft } from '../logic/forms';
 import { reportPrint, aiButton, acceptReply, unavailableNote, AiLang, AiUnavailable, AiButton } from '../logic/aiCheck';
 import { buildReportContext } from '../logic/aiContext';
+import { buildCheckContext, ruleItems, checkItems } from '../logic/aiRules';
 import { parseDraft, parseCheck, checkText, AiDraft } from '../logic/aiReply';
 import { aiMessage, AiKind } from '../logic/aiEval';
 import { aiUnavailable, aiSaveFields, nextPrevCheck, draftInsert, undoAvailable, AiResult, riskRefs, mentionLine, appendLine } from '../logic/aiFlow';
@@ -74,7 +75,8 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
   React.useEffect(() => { if (pid !== firstPid.current) { firstPid.current = pid; reset(); } }, [pid]);
 
   const run = async (kind: AiKind): Promise<void> => {
-    const id = ++req.current; const reqPrint = reportPrint(dRef.current);
+    // снимок формы — один на весь запрос: пункты кода, контекст и отпечаток — по одной и той же форме
+    const id = ++req.current; const draft0 = dRef.current; const reqPrint = reportPrint(draft0);
     const at = kind === 'draft' ? 'top' : 'bottom';
     setBusy(kind); setMsg(null);
     const fail = (reason: AiUnavailable, detail?: string): void => {
@@ -92,8 +94,11 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
     // журнал — только для черновика («Зроблено за період»); проверке он мешает: ИИ принимает прежние изменения за правки этой формы
     const changes: ChangeEntry[] = kind === 'draft' ? await c.repo.loadChanges(a.project.id).catch(() => [] as ChangeEntry[]) : [];
     if (id !== req.current) return;
-    const ctx = buildReportContext({ project: a.project, reports: a.data.reports, risks: a.data.risks, changes, draft: dRef.current,
-      prevCheck: kind === 'check' && prevCheck ? prevCheck : undefined, lang, today: c.today });
+    const input = { project: a.project, reports: a.data.reports, risks: a.data.risks, changes, draft: draft0,
+      prevCheck: kind === 'check' && prevCheck ? prevCheck : undefined, lang, today: c.today };
+    // проверка гибридная: сравнения чисел и дат — кодом (ruleItems), ИИ — только смысловые правила (план помощника, этап 4)
+    const ctx = kind === 'check' ? buildCheckContext(input) : buildReportContext(input);
+    const rules = kind === 'check' ? ruleItems(input) : [];
     if (ctx.tooLarge) { fail('tooLarge'); return; }
     const parse = kind === 'draft'
       ? (raw: string): AiDraft | null => { const r = parseDraft(raw); return r.ok ? r : null; }
@@ -108,9 +113,10 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
     if (!acceptReply(reqPrint, reportPrint(dRef.current))) { setMsg({ at, kind: 'warn', text: t('aiStale') }); return; }
     setUnav(null);
     if (kind === 'check') {
-      const items = r.value as string[];
+      const aiItems = r.value as string[], items = checkItems(rules, aiItems);
       setChecked({ print: reqPrint, items, at: new Date().toISOString() });
-      setPrevCheck(nextPrevCheck({ kind: 'checked', items, at: '' }, lang));
+      // прежние пункты — только ИИ: пункты кода считаются заново и в prompt не нужны
+      setPrevCheck(aiItems.length ? nextPrevCheck({ kind: 'checked', items: aiItems, at: '' }, lang) : '');
       setMsg(items.length ? { at, kind: 'warn', text: t('aiFound').replace('{n}', String(items.length)) } : { at, kind: 'ok', text: t('aiNone') });
       return;
     }
