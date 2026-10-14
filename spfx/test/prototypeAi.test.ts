@@ -75,6 +75,29 @@ const sub = (): W => q('#f-submit');
 /** После сохранения открыта карточка проекта: новый отчёт — первый в списке; открыть его просмотр. */
 const openSaved = (): void => { const el = q('.rep-open[data-act="repopen"]'); if (!el) throw new Error('нет отчёта в карточке'); el.click(); };
 
+describe('прототип: переключатели в меню пользователя', () => {
+  const sw = (act: string): W => q(`.pop-sw[data-act="${act}"]`);
+  const openMenu = (): void => q('[data-act="me"]').click();
+  test('«Помічник ШІ» и «Імітувати збій ШІ» — переключатели вверху меню; сбой недоступен, пока помощник выключен; меню не закрывается', () => {
+    openMenu();
+    expect([sw('aidemo').getAttribute('role'), sw('aidemo').getAttribute('aria-checked'), sw('aifail').disabled]).toEqual(['switch', 'false', true]);
+    sw('aidemo').click();
+    expect([sw('aidemo').getAttribute('aria-checked'), sw('aifail').disabled, sw('aifail').getAttribute('aria-checked')]).toEqual(['true', false, 'false']);
+    sw('aifail').click();
+    expect(sw('aifail').getAttribute('aria-checked')).toBe('true');
+    sw('aidemo').click();   // выключение помощника сбрасывает сбой
+    expect([sw('aidemo').getAttribute('aria-checked'), sw('aifail').getAttribute('aria-checked'), sw('aifail').disabled]).toEqual(['false', 'false', true]);
+  });
+  test('переключение при открытой форме — форма сразу с ИИ / без ИИ', () => {
+    const f = openForm();
+    expect(f.querySelector('#ai-fill')).toBeNull();
+    openMenu(); sw('aidemo').click();
+    expect(f.querySelector('#ai-fill')).not.toBeNull(); expect(q('#f-submit').textContent).toBe(T.aiCheckBtn[0]);
+    sw('aidemo').click();
+    expect(f.querySelector('#ai-fill')).toBeNull(); expect(q('#f-submit').textContent).toBe(T.save[0]);
+  });
+});
+
 describe('прототип: помощник в форме отчёта', () => {
   test('«Помічник ШІ» выключен (по умолчанию и после «вимкнено») — форма без ИИ: «Зберегти», кнопок ИИ нет; сбой при выключении сбрасывается', () => {
     demo('down'); demo('off');

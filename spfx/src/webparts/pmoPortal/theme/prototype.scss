@@ -448,6 +448,16 @@ form .fsec:first-child{margin-top:0}
 .pop-me{display:flex;gap:12px;align-items:center;padding:6px 6px 12px}
 .pop-me .pn small{display:block}
 .pop-sep{font-size:11px;font-weight:600;color:var(--text-3);padding:10px 6px 4px;border-top:1px solid var(--line)}
+/* переключатели в меню пользователя (демо помощника ИИ) */
+.pop-sws{padding:0 0 6px}
+.pop-sw{justify-content:space-between}
+.pop-sw>span:first-child{display:inline-flex;align-items:center;gap:8px}
+.pop-sw svg{width:16px;height:16px;color:var(--nv-ai)}
+.sw{position:relative;width:36px;height:20px;border-radius:10px;background:var(--line);flex:none;transition:background .15s}
+.sw::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:left .15s}
+.pop-sw[aria-checked="true"] .sw{background:var(--nv-ai)}
+.pop-sw[aria-checked="true"] .sw::after{left:18px}
+.pop-sw:disabled{opacity:.45;cursor:default}
 .me{border:0;background:none;padding:0;border-radius:50%;cursor:pointer;display:grid;place-items:center}
 .bell{position:relative;border:0;background:var(--bg-alt);cursor:pointer;color:var(--text-2);width:34px;height:34px;border-radius:10px;display:grid;place-items:center}
 .bell:hover{color:var(--text)}

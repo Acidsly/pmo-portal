@@ -571,16 +571,6 @@ export const T: Record<string, L3> = {
   "AI assistant",
   "Помощник ИИ"
  ],
- "aiDemoOff": [
-  "Вимкнено — форма без ШІ",
-  "Off — form without AI",
-  "Выключен — форма без ИИ"
- ],
- "aiDemoOn": [
-  "Увімкнено — форма з ШІ",
-  "On — form with AI",
-  "Включён — форма с ИИ"
- ],
  "aiDemoFail": [
   "Імітувати збій ШІ (демо)",
   "Simulate AI failure (demo)",

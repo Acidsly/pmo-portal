@@ -454,6 +454,16 @@ main{padding-bottom:40px}
 .pop-me{display:flex;gap:12px;align-items:center;padding:6px 6px 12px}
 .pop-me .pn small{display:block}
 .pop-sep{font-size:11px;font-weight:600;color:var(--text-3);padding:10px 6px 4px;border-top:1px solid var(--line)}
+/* переключатели в меню пользователя (демо помощника ИИ) */
+.pop-sws{padding:0 0 6px}
+.pop-sw{justify-content:space-between}
+.pop-sw>span:first-child{display:inline-flex;align-items:center;gap:8px}
+.pop-sw svg{width:16px;height:16px;color:var(--nv-ai)}
+.sw{position:relative;width:36px;height:20px;border-radius:10px;background:var(--line);flex:none;transition:background .15s}
+.sw::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:left .15s}
+.pop-sw[aria-checked="true"] .sw{background:var(--nv-ai)}
+.pop-sw[aria-checked="true"] .sw::after{left:18px}
+.pop-sw:disabled{opacity:.45;cursor:default}
 .me{border:0;background:none;padding:0;border-radius:50%;cursor:pointer;display:grid;place-items:center}
 .bell{position:relative;border:0;background:var(--bg-alt);cursor:pointer;color:var(--text-2);width:34px;height:34px;border-radius:10px;display:grid;place-items:center}
 .bell:hover{color:var(--text)}
@@ -759,7 +769,7 @@ const T = {
  aiShowRec:['Показати запис «{t}»','Show record «{t}»','Показать запись «{t}»'], aiHideRec:['Сховати','Hide','Скрыть'], aiMention:['Додати згадку в «Проблеми та ризики за період»','Add a mention to «Issues and risks for the period»','Добавить упоминание в «Проблемы и риски за период»'], aiMentionScore:['оцінка','score','оценка'], aiMentionDue:['термін','due','срок'], aiMentionMit:['заходи','actions','меры'], aiNoMit:['У записі немає заходів — опишіть у «Проблеми та ризики за період», що робите, або створіть копію запису із заходами («Копіювати»).','The record has no actions — describe in «Issues and risks for the period» what you are doing, or create a copy of the record with actions («Copy»).','В записи нет мер — опишите в «Проблемы и риски за период», что делаете, или создайте копию записи с мерами («Копировать»).'], aiMentioned:['Згадку із заходами з реєстру додано — за потреби уточніть і перевірте ще раз.','Mention with the register actions added — adjust if needed and check again.','Упоминание с мерами из реестра добавлено — при необходимости уточните и проверьте ещё раз.'],
  aiAssist:['Підказки ШІ: що не забути ({n}) і пропоновані оцінки','AI hints: don\'t forget ({n}) and suggested ratings','Подсказки ИИ: что не забыть ({n}) и предлагаемые оценки'],
  aiFill:['Заповнити з ШІ','Fill with AI','Заполнить с ИИ'], aiFillBusy:['ШІ готує чернетку…','AI is drafting…','ИИ готовит черновик…'], aiCheckBtn:['Перевірити з ШІ','Check with AI','Проверить с ИИ'], aiCheckBusy:['ШІ аналізує…','AI is analysing…','ИИ анализирует…'], aiSaveWithout:['Зберегти без перевірки','Save without check','Сохранить без проверки'], aiFound:['ШІ знайшов суперечностей: {n} — виправте звіт або збережіть як є.','AI found contradictions: {n} — fix the report or save as is.','ИИ нашёл противоречий: {n} — исправьте отчёт или сохраните как есть.'], aiNone:['Суперечностей не знайдено — можна зберегти.','No contradictions found — you can save.','Противоречий не найдено — можно сохранить.'], aiUnavailHint:['Можна зберегти без перевірки — PMO побачить причину. Змініть звіт, щоб спробувати ще раз.','You can save without the check — PMO will see the reason. Change the report to try again.','Можно сохранить без проверки — PMO увидит причину. Измените отчёт, чтобы попробовать ещё раз.'], aiRemember:['Що не забути','Don\'t forget','Что не забыть'], aiRatings:['ШІ пропонує оцінки (оцінку обираєте ви)','AI suggests ratings (you choose the rating)','ИИ предлагает оценки (оценку выбираете вы)'], aiSuggest:['ШІ: {v}','AI: {v}','ИИ: {v}'], aiAccept:['Прийняти','Accept','Принять'], aiReplace:['Замінити текст у полі «{f}» чернеткою ШІ?','Replace the text in «{f}» with the AI draft?','Заменить текст в поле «{f}» черновиком ИИ?'], aiYes:['Замінити','Replace','Заменить'], aiNo:['Залишити мій','Keep mine','Оставить мой'], aiUndo:['Скасувати вставку ШІ','Undo AI insert','Отменить вставку ИИ'], aiDraftDone:['Чернетку ШІ вставлено — перевірте й виправте тексти.','AI draft inserted — review and edit the texts.','Черновик ИИ вставлен — проверьте и исправьте тексты.'], aiStale:['Звіт змінився, поки ШІ працював, — відповідь не застосовано.','The report changed while AI was working — the reply was discarded.','Отчёт изменился, пока ИИ работал, — ответ не применён.'], aiConsent:['Помічник ШІ надішле дані цього звіту й проєкту в Microsoft Copilot Studio (Європа; обробка моделлю може відбуватися за її межами). Дозволити? Запитуємо один раз.','The AI assistant will send this report and project data to Microsoft Copilot Studio (Europe; model processing may take place outside it). Allow? We ask once.','Помощник ИИ отправит данные этого отчёта и проекта в Microsoft Copilot Studio (Европа; обработка моделью может идти за её пределами). Разрешить? Спрашиваем один раз.'], aiAllow:['Дозволити','Allow','Разрешить'], aiCheckedAt:['Перевірено ШІ: {date}','AI checked: {date}','Проверено ИИ: {date}'], aiWithout:['Збережено без перевірки ШІ','Saved without AI check','Сохранено без проверки ИИ'], aiFieldHint:['Коментар ШІ — лише для читання. Виправте поля звіту, названі в пунктах, — кнопка зміниться на «Перевірити з ШІ»; або збережіть як є, якщо згодні.','AI comment — read-only. Fix the report fields named in the items — the button will change to «Check with AI»; or save as is if you agree.','Комментарий ИИ — только для чтения. Исправьте поля отчёта, названные в пунктах, — кнопка сменится на «Проверить с ИИ»; или сохраните как есть, если согласны.'], aiPopup:['вікно входу Microsoft заблоковано — дозвольте спливаючі вікна для сайту','the Microsoft sign-in window was blocked — allow pop-ups for the site','окно входа Microsoft заблокировано — разрешите всплывающие окна для сайта'],
- aiDemo:['Помічник ШІ','AI assistant','Помощник ИИ'], aiDemoOff:['Вимкнено — форма без ШІ','Off — form without AI','Выключен — форма без ИИ'], aiDemoOn:['Увімкнено — форма з ШІ','On — form with AI','Включён — форма с ИИ'], aiDemoFail:['Імітувати збій ШІ (демо)','Simulate AI failure (demo)','Имитировать сбой ИИ (демо)'],
+ aiDemo:['Помічник ШІ','AI assistant','Помощник ИИ'], aiDemoFail:['Імітувати збій ШІ (демо)','Simulate AI failure (demo)','Имитировать сбой ИИ (демо)'],
  aiDemoNoDone:['Немає даних про виконане за період — допишіть','No data on work done this period — add it','Нет данных о сделанном за период — допишите'], aiDemoNext:['Опишіть план на наступний період','Describe the plan for the next period','Опишите план на следующий период'],
  aiDemoSummary:['Проєкт іде за планом','The project is on track','Проект идёт по плану'], aiDemoSummaryDev:['Є відхилення від плану — див. «Проблеми та ризики за період»','There are deviations from the plan — see «Issues and risks for the period»','Есть отклонения от плана — см. «Проблемы и риски за период»'],
  aiDemoReason:['Оцінки — за прогнозом проти плану, витратами проти бюджету та простроченими заходами.','Ratings follow the forecast vs plan, cost vs budget and overdue actions.','Оценки — по прогнозу против плана, затратам против бюджета и просроченным мерам.'],
@@ -1640,11 +1650,12 @@ function renderPop(){
       <div class="pop-f"><button class="more" data-act="creset">${t('colsReset')}</button>${st.w && Object.keys(st.w).length ? `<button class="more" data-act="wreset" data-key="${POP.key}">${t('colWidthsReset')}</button>` : ''}</div>`;
   } else if (POP.kind === 'user'){
     pop.innerHTML = `<div class="pop-me">${avatar(VIEWER, 'lg')}<span class="pn"><b>${esc(VIEWER)}</b><small>${esc(roleOf(VIEWER))}</small><small>${esc(email(VIEWER))}</small></span></div>
+      <div class="pop-list pop-sws">
+        <button class="pop-row pop-sw" role="switch" aria-checked="${AI_DEMO === 'on'}" data-act="aidemo" data-v="${AI_DEMO === 'on' ? 'off' : 'on'}"><span>${lucide('ai')}${t('aiDemo')}</span><span class="sw" aria-hidden="true"></span></button>
+        <button class="pop-row pop-sw" role="switch" aria-checked="${AI_FAIL}" data-act="aifail"${AI_DEMO === 'on' ? '' : ' disabled'}><span>${t('aiDemoFail')}</span><span class="sw" aria-hidden="true"></span></button>
+      </div>
       <div class="pop-sep">${t('switchUser')}</div>
-      <div class="pop-list">${Object.keys(ORG).filter(n => n !== VIEWER).map(n => `<button class="pop-row pop-user" data-act="asuser" data-n="${esc(n)}">${person(n, roleOf(n))}</button>`).join('')}</div>
-      <div class="pop-sep">${t('aiDemo')}</div>
-      <div class="pop-list">${[['on','aiDemoOn'],['off','aiDemoOff']].map(([v, l]) => `<button class="pop-row" data-act="aidemo" data-v="${v}" aria-pressed="${AI_DEMO === v}">${AI_DEMO === v ? '✓ ' : ''}${t(l)}</button>`).join('')}
-        ${AI_DEMO === 'on' ? `<button class="pop-row" data-act="aifail" aria-pressed="${AI_FAIL}">${AI_FAIL ? '☑' : '☐'} ${t('aiDemoFail')}</button>` : ''}</div>`;
+      <div class="pop-list">${Object.keys(ORG).filter(n => n !== VIEWER).map(n => `<button class="pop-row pop-user" data-act="asuser" data-n="${esc(n)}">${person(n, roleOf(n))}</button>`).join('')}</div>`;
   }
 }
 pop.addEventListener('input', e => { if (e.target.classList.contains('pop-q')){ POP.q = e.target.value; const pos = e.target.selectionStart; renderPop(); const q = pop.querySelector('.pop-q'); q.focus(); q.setSelectionRange(pos, pos); } });
@@ -2854,8 +2865,11 @@ document.addEventListener('click', e => {
   else if (a === 'creset'){ TS[POP.key] = {cols:TDEFAULTS[POP.key].slice(), sort:null, filters:{}}; tSave(POP.key); rerenderMain(); renderPop(); }
   else if (a === 'me'){ if (POP && POP.kind === 'user') closePop(); else openPop(el, 'user'); }
   else if (a === 'asuser'){ VIEWER = el.dataset.n; closePop(); render(); }
-  else if (a === 'aidemo'){ AI_DEMO = el.dataset.v; if (AI_DEMO === 'off') AI_FAIL = false; closePop(); toast(t('aiDemo') + ': ' + t(AI_DEMO === 'on' ? 'aiDemoOn' : 'aiDemoOff')); }
-  else if (a === 'aifail'){ AI_FAIL = !AI_FAIL; closePop(); toast(t('aiDemoFail') + ': ' + (AI_FAIL ? '☑' : '☐')); }
+  // переключатели «Помічник ШІ» и «Імітувати збій ШІ»: меню не закрывается, открытая форма отчёта перестраивается
+  else if (a === 'aidemo' || a === 'aifail'){
+    if (a === 'aidemo'){ AI_DEMO = el.dataset.v === 'on' ? 'on' : 'off'; if (AI_DEMO === 'off') AI_FAIL = false; } else if (AI_DEMO === 'on') AI_FAIL = !AI_FAIL;
+    if (POP && POP.kind === 'user') renderPop();
+    const rf = document.getElementById('repform'); if (rf) rf.dispatchEvent(new Event('change', {bubbles:true})); }
   else if (a === 'grp'){ el.classList.toggle('collapsed'); const h = el.classList.contains('collapsed'); document.querySelectorAll(`[data-gk="${el.dataset.g}"]`).forEach(r => r.hidden = h); }
 });
 document.addEventListener('change', e => {
