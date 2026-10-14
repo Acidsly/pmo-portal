@@ -1,6 +1,6 @@
 import { PublicClientApplication, InteractionRequiredAuthError, AccountInfo } from '@azure/msal-browser';
 import { CopilotStudioClient, ConnectionSettings, ScopeHelper } from '@microsoft/agents-copilotstudio-client';
-import { AI_CONFIG } from './aiConfig';
+import { AI_CONFIG, aiRedirectUri } from './aiConfig';
 import { AiPort } from './aiRun';
 import { AiCallOut } from '../logic/aiFlow';
 
@@ -14,7 +14,7 @@ let msal: PublicClientApplication | undefined;
 async function app(): Promise<PublicClientApplication> {
   if (!msal) {
     msal = new PublicClientApplication({ auth: { clientId: AI_CONFIG.clientId, authority: `https://login.microsoftonline.com/${AI_CONFIG.tenantId}`,
-      redirectUri: window.location.origin + window.location.pathname }, cache: { cacheLocation: 'sessionStorage' } });
+      redirectUri: aiRedirectUri(window.location.origin, window.location.pathname) }, cache: { cacheLocation: 'sessionStorage' } });
     await msal.initialize();
   }
   return msal;

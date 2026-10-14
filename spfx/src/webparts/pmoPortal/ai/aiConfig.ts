@@ -19,3 +19,8 @@ export const isAiPilot = (email: string): boolean => AI_CONFIG.pilot.indexOf((em
 /** Страница — ответ входа Microsoft во всплывающем окне или скрытом фрейме (MSAL): в адресе code / error и state. */
 export const isAuthResponse = (hash: string, search: string): boolean =>
   /(^|[#&?])(code|error)=/.test(hash + '&' + search) && /(^|[#&?])state=/.test(hash + '&' + search);
+
+/** Адрес возврата входа MSAL — всегда страница портала сайта (`…/SitePages/Portal.aspx`), а не текущий адрес: сайт открывают
+ *  и с корня (`/sites/pmo-test`), а в регистрации SPA «PPM Copilot Client» указана только страница портала (иначе AADSTS50011). */
+export const aiRedirectUri = (origin: string, pathname: string): string =>
+  origin + pathname.replace(/\/SitePages\/.*$/i, '').replace(/\/+$/, '') + '/SitePages/Portal.aspx';

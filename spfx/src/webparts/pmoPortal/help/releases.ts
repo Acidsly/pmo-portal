@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.3.2",
+   "date": "14.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення без змін у роботі порталу.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.3.1",
    "date": "14.10.2026",
    "html": "<p><b>Нове</b></p>\n<ul>\n<li>«Копіювати ризик» / «Копіювати проблему» у збереженому записі: відкривається новий запис з усіма полями — змініть потрібне й збережіть, а вихідний запис закрийте (#92).</li>\n<li>PMO отримує в дзвіночку нові високі ризики (від 15) і всі проблеми, а також зміну їх статусу (#87).</li>\n</ul>\n<p><b>Змінено</b></p>\n<ul>\n<li>Ризик: «Стратегія реагування», «Заходи для зниження ризику» і «План дій у разі настання» — обов'язкові за будь-якої оцінки; проблема — опис і заходи. Обов'язкові поля позначені *, пояснення — біля поля (#91, #88).</li>\n<li>Збережений ризик чи проблема змінюється лише статусом; інші поля — через «Копіювати» (#92).</li>\n<li>У формі нового запису — як опрацьовуються ризики: не погоджуються, PMO бачить їх у сповіщеннях, зворотний зв'язок — коментарем у картці (#87).</li>\n<li>«Детальний огляд системи» в «Довідці»: розділи про ризики й сповіщення — за рішеннями щодо ризиків.</li>\n</ul>\n<p><b>Перевірте повторно</b></p>\n<ul>\n<li>Новий ризик без стратегії, заходів чи плану дій — помилки біля полів; нова проблема — лише опис і заходи.</li>\n<li>Збережений ризик: змінюється лише «Статус»; «Копіювати ризик» — новий запис з усіма полями.</li>\n<li>PMO: через ~15 хвилин після нового високого ризику чи проблеми від PM і зміни їх статусу — подія в дзвіночку.</li>\n</ul>"
@@ -135,6 +140,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.3.2",
+   "date": "14.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update with no changes to how the portal works.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.3.1",
    "date": "14.10.2026",
    "html": "<p><b>New</b></p>\n<ul>\n<li>\"Copy risk\" / \"Copy issue\" in a saved record: a new record opens with all fields — change what you need and save, then close the original (#92).</li>\n<li>The PMO gets new high risks (15+) and all issues, and their status changes, in the bell (#87).</li>\n</ul>\n<p><b>Changed</b></p>\n<ul>\n<li>Risk: \"Response strategy\", \"Risk reduction actions\" and \"Contingency plan\" are required at any score; issue — description and actions. Required fields are marked *, the explanation is next to the field (#91, #88).</li>\n<li>A saved risk or issue can only change its status; other fields — via \"Copy\" (#92).</li>\n<li>The new record form explains how risks are handled: they are not approved, the PMO sees them in notifications, feedback is a comment in the card (#87).</li>\n<li>\"Detailed system overview\" in Help: the risks and notifications sections follow the risk decisions.</li>\n</ul>\n<p><b>Check again</b></p>\n<ul>\n<li>A new risk without strategy, actions or contingency plan — errors next to the fields; a new issue — only description and actions.</li>\n<li>A saved risk: only \"Status\" can be changed; \"Copy risk\" opens a new record with all fields.</li>\n<li>PMO: about 15 minutes after a new high risk or issue from a PM, or its status change — an event in the bell.</li>\n</ul>"
@@ -266,6 +276,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.3.2",
+   "date": "14.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Техническое обновление без изменений в работе портала.</li>\n</ul>"
+  },
   {
    "ver": "1.7.3.1",
    "date": "14.10.2026",
