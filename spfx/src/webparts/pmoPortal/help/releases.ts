@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.4.1",
+   "date": "14.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>«Детальний огляд системи» в «Довідці»: новий розділ «Помічник ШІ (пілот)», безпека даних і стан робіт — з урахуванням помічника.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.4.0",
    "date": "14.10.2026",
    "html": "<p><b>Нове</b></p>\n<ul>\n<li>Помічник ШІ для учасників пілоту: перемикач «Помічник ШІ» в меню аватара (згода — один раз, при ввімкненні); у формі статус-звіту — «Заповнити з ШІ» (чернетка, «Що не забути», пропоновані оцінки) і «Перевірити з ШІ» (суперечності між звітом і даними проєкту); поле «Суперечності (аналіз ШІ)» видно у звіті й під час погодження. Докладно — «Довідка», розділ «Помічник ШІ (пілот)».</li>\n</ul>"
@@ -160,6 +165,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.4.1",
+   "date": "14.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>«Detailed system overview» in «Help»: a new «AI assistant (pilot)» section; data security and project status now cover the assistant.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.4.0",
    "date": "14.10.2026",
    "html": "<p><b>New</b></p>\n<ul>\n<li>AI assistant for pilot participants: the «AI assistant» switch in the avatar menu (consent once, when turning it on); in the status report form — «Fill with AI» (draft, «Don't forget», suggested ratings) and «Check with AI» (contradictions between the report and project data); the «Contradictions (AI analysis)» field is visible in the report and during approval. Details — «Help», section «AI assistant (pilot)».</li>\n</ul>"
@@ -316,6 +326,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.4.1",
+   "date": "14.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>«Подробный обзор системы» в «Справке»: новый раздел «Помощник ИИ (пилот)», безопасность данных и состояние работ — с учётом помощника.</li>\n</ul>"
+  },
   {
    "ver": "1.7.4.0",
    "date": "14.10.2026",

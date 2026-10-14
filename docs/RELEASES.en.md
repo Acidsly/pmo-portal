@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.4.1 · 14.10.2026
+
+**Changed**
+- «Detailed system overview» in «Help»: a new «AI assistant (pilot)» section; data security and project status now cover the assistant.
+
 ## 1.7.4.0 · 14.10.2026
 
 **New**
