@@ -622,7 +622,7 @@ form .fsec:first-child{margin-top:0}
 .date-btn:disabled{opacity:.4;cursor:default}
 .date-native{position:absolute;right:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
 /* помощник ИИ в форме отчёта (план этапа 4): свой цвет --nv-ai, значки Lucide wand-sparkles / scan-search / sparkles */
-.btn.ai{background:transparent;border:1.5px solid var(--nv-ai);color:var(--nv-ai)}
+.btn.ai{background:transparent;box-shadow:inset 0 0 0 1.5px var(--nv-ai);color:var(--nv-ai)}
 .btn.ai svg,.ai-label svg{width:16px;height:16px;flex:none}
 .ai-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px}
 .ai-panel{border:1px solid var(--line);border-left:4px solid var(--nv-ai);border-radius:10px;padding:10px 14px;margin:0 0 14px;background:var(--bg-alt)}

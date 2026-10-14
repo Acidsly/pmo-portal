@@ -68,6 +68,19 @@ describe('помощник ИИ в форме отчёта', () => {
     expect([bodies[0].srAiCheck, bodies[0].srAiCheckedAt, bodies[0].srAiFilled]).toEqual(['1. Терміни зелені, а прогноз пізніше плану', '2026-10-14T02:30:00', false]);
   });
 
+  test('вид кнопки: проверка и «ШІ аналізує…» — как «Заповнити з ШІ» (контур, иконка ИИ), сохранение — основная; иконка ИИ везде одна', async () => {
+    await open(); fill();
+    const sub = (): HTMLElement => $('#f-submit');
+    const icon = (el: Element): string => el.querySelector('svg')!.innerHTML;
+    expect(sub().className).toBe('btn ai'); expect(icon(sub())).toBe(icon($('#ai-fill')));
+    let release: () => void = () => undefined; mockAgent.hold = new Promise<void>(r => { release = r; });
+    mockAgent.replies.push({ text: '{"items":[]}' });
+    await submit();
+    expect(sub().className).toBe('btn ai'); expect(sub().querySelector('svg')).not.toBeNull();
+    await act(async () => { release(); }); await flush();
+    expect(btn()).toBe('Зберегти'); expect(sub().className).toBe('btn primary'); expect(sub().querySelector('svg')).toBeNull();
+  });
+
   test('после проверки PM изменил отчёт — снова «Перевірити з ШІ»', async () => {
     await open(); fill();
     mockAgent.replies.push({ text: '{"items":[]}' }); await submit();

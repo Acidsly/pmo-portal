@@ -156,8 +156,9 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
       {ai.bottom}
       <Err msg={err} />
       <div className="actions">
-        <button type="submit" className="btn primary" id="f-submit" disabled={busy || !!pendingBlock || ai.button === 'busy'}>
-          {ai.button === 'check' ? <><Lucide k="aiCheck" />{t('aiCheckBtn')}</> : ai.button === 'busy' ? t('aiCheckBusy')
+        {/* проверка ИИ — как «Заповнити з ШІ» (контур, иконка ИИ); сохранение — основная кнопка */}
+        <button type="submit" className={ai.button === 'check' || ai.button === 'busy' ? 'btn ai' : 'btn primary'} id="f-submit" disabled={busy || !!pendingBlock || ai.button === 'busy'}>
+          {ai.button === 'check' ? <><Lucide k="ai" />{t('aiCheckBtn')}</> : ai.button === 'busy' ? <><Lucide k="ai" />{t('aiCheckBusy')}</>
             : ai.button === 'saveWithout' ? t('aiSaveWithout') : t('save')}</button>
         <button type="button" className="btn" onClick={onCancel}>{t('cancel')}</button>
       </div>

@@ -150,7 +150,7 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
   const top = !pilot ? null : <>
     <div className="ai-bar">
       <button type="button" className="btn ai" id="ai-fill" disabled={busy !== null || a.blocked} onClick={() => { run('draft').catch(() => undefined); }}>
-        <Lucide k="aiFill" />{busy === 'draft' ? t('aiFillBusy') : t('aiFill')}</button>
+        <Lucide k="ai" />{busy === 'draft' ? t('aiFillBusy') : t('aiFill')}</button>
       {busy !== null ? <button type="button" className="btn" onClick={cancel}>{t('cancel')}</button> : null}
       {canUndo ? <button type="button" className="btn" onClick={undo}>{t('aiUndo')}</button> : null}
     </div>
