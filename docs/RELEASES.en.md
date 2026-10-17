@@ -1,5 +1,20 @@
 # What's new
 
+## 1.7.4.2 · 17.10.2026
+
+**New**
+- The **↻ «Refresh data»** button above lists (next to «CSV») — fresh data without reopening the page, handy on a phone (#103).
+
+**Changed**
+- «What's new»: the current version at the top; consecutive technical updates are collected in one collapsed block; each release with changes expands by tapping its title, the «New / Changed / Fixed» sections are highlighted (#95).
+- Project card: «Goal and description» is required when the PM saves the card (including projects created earlier — at the next save) (#96).
+- Project card: «Priority» is in «General», next to the department, with a hint on how priority differs from type; definitions in «Help» (#105).
+- Status report view: the responsible PM under the title (#98).
+- The SharePoint search in the grey bar is hidden: on a phone it zoomed the page (#106).
+
+**Fixed**
+- Feedback is sent on the first try: on a connection failure the portal retries itself, pressing «Send» again does not create a duplicate; sent feedback is visible in the list right away (#108, #103).
+
 ## 1.7.4.1 · 14.10.2026
 
 **Changed**

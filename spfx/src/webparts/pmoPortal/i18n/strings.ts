@@ -841,6 +841,21 @@ export const T: Record<string, L3> = {
   "The project is being completed — 100%.",
   "Проект завершается — 100 %."
  ],
+ "prioHint": [
+  "Пріоритет — черговість виділення ресурсів зараз (його змінює PM у картці). Тип «Стратегічний / Звичайний» — значущість проєкту для компанії, змінюється статус-звітом. Стратегічний проєкт може мати й низький пріоритет.",
+  "Priority is the current order of resource allocation (the PM changes it in the card). Type «Strategic / Regular» is the project's importance to the company and is changed by a status report. A strategic project may also have a low priority.",
+  "Приоритет — очерёдность выделения ресурсов сейчас (его меняет PM в карточке). Тип «Стратегический / Обычный» — значимость проекта для компании, меняется статус-отчётом. Стратегический проект может иметь и низкий приоритет."
+ ],
+ "errDesc": [
+  "Заповніть поле «Мета та опис».",
+  "Fill in «Goal and description».",
+  "Заполните поле «Цель и описание»."
+ ],
+ "descHint": [
+  "Коротко опишіть мету проєкту та очікуваний результат.",
+  "Briefly describe the project goal and the expected result.",
+  "Кратко опишите цель проекта и ожидаемый результат."
+ ],
  "errTitleTaken": [
   "Проєкт з такою назвою вже є. Вкажіть іншу назву.",
   "A project with this name already exists. Enter a different name.",
@@ -2265,6 +2280,16 @@ export const EXTRA: Record<string, L3> = {
   "current",
   "текущая"
  ],
+ "relCurVer": [
+  "Поточна версія {v}",
+  "Current version {v}",
+  "Текущая версия {v}"
+ ],
+ "relTech": [
+  "Технічні оновлення",
+  "Technical updates",
+  "Технические обновления"
+ ],
  "nkFeedback": [
   "Відгук розглянуто",
   "Feedback reviewed",
@@ -2389,6 +2414,26 @@ export const EXTRA: Record<string, L3> = {
   "CSV",
   "CSV",
   "CSV"
+ ],
+ "refresh": [
+  "Оновити дані",
+  "Refresh data",
+  "Обновить данные"
+ ],
+ "refreshed": [
+  "Дані оновлено",
+  "Data refreshed",
+  "Данные обновлены"
+ ],
+ "fbNetErr": [
+  "Немає зв'язку з сервером — відгук не надіслано. Перевірте інтернет і натисніть «Надіслати» ще раз.",
+  "No connection to the server — the feedback was not sent. Check the internet and press «Send» again.",
+  "Нет связи с сервером — отзыв не отправлен. Проверьте интернет и нажмите «Отправить» ещё раз."
+ ],
+ "fbNetErrPart": [
+  "Відгук надіслано, але не всі скриншоти завантажилися. Натисніть «Надіслати» ще раз — догрузяться лише відсутні.",
+  "The feedback was sent, but not all screenshots were uploaded. Press «Send» again — only the missing ones will be uploaded.",
+  "Отзыв отправлен, но не все скриншоты загрузились. Нажмите «Отправить» ещё раз — догрузятся только недостающие."
  ],
  "fbAll": [
   "Усі відгуки учасників (для PMO)",

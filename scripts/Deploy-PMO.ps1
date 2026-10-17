@@ -844,6 +844,13 @@ foreach ($u in $portalLists) {
 # меню сайта SharePoint выключено: навигация — только в приложении
 $w = Get-PnPWeb -Includes QuickLaunchEnabled
 if ($w.QuickLaunchEnabled) { $w.QuickLaunchEnabled = $false; $w.Update(); Invoke-PnPQuery; Write-Host "    меню сайта SharePoint выключено" }
+# #106: поиск SharePoint в серой полосе скрыт — на телефоне он увеличивал страницу (поле мельче 16 px); у списков портала свои фильтры
+$w = Get-PnPWeb -Includes SearchBoxInNavBar
+if ([string]$w.SearchBoxInNavBar -ne "Hidden") {
+    $was = [string]$w.SearchBoxInNavBar
+    $w.SearchBoxInNavBar = [Microsoft.SharePoint.Client.SearchBoxInNavBarType]::Hidden; $w.Update(); Invoke-PnPQuery
+    Write-Host "    поиск SharePoint в шапке скрыт (было: $was)"
+}
 
 #region legacy-cleanup
 # ===========================================================================

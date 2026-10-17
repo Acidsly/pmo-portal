@@ -130,6 +130,18 @@ test('#54: «Скасовано» с фактической датой → по�
   q('[data-act="nav"][data-page="projects"]').click(); expect(q(`#main [data-act="openp"][data-id="${pid}"]`)).toBeNull();
 });
 
+test('#96: правка карточки без «Мета та опис» — ошибка у поля; новый проект PMO — без описания можно', () => {
+  q('[data-act="nav"][data-page="projects"]').click(); q('[data-act="openp"][data-id="1"]').click();
+  q('[data-act="editproj"][data-id="1"]').click();
+  const f = q('#pform'); expect(f.querySelector('label[for="p-desc"]').textContent).toBe('Мета та опис *');
+  const d = f.querySelector('#p-desc'); d.value = '   '; ev(d, 'input');
+  f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+  expect(err(f)).toBe(T.errDesc[0]); expect(d.getAttribute('aria-invalid')).toBe('true'); expect(f.querySelector('#e-desc').hidden).toBe(false);
+  const nf = newProject('Проєкт без опису', '2026-03-02', '2026-04-01');
+  expect(nf.querySelector('label[for="p-desc"]').textContent).toBe('Мета та опис');
+  expect(err(nf)).not.toBe(T.errDesc[0]);
+});
+
 describe('#43 смена PM / власника — только PMO', () => {
   const card = (id: number): void => { q('[data-act="nav"][data-page="projects"]').click(); q(`[data-act="openp"][data-id="${id}"]`).click(); };
   test('PM: кнопки нет, в форме проекта PM и власник — только чтение', () => {

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { retryNet, isNetError } from '../logic/ui';
 import { EntTag } from '../components/EntTag';
 import { AppCtx } from '../components/ctx';
 import { Frow, Err } from '../components/fields';
@@ -15,6 +16,7 @@ export const FeedbackForm: React.FC<{ screen: string; onCancel(): void; allUrl?:
   const [shots, setShots] = React.useState<Shot[]>([]);
   const [err, setErr] = React.useState('');
   const [busy, setBusy] = React.useState(false);
+  const sent = React.useRef<{ id: number; shots: string[] }>({ id: 0, shots: [] });
   const fileRef = React.useRef<HTMLInputElement>(null);
   React.useEffect(() => () => shots.forEach(s => URL.revokeObjectURL(s.url)), []);
 
@@ -46,10 +48,23 @@ export const FeedbackForm: React.FC<{ screen: string; onCancel(): void; allUrl?:
     setBusy(true); setErr('');
     try {
       const device = `${window.innerWidth}×${window.innerHeight} · ${navigator.userAgent}`.slice(0, 255);
-      const id = await c.repo.create('Feedback', { Title: text.trim().slice(0, 120), fbText: text.trim(), fbScreen: screen.slice(0, 255), fbDevice: device });
-      for (const s of shots) await c.repo.attach('Feedback', id, s.name, s.blob);
+      // #108: сетевой сбой — повтор; запись создаётся один раз — повторное «Надіслати» догружает только недогруженные скриншоты
+      const st = sent.current;
+      if (!st.id) {
+        const body = { Title: text.trim().slice(0, 120), fbText: text.trim(), fbScreen: screen.slice(0, 255), fbDevice: device };
+        const created = await retryNet(() => c.repo.create('Feedback', body));
+        st.id = created;
+      }
+      const id = st.id;
+      for (const s of shots) {
+        if (st.shots.indexOf(s.name) >= 0) continue;
+        await retryNet(() => c.repo.attach('Feedback', id, s.name, s.blob));
+        st.shots.push(s.name);
+      }
+      // #103: отправленный отзыв сразу виден в списке «Відгуки»
+      await c.reload().catch(() => undefined);
       c.toast(t('fbSent')); onCancel();
-    } catch (x) { setErr(String((x as Error).message || x)); setBusy(false); }
+    } catch (x) { setErr(isNetError(x) ? t(sent.current.id ? 'fbNetErrPart' : 'fbNetErr') : String((x as Error).message || x)); setBusy(false); }
   };
 
   return <>

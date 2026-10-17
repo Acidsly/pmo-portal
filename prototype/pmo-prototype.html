@@ -349,6 +349,7 @@ fieldset[aria-invalid=true]{padding:4px 6px}
 .apnote .btn{margin-top:10px}
 .apnote .link{margin-left:6px}
 .rv-meta{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:0 0 18px;font-size:14px;color:var(--text-2)}
+.rv-pm{display:inline-flex;align-items:center;gap:6px}.rv-pm .person b{color:var(--text)}
 .rv-text p{margin:6px 0;font-size:14px}
 .rv-text .lbl{color:var(--text-2)}
 .apbox{background:var(--bg-alt);border-radius:16px;padding:14px 16px}
@@ -824,7 +825,7 @@ const T = {
  errDatesOrder:['Дати запуску й завершення не можуть бути раніше дати старту.','Launch and end dates cannot be earlier than the start date.','Даты запуска и завершения не могут быть раньше даты старта.'],
  repPendingOpt:['звіт від {date} на погодженні','report of {date} awaiting approval','отчёт от {date} на согласовании'],
  progressDone:['Проєкт завершується — 100 %.','The project is being completed — 100%.','Проект завершается — 100 %.'],
- errTitleTaken:['Проєкт з такою назвою вже є. Вкажіть іншу назву.','A project with this name already exists. Enter a different name.','Проект с таким названием уже есть. Укажите другое название.'],
+ prioHint:['Пріоритет — черговість виділення ресурсів зараз (його змінює PM у картці). Тип «Стратегічний / Звичайний» — значущість проєкту для компанії, змінюється статус-звітом. Стратегічний проєкт може мати й низький пріоритет.','Priority is the current order of resource allocation (the PM changes it in the card). Type «Strategic / Regular» is the project\'s importance to the company and is changed by a status report. A strategic project may also have a low priority.','Приоритет — очерёдность выделения ресурсов сейчас (его меняет PM в карточке). Тип «Стратегический / Обычный» — значимость проекта для компании, меняется статус-отчётом. Стратегический проект может иметь и низкий приоритет.'], errDesc:['Заповніть поле «Мета та опис».','Fill in «Goal and description».','Заполните поле «Цель и описание».'], descHint:['Коротко опишіть мету проєкту та очікуваний результат.','Briefly describe the project goal and the expected result.','Кратко опишите цель проекта и ожидаемый результат.'], errTitleTaken:['Проєкт з такою назвою вже є. Вкажіть іншу назву.','A project with this name already exists. Enter a different name.','Проект с таким названием уже есть. Укажите другое название.'],
  datePh:['дд.мм.рррр','dd.mm.yyyy','дд.мм.гггг'], pickDate:['Обрати дату в календарі','Pick a date in the calendar','Выбрать дату в календаре'],
  repPending:['на погодженні · {date}','awaiting approval · {date}','на согласовании · {date}'], repPendingNew:['новий звіт на погодженні','new report awaiting approval','новый отчёт на согласовании'],
  listLabel:['список','list','список'], close:['Закрити','Close','Закрыть'], latestUpd:['Останній апдейт','Latest update','Последний апдейт'],
@@ -2108,6 +2109,7 @@ function projectForm(p){
       <div><label class="t" for="p-dept">${fl('dept')}</label><select id="p-dept">${DEPTS.map(d => opt(d, p.dept)).join('')}</select></div>
     </div>
     ${isNew ? `<fieldset class="ragpick"><legend>${fl('type')} *</legend>${segPick('p-type', TYPES, p.type)}</fieldset>` : ''}
+    <div class="frow"><label class="t" for="p-prio">${fl('prio')}</label><select id="p-prio">${PRIOS.map(s => opt(s, p.prio)).join('')}</select><p class="hint">${t('prioHint')}</p></div>
     <h3 class="fsec">${t('fPeople')}</h3>
     ${isNew ? `<div class="frow"><label class="t" for="p-pm">${fl('pm')} * <span class="muted">· ${t('m365')}</span></label>${peopleSelect('p-pm', p.pm, true)}</div>
     <div class="fgrid2 frow">
@@ -2132,10 +2134,9 @@ function projectForm(p){
     <div class="fgrid2 frow"><div><label class="t" for="p-status">${fl('status')}</label><select id="p-status">${REPORT_STATUSES.map(s => opt(s, p.status)).join('')}</select></div><div></div></div>` : ''}
     <h3 class="fsec">${t('secMoney')}</h3>
     <div class="fgrid2 frow">
-      <div><label class="t" for="p-prio">${fl('prio')}</label><select id="p-prio">${PRIOS.map(s => opt(s, p.prio)).join('')}</select></div>
       <div><label class="t" for="p-budget">${fl('budget')}, $</label><input type="text" id="p-budget" inputmode="numeric" autocomplete="off" onfocus="this.value=this.value.replace(/\\s/g,'');if(this.value==='0')this.value=''" oninput="const m=/^(.*?)[.,](\\d{1,2})$/.exec(this.value.replace(/\\s/g,''));this.value=m?String(Math.round(+(m[1].replace(/[^0-9]/g,'')||0)+(+m[2].padEnd(2,'0'))/100)):this.value.replace(/[^0-9]/g,'')" onblur="this.value=this.value.replace(/[^0-9]/g,'').replace(/^0+(?=\\d)/,'').replace(/\\B(?=(\\d{3})+(?!\\d))/g,' ')" value="${grp(p.budget || 0)}"></div>
     </div>
-    <div class="frow"><label class="t" for="p-desc">${fl('desc')}</label><textarea id="p-desc">${esc(p.desc || '')}</textarea></div>
+    <div class="frow"><label class="t" for="p-desc">${fl('desc')}${isNew ? '' : ' *'}</label><textarea id="p-desc">${esc(p.desc || '')}</textarea>${isNew ? '' : `<p class="hint">${t('descHint')}</p>`}<p class="ferr" id="e-desc" hidden></p></div>
     <p class="err" hidden></p>
     <div class="actions"><button type="submit" class="btn primary">${t('save')}</button><button type="button" class="btn" data-act="${isNew ? 'close' : 'backp'}" data-id="${p.id || ''}">${t('cancel')}</button></div>
   </form>`);
@@ -2156,6 +2157,9 @@ function projectForm(p){
     const tk = x => String(x || '').trim().replace(/\s+/g, ' ').toLowerCase();
     if (tk(vals.title) !== tk(isNew ? '' : p.title) && PROJ.some(x => (isNew || x.id !== p.id) && tk(x.title) === tk(vals.title))) return err(t('errTitleTaken'));
     if (!vals.pm) return err(t('errPM'));
+    // #96: при правке карточки (PM) «Мета та опис» обязательно; новый проект PMO заводит без него
+    const de = g('e-desc'); de.hidden = true; g('p-desc').removeAttribute('aria-invalid');
+    if (!isNew && !vals.desc){ de.textContent = t('errDesc'); de.hidden = false; g('p-desc').setAttribute('aria-invalid', 'true'); g('p-desc').focus(); return err(t('errDesc')); }
     // #54: даты нового проекта не раньше старта
     if (isNew && g('p-start').value && ['p-golive','p-plan'].some(id => g(id).value && g(id).value < g('p-start').value)) return err(t('errDatesOrder'));
     const team = [], links = [];
@@ -2801,7 +2805,7 @@ function reportView(pid, rid, keep){
       <div class="actions"><button type="submit" class="btn primary" id="ap-ok">${t('approve')}</button><button type="button" class="btn" id="ap-ret">${t('returnRep')}</button></div>
     </form></div></div>` : '';
   openPanel(`<div class="ph"><div><div class="k">${entTag('report')}<span>${esc(p.code)} · ${t('listLabel')} «${t('navReports')}»</span></div><h2>${esc(r.title)}</h2></div>${closeBtn()}</div>
-    <div class="rv-meta"><button class="link" data-act="openp" data-id="${p.id}">${esc(p.title)}</button><span>${fl('rDate')}: <b>${fmt(d)}</b></span>${periodTxt(r) ? `<span>${fl('rPeriod')}: <b>${esc(periodTxt(r))}</b></span>` : ''}${apBadge(r.approval)}</div>
+    <div class="rv-meta"><button class="link" data-act="openp" data-id="${p.id}">${esc(p.title)}</button><span class="rv-pm" id="rv-pm">${fl('pm')}: ${person(r.author)}</span><span>${fl('rDate')}: <b>${fmt(d)}</b></span>${periodTxt(r) ? `<span>${fl('rPeriod')}: <b>${esc(periodTxt(r))}</b></span>` : ''}${apBadge(r.approval)}</div>
     ${apForm}
     <div class="sec"><div class="group">${kv('rag', ragHtml(r.rag))}${DIMS.map(([k, l]) => kv(l, ragHtml(r[k]))).join('')}</div></div>
     ${ind ? `<div class="sec"><h3>${t('repIndicators')}</h3><div class="group">${ind}${r.keyReason ? `<div class="kv"><span class="k">${t('keyReason')}</span><span class="v">${esc(r.keyReason)}</span></div>` : ''}</div></div>` : ''}

@@ -69,6 +69,17 @@ describe('DataTable: #35 / #49 ширина колонок, #58 карточки
   const ev = (type: string, x: number, button = 0): MouseEvent => new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, button });
   const colW = (k: number): string => (root.querySelectorAll('col')[k] as HTMLElement).style.width;
 
+  test('#103: «Оновити дані» — перечитывает данные, повторно не нажать, пока идёт; затем «Дані оновлено»', async () => {
+    let n = 0, done: () => void = () => undefined; const toasts: string[] = [];
+    const c2 = { ...ctx, reload: () => { n++; return new Promise<void>(r => { done = r; }); }, toast: (m: string) => toasts.push(m) };
+    act(() => { ReactDOM.render(<AppCtx.Provider value={c2 as any}><DataTable tkey="t9" defs={defs} rows={rows} /></AppCtx.Provider>, root); });
+    const b = root.querySelector('#dt-refresh') as HTMLButtonElement;
+    expect(b.getAttribute('aria-label')).toBe('Оновити дані');
+    act(() => { b.click(); }); act(() => { b.click(); });
+    expect([n, b.disabled]).toEqual([1, true]);
+    await act(async () => { done(); });
+    expect([b.disabled, toasts]).toEqual([false, ['Дані оновлено']]);
+  });
   test('перетаскивание: живая ширина, по отпусканию — запомнена для списка', () => {
     mount(<DataTable tkey="t1" defs={defs} rows={rows} />);
     const h = root.querySelectorAll('.col-rs')[1] as HTMLElement;
@@ -216,6 +227,22 @@ describe('#43 «Змінити PM / власника» — только PMO', ()
       expect(root.querySelector('form')).toBeNull(); expect(root.textContent).toContain('Проєкт в архіві: лише перегляд.');
       ReactDOM.unmountComponentAtNode(root);
     }
+  });
+  test('#96: правка карточки без «Мета та опис» — звёздочка, подсказка, ошибка у поля, запись не уходит; введённое остаётся', async () => {
+    const saved: any[] = []; const c2 = { ...ctx, repo: { ...ctx.repo, update: async (...a: any[]) => { saved.push(a); } } };
+    act(() => { ReactDOM.render(<AppCtx.Provider value={c2}><ProjectForm data={data({ canEdit: true })} project={{ ...pr, canEdit: true, description: '' } as any} onCancel={() => undefined} /></AppCtx.Provider>, root); });
+    const label = root.querySelector('label[for="f-desc"]') as HTMLElement;
+    expect(label.textContent).toBe('Мета та опис *');
+    expect(root.textContent).toContain('Коротко опишіть мету проєкту та очікуваний результат.');
+    const t = root.querySelector('#f-title') as HTMLInputElement;
+    act(() => { Simulate.change(t, { target: { value: 'Нова назва' } } as any); });
+    await act(async () => { Simulate.submit(root.querySelector('form') as HTMLFormElement); });
+    expect(saved.length).toBe(0);
+    expect(root.querySelector('#f-desc')!.getAttribute('aria-invalid')).toBe('true');
+    expect(root.textContent).toContain('Заповніть поле «Мета та опис».');
+    expect((root.querySelector('#f-title') as HTMLInputElement).value).toBe('Нова назва');
+    act(() => { Simulate.change(root.querySelector('#f-desc') as HTMLTextAreaElement, { target: { value: 'Мета' } } as any); });
+    expect(root.querySelector('#f-desc')!.getAttribute('aria-invalid')).toBeNull();
   });
   test('у PM в форме проекта PM и власник — только чтение', () => {
     mount(<ProjectForm data={data({ canEdit: true })} project={{ ...pr, canEdit: true } as any} onCancel={() => undefined} />);
@@ -498,8 +525,13 @@ describe('#90 версия портала и «Що змінилося»', () =>
     act(() => { Simulate.click(root.querySelector('#rel-open') as HTMLElement); }); expect(opened).toBe(1);
     ReactDOM.unmountComponentAtNode(root);
     const fb: number[] = []; mount(<Releases onBack={() => undefined} onCancel={() => undefined} onFeedback={(n: number) => fb.push(n)} />);
-    expect(root.querySelectorAll('.rel-i').length).toBe(RELEASES[0].length);
+    // #95: технические выпуски подряд — один блок, блоков меньше, чем выпусков; вверху — текущая версия; первый содержательный — раскрыт
+    expect(root.querySelectorAll('.rel-i').length).toBeLessThan(RELEASES[0].length);
+    expect((root.querySelector('#rel-cur') as HTMLElement).textContent).toBe(`Поточна версія ${RELEASES[0][0].ver} · ${RELEASES[0][0].date}`);
     expect((root.querySelector('.rel-i h3') as HTMLElement).textContent).toContain('поточна');
+    const openBlocks = Array.from(root.querySelectorAll('details.rel-i[open]'));
+    expect(openBlocks.length).toBe(1); expect(openBlocks[0].classList.contains('rel-tech')).toBe(false);
+    expect(Array.from(root.querySelectorAll('.rel-tech summary')).some(x => /Технічні оновлення · [\d.]+–[\d.]+ · /.test(x.textContent || ''))).toBe(true);
     const a = root.querySelector('a.rel-fb[data-fb="84"]') as HTMLElement; expect(a).not.toBeNull();
     act(() => { a.dispatchEvent(new MouseEvent('click', { bubbles: true })); }); expect(fb).toEqual([84]);
     expect(linkFeedback('<li>x (#82, #84)</li>')).toBe('<li>x (<a href="#" class="rel-fb" data-fb="82">#82</a>, <a href="#" class="rel-fb" data-fb="84">#84</a>)</li>');

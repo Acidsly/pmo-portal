@@ -27,6 +27,7 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
     : { title: '', code: '', department: 'ІТ', links: [], type: 'Звичайний', priority: '2 — Середній', manager: null, owner: null, team: [{ user: null, role: '', topics: '' }],
         start: c.today, goLive: '', planEnd: '', status: 'Ініціація', budget: 0, description: '' });
   const [err, setErr] = React.useState('');
+  const [descErr, setDescErr] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   // PM нового проекта не подставляется: проект заводит PMO и назначает PM сам (иначе PMO случайно становится PM)
   const set = (x: Partial<ProjectDraft>): void => setD({ ...d, ...x });
@@ -44,7 +45,8 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
     const others = othersP.map(x => x.code);
     const clean = { ...d, team: cleanTeam(d.team), links: cleanLinks(d.links) };
     const v = validateProject(clean, others, othersP.map(x => x.title), project ? project.title : '', !project);   // даты — только у нового проекта (#54)
-    if (v) { setErr(t(v)); return; }
+    setDescErr(v === 'errDesc');
+    if (v) { setErr(t(v)); if (v === 'errDesc') { const el = document.getElementById('f-desc'); if (el) el.focus(); } return; }
     setBusy(true); setErr('');
     try {
       const x = await withIds(clean);
@@ -104,6 +106,9 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
           <select id="f-dept" value={d.department} onChange={e => set({ department: e.target.value })}><Opts values={DEPTS} /></select></div>
       </div>
       {isNew ? <fieldset className="ragpick"><legend>{fl('type')}</legend><SegPick name="f-type" options={TYPES} value={d.type} onChange={v => set({ type: v })} /></fieldset> : null}
+      {/* #105: пріоритет — рядом с типом, с подсказкой, чем они различаются */}
+      <Frow label={fl('prio')} htmlFor="f-prio" hint={t('prioHint')}>
+        <select id="f-prio" value={d.priority} onChange={e => set({ priority: e.target.value })}><Opts values={PRIOS} /></select></Frow>
 
       <h3 className="fsec">{t('fPeople')}</h3>
       {/* #43: после создания PM и власника меняет только PMO («Змінити PM / власника» в карточке) */}
@@ -139,12 +144,13 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
 
       <h3 className="fsec">{t('secMoney')}</h3>
       <div className="fgrid2 frow">
-        <div><label className="t" htmlFor="f-prio">{fl('prio')}</label>
-          <select id="f-prio" value={d.priority} onChange={e => set({ priority: e.target.value })}><Opts values={PRIOS} /></select></div>
         <div><label className="t" htmlFor="f-bud">{fl('budget')}, $</label>
           <MoneyIn id="f-bud" value={d.budget} onChange={v => set({ budget: v })} /></div>
       </div>
-      <Frow label={fl('desc')} htmlFor="f-desc"><textarea id="f-desc" value={d.description} onChange={e => set({ description: e.target.value })} /></Frow>
+      {/* #96: при правке карточки описание обязательно — звёздочка, подсказка, ошибка у поля; остальное введённое остаётся */}
+      <Frow label={fl('desc')} htmlFor="f-desc" req={!isNew} hint={isNew ? undefined : t('descHint')} err={descErr ? t('errDesc') : ''}>
+        <textarea id="f-desc" aria-invalid={descErr || undefined} value={d.description}
+          onChange={e => { set({ description: e.target.value }); if (descErr && e.target.value.trim()) setDescErr(false); }} /></Frow>
       <Err msg={err} />
       <div className="actions">
         <button type="submit" className="btn primary" disabled={busy}>{t('save')}</button>

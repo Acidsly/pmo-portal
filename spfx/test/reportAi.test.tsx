@@ -237,6 +237,11 @@ describe('поле ИИ в просмотре отчёта', () => {
   const view = async (r: any): Promise<void> => {
     await act(async () => { ReactDOM.render(<AppCtx.Provider value={ctxFor('boss@x')}><ReportView data={{ ...data, reports: [r], approvals: [] }} report={r} onCancel={() => undefined} /></AppCtx.Provider>, root); });
   };
+  test('#98: ответственный PM (автор отчёта) — под заголовком', async () => {
+    await view(rep({}));
+    expect($('#rv-pm .pn b').textContent).toBe('PM'); expect($('#rv-pm').textContent!.indexOf('PM:')).toBe(0);
+    expect($('.rv-meta').firstElementChild!.nextElementSibling).toBe($('#rv-pm'));
+  });
   test('проверено — текст и «Перевірено ШІ: дата»', async () => {
     await view(rep({ aiCheck: '1. Пункт', aiCheckedAt: '2026-10-14T09:30:00Z' }));
     expect($('#rv-ai').textContent).toContain('1. Пункт'); expect($('#rv-ai').textContent).toContain('Перевірено ШІ:');

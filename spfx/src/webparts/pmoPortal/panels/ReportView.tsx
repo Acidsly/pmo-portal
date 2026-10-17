@@ -67,7 +67,9 @@ export const ReportView: React.FC<{ data: PortalData; report: StatusReport | und
 
   return <>
     {head}
+    {/* #98: ответственный PM (автор отчёта) — сразу под заголовком */}
     <div className="rv-meta"><button className="link" onClick={() => c.openProject(p.id)}>{p.title}</button>
+      <span className="rv-pm" id="rv-pm">{fl('pm')}: <PersonCell p={r.author} /></span>
       <span>{fl('rDate')}: <b>{fmtDate(r.date)}</b></span>{periodText(t, r) ? <span>{fl('rPeriod')}: <b>{periodText(t, r)}</b></span> : null}<ApBadge v={state} /></div>
 
     {canDecide ? <div className="sec"><h3>{t('apTitle')}</h3><div className="apbox"><form noValidate={true} onSubmit={e => { e.preventDefault(); decide(AP_OK).catch(() => undefined); }}>

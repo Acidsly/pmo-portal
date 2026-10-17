@@ -161,6 +161,8 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
 - Only the PM can **Edit project**: name, department, priority, budget, description, and also:
   - **Project team** — "+ Add member": a person, their **role** (required) and what to contact them about; × removes the member;
   - **Links** — "+ Add link": a name and an address (starting with `https://`); × removes it.
+- **«Goal and description»** is required when the PM saves the card (including projects created earlier — at the next save): briefly, the project goal and the expected result. The PMO can create a new project without a description — the PM adds it.
+- **Type and priority are different things.** **Type** («Strategic» / «Regular») is the project's importance to the company; it is set at creation and then changes only through a status report. **Priority** («1 — High» … «3 — Low») is the current order of resource allocation; the PM changes it in the card (the field next to the department). A strategic project may temporarily have a low priority — this is not an error.
 - Phase, health, dates and costs change only through a status report (see "How to change the project phase").
 - After the team changes, access rights are recalculated automatically **within ~15 minutes**: then the person sees the project in their list and in «Card access» and can comment.
 - After the project is created, only the PMO changes the **PM and the owner**: in the card — **"Change PM / owner"** (new PM, new owner — an empty field means no change, the reason is required). The change shows in the card and in the "Change history" ("Assignment") right away and is finally applied by synchronization within ~15 minutes; until then a new change cannot be submitted. A report of the former PM that is pending approval is returned automatically.
@@ -178,7 +180,7 @@ Top right: **UA / EN / RU** and the light ☀ / dark ☾ theme. The choice is re
 
 Anything you save in the forms appears on screen immediately; so do PMO decisions on reports. Access rights (including for new team members), the change history and "Card access" update automatically within ~15 minutes.
 
-Before every save the portal checks the current data: if meanwhile the PM changed, the project moved to the archive, the project already has a report awaiting approval or another user changed the record — nothing is saved, you see an explanation and the data refreshes. An open page refreshes its data when you return to the tab and every 5 minutes.
+Before every save the portal checks the current data: if meanwhile the PM changed, the project moved to the archive, the project already has a report awaiting approval or another user changed the record — nothing is saved, you see an explanation and the data refreshes. An open page refreshes its data when you return to the tab and every 5 minutes. To refresh the data right away (for example, on a phone), press **↻ «Refresh data»** above the list — next to «CSV».
 
 ## Feedback
 

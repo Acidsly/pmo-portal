@@ -55,3 +55,19 @@ export function neighbors(order: number[], id: number): { prev: number; next: nu
   if (i < 0) return { prev: 0, next: 0 };
   return { prev: i > 0 ? order[i - 1] : 0, next: i < order.length - 1 ? order[i + 1] : 0 };
 }
+
+/** #108: сетевой сбой браузера (Safari — «Load failed», Chrome — «Failed to fetch», Firefox — «NetworkError»): запрос не дошёл,
+ *  его можно повторить. Ответ сервера с ошибкой (403, 400 …) — не сетевой сбой. */
+export const isNetError = (e: unknown): boolean => /load failed|failed to fetch|networkerror|network request failed|the network connection was lost/i
+  .test(String((e as Error)?.message || e || ''));
+/** Паузы между повторами (мс); тесты обнуляют. */
+export const NET_RETRY = { waits: [700, 1800] };
+/** Запрос с повтором при сетевом сбое: до NET_RETRY.waits.length повторов с паузой; другие ошибки — сразу. */
+export async function retryNet<T>(fn: () => Promise<T>): Promise<T> {
+  for (let i = 0; ; i++) {
+    try { return await fn(); } catch (e) {
+      if (!isNetError(e) || i >= NET_RETRY.waits.length) throw e;
+      await new Promise(resolve => setTimeout(resolve, NET_RETRY.waits[i]));
+    }
+  }
+}

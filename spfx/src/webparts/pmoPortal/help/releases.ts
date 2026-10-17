@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.4.2",
+   "date": "17.10.2026",
+   "html": "<p><b>Нове</b></p>\n<ul>\n<li>Кнопка <b>↻ «Оновити дані»</b> над списками (поруч із «CSV») — свіжі дані без перезаходу на сторінку, зручно на телефоні (#103).</li>\n</ul>\n<p><b>Змінено</b></p>\n<ul>\n<li>«Що змінилося»: угорі — поточна версія; технічні оновлення підряд зібрані в один згорнутий блок; кожен випуск зі змінами розгортається натисканням на заголовок, розділи «Нове / Змінено / Виправлено» виділені (#95).</li>\n<li>Картка проєкту: «Мета та опис» обов'язкове при збереженні PM (і в раніше створених проєктах — при наступному збереженні) (#96).</li>\n<li>Картка проєкту: «Пріоритет» — у «Основне», поруч із напрямом, з підказкою, чим пріоритет відрізняється від типу; у «Довідці» — визначення (#105).</li>\n<li>Перегляд статус-звіту: під заголовком — відповідальний PM (#98).</li>\n<li>Пошук SharePoint у сірій смузі прихований: на телефоні він збільшував сторінку (#106).</li>\n</ul>\n<p><b>Виправлено</b></p>\n<ul>\n<li>Відгук надсилається з першого разу: при збої зв'язку портал повторює запит сам, повторне «Надіслати» не створює дубль; надісланий відгук одразу видно в списку (#108, #103).</li>\n</ul>"
+  },
+  {
    "ver": "1.7.4.1",
    "date": "14.10.2026",
    "html": "<p><b>Змінено</b></p>\n<ul>\n<li>«Детальний огляд системи» в «Довідці»: новий розділ «Помічник ШІ (пілот)», безпека даних і стан робіт — з урахуванням помічника.</li>\n</ul>"
@@ -165,6 +170,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.4.2",
+   "date": "17.10.2026",
+   "html": "<p><b>New</b></p>\n<ul>\n<li>The <b>↻ «Refresh data»</b> button above lists (next to «CSV») — fresh data without reopening the page, handy on a phone (#103).</li>\n</ul>\n<p><b>Changed</b></p>\n<ul>\n<li>«What's new»: the current version at the top; consecutive technical updates are collected in one collapsed block; each release with changes expands by tapping its title, the «New / Changed / Fixed» sections are highlighted (#95).</li>\n<li>Project card: «Goal and description» is required when the PM saves the card (including projects created earlier — at the next save) (#96).</li>\n<li>Project card: «Priority» is in «General», next to the department, with a hint on how priority differs from type; definitions in «Help» (#105).</li>\n<li>Status report view: the responsible PM under the title (#98).</li>\n<li>The SharePoint search in the grey bar is hidden: on a phone it zoomed the page (#106).</li>\n</ul>\n<p><b>Fixed</b></p>\n<ul>\n<li>Feedback is sent on the first try: on a connection failure the portal retries itself, pressing «Send» again does not create a duplicate; sent feedback is visible in the list right away (#108, #103).</li>\n</ul>"
+  },
+  {
    "ver": "1.7.4.1",
    "date": "14.10.2026",
    "html": "<p><b>Changed</b></p>\n<ul>\n<li>«Detailed system overview» in «Help»: a new «AI assistant (pilot)» section; data security and project status now cover the assistant.</li>\n</ul>"
@@ -326,6 +336,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.4.2",
+   "date": "17.10.2026",
+   "html": "<p><b>Новое</b></p>\n<ul>\n<li>Кнопка <b>↻ «Обновить данные»</b> над списками (рядом с «CSV») — свежие данные без перезахода на страницу, удобно на телефоне (#103).</li>\n</ul>\n<p><b>Изменено</b></p>\n<ul>\n<li>«Что изменилось»: вверху — текущая версия; технические обновления подряд собраны в один свёрнутый блок; каждый выпуск с изменениями раскрывается нажатием на заголовок, разделы «Новое / Изменено / Исправлено» выделены (#95).</li>\n<li>Карточка проекта: «Цель и описание» обязательно при сохранении PM (и в ранее созданных проектах — при следующем сохранении) (#96).</li>\n<li>Карточка проекта: «Приоритет» — в «Основное», рядом с направлением, с подсказкой, чем приоритет отличается от типа; в «Справке» — определения (#105).</li>\n<li>Просмотр статус-отчёта: под заголовком — ответственный PM (#98).</li>\n<li>Поиск SharePoint в серой полосе скрыт: на телефоне он увеличивал страницу (#106).</li>\n</ul>\n<p><b>Исправлено</b></p>\n<ul>\n<li>Отзыв отправляется с первого раза: при сбое связи портал повторяет запрос сам, повторное «Отправить» не создаёт дубль; отправленный отзыв сразу виден в списке (#108, #103).</li>\n</ul>"
+  },
   {
    "ver": "1.7.4.1",
    "date": "14.10.2026",

@@ -39,6 +39,10 @@ test('проверки проекта и риска', () => {
   expect(validateProject(draft({ title: 'П', manager: m, code: ' prj-911 ' }), ['PRJ-911'])).toBe('errCode');
   expect(validateProject(draft({ title: 'П', manager: m, code: '' }), ['PRJ-911'])).toBe('');
   expect(validateProject(draft({ title: 'П', manager: m, code: 'PRJ-912' }), ['PRJ-911'])).toBe('');
+  // #96: «Мета та опис» обязательно при правке карточки (PM); новый проект PMO заводит без него; пробелы — пусто
+  expect(validateProject(draft({ title: 'П', manager: m, description: '  ' }), [], [], 'П', false)).toBe('errDesc');
+  expect(validateProject(draft({ title: 'П', manager: m, description: 'Мета' }), [], [], 'П', false)).toBe('');
+  expect(validateProject(draft({ title: 'П', manager: m, description: '' }), [], [], '', true)).toBe('');
   const r: RiskDraft = { projectId: 1, title: ' ', type: 'Ризик', probability: 3, impact: 3, owner: null, status: 'Відкрито', due: '', mitigation: '', strategy: '', contingency: '' };
   expect(validateRisk(r)).toBe('errRiskTitle');
   expect(validateRisk({ ...r, title: 'Р' })).toBe('');
@@ -99,5 +103,5 @@ test('#54: даты проверяются только у нового прое
   const m = { id: 1, name: 'M', email: 'm@x.ua' };
   const D = { title: 'П', code: '', department: 'ІТ', links: [], type: 'Звичайний', priority: '', manager: m, owner: null, team: [], start: '2026-03-02', goLive: '2026-01-01', planEnd: '', status: 'Ініціація', budget: 0, description: '' };
   expect(validateProject(D)).toBe('errDatesOrder');
-  expect(validateProject(D, [], [], 'П', false)).toBe('');
+  expect(validateProject({ ...D, description: 'Мета' }, [], [], 'П', false)).toBe('');   // описание обязательно при правке (#96)
 });

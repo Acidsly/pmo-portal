@@ -6,7 +6,7 @@ import { AppCtx } from './ctx';
 import { TableDefs, Col } from './defs';
 import { applyTable, filterValues, nextSort, toggleCol, moveCol, loadState, saveState, TableState, colWidths, resizeCol, resetWidths } from '../logic/table';
 import { Pop } from './Pop';
-import { Funnel, Gear } from './Icons';
+import { Funnel, Gear, Refresh } from './Icons';
 
 type PopState = { kind: 'filter'; col: string; anchor: HTMLElement } | { kind: 'cols'; anchor: HTMLElement } | undefined;
 
@@ -15,7 +15,10 @@ type PopState = { kind: 'filter'; col: string; anchor: HTMLElement } | { kind: '
 export function DataTable<R extends { id: number }>(p: { tkey: string; defs: TableDefs<R>; rows: R[]; empty?: string; left?: React.ReactNode; right?: React.ReactNode;
   /** #58: карточка строки — на узком экране вместо таблицы (те же строки; сортировка и фильтры — заданные на широком экране) */ card?: (r: R) => React.ReactNode;
   /** строки как на экране (фильтры и сортировка) — например, «попередній / наступний» в окне записи */ onShown?: (rows: R[]) => void }): JSX.Element {
-  const { t, lang } = React.useContext(AppCtx);
+  const { t, lang, reload, toast } = React.useContext(AppCtx);
+  // #103: «Оновити» — перечитать данные портала (на телефоне иначе — только перезайти на страницу)
+  const [refreshing, setRefreshing] = React.useState(false);
+  const refresh = (): void => { if (refreshing) return; setRefreshing(true); reload().then(() => { setRefreshing(false); toast(t('refreshed')); }, () => setRefreshing(false)); };
   const { cols: defs, lock, defaults } = p.defs;
   const known = Object.keys(defs);
   const [st, setSt] = React.useState<TableState>(() => loadState(p.tkey, defaults, known, lock));
@@ -124,6 +127,7 @@ export function DataTable<R extends { id: number }>(p: { tkey: string; defs: Tab
 
   return <>
     <div className="cmdbar">{p.left}<span className="spacer" />{p.right}
+      <button className="iconbtn refresh-btn" id="dt-refresh" title={t('refresh')} aria-label={t('refresh')} aria-busy={refreshing || undefined} disabled={refreshing} onClick={refresh}><Refresh /></button>
       <button className="iconbtn csv-btn" title={t('csvTitle')} aria-label={t('csvTitle')} disabled={!data.length} onClick={exportCsv}>{t('csv')}</button>
       <button className="iconbtn gear-lg" aria-label={t('cols')} title={t('cols')}
         onClick={e => { const a = e.currentTarget; setPop(pop && pop.kind === 'cols' ? undefined : { kind: 'cols', anchor: a }); }}><Gear /></button></div>
