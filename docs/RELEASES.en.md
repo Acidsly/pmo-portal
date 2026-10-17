@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.4.4 · 17.10.2026
+
+**Fixed**
+- «Detailed system overview»: tables wrap text — no sideways scrolling.
+
 ## 1.7.4.3 · 17.10.2026
 
 **Fixed**

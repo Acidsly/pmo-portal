@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.4.4",
+   "date": "17.10.2026",
+   "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>«Детальний огляд системи»: таблиці переносять текст — без прокрутки вбік.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.4.3",
    "date": "17.10.2026",
    "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>«Помічник ШІ» вмикається з першого разу: вікно входу Microsoft відкривається одразу після «Дозволити»; на телефоні — вхід із переходом на сторінку Microsoft, після повернення увімкнення завершується само. Не вдалося — видно причину (вікно входу заблоковано, вхід не завершено, помилка ШІ з кодом); на тестовому сайті збій записується у «Відгуки».</li>\n</ul>\n<p><b>Змінено</b></p>\n<ul>\n<li>«Помічник ШІ» зберігається для вас, а не для браузера: увімкнули на телефоні — увімкнено й на комп'ютері.</li>\n</ul>"
@@ -175,6 +180,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.4.4",
+   "date": "17.10.2026",
+   "html": "<p><b>Fixed</b></p>\n<ul>\n<li>«Detailed system overview»: tables wrap text — no sideways scrolling.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.4.3",
    "date": "17.10.2026",
    "html": "<p><b>Fixed</b></p>\n<ul>\n<li>«AI assistant» turns on the first time: the Microsoft sign-in window opens right after «Allow»; on a phone, sign-in goes to the Microsoft page and back, and turning on finishes by itself. If it fails, the reason is shown (sign-in window blocked, sign-in not completed, AI error with a code); on the test site the failure is recorded in «Feedback».</li>\n</ul>\n<p><b>Changed</b></p>\n<ul>\n<li>«AI assistant» is kept for you, not for the browser: turned on on your phone — it is on on your computer too.</li>\n</ul>"
@@ -346,6 +356,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.4.4",
+   "date": "17.10.2026",
+   "html": "<p><b>Исправлено</b></p>\n<ul>\n<li>«Подробный обзор системы»: таблицы переносят текст — без прокрутки вбок.</li>\n</ul>"
+  },
   {
    "ver": "1.7.4.3",
    "date": "17.10.2026",

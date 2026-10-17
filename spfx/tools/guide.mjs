@@ -3,6 +3,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { setBlock, js } from './proto-block.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -64,4 +65,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     'export interface Release { ver: string; date: string; html: string; }\n' +
     `export const RELEASES: [Release[], Release[], Release[]] = ${JSON.stringify(rel, null, 1)};\n`);
   console.log('help/releases.ts обновлён');
+  // прототип — те же тексты (эталон интерфейса показывает ту же «Довідку» и «Що змінилося»)
+  setBlock('help', `const GUIDE = ${js(html)};\nconst RELEASES = ${js(rel)};`);
+  console.log('prototype: GUIDE, RELEASES обновлены');
 }

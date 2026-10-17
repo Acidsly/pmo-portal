@@ -5,6 +5,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { setBlock, js } from './proto-block.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const OVERVIEW_SRC = join(root, 'docs/overview/overview.uk.html');
@@ -38,4 +39,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     `export const OVERVIEW_CSS: string = ${JSON.stringify(o.css)};\n` +
     `export const OVERVIEW_HTML: string = ${JSON.stringify(o.html)};\n`);
   console.log('help/overview.ts обновлён');
+  // прототип: картинки — из docs/overview/img рядом с репозиторием
+  setBlock('overview', `const OVERVIEW_CSS = ${js(o.css)};\nconst OVERVIEW_HTML = ${js(o.html)};`);
+  console.log('prototype: OVERVIEW обновлён');
 }

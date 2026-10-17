@@ -669,6 +669,71 @@ form .fsec:first-child{margin-top:0}
 .ai-rec p{margin:2px 0}
 .ai-msg.warn{color:var(--nv-risks)} .ai-msg.err{color:#b91c1c} .ai-msg.ok{color:var(--nv-reports)}
 @media (max-width:720px){.ai-bar .btn{flex:1 1 100%;justify-content:center}}
+/* «Довідка», «Що змінилося», «Детальний огляд», «Відгуки», кнопки «?», «Оновити дані» и «CSV» (как в приложении) */
+.hbtn { border: 0; background: var(--bg-alt); border-radius: 10px; padding: 6px 12px; min-height: 34px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-2); display: inline-flex; align-items: center; gap: 6px; }
+.hbtn:hover { color: var(--text); }
+.hbtn.round { width: 34px; padding: 0; justify-content: center; font-size: 15px; }
+.fb-nav { display: inline-flex; align-items: center; gap: 6px; vertical-align: middle; }
+.fb-nav button { border: 0; background: var(--bg-alt); color: var(--text-2); width: 24px; height: 24px; border-radius: 7px; display: inline-grid; place-items: center; cursor: pointer; padding: 0; }
+.fb-nav button:hover:not(:disabled) { color: var(--text); }
+.fb-nav button:disabled { opacity: .35; cursor: default; }
+.fb-shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.fb-shots figure { position: relative; margin: 0; border-radius: 12px; overflow: hidden; background: var(--bg-alt); aspect-ratio: 1; }
+.fb-shots img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fb-shots .x-sm { position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; background: var(--glass); }
+@media (pointer: coarse) { .fb-paste { display: none; } .hbtn { min-height: 40px; } .hbtn.round, .bell { width: 40px; height: 40px; } }
+@media (max-width: 600px) { .hbtn .hlabel { display: none; } }
+.help { font-size: 15px; line-height: 1.55; }
+.help h3 { font-size: 17px; font-weight: 600; margin: 26px 0 8px; }
+.help h3:first-child { margin-top: 4px; }
+.help p { margin: 0 0 10px; }
+.help ul, .help ol { margin: 0 0 10px; padding-left: 22px; }
+.help li { margin: 4px 0; }
+.help code { background: var(--bg-alt); border-radius: 6px; padding: 1px 6px; font-size: 13px; word-break: break-all; }
+.help table { border-collapse: collapse; font-size: 14px; margin: 4px 0 12px; width: 100%; }
+@media (max-width: 600px) { .help table { min-width: 480px; } }
+/* тексты «Довідки» и «Огляду» переносятся (общее правило таблиц — без переноса: обзор растягивался вбок) */
+.help th, .help td, .ovw th, .ovw td { white-space: normal; }
+.help th, .help td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.help th { color: var(--text-2); font-weight: 600; font-size: 13px; }
+.help-more { margin-top: 22px; padding: 14px 16px; border-radius: 16px; background: var(--bg-alt); }
+.help-more p { margin: 0 0 10px; font-size: 14px; }
+.actions.top { margin: 0 0 14px; flex-wrap: wrap; }
+.actions.top a.btn { text-decoration: none; display: inline-flex; align-items: center; }
+.ovw-paper { background: #fff; border-radius: 16px; padding: 18px 20px; box-shadow: 0 0 0 1px var(--line); }
+@media (max-width: 600px) { .ovw-paper { padding: 12px; } .ovw .cards, .ovw .two, .ovw .arch { grid-template-columns: 1fr; } .ovw .phones { flex-wrap: wrap; } .ovw .phones figure { width: 100%; } }
+.ovw section { margin-top: 26px; padding-top: 18px; border-top: 1px solid #d5dbe8; }
+.ovw .tablewrap, .ovw table { max-width: 100%; }
+/* #90: версия портала в «Довідці» и «Що змінилося» */
+.rel-ver { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 0 0 14px; font-size: 13px; color: var(--text-2); }
+.rel-i { padding: 14px 0; border-top: 1px solid var(--line); }
+.rel-i:first-child { border-top: 0; padding-top: 4px; }
+.rel-i h3 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0; }
+/* #95: блоки выпусков раскрываются по заголовку; разделы «Нове / Змінено / Виправлено / Перевірте повторно» — метками */
+.rel-cur { margin: 0 0 10px; font-size: 14px; }
+.rel-i > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; }
+.rel-i > summary::-webkit-details-marker { display: none; }
+.rel-i > summary::before { content: '▸'; color: var(--text-2); transition: transform .15s; }
+.rel-i[open] > summary::before { transform: rotate(90deg); }
+.rel-i[open] > summary { margin-bottom: 8px; }
+.rel-tech h3 { font-size: 14px; font-weight: 600; color: var(--text-2); }
+.rel-tech-list { margin: 0; font-size: 13px; color: var(--text-2); }
+.rel-body > p > b:only-child { display: inline-block; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--theme); background: var(--bg-alt); border-radius: 6px; padding: 2px 8px; margin-top: 6px; }
+.ovw img { max-width: 100%; height: auto; }
+.cmdbar .csv-btn { width: auto; padding: 0 12px; font-size: 12px; font-weight: 700; letter-spacing: .04em; }
+.cmdbar .csv-btn:disabled { opacity: .45; cursor: default; }
+.cmdbar .refresh-btn[aria-busy] svg { animation: pmo-spin .8s linear infinite; }
+@keyframes pmo-spin { to { transform: rotate(360deg); } }
+.fbst { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.fbst-0 { color: #0a64d6; background: #e3eefc; }
+.fbst-1 { color: #8a5a00; background: #fdf1d8; }
+.fbst-2 { color: #1e7d34; background: #e2f4e6; }
+.fbst-3 { color: #6b3fb8; background: #efe7fb; }
+.fbst-4 { color: #6b7280; background: #eceef1; }
+.linklike { border: 0; background: none; padding: 0; text-align: left; color: inherit; cursor: pointer; font: inherit; }
+.linklike:hover { color: var(--theme); }
+.clamp3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.fb-text { white-space: pre-wrap; line-height: 1.5; }
 
 }
 }
