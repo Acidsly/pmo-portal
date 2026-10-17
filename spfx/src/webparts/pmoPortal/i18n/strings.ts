@@ -2430,6 +2430,36 @@ export const EXTRA: Record<string, L3> = {
   "No connection to the server — the feedback was not sent. Check the internet and press «Send» again.",
   "Нет связи с сервером — отзыв не отправлен. Проверьте интернет и нажмите «Отправить» ещё раз."
  ],
+ "aiEnableFail": [
+  "Не вдалося увімкнути ШІ: ",
+  "Could not turn on AI: ",
+  "Не удалось включить ИИ: "
+ ],
+ "aiLoginFail": [
+  "вхід Microsoft не завершено",
+  "Microsoft sign-in was not completed",
+  "вход Microsoft не завершён"
+ ],
+ "aiSignInAgain": [
+  "потрібно увійти до Microsoft — натисніть ще раз",
+  "Microsoft sign-in is needed — press again",
+  "нужно войти в Microsoft — нажмите ещё раз"
+ ],
+ "aiCode": [
+  "код",
+  "code",
+  "код"
+ ],
+ "aiSignInNeed": [
+  "Щоб користуватися ШІ на цьому пристрої, увійдіть до Microsoft. Введені дані форми не збережуться.",
+  "To use AI on this device, sign in to Microsoft. Data entered in the form will not be kept.",
+  "Чтобы пользоваться ИИ на этом устройстве, войдите в Microsoft. Введённые в форму данные не сохранятся."
+ ],
+ "aiSignIn": [
+  "Увійти",
+  "Sign in",
+  "Войти"
+ ],
  "fbNetErrPart": [
   "Відгук надіслано, але не всі скриншоти завантажилися. Натисніть «Надіслати» ще раз — догрузяться лише відсутні.",
   "The feedback was sent, but not all screenshots were uploaded. Press «Send» again — only the missing ones will be uploaded.",

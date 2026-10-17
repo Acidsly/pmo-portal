@@ -3,7 +3,7 @@ import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { Project, StatusReport, Risk, Comment, ChangeEntry, Person, FeedbackRow, Approval } from './types';
 import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, REPORT_SELECT, REPORT_EXPAND, REPORT_AI, RISK_SELECT, RISK_EXPAND,
   COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, TEAM_SELECT, TEAM_EXPAND, mapTeam, APPROVAL_SELECT, APPROVAL_EXPAND, mapApproval, ASSIGN_SELECT, ASSIGN_EXPAND, mapAssign, canAdd, canManage,
-  withoutFolders, CHANGES_ON_LOAD, changesOf, changesSince, NOTIFY_SELECT, mapNotify } from './map';
+  withoutFolders, CHANGES_ON_LOAD, changesOf, changesSince, NOTIFY_SELECT, NOTIFY_SELECT_BASE, mapNotify, NotifyRow } from './map';
 import { withApproval, approvedIds as approvedOf, pendingReports, latestReport } from '../logic/approval';
 import { applyAssignments } from '../logic/assign';
 import { NOTIFY_DAYS, ReadMarks, mergeMarks } from '../logic/notify';
@@ -33,7 +33,7 @@ export interface PortalData { projects: Project[]; reports: StatusReport[]; risk
   /** Страница «Відгуки»: все отзывы с решениями (пусто, если списка нет). */
   feedbackRows: FeedbackRow[];
   /** Сповіщення: журнал за 14 дней (видимые проекты) и своя строка «Прочитане» (null — строки ещё нет). */
-  recent: ChangeEntry[]; notify: { id: number; readId: number; readCmId: number; seen: string[] } | null; }
+  recent: ChangeEntry[]; notify: NotifyRow | null; }
 
 /** Чтение списков портала от имени пользователя: видны только проекты, которые ему открыла синхронизация. */
 export class SpRepo {
@@ -81,7 +81,7 @@ export class SpRepo {
       this.items('ProjectAssignments', ASSIGN_SELECT, ASSIGN_EXPAND).catch(() => [] as any[]),
       // сповіщення: журнал за 14 дней и своя строка «Прочитане» (до развёртывания — пусто / null)
       this.items('KeyChanges', CHANGE_SELECT, CHANGE_EXPAND, changesSince(since)).catch(() => [] as any[]),
-      this.items('NotifyState', NOTIFY_SELECT, '', `Title eq '${this.me.toLowerCase().replace(/'/g, "''")}'`).catch(() => [] as any[])]);
+      this.items('NotifyState', NOTIFY_SELECT, '', this.ownRow()).catch(() => this.items('NotifyState', NOTIFY_SELECT_BASE, '', this.ownRow())).catch(() => [] as any[])]);
     const approvals = (ap || []).map(mapApproval);
     const assigns = pa.map(mapAssign);
     // решение PMO, ещё не перенесённое синхронизацией, видно сразу (как применение отчёта в карточку)
@@ -106,18 +106,38 @@ export class SpRepo {
       recent: rc.map(mapChange), notify: ns[0] ? mapNotify(ns[0]) : null };
   }
 
+  private ownRow(): string { return `Title eq '${this.me.toLowerCase().replace(/'/g, "''")}'`; }
+  /** Своя строка «Прочитане» — свежая версия с ETag (поля nsPrefs может ещё не быть — без него); строки нет — null. */
+  private async ownNotify(): Promise<any | null> {
+    let sel = NOTIFY_SELECT;
+    const rows = await this.items('NotifyState', sel, '', this.ownRow()).catch(() => { sel = NOTIFY_SELECT_BASE; return this.items('NotifyState', sel, '', this.ownRow()); });
+    return rows[0] ? this.getJson(this.itemUrl('NotifyState', rows[0].Id, sel, ''), true) : null;
+  }
+
   /** Сповіщення: отметить прочитанным (своя строка «Прочитане», свежая версия, метки только растут). */
   async markRead(next: ReadMarks): Promise<void> {
     for (let attempt = 0; attempt < 2; attempt++) {
-      const rows = await this.items('NotifyState', NOTIFY_SELECT, '', `Title eq '${this.me.toLowerCase().replace(/'/g, "''")}'`);
-      if (!rows[0]) return;
-      const j = await this.getJson(this.itemUrl('NotifyState', rows[0].Id, NOTIFY_SELECT, ''), true);
+      const j = await this.ownNotify();
+      if (!j) return;
       const cur = mapNotify(j);
       const m = mergeMarks(cur, next);
       const body = { nsReadId: m.readId, nsReadCmId: m.readCmId, nsReadSet: JSON.stringify(m.seen || []) };
       if (body.nsReadId === cur.readId && body.nsReadCmId === cur.readCmId && body.nsReadSet === JSON.stringify(cur.seen)) return;
       try { await this.update('NotifyState', cur.id, body, String(j['odata.etag'] || '')); return; } catch (x) { if ((x as Error).message !== 'conflict' || attempt) throw x; }
     }
+  }
+
+  /** Настройки человека (поле nsPrefs своей строки «Прочитане»): edit — новое значение по свежему; строки нет — false. */
+  async savePrefs(edit: (raw: string) => string): Promise<boolean> {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const j = await this.ownNotify();
+      if (!j) return false;
+      const cur = mapNotify(j), next = edit(cur.prefs);
+      if (next === cur.prefs) return true;
+      try { await this.update('NotifyState', cur.id, { nsPrefs: next }, String(j['odata.etag'] || '')); return true; }
+      catch (x) { if ((x as Error).message !== 'conflict' || attempt) throw x; }
+    }
+    return false;
   }
 
   /** Весь журнал «Зміни показників» одного проекта — для карточки (при загрузке приложения — только переносы плановой даты). */

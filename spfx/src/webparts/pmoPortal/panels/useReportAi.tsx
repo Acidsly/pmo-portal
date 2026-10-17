@@ -14,8 +14,8 @@ import { riskScore } from '../logic/status';
 import { fmtDate } from '../components/Bits';
 import { Risk } from '../data/types';
 import { aiRun, AiTrace } from '../ai/aiRun';
-import { aiFailFeedback, aiFailAllowed } from '../logic/aiFeedback';
-import { RELEASES } from '../help/releases';
+import { aiReportFail } from '../ai/aiFailReport';
+import { aiTokenWhy } from '../logic/aiLogin';
 import { tv } from '../i18n/values';
 import { Rag } from '../logic/rag';
 
@@ -64,7 +64,18 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
   const agent = React.useRef<Agent | null>(null);
 
   // модуль агента — заранее: окно входа Microsoft открывается только сразу после нажатия (без долгих await до него)
-  React.useEffect(() => { if (pilot) loadAgent().then(m => { agent.current = m; }).catch(() => undefined); }, [pilot]);
+  // на телефоне окна входа нет (вход с переходом на страницу унёс бы введённое): вход проверяется при открытии формы,
+  // нет — кнопка «Увійти» сверху, пока форма ещё пустая
+  const [needSign, setNeedSign] = React.useState(false);
+  React.useEffect(() => {
+    if (!pilot) return;
+    let live = true;
+    loadAgent().then(m => {
+      agent.current = m;
+      if (m.aiDeviceMode() === 'redirect') m.aiToken(c.me, () => undefined, 'cache').then(() => undefined, () => { if (live) setNeedSign(true); });
+    }).catch(() => undefined);
+    return () => { live = false; };
+  }, [pilot]);
 
   // форма закрыта — запрос в работе отменяется: ни setState, ни отзыва о сбое после закрытия
   React.useEffect(() => () => { req.current++; }, []);
@@ -83,20 +94,9 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
     const at = kind === 'draft' ? 'top' : 'bottom';
     setBusy(kind); setMsg(null);
     const t0 = Date.now(), trace: AiTrace = {};
-    // сбой — автоматический отзыв «Помилка ШІ (автоматично)» (список «Відгуки» есть только на тестовом сайте): техника без данных
-    // отчёта, не чаще одного в день на вид запроса и причину; «Скасувати» в согласии — не сбой
-    const report = (reason: AiUnavailable): void => {
-      if (!a.data.feedback || reason === 'declined') return;
-      const key = `${kind}:${reason}`, store = 'pmo-ai-fail:' + (c.me || '').toLowerCase();
-      let sent: Record<string, string> = {};
-      try { sent = JSON.parse(localStorage.getItem(store) || '{}') || {}; } catch { sent = {}; }
-      if (!aiFailAllowed(sent, key, c.today)) return;
-      sent[key] = c.today;
-      try { localStorage.setItem(store, JSON.stringify(sent)); } catch { /* приватный режим */ }
-      const f = aiFailFeedback({ kind, reason, code: trace.code || '', conv: trace.conv || '', ms: trace.ms ?? Date.now() - t0,
-        project: a.project.code, version: RELEASES[0] && RELEASES[0][0] ? RELEASES[0][0].ver : '', at: new Date().toISOString() });
-      c.repo.create('Feedback', { ...f, fbDevice: `${window.innerWidth}×${window.innerHeight} · ${navigator.userAgent}`.slice(0, 255) }).catch(() => undefined);
-    };
+    // сбой — автоматический отзыв «Помилка ШІ (автоматично)» (ai/aiFailReport.ts)
+    const report = (reason: AiUnavailable): void => aiReportFail({ create: (l, b) => c.repo.create(l, b), can: !!a.data.feedback, me: c.me, today: c.today,
+      kind, reason, trace, ms: Date.now() - t0, project: a.project.code });
     const fail = (reason: AiUnavailable, detail?: string): void => {
       if (id !== req.current) return;
       report(reason);
@@ -108,8 +108,14 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
     let m: Agent;
     try { m = agent.current || (await loadAgent()); } catch (e) { trace.code = 'load: ' + String((e as Error)?.message || e).slice(0, 100); fail('error'); return; }
     let token: string;
-    try { token = await m.aiToken(c.me, () => undefined); }
-    catch (e) { trace.code = 'token: ' + String((e as Error)?.message || e).slice(0, 100); fail('error', /popup|interaction|blocked/i.test(String((e as Error).message || e)) ? t('aiPopup') : undefined); return; }
+    const redirectDevice = m.aiDeviceMode() === 'redirect';
+    try { token = await m.aiToken(c.me, () => undefined, redirectDevice ? 'silent' : 'interactive'); }
+    catch (e) {
+      const s = String((e as Error)?.message || e);
+      trace.code = 'token: ' + s.slice(0, 100);
+      if (redirectDevice && id === req.current) setNeedSign(true);
+      fail('error', t(aiTokenWhy(s) === 'popup' ? 'aiPopup' : 'aiLoginFail')); return;
+    }
     // журнал — только для черновика («Зроблено за період»); проверке он мешает: ИИ принимает прежние изменения за правки этой формы
     const changes: ChangeEntry[] = kind === 'draft' ? await c.repo.loadChanges(a.project.id).catch(() => [] as ChangeEntry[]) : [];
     if (id !== req.current) return;
@@ -180,6 +186,9 @@ export function useReportAi(a: { data: PortalData; project: Project; d: ReportDr
       {busy !== null ? <button type="button" className="btn" onClick={cancel}>{t('cancel')}</button> : null}
       {canUndo ? <button type="button" className="btn" onClick={undo}>{t('aiUndo')}</button> : null}
     </div>
+    {needSign ? <div className="ai-panel" id="ai-signin" role="status"><p>{t('aiSignInNeed')}</p>
+      <div className="ai-rate"><button type="button" className="btn primary" onClick={() => { if (agent.current) agent.current.aiSignIn(c.me).catch(() => undefined); }}>
+        {t('aiSignIn')}</button></div></div> : null}
     {asks.length ? <div className="ai-panel" role="alertdialog"><p>{t('aiReplace').replace('{f}', fl(TEXT_LABEL[asks[0].field]))}</p>
       <div className="ai-rate"><button type="button" className="btn primary" onClick={() => answerAsk(true)}>{t('aiYes')}</button>
         <button type="button" className="btn" onClick={() => answerAsk(false)}>{t('aiNo')}</button></div></div> : null}

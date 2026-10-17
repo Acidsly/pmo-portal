@@ -1,5 +1,13 @@
 # What's new
 
+## 1.7.4.3 · 17.10.2026
+
+**Fixed**
+- «AI assistant» turns on the first time: the Microsoft sign-in window opens right after «Allow»; on a phone, sign-in goes to the Microsoft page and back, and turning on finishes by itself. If it fails, the reason is shown (sign-in window blocked, sign-in not completed, AI error with a code); on the test site the failure is recorded in «Feedback».
+
+**Changed**
+- «AI assistant» is kept for you, not for the browser: turned on on your phone — it is on on your computer too.
+
 ## 1.7.4.2 · 17.10.2026
 
 **New**

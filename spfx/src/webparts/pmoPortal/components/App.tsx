@@ -24,8 +24,11 @@ import { Overview } from '../panels/Overview';
 import { Releases } from '../panels/Releases';
 import { AiEvalPage } from '../panels/AiEvalPage';
 import { isAiPilot } from '../ai/aiConfig';
-import { useAiSwitch } from '../ai/useAiSwitch';
-import { aiEnable } from '../ai/aiEnable';
+import { useAiSwitch, AiStore } from '../ai/useAiSwitch';
+import { aiEnable, aiPreload } from '../ai/aiEnable';
+import { aiPref } from '../ai/aiPref';
+import { aiReportFail } from '../ai/aiFailReport';
+import { aiPrefsOf, withAiPrefs } from '../logic/aiPrefs';
 import { aiLangOf } from '../logic/aiCheck';
 import { Feedback, feedbackOrder } from '../pages/Feedback';
 import { FeedbackView } from '../panels/FeedbackView';
@@ -67,7 +70,21 @@ export const App: React.FC<AppProps> = p => {
   }, []);
   const [toastMsg, showToast] = useToast();
   // «Помічник ШІ» — переключатель у пилотной группы; согласие — при включении
-  const aiSw = useAiSwitch(p.userEmail, isAiPilot(p.userEmail), () => aiEnable(p.userEmail, aiLangOf(lang)));
+  // значение — у человека (своя строка «Прочитане»), модуль агента — заранее (окно входа сразу по нажатию)
+  const pilot = isAiPilot(p.userEmail);
+  React.useEffect(() => { if (pilot) aiPreload().catch(() => undefined); }, []);
+  const dataRef = React.useRef(data); dataRef.current = data;
+  const aiStore: AiStore | undefined = data ? { row: !!data.notify, prefs: data.notify ? aiPrefsOf(data.notify.prefs) : null,
+    save: pr => p.repo.savePrefs(raw => withAiPrefs(raw, pr)) } : undefined;
+  const aiSw = useAiSwitch(p.userEmail, pilot, resume => {
+    const t0 = Date.now();
+    return aiEnable(p.userEmail, aiLangOf(lang), resume, () => aiPref.setPending(p.userEmail, true)).then(r => {
+      // сбой включения — автоотзыв, как сбой в форме отчёта (ai/aiFailReport.ts)
+      if (r) aiReportFail({ create: (l, b) => p.repo.create(l, b), can: !!dataRef.current && !!dataRef.current.feedback, me: p.userEmail, today: todayIso(),
+        kind: 'enable', reason: r.reason, why: r.why, trace: { code: r.code, conv: r.conv, ms: r.ms }, ms: Date.now() - t0, project: '' });
+      return r;
+    });
+  }, aiStore);
   React.useEffect(() => {
     const on = (): void => setRoute(r => parse(window.location.hash, r.views));
     window.addEventListener('hashchange', on);

@@ -14,7 +14,10 @@ describe('«Прочитане»: открытые события (nsReadSet)', 
   const { mapNotify, NOTIFY_SELECT } = require('../src/webparts/pmoPortal/data/map');
   test('читается вместе со строкой; пусто или испорчено — пустой список', () => {
     expect(NOTIFY_SELECT).toContain('nsReadSet');
-    expect(mapNotify({ Id: 5, nsReadId: 150, nsReadCmId: 28, nsReadSet: '["j151","c30"]' })).toEqual({ id: 5, readId: 150, readCmId: 28, seen: ['j151', 'c30'] });
+    expect(mapNotify({ Id: 5, nsReadId: 150, nsReadCmId: 28, nsReadSet: '["j151","c30"]' })).toEqual({ id: 5, readId: 150, readCmId: 28, seen: ['j151', 'c30'], prefs: '' });
+    // настройки человека (помощник ИИ) — тем же запросом
+    expect(NOTIFY_SELECT).toContain('nsPrefs');
+    expect(mapNotify({ Id: 5, nsPrefs: '{"ai":1,"aiOk":1}' }).prefs).toBe('{"ai":1,"aiOk":1}');
     expect(mapNotify({ Id: 5, nsReadId: 1, nsReadCmId: 2, nsReadSet: null }).seen).toEqual([]);
     expect(mapNotify({ Id: 5, nsReadId: 1, nsReadCmId: 2, nsReadSet: '{bad' }).seen).toEqual([]);
     expect(mapNotify({ Id: 5, nsReadId: 1, nsReadCmId: 2, nsReadSet: '[1,"j3"]' }).seen).toEqual(['j3']);

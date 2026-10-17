@@ -8,10 +8,13 @@ import { ReportForm } from '../src/webparts/pmoPortal/panels/ReportForm';
 import { ReportView } from '../src/webparts/pmoPortal/panels/ReportView';
 
 // Помощник ИИ в форме отчёта (план этапа 4, задача 4): поведение формы с заглушкой агента
-const mockAgent = { replies: [] as any[], allows: [] as any[], asked: [] as string[], hold: null as null | Promise<void> };
+const mockAgent = { replies: [] as any[], allows: [] as any[], asked: [] as string[], hold: null as null | Promise<void>,
+  mode: 'popup', tokenErr: '', hows: [] as string[], signIns: [] as string[] };
 jest.mock('../src/webparts/pmoPortal/ai/aiConfig', () => ({ isAiPilot: (e: string) => e === 'pm@x', AI_CONFIG: { pilot: ['pm@x'] } }));
 jest.mock('../src/webparts/pmoPortal/ai/aiAgent', () => ({
-  aiToken: async () => 'tok',
+  aiToken: async (_e: string, _l: unknown, how: string) => { mockAgent.hows.push(how); if (mockAgent.tokenErr) throw new Error(mockAgent.tokenErr); return 'tok'; },
+  aiDeviceMode: () => mockAgent.mode,
+  aiSignIn: async (e: string) => { mockAgent.signIns.push(e); },
   AiSession: { open: async () => ({
     ask: async (t: string) => { mockAgent.asked.push(t); if (mockAgent.hold) await mockAgent.hold; return mockAgent.replies.shift() || { text: '' }; },
     allow: async () => mockAgent.allows.shift() || { text: '' } }) }
@@ -28,7 +31,7 @@ const ctxFor = (me: string, project = pr): any => ({ ...tt, lang: 0, today: '202
   openForm() { /* */ }, canCreate: false, reload: async () => undefined, toast() { /* */ },
   repo: { loadChanges: async () => [], siteLocalTime: async () => '2026-10-14T02:30:00',
     fresh: async () => ({ project, etag: '"1"', owner: false, pending: [], lastApprovedDate: '2026-09-01' }), createIn: async (_l: string, _id: number, b: any) => { bodies.push(b); }, create: async (l: string, b: any) => { created.push({ l, b }); return 1; } } });
-beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); mockAgent.replies = []; mockAgent.allows = []; mockAgent.asked = []; mockAgent.hold = null; bodies = []; created = []; localStorage.clear(); });
+beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); mockAgent.replies = []; mockAgent.allows = []; mockAgent.asked = []; mockAgent.hold = null; mockAgent.mode = 'popup'; mockAgent.tokenErr = ''; mockAgent.hows = []; mockAgent.signIns = []; bodies = []; created = []; localStorage.clear(); });
 afterEach(() => { ReactDOM.unmountComponentAtNode(root); root.remove(); });
 
 const flush = async (): Promise<void> => { for (let i = 0; i < 6; i++) await act(async () => { await new Promise(r => setTimeout(r, 0)); }); };
@@ -280,5 +283,32 @@ describe('запись реестра в пункте ИИ', () => {
     act(() => { (Array.from(root.querySelectorAll('.ai-rec button'))[0] as HTMLButtonElement).click(); });
     expect(($('#f-iss') as HTMLTextAreaElement).value).toBe('– Прогноз зміщено.\n– Проблема «Ризик чи Проблема ?» (оцінка 12, термін 01.10.2026) — заходи: Розібрати з ІТ');
     expect(btn()).toBe('Перевірити з ШІ');
+  });
+});
+
+// Вход Microsoft (исправление 17.10.2026): на компьютере — окно входа сразу по нажатию; на телефоне окна нет —
+// вход проверяется при открытии формы, нет входа — кнопка «Увійти» (переход на страницу Microsoft и обратно)
+describe('вход Microsoft в форме отчёта', () => {
+  test('компьютер: при открытии вход не проверяется; «Перевірити з ШІ» — вход с окном', async () => {
+    await open(); fill();
+    expect(mockAgent.hows).toEqual([]); expect($('#ai-signin')).toBeNull();
+    mockAgent.replies.push({ text: '{"items":[]}' });
+    await act(async () => { $('#f-submit').click(); }); await flush();
+    expect(mockAgent.hows).toEqual(['interactive']);
+  });
+  test('телефон, вход есть: проверка только по кэшу (без скрытого фрейма — он на телефоне долгий), кнопки «Увійти» нет', async () => {
+    mockAgent.mode = 'redirect';
+    await open(); fill();
+    expect(mockAgent.hows).toEqual(['cache']); expect($('#ai-signin')).toBeNull();
+  });
+  test('телефон, входа нет: «Увійти» сверху; ИИ — причина «вхід Microsoft не завершено», без перехода со страницы', async () => {
+    mockAgent.mode = 'redirect'; mockAgent.tokenErr = 'login_required: AADSTS50058';
+    await open(); fill();
+    expect($('#ai-signin').textContent).toContain('увійдіть до Microsoft');
+    await act(async () => { $('#f-submit').click(); }); await flush();
+    expect(mockAgent.hows).toEqual(['cache', 'silent']); expect(mockAgent.asked).toEqual([]);
+    expect(root.textContent).toContain('Перевірку ШІ не виконано: вхід Microsoft не завершено');
+    await act(async () => { ($('#ai-signin button') as HTMLElement).click(); });
+    expect(mockAgent.signIns).toEqual(['pm@x']);
   });
 });

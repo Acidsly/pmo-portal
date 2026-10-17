@@ -24,3 +24,9 @@ export const isAuthResponse = (hash: string, search: string): boolean =>
  *  и с корня (`/sites/pmo-test`), а в регистрации SPA «PPM Copilot Client» указана только страница портала (иначе AADSTS50011). */
 export const aiRedirectUri = (origin: string, pathname: string): string =>
   origin + pathname.replace(/\/SitePages\/.*$/i, '').replace(/\/+$/, '') + '/SitePages/Portal.aspx';
+
+/** Адрес возврата входа с переходом на страницу (телефон) — в sessionStorage, пока идёт вход: по нему страница Portal.aspx
+ *  с ответом Microsoft отличает возврат в эту же вкладку от всплывающего окна. */
+export const AI_RETURN_KEY = 'pmo-ai-return';
+/** Идёт вход с переходом на страницу (sessionStorage — только эта вкладка). */
+export const aiRedirecting = (): boolean => { try { return sessionStorage.getItem(AI_RETURN_KEY) !== null; } catch { return false; } };

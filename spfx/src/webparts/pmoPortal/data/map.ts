@@ -93,10 +93,14 @@ export const CHANGES_ON_LOAD = "kcField eq 'pmPlanEnd'";
 export const changesOf = (projectId: number): string => `kcProjectId eq ${Math.floor(projectId)}`;
 /** Сповіщення: журнал за последние дни (индекс kcDate). */
 export const changesSince = (iso: string): string => `kcDate ge datetime'${iso}'`;
-export const NOTIFY_SELECT = 'Id,Title,nsReadId,nsReadCmId,nsReadSet';
+/** Без nsPrefs — если приложение установили раньше Deploy-PMO.ps1 (поля ещё нет): строка и колокольчик не пропадают. */
+export const NOTIFY_SELECT_BASE = 'Id,Title,nsReadId,nsReadCmId,nsReadSet';
+export const NOTIFY_SELECT = NOTIFY_SELECT_BASE + ',nsPrefs';
 /** Открытые события (nsReadSet) — JSON-массив ключей «j<номер>» / «c<номер>»; испорчено или пусто — []. */
 const seenOf = (v: unknown): string[] => { try { const a = JSON.parse(String(v || '[]')); return Array.isArray(a) ? a.filter(x => typeof x === 'string') : []; } catch { return []; } };
-export const mapNotify = (r: any): { id: number; readId: number; readCmId: number; seen: string[] } => ({ id: r.Id, readId: n(r.nsReadId), readCmId: n(r.nsReadCmId), seen: seenOf(r.nsReadSet) });
+/** Своя строка «Прочитане»: метки сповіщень и настройки человека (nsPrefs — JSON, logic/aiPrefs.ts). */
+export interface NotifyRow { id: number; readId: number; readCmId: number; seen: string[]; prefs: string }
+export const mapNotify = (r: any): NotifyRow => ({ id: r.Id, readId: n(r.nsReadId), readCmId: n(r.nsReadCmId), seen: seenOf(r.nsReadSet), prefs: s(r.nsPrefs) });
 export const CHANGE_SELECT = ['Id', 'kcProjectId', 'kcDate', 'kcKind', 'kcField', 'kcFrom', 'kcTo', 'kcReason', 'kcItem', ...people('kcChangedBy')].join(',');
 export const CHANGE_EXPAND = 'kcChangedBy';
 export const mapComment = (r: any): Comment => ({ id: r.Id, projectId: r.cmProjectId, text: s(r.cmText), created: s(r.Created), author: mapPerson(r.Author) });
