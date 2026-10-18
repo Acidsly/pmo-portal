@@ -20,7 +20,14 @@ test('#107: у нижнего окна фильтра и колонок кноп
 });
 test('#97: блок погодження в просмотре отчёта не прилипает', () =>
   expect(phone).toMatch(/\.pmo-panel \.apbox form \.actions\s*\{\s*position:\s*static/));
+test('меню аватара на телефоне — под аватаром, а не снизу (фильтры и колонки — снизу)', () => {
+  expect(css).toMatch(/\.pmo-pop:not\(:has\(\.pop-user-menu\)\)\s*\{\s*left:\s*8px !important;[^}]*top:\s*auto !important/);
+  const m = /\.pmo-pop:has\(\.pop-user-menu\)\s*\{([^}]*)\}/.exec(css);
+  expect(m && m[1]).toBeTruthy(); expect(m![1]).not.toMatch(/top|bottom/);
+});
 test('низ экрана — место под панель браузера', () => expect(phone).toMatch(/\.pmo-main\s*\{\s*padding-bottom:\s*calc\(40px \+ env\(safe-area-inset-bottom/));
 test('диагностика: ?diag=1 — только владельцам сайта', () => {
   expect([diagOn('?diag=1', true), diagOn('?x=1&diag=1', true), diagOn('?diag=1', false), diagOn('?diag=10', true), diagOn('', true)]).toEqual([true, true, false, false, false]);
+  // после «#» — так адрес получается, если дописать в конец …/Portal.aspx#home
+  expect([diagOn('', true, '#home?diag=1'), diagOn('', true, '#reports/all?diag=1'), diagOn('', false, '#home?diag=1'), diagOn('', true, '#home?diag=2')]).toEqual([true, true, false, false]);
 });

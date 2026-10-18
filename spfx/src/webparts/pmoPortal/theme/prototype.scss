@@ -771,8 +771,10 @@ input, select, textarea { font-size: 16px; }
 .viewsel select { flex: 1; min-width: 0; max-width: none; }
 .dt td.w-title { min-width: 150px; }
 .dt td.w-wide { min-width: 170px; }
-.pmo-pop { left: 8px !important; right: 8px; top: auto !important; bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+.pmo-pop:not(:has(.pop-user-menu)) { left: 8px !important; right: 8px; top: auto !important; bottom: calc(8px + env(safe-area-inset-bottom, 0px));
 min-width: 0; max-width: none; max-height: 70vh; border-radius: 20px; }
+/* меню аватара — под аватаром (сверху), на всю ширину; фильтры и колонки — снизу */
+.pmo-pop:has(.pop-user-menu) { left: 8px !important; right: 8px; min-width: 0; max-width: none; border-radius: 20px; }
 .pmo-panel { border-radius: 0; padding-left: 16px; padding-right: 16px; }
 .pmo-panel .ph { position: sticky; top: calc(-24px - env(safe-area-inset-top, 0px)); z-index: 3; background: var(--bg);
 margin: -8px -16px 12px; padding: 8px 16px; }

@@ -3,7 +3,8 @@ import * as React from 'react';
 /** Диагностика раскладки на телефоне (план мобильного интерфейса, этап 1): адрес с ?diag=1, только владельцы сайта.
  *  Поверх страницы — размеры окна и видимой области (visualViewport), отступы безопасной зоны, что лежит у нижнего края
  *  экрана и где кнопки открытой формы. Скриншот с телефона — чтобы править отступы по данным, а не наугад. */
-export const diagOn = (search: string, admin: boolean): boolean => admin && /(^|[?&])diag=1(&|$)/.test(search || '');
+/** ?diag=1 — в адресе до «#» или после него (раздел портала хранится после «#»: …/Portal.aspx#home?diag=1). */
+export const diagOn = (search: string, admin: boolean, hash = ''): boolean => admin && /(^|[?&#/])diag=1(&|$|#)/.test((search || '') + '#' + (hash || ''));
 
 const who = (el: Element | null): string => {
   if (!el) return '—';

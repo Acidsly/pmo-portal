@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.4.7",
+   "date": "18.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>На телефоні меню під аватаром відкривається одразу під ним, а не знизу екрана.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.4.6",
    "date": "18.10.2026",
    "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення без змін у роботі порталу.</li>\n</ul>"
@@ -190,6 +195,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.4.7",
+   "date": "18.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>On a phone the avatar menu opens right under it, not at the bottom of the screen.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.4.6",
    "date": "18.10.2026",
    "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update with no changes to how the portal works.</li>\n</ul>"
@@ -376,6 +386,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.4.7",
+   "date": "18.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>На телефоне меню под аватаром открывается сразу под ним, а не внизу экрана.</li>\n</ul>"
+  },
   {
    "ver": "1.7.4.6",
    "date": "18.10.2026",

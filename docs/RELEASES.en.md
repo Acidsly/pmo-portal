@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.4.7 · 18.10.2026
+
+**Changed**
+- On a phone the avatar menu opens right under it, not at the bottom of the screen.
+
 ## 1.7.4.6 · 18.10.2026
 
 **Changed**
