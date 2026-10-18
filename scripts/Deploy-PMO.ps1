@@ -466,6 +466,8 @@ F $NS nsReadId      Number   "Прочитано до (журнал)" "Read up t
 F $NS nsReadCmId    Number   "Прочитано до (коментарі)" "Read up to (comments)" "Прочитано до (комментарии)" "Decimals='0'" "<Default>0</Default>"
 # открытые события поверх метки (JSON-массив «j<номер>» / «c<номер>», не больше 200) — пишет приложение в свою строку
 F $NS nsReadSet     Note     "Прочитані події"    "Read events"         "Прочитанные события"  "NumLines='3' RichText='FALSE'"
+# настройки человека (JSON: «ai» — помощник ИИ включён, «aiOk» — согласие дано) — пишет приложение в свою строку
+F $NS nsPrefs       Note     "Налаштування"       "Settings"            "Настройки"            "NumLines='3' RichText='FALSE'"
 F $NS pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='255'"
 $script:Loc += , @($NS, "Title", "E-mail", "E-mail", "E-mail")
 

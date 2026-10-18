@@ -8,8 +8,8 @@ import { FLD, T } from '../src/webparts/pmoPortal/i18n/strings';
 test('#30: суммы — в долларах, целые', () => {
   expect(money(1234567)).toMatch(/ \$$/); expect(money(12.5)).toMatch(/^13 \$$/); expect(money(0)).toBe('0 $');
 });
-test('#14: у каждого статуса разбора отзыва — свой цвет (.fbst-N)', () => {
-  const css = fs.readFileSync(path.join(__dirname, '../src/webparts/pmoPortal/theme/overrides.scss'), 'utf8');
+test('#14: у каждого статуса разбора отзыва — свой цвет (.fbst-N; стили «Відгуків» — из прототипа)', () => {
+  const css = fs.readFileSync(path.join(__dirname, '../src/webparts/pmoPortal/theme/prototype.scss'), 'utf8');
   FB_STATUSES.forEach((_, i) => expect(css).toMatch(new RegExp(`\\.fbst-${i}\\s*\\{`)));
 });
 test('#11: «Термін виконання заходів»; #16: «Відображати»', () => {

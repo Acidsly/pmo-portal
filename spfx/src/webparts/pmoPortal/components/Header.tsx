@@ -7,7 +7,8 @@ import { Sun, Moon, Bell } from './Icons';
 import { Lucide } from './LucideIcons';
 import { Pop } from './Pop';
 import { AiSwitch } from '../ai/useAiSwitch';
-import { unavailableNote, aiLangOf } from '../logic/aiCheck';
+import { aiLangOf } from '../logic/aiCheck';
+import { aiEnableNote } from '../logic/aiLogin';
 
 const NAV: [Page, string][] = [['home', 'navHome'], ['projects', 'navProjects'], ['reports', 'navReports'], ['risks', 'navRisks'], ['archive', 'navArchive'], ['feedback', 'navFeedback']];
 
@@ -57,7 +58,8 @@ export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: 
         {ai.asking ? <div className="ai-panel" role="alertdialog" aria-label={t('aiAllow')}><p>{t('aiConsent')}</p>
           <div className="ai-rate"><button type="button" className="btn primary" disabled={ai.busy} onClick={ai.allow}>{ai.busy ? t('aiEnabling') : t('aiAllow')}</button>
             <button type="button" className="btn" disabled={ai.busy} onClick={ai.deny}>{t('cancel')}</button></div></div> : null}
-        {ai.err ? <p className="ai-msg err" role="status">{unavailableNote(ai.err, aiLangOf(p.lang))}</p> : null}
+        {ai.busy && !ai.asking ? <p className="ai-msg" role="status">{t('aiEnabling')}</p> : null}
+        {ai.err ? <p className="ai-msg err" role="status">{aiEnableNote(ai.err, t, aiLangOf(p.lang))}</p> : null}
         <p className="hint pop-hint">{t(ai.on ? 'aiSwitchOn' : 'aiSwitchOff')}</p>
       </div></Pop> : null}
   </>;

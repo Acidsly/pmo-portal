@@ -3,6 +3,16 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.4.4",
+   "date": "17.10.2026",
+   "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>«Детальний огляд системи»: таблиці переносять текст — без прокрутки вбік.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.4.3",
+   "date": "17.10.2026",
+   "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>«Помічник ШІ» вмикається з першого разу: вікно входу Microsoft відкривається одразу після «Дозволити»; на телефоні — вхід із переходом на сторінку Microsoft, після повернення увімкнення завершується само. Не вдалося — видно причину (вікно входу заблоковано, вхід не завершено, помилка ШІ з кодом); на тестовому сайті збій записується у «Відгуки».</li>\n</ul>\n<p><b>Змінено</b></p>\n<ul>\n<li>«Помічник ШІ» зберігається для вас, а не для браузера: увімкнули на телефоні — увімкнено й на комп'ютері.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.4.2",
    "date": "17.10.2026",
    "html": "<p><b>Нове</b></p>\n<ul>\n<li>Кнопка <b>↻ «Оновити дані»</b> над списками (поруч із «CSV») — свіжі дані без перезаходу на сторінку, зручно на телефоні (#103).</li>\n</ul>\n<p><b>Змінено</b></p>\n<ul>\n<li>«Що змінилося»: угорі — поточна версія; технічні оновлення підряд зібрані в один згорнутий блок; кожен випуск зі змінами розгортається натисканням на заголовок, розділи «Нове / Змінено / Виправлено» виділені (#95).</li>\n<li>Картка проєкту: «Мета та опис» обов'язкове при збереженні PM (і в раніше створених проєктах — при наступному збереженні) (#96).</li>\n<li>Картка проєкту: «Пріоритет» — у «Основне», поруч із напрямом, з підказкою, чим пріоритет відрізняється від типу; у «Довідці» — визначення (#105).</li>\n<li>Перегляд статус-звіту: під заголовком — відповідальний PM (#98).</li>\n<li>Пошук SharePoint у сірій смузі прихований: на телефоні він збільшував сторінку (#106).</li>\n</ul>\n<p><b>Виправлено</b></p>\n<ul>\n<li>Відгук надсилається з першого разу: при збої зв'язку портал повторює запит сам, повторне «Надіслати» не створює дубль; надісланий відгук одразу видно в списку (#108, #103).</li>\n</ul>"
@@ -170,6 +180,16 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.4.4",
+   "date": "17.10.2026",
+   "html": "<p><b>Fixed</b></p>\n<ul>\n<li>«Detailed system overview»: tables wrap text — no sideways scrolling.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.4.3",
+   "date": "17.10.2026",
+   "html": "<p><b>Fixed</b></p>\n<ul>\n<li>«AI assistant» turns on the first time: the Microsoft sign-in window opens right after «Allow»; on a phone, sign-in goes to the Microsoft page and back, and turning on finishes by itself. If it fails, the reason is shown (sign-in window blocked, sign-in not completed, AI error with a code); on the test site the failure is recorded in «Feedback».</li>\n</ul>\n<p><b>Changed</b></p>\n<ul>\n<li>«AI assistant» is kept for you, not for the browser: turned on on your phone — it is on on your computer too.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.4.2",
    "date": "17.10.2026",
    "html": "<p><b>New</b></p>\n<ul>\n<li>The <b>↻ «Refresh data»</b> button above lists (next to «CSV») — fresh data without reopening the page, handy on a phone (#103).</li>\n</ul>\n<p><b>Changed</b></p>\n<ul>\n<li>«What's new»: the current version at the top; consecutive technical updates are collected in one collapsed block; each release with changes expands by tapping its title, the «New / Changed / Fixed» sections are highlighted (#95).</li>\n<li>Project card: «Goal and description» is required when the PM saves the card (including projects created earlier — at the next save) (#96).</li>\n<li>Project card: «Priority» is in «General», next to the department, with a hint on how priority differs from type; definitions in «Help» (#105).</li>\n<li>Status report view: the responsible PM under the title (#98).</li>\n<li>The SharePoint search in the grey bar is hidden: on a phone it zoomed the page (#106).</li>\n</ul>\n<p><b>Fixed</b></p>\n<ul>\n<li>Feedback is sent on the first try: on a connection failure the portal retries itself, pressing «Send» again does not create a duplicate; sent feedback is visible in the list right away (#108, #103).</li>\n</ul>"
@@ -336,6 +356,16 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.4.4",
+   "date": "17.10.2026",
+   "html": "<p><b>Исправлено</b></p>\n<ul>\n<li>«Подробный обзор системы»: таблицы переносят текст — без прокрутки вбок.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.4.3",
+   "date": "17.10.2026",
+   "html": "<p><b>Исправлено</b></p>\n<ul>\n<li>«Помощник ИИ» включается с первого раза: окно входа Microsoft открывается сразу после «Разрешить»; на телефоне — вход с переходом на страницу Microsoft, после возврата включение завершается само. Не удалось — видна причина (окно входа заблокировано, вход не завершён, ошибка ИИ с кодом); на тестовом сайте сбой записывается в «Отзывы».</li>\n</ul>\n<p><b>Изменено</b></p>\n<ul>\n<li>«Помощник ИИ» хранится для вас, а не для браузера: включили на телефоне — включено и на компьютере.</li>\n</ul>"
+  },
   {
    "ver": "1.7.4.2",
    "date": "17.10.2026",

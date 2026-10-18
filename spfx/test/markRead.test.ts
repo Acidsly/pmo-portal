@@ -35,3 +35,29 @@ test('второй конфликт подряд — ошибка наружу',
   const { repo } = repoWith([row(20, 5, [], '"1"'), row(20, 5, [], '"2"')], 2);
   await expect(repo.markRead({ readId: 21, readCmId: 5 })).rejects.toThrow('conflict');
 });
+
+// Настройки человека (помощник ИИ, поле nsPrefs) — та же строка, та же защита от гонки; пишется только nsPrefs
+describe('savePrefs', () => {
+  const pr = (prefs: string, etag: string): any => ({ ...row(20, 5, [], etag), nsPrefs: prefs });
+  test('пишет только nsPrefs по свежей версии; прочие ключи сохраняются', async () => {
+    const { repo, writes } = repoWith([pr('{"x":1}', '"1"')], 0);
+    expect(await repo.savePrefs((raw: string) => JSON.stringify({ ...JSON.parse(raw), ai: 1 }))).toBe(true);
+    expect(writes).toEqual([{ id: 5, body: { nsPrefs: '{"x":1,"ai":1}' }, etag: '"1"' }]);
+  });
+  test('конфликт — перечитывает; нечего менять — не пишет', async () => {
+    const { repo, writes } = repoWith([pr('', '"1"'), pr('{"ai":1}', '"2"')], 1);
+    await repo.savePrefs(() => '{"ai":1}');
+    expect(writes.map(w => w.etag)).toEqual(['"1"']);
+  });
+  test('строки ещё нет — false, ничего не пишет', async () => {
+    const { repo, writes } = repoWith([], 0); repo.items = async () => [];
+    expect([await repo.savePrefs(() => '{}'), writes]).toEqual([false, []]);
+  });
+  test('поля nsPrefs ещё нет на сайте (приложение раньше Deploy-PMO.ps1) — строка читается без него, метки пишутся', async () => {
+    const { repo, writes } = repoWith([row(20, 5, [], '"1"')], 0);
+    const sels: string[] = [];
+    repo.items = async (_l: string, sel: string) => { sels.push(sel); if (/nsPrefs/.test(sel)) throw new Error('400'); return [{ Id: 5 }]; };
+    await repo.markRead({ readId: 21, readCmId: 5 });
+    expect(sels.length).toBe(2); expect(sels[1]).not.toContain('nsPrefs'); expect(writes.length).toBe(1);
+  });
+});

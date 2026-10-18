@@ -34,11 +34,13 @@ export function aiSafeCode(raw: string): string {
   return pre + one();
 }
 
-const KIND: Record<AiKind, string> = { draft: 'Чернетка', check: 'Перевірка' };
+/** Вид запроса: черновик и проверка — в форме отчёта; enable — служебный вызов при включении «Помічник ШІ». */
+export type AiFailKind = AiKind | 'enable';
+const KIND: Record<AiFailKind, string> = { draft: 'Чернетка', check: 'Перевірка', enable: 'Увімкнення' };
 const HEAD = 'Помилка ШІ (автоматично)';
 /** Отзыв о сбое: заголовок «Помилка ШІ (автоматично): «Перевірка» — <причина>», строки «Код», «Розмова» (если есть),
- *  «Тривалість», «Проєкт» (код), «Версія», «Час (UTC)»; экран — форма статус-отчёта. */
-export function aiFailFeedback(x: { kind: AiKind; reason: AiUnavailable; code: string; conv: string; ms: number; project: string; version: string; at: string }):
+ *  «Тривалість», «Проєкт» (код; при включении — нет), «Версія», «Час (UTC)»; экран — форма статус-отчёта (включение — главная). */
+export function aiFailFeedback(x: { kind: AiFailKind; reason: AiUnavailable; code: string; conv: string; ms: number; project: string; version: string; at: string }):
   { Title: string; fbText: string; fbScreen: string } {
   const why = unavailableNote(x.reason, 'uk').replace(/^[^:]*:\s*/, '');
   const title = `${HEAD}: «${KIND[x.kind] || x.kind}» — ${why}`;
@@ -46,9 +48,10 @@ export function aiFailFeedback(x: { kind: AiKind; reason: AiUnavailable; code: s
   const code = aiSafeCode(x.code);
   if (code) lines.push('Код: ' + code);
   if (x.conv) lines.push('Розмова: ' + x.conv);
-  lines.push(`Тривалість: ${(Math.max(0, x.ms) / 1000).toFixed(1).replace('.', ',')} с`, 'Проєкт: ' + x.project, 'Версія: ' + x.version,
-    'Час (UTC): ' + String(x.at).slice(0, 16).replace('T', ' '));
-  return { Title: title.slice(0, 255), fbText: lines.join('\n'), fbScreen: '#reports///report' };
+  lines.push(`Тривалість: ${(Math.max(0, x.ms) / 1000).toFixed(1).replace('.', ',')} с`);
+  if (x.project) lines.push('Проєкт: ' + x.project);
+  lines.push('Версія: ' + x.version, 'Час (UTC): ' + String(x.at).slice(0, 16).replace('T', ' '));
+  return { Title: title.slice(0, 255), fbText: lines.join('\n'), fbScreen: x.kind === 'enable' ? '#home' : '#reports///report' };
 }
 
 /** Не чаще одного отзыва в день на вид запроса и причину (ключ «check:error»): sent — когда отправлен последний (гггг-мм-дд). */
