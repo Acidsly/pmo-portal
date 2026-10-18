@@ -115,3 +115,21 @@ describe('«Оновити дані» и «CSV» над таблицами', () 
     expect(q('#toast').textContent).toBe(T.refreshed[0]);
   });
 });
+
+describe('телефон (прототип)', () => {
+  test('меню аватара: язык и тема (на телефоне их нет в шапке); язык меняется из меню, меню остаётся открытым', () => {
+    q('#me').click();
+    expect(qa('#pop .me-prefs .seg').length).toBe(2);
+    q('#pop .me-prefs [data-act="lang"][data-i="1"]').click();
+    expect(q('.page-title').textContent).toBe(T.dash[1]);
+    expect(q('#pop').hidden).toBe(false);
+    expect(q('#pop .me-prefs [data-act="lang"][data-i="1"]').getAttribute('aria-pressed')).toBe('true');
+  });
+  test('#99 и #102: карточки строк — отчёт «PM · дата · стан», отзыв с номером и статусом', () => {
+    q('[data-act="nav"][data-page="reports"]').click();
+    expect(q('#main .mcards .mcard .mc-m').textContent).toMatch(/^\S.* · \d\d\.\d\d\.\d{4} · /);
+    q('[data-act="nav"][data-page="feedback"]').click();
+    const m = q('#main .mcards .mcard');
+    expect(m.textContent).toMatch(/^#\d+/); expect(m.querySelector('.fbst')).not.toBeNull();
+  });
+});

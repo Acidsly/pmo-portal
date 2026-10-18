@@ -1,9 +1,11 @@
-// Поправки для SharePoint — не из прототипа (prototype.scss генерируется и не правится вручную).
+// Поправки для SharePoint — не из прототипа (prototype.scss генерируется из прототипа и не правится вручную).
+// Здесь — только то, что нужно из-за SharePoint; телефон, касания, таблицы и прочее — в прототипе (единый источник).
 // pmo-sp: приложение открыто в SharePoint — сверху полоса Microsoft 365 (48px), панель и затемнение начинаются под ней.
 :global {
   .pmo-app.pmo-sp .pmo-panel,
   .pmo-app.pmo-sp .pmo-scrim { top: 48px; }
   .pmo-app.pmo-sp .pmo-panel { border-radius: 28px 0 0 0; }
+  @media (max-width: 600px) { .pmo-app.pmo-sp .pmo-panel { border-radius: 0; } }
 }
 
 // Выбор людей — в прототипе его нет (там справочник ORG); оформление в стиле полей и всплывающих списков прототипа
@@ -15,89 +17,12 @@
   .pmo-app .picker-list { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 25; background: var(--bg); border-radius: 14px; box-shadow: var(--shadow-hi); border: 1px solid var(--line); padding: 6px; max-height: 280px; overflow: auto; }
   .pmo-app .picker-list .pop-row { width: 100%; }
   .pmo-app .picker-list .pop-row.on { background: var(--bg-hover); }
+  @media (max-width: 600px) { .pmo-app .picker input[type=search] { min-width: 0; } }
 }
 
-// Воронка в заголовке таблицы: прототип задаёт ширину 14px и не обнуляет браузерные отступы кнопки — иконка вылезала из плашки
+// Диагностика раскладки (?diag=1, только владельцы сайта) — служебная, в прототипе её нет
 :global {
-  .pmo-app .dt th .fbtn { padding: 0; width: 18px; min-width: 18px; height: 18px; }
-}
-
-// Телефон и планшет — дополнения к @media прототипа (план теста с фокус-группой, задача 2).
-// Страница никогда не прокручивается вбок: широкое прокручивается только внутри своей рамки.
-:global {
-  .pmo-app { overflow-x: clip; }
-  .pmo-app .nav { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-  .pmo-app .nav::-webkit-scrollbar { display: none; }
-  .pmo-app .tablewrap { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
-  .pmo-app .pmo-toast, .pmo-app #toast { max-width: calc(100vw - 32px); }
-
-  // сенсорный ввод: поля не мельче 16px (иначе iOS увеличивает страницу), цели касания от 40px
-  @media (pointer: coarse) {
-    .pmo-app input, .pmo-app select, .pmo-app textarea { font-size: 16px; }
-    .pmo-app .nav button { padding: 10px 14px; }
-    .pmo-app .seg button { min-height: 36px; padding: 6px 12px; }
-    .pmo-app .x { width: 40px; height: 40px; }
-    .pmo-app .dt .fbtn { width: 28px; min-width: 28px; height: 28px; }
-    .pmo-app .pop-row { padding: 11px 10px; }
-    .pmo-app .btn { min-height: 44px; }
-  }
-
-  // планшет в книжной ориентации и узкие окна
-  @media (max-width: 1024px) {
-    .pmo-app .tiles { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
-  }
-
-  // телефон
-  @media (max-width: 600px) {
-    .pmo-app .top-in { padding-top: 10px; padding-bottom: 10px; gap: 10px; }
-    .pmo-app .brand-sub { display: none; }
-    .pmo-app .controls { gap: 6px; }
-    .pmo-app .page-title { font-size: 28px; }
-    .pmo-app .page-sub { font-size: 15px; }
-    .pmo-app .hero { margin-bottom: 20px; }
-    .pmo-app .hero .btn { width: 100%; justify-content: center; }
-    .pmo-app .wp { padding: 18px 16px; }
-    .pmo-app .listcard { padding: 16px 14px 8px; }
-    .pmo-app .tiles { grid-template-columns: minmax(0, 1fr); }
-    .pmo-app .tile { padding: 18px; }
-    // панель инструментов списков: переносится по строкам, выбор представления — на всю ширину
-    .pmo-app .cmdbar { gap: 10px; }
-    .pmo-app .cmdbar .spacer { display: none; }
-    .pmo-app .viewsel { width: 100%; }
-    .pmo-app .viewsel select { flex: 1; min-width: 0; max-width: none; }
-    .pmo-app .dt td.w-title { min-width: 150px; }
-    .pmo-app .dt td.w-wide { min-width: 170px; }
-    // фильтры и выбор колонок — снизу на всю ширину
-    .pmo-app .pmo-pop { left: 8px !important; right: 8px; top: auto !important; bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-      min-width: 0; max-width: none; max-height: 70vh; border-radius: 20px; }
-    // карточка и формы — на весь экран; заголовок с крестиком и кнопки сохранения всегда видны
-    .pmo-app .pmo-panel, .pmo-app.pmo-sp .pmo-panel { border-radius: 0; padding-left: 16px; padding-right: 16px; }
-    .pmo-app .pmo-panel .ph { position: sticky; top: calc(-24px - env(safe-area-inset-top, 0px)); z-index: 3; background: var(--bg);
-      margin: -8px -16px 12px; padding: 8px 16px; }
-    .pmo-app .pmo-panel .ph h2 { font-size: 22px; }
-    .pmo-app .pmo-panel form .actions { position: sticky; bottom: calc(-40px - env(safe-area-inset-bottom, 0px)); z-index: 3; background: var(--bg);
-      margin: 20px -16px 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); }
-    .pmo-app .pmo-panel form .actions .btn { flex: 1; }
-    .pmo-app .kv { flex-wrap: wrap; gap: 4px 16px; }
-    .pmo-app .kv .v { flex: 1 1 auto; }
-    .pmo-app .access li { flex-wrap: wrap; }
-    .pmo-app .picker input[type=search] { min-width: 0; }
-    .pmo-app input[type=url], .pmo-app input[type=text], .pmo-app input[type=number], .pmo-app input[type=date], .pmo-app select, .pmo-app textarea { max-width: 100%; box-sizing: border-box; }
-  }
-}
-
-// поле ссылки Loop — как остальные поля формы (в прототипе type=url не попал в общее правило и было узким)
-:global {
-  .pmo-app form input[type=url] { width: 100%; border: 1px solid transparent; border-radius: 12px; padding: 10px 12px; background: var(--bg-alt); box-sizing: border-box; }
-  .pmo-app form input[type=url]:focus { outline: none; border-color: var(--theme); background: var(--bg); }
-}
-
-// Шапка (как в прототипе): название — своей строкой сверху, ниже — меню и кнопки в одну строку; с колокольчиком, «?»,
-// «Відгуками» и значками всё в одну строку шириной 1280 px не помещается — название не сжимается и не перекрывается
-:global {
-  .pmo-app .brand-name, .pmo-app .brand-sub { white-space: nowrap; }
-  @media (min-width: 1280px) { .pmo-app .controls { flex-wrap: nowrap; } }   // уже — переносятся (телефон: языки, тема, колокольчик, «?», «Відгук»)
-  // «Статус-звіти»: базовый набор колонок помещается без прокрутки вбок
-  .pmo-app .dt td.w-rep { min-width: 140px; }
-  .pmo-app .dt td .pill.ap { font-size: 11px; padding: 3px 7px; }
+  .pmo-app .pmo-diag { position: fixed; left: 8px; right: 8px; top: calc(56px + env(safe-area-inset-top, 0px)); z-index: 100; background: rgba(0,0,0,.82); color: #fff;
+    font: 12px/1.45 ui-monospace, Menlo, monospace; padding: 8px 10px; border-radius: 10px; pointer-events: none; word-break: break-word; }
+  .pmo-app .pmo-diag b { color: #9cf; font-weight: 600; }
 }

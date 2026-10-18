@@ -34,10 +34,12 @@ const btn = (text: string): HTMLElement => Array.from(document.querySelectorAll(
 const sw = (): HTMLElement => $('#ai-switch');
 
 describe('переключатель «Помічник ШІ»', () => {
-  test('вне пилота — у аватара нет меню', () => {
+  test('вне пилота — меню аватара есть (имя, e-mail, язык и тема для телефона), «Помічник ШІ» нет', () => {
     mount(false);
     click($('.me'));
-    expect($('#me-pop')).toBeNull(); expect($('#state').textContent).toBe('none');
+    expect($('#me-pop').textContent).toContain('pm@x');
+    expect($('#me-pop .me-prefs').querySelectorAll('.seg').length).toBe(2);
+    expect([$('#ai-switch'), $('#state').textContent]).toEqual([null, 'none']);
   });
   test('первое включение — согласие; «Скасувати» — выключен, агент не вызывается', () => {
     mount(); click($('.me'));

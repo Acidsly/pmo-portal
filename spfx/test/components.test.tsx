@@ -17,6 +17,7 @@ import { NotifyPanel } from '../src/webparts/pmoPortal/panels/NotifyPanel';
 import { Header } from '../src/webparts/pmoPortal/components/Header';
 import { RepMark, FreshDate, freshTip } from '../src/webparts/pmoPortal/components/Bits';
 import { FeedbackView } from '../src/webparts/pmoPortal/panels/FeedbackView';
+import { Feedback } from '../src/webparts/pmoPortal/pages/Feedback';
 import { neighbors } from '../src/webparts/pmoPortal/logic/ui';
 
 // Компоненты приложения в jsdom: поведение, а не только «вызывается» (блок 2 отзывов раунда 3 и правки кросс-ревью)
@@ -113,10 +114,12 @@ describe('#58 карточки отчёта и риска', () => {
   const opened: string[] = [];
   const x = { t: tt.t, fl: tt.fl, today: '2026-10-04', byId: { 5: { id: 5, title: 'Проєкт П' } }, comments: [],
     open() { /* */ }, openRisk: (id: number, p: number) => opened.push(`risk ${id}/${p}`), openReport: (id: number, p: number) => opened.push(`rep ${id}/${p}`) } as any;
-  test('отчёт: проект, дата, стан, погодження, резюме; нажатие открывает отчёт', () => {
-    mount(<>{reportCard(x)({ id: 7, projectId: 5, date: '2026-10-02', schedule: 'Зелений', budget: 'Жовтий', resources: 'Зелений', approval: 'На погодженні', title: 'Резюме' } as any)}</>);
+  test('отчёт: проект, PM · дата · стан (#99), погодження, резюме; нажатие открывает отчёт', () => {
+    mount(<>{reportCard(x)({ id: 7, projectId: 5, date: '2026-10-02', schedule: 'Зелений', budget: 'Жовтий', resources: 'Зелений', approval: 'На погодженні', title: 'Резюме',
+      author: { id: 1, name: 'Ірина PM', email: 'pm@x' } } as any)}</>);
     const t = root.textContent || '';
     ['Проєкт П', '02.10.2026', 'Жовтий', 'На погодженні', 'Резюме'].forEach(s => expect(t).toContain(s));
+    expect((root.querySelector('.mc-m') as HTMLElement).textContent).toMatch(/^Ірина PM · 02\.10\.2026 · Жовтий$/);
     act(() => { (root.querySelector('.mcard') as HTMLElement).click(); }); expect(opened).toContain('rep 7/5');
   });
   test('риск: название, оценка, проект, статус, срок; нажатие открывает риск', () => {
@@ -589,4 +592,14 @@ describe('#91 / #92 запись реестра в приложении', () => 
     expect((root.querySelector('#k-due') as HTMLInputElement).value).toBe('');
     expect(root.querySelector('#k-copy')!.textContent).toContain('«Р»');
   });
+});
+
+// #102: «Відгуки» на телефоне — карточки (на широком экране их прячет CSS, видна таблица)
+test('#102: «Відгуки» — карточки: №, дата, статус, автор, экран, текст; нажатие открывает отзыв', () => {
+  const opened: string[] = []; const c2 = { ...ctx, openForm: (f: string) => opened.push(f) };
+  act(() => { ReactDOM.render(<AppCtx.Provider value={c2}><Feedback data={{ feedbackRows: [{ id: 12, created: '2026-10-16T09:30:00Z', author: 'Марина', text: 'Не видно кнопки',
+    status: 'Прийнято', answer: '', shots: 0, files: [], screen: '#reports', mine: false }] } as any} /></AppCtx.Provider>, root); });
+  const m = root.querySelector('.mcards .mcard') as HTMLElement;
+  ['#12', 'Прийнято', 'Марина', 'Статус-звіти', 'Не видно кнопки'].forEach(x => expect(m.textContent).toContain(x));
+  act(() => { m.click(); }); expect(opened).toEqual(['fb:12']);
 });

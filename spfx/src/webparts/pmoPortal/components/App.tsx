@@ -29,6 +29,7 @@ import { aiEnable, aiPreload } from '../ai/aiEnable';
 import { aiPref } from '../ai/aiPref';
 import { aiReportFail } from '../ai/aiFailReport';
 import { aiPrefsOf, withAiPrefs } from '../logic/aiPrefs';
+import { Diag, diagOn } from './Diag';
 import { aiLangOf } from '../logic/aiCheck';
 import { Feedback, feedbackOrder } from '../pages/Feedback';
 import { FeedbackView } from '../panels/FeedbackView';
@@ -138,6 +139,7 @@ export const App: React.FC<AppProps> = p => {
         onPage={pg => ctx.go(pg)} onLang={l => { setLang(l); saveLang(l); }} onTheme={v => { setTheme(v); saveTheme(v); }}
         onFeedback={openFeedback} onHelp={() => ctx.openForm('help', route.projectId)}
         bell={data ? { unread: bellUnread, onOpen: () => { setNtfRet(false); ctx.openForm('notifications', route.projectId); } } : undefined} ai={aiSw} />
+      {diagOn(window.location.search, !!p.admin) ? <Diag /> : null}
       <main className="pmo-main">
         {err ? <p className="empty">{tt.t('loadErr')}: {err}</p> : !data ? <p className="empty">…</p> : pageEl}
       </main>

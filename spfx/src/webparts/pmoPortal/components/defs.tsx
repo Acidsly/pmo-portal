@@ -151,7 +151,8 @@ export const reportCard = (x: DefsCtx) => (r: StatusReport): React.ReactNode => 
   const pj = x.byId[r.projectId];
   return <button className="mcard" onClick={() => x.openReport(r.id, r.projectId)}>
     <span className="mc-h"><b>{pj ? pj.title : ''}</b><ApBadge v={r.approval} /></span>
-    <span className="mc-m">{fmtDate(r.date)} · <span className="ilabel"><RagDot v={calc(r)} notRated={x.t('notRated')} />{calc(r) ? tv(calc(r)) : x.t('notRated')}</span></span>
+    {/* #99: сначала кто подал (PM), когда и состояние, затем резюме */}
+    <span className="mc-m">{r.author ? <>{r.author.name} · </> : null}{fmtDate(r.date)} · <span className="ilabel"><RagDot v={calc(r)} notRated={x.t('notRated')} />{calc(r) ? tv(calc(r)) : x.t('notRated')}</span></span>
     <span className="mc-t">{r.title}</span></button>;
 };
 export const riskCard = (x: DefsCtx) => (k: Risk): React.ReactNode => {

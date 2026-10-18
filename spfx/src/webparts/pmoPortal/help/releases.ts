@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.4.5",
+   "date": "18.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>На телефоні: шапка в один ряд, при прокрутці лишається тільки меню розділів; мова й тема — у меню під аватаром. Вікна фільтра й колонок — знизу, кнопки «Як за замовчуванням» і «Скинути ширини» — угорі вікна (#107). Блок погодження в перегляді звіту більше не налазить на заголовок (#97). Картка звіту в списку: спершу PM, дата й стан (#99). «Відгуки» — картками (#102).</li>\n</ul>\n<p><b>Перевірте повторно</b></p>\n<ul>\n<li>На телефоні: шапка, меню під аватаром, фільтри й колонки у списках, погодження звіту, «Відгуки».</li>\n</ul>"
+  },
+  {
    "ver": "1.7.4.4",
    "date": "17.10.2026",
    "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>«Детальний огляд системи»: таблиці переносять текст — без прокрутки вбік.</li>\n</ul>"
@@ -180,6 +185,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.4.5",
+   "date": "18.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>On a phone: a single-row header, only the section menu stays when scrolling; language and theme — in the menu under the avatar. Filter and column windows open at the bottom, with «Default» and «Reset widths» at the top of the window (#107). The approval block in the report view no longer overlaps the title (#97). A report card in the list shows the PM, date and health first (#99). «Feedback» — as cards (#102).</li>\n</ul>\n<p><b>Please re-check</b></p>\n<ul>\n<li>On a phone: the header, the avatar menu, filters and columns in lists, report approval, «Feedback».</li>\n</ul>"
+  },
+  {
    "ver": "1.7.4.4",
    "date": "17.10.2026",
    "html": "<p><b>Fixed</b></p>\n<ul>\n<li>«Detailed system overview»: tables wrap text — no sideways scrolling.</li>\n</ul>"
@@ -356,6 +366,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.4.5",
+   "date": "18.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>На телефоне: шапка в один ряд, при прокрутке остаётся только меню разделов; язык и тема — в меню под аватаром. Окна фильтра и колонок — снизу, кнопки «Как по умолчанию» и «Сбросить ширины» — вверху окна (#107). Блок согласования в просмотре отчёта больше не наезжает на заголовок (#97). Карточка отчёта в списке: сначала PM, дата и состояние (#99). «Отзывы» — карточками (#102).</li>\n</ul>\n<p><b>Проверьте повторно</b></p>\n<ul>\n<li>На телефоне: шапка, меню под аватаром, фильтры и колонки в списках, согласование отчёта, «Отзывы».</li>\n</ul>"
+  },
   {
    "ver": "1.7.4.4",
    "date": "17.10.2026",

@@ -174,7 +174,7 @@ The "Archive" tab lists projects with the **Completed** or **Cancelled** phase (
 
 ## Language and theme
 
-Top right: **UA / EN / RU** and the light ☀ / dark ☾ theme. The choice is remembered in this browser. Values (statuses, health, types, priorities, departments, approval) and the names in "Show" are translated with the interface; record content stays as entered.
+Top right: **UA / EN / RU** and the light ☀ / dark ☾ theme. On a phone — in the menu under your avatar (the header is a single row there). The choice is remembered in this browser. Values (statuses, health, types, priorities, departments, approval) and the names in "Show" are translated with the interface; record content stays as entered.
 
 ## When changes appear
 
