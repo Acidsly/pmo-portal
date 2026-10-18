@@ -6,7 +6,10 @@ import { diagOn } from '../src/webparts/pmoPortal/components/Diag';
 const css = fs.readFileSync(path.join(__dirname, '../src/webparts/pmoPortal/theme/prototype.scss'), 'utf8');
 const phone = css.slice(css.indexOf('Телефон: шапка в один ряд'));
 test('шапка: один ряд, при прокрутке прилипает только меню разделов; язык и тема — в меню аватара', () => {
-  expect(phone).toMatch(/\.top\s*\{\s*top:\s*calc\(env\(safe-area-inset-top, 0px\) - 60px\)/);
+  expect(phone).toMatch(/header\.top\s*\{\s*top:\s*calc\(env\(safe-area-inset-top, 0px\) - 60px\)/);
+  // верхний ряд — 40px и с мышью, и на касаниях: смещение 10 + 40 + 10 = 60
+  expect(phone).toMatch(/\.brand, \.pmo-app \.controls\s*\{\s*min-height:\s*40px|\.brand, \.controls\s*\{\s*min-height:\s*40px/);
+  expect(phone).toMatch(/\.pmo-pop \.pop-user-menu\s*\{\s*width:\s*100%/);
   expect(phone).toMatch(/\.controls \.seg\s*\{\s*display:\s*none/);
   expect(phone).toMatch(/\.nav\s*\{\s*order:\s*3/);
   expect(css).toMatch(/\.me-prefs\s*\{\s*display:\s*none/);
