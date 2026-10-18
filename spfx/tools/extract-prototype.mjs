@@ -2,7 +2,8 @@
 import fs from 'fs'; import path from 'path'; import { fileURLToPath } from 'url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const src = fs.readFileSync(path.join(here, '../../prototype/pmo-prototype.html'), 'utf8');
-const out = p => path.join(here, '../src/webparts/pmoPortal', p);
+// PMO_EXTRACT_OUT — другая папка (тест «прототип не меняет портал» сравнивает результат с файлами приложения)
+const out = p => path.join(process.env.PMO_EXTRACT_OUT || path.join(here, '../src/webparts/pmoPortal'), p);
 
 // --- словари: объекты T и FLD — литералы; вычисляем их в изолированной функции
 const grab = name => {

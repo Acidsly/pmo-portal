@@ -20,6 +20,7 @@ afterEach(() => { if (w) w.close(); });
 const q = (s: string): W => w.document.querySelector(s);
 const ev = (el: W, t: string): void => { el.dispatchEvent(new w.Event(t, { bubbles: true })); };
 // «войти как» PMO (кнопка меню пользователя; обработчик — по data-act на документе)
+function asUser(n: string): void { const b = w.document.createElement('button'); b.dataset.act = 'asuser'; b.dataset.n = n; w.document.body.appendChild(b); b.click(); b.remove(); }
 function asPmo(): void { const b = w.document.createElement('button'); b.dataset.act = 'asuser'; b.dataset.n = 'Олександра Мороз'; w.document.body.appendChild(b); b.click(); b.remove(); }
 function newProject(title: string, start: string, golive: string): W {
   asPmo();
@@ -144,12 +145,12 @@ test('#96: правка карточки без «Мета та опис» — �
 
 describe('#43 смена PM / власника — только PMO', () => {
   const card = (id: number): void => { q('[data-act="nav"][data-page="projects"]').click(); q(`[data-act="openp"][data-id="${id}"]`).click(); };
-  test('PM: кнопки нет, в форме проекта PM и власник — только чтение', () => {
-    card(1);                                                     // PRJ-001: PM — Юрій (текущий пользователь)
+  test('PM (не PMO и не владелец сайта): кнопки нет, в форме проекта PM и власник — только чтение', () => {
+    asUser('Андрій Мельник'); card(2);                           // PRJ-002: PM — Андрій Мельник
     expect(q('[data-act="assign"]')).toBeNull();
-    q('[data-act="editproj"][data-id="1"]').click();
+    q('[data-act="editproj"][data-id="2"]').click();
     expect(q('#pform select#p-pm')).toBeNull();
-    expect(q('#p-pm-fixed').textContent).toBe('Юрій');
+    expect(q('#p-pm-fixed').textContent).toBe('Андрій Мельник');
     expect(q('#pform').textContent).toContain('PM і власника змінює лише PMO.');
   });
   test('PMO: без выбора и без причины — ошибки; затем новый PM в карточке и «Призначення» в истории', () => {
