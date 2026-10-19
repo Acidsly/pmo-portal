@@ -267,6 +267,9 @@ F $P pmoAcl        Text     "Службове: права"    "System: access"  
 F $P pmAccess      Note     "Службове: доступ"   "System: access list" "Служебное: доступ"    "Hidden='TRUE' NumLines='6' RichText='FALSE'"
 # Посилання картки (JSON [{ "t": назва, "u": адреса }]) — вместо одной ссылки на Loop; правит PM в приложении
 F $P pmLinks       Note     "Посилання"          "Links"               "Ссылки"               "Hidden='TRUE' NumLines='6' RichText='FALSE'"
+# «Батьківський проєкт» (план 2026-10-19-parent-project.md): lookup на этот же список — только связь (прав не даёт); вложенность любая,
+# сам себе — нельзя (проверяет приложение). Не обязательное; удаление родителя связь не трогает (None); индекс — для фильтров по большому списку
+F $P pmParent      Lookup   "Батьківський проєкт" "Parent project"     "Родительский проект"  "List='{$($P.Id)}' ShowField='Title' Required='FALSE' Indexed='TRUE' RelationshipDeleteBehavior='None' Hidden='TRUE'"
 # отметки одноразовой миграции проекта (team, links): повторный запуск удалённое PM не возвращает
 F $P pmMigrated    Text     "Службове: міграція" "System: migration"   "Служебное: миграция"  "Hidden='TRUE' MaxLength='100'"
 F $P pmEditLog     Note     "Службове: правки картки" "System: card edits" "Служебное: правки карточки" "Hidden='TRUE' NumLines='6' RichText='FALSE'"

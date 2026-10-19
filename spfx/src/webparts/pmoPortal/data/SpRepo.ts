@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- ответы REST SharePoint */
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
+import { withParentNames } from '../logic/projects';
 import { Project, StatusReport, Risk, Comment, ChangeEntry, Person, FeedbackRow, Approval } from './types';
-import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, REPORT_SELECT, REPORT_EXPAND, REPORT_AI, RISK_SELECT, RISK_EXPAND,
+import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, PROJECT_PARENT, REPORT_SELECT, REPORT_EXPAND, REPORT_AI, RISK_SELECT, RISK_EXPAND,
   COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, TEAM_SELECT, TEAM_EXPAND, mapTeam, APPROVAL_SELECT, APPROVAL_EXPAND, mapApproval, ASSIGN_SELECT, ASSIGN_EXPAND, mapAssign, canAdd, canManage,
   withoutFolders, CHANGES_ON_LOAD, changesOf, changesSince, NOTIFY_SELECT, NOTIFY_SELECT_BASE, mapNotify, NotifyRow } from './map';
 import { withApproval, approvedIds as approvedOf, pendingReports, latestReport } from '../logic/approval';
@@ -65,7 +66,7 @@ export class SpRepo {
   async loadAll(): Promise<PortalData> {
     const since = new Date(Date.now() - NOTIFY_DAYS * 864e5).toISOString();
     const [p, r, k, c, h, tm, ap, ps, perm, fbPerm, pa, rc, ns] = await Promise.all([
-      this.items('Projects', PROJECT_SELECT, PROJECT_EXPAND),
+      this.items('Projects', PROJECT_SELECT + PROJECT_PARENT.select, PROJECT_EXPAND + PROJECT_PARENT.expand).catch(() => this.items('Projects', PROJECT_SELECT, PROJECT_EXPAND)),
       this.reportRows(),
       this.items('RisksIssues', RISK_SELECT, RISK_EXPAND),
       this.items('ProjectComments', COMMENT_SELECT, COMMENT_EXPAND),
@@ -99,7 +100,7 @@ export class SpRepo {
     // R7: строка в корне у проекта с выданными правами не от PM — синхронизация её не учитывает, приложение тоже не показывает
     const teamRoot = `${this.webRelUrl.replace(/\/$/, '')}/Lists/ProjectTeam`;
     const withTeam = (x: Project): Project => { const own = team.filter(m => m.projectId === x.id && teamVisible(m, teamRoot, !!x.access, x.manager ? x.manager.email : '')); return { ...x, team: own, stakeholders: teamPeople(own) }; };
-    return { projects: p.map(mapProject).map(x => ({ ...applyState(x, states[x.id]), lastApplied: lastApplied[x.id] || '' })).map(withTeam)
+    return { projects: withParentNames(p.map(mapProject)).map(x => ({ ...applyState(x, states[x.id]), lastApplied: lastApplied[x.id] || '' })).map(withTeam)
       .map(x => applyPending(x, byProj[x.id] || [], ap ? approvedIds : undefined)).map(x => applyAssignments(x, assigns))
       .map(x => { const pr = pendingReports(byProj[x.id] || [])[0]; return { ...x, pendingDate: pr ? pr.date : undefined, lastRep: latestReport(byProj[x.id] || []) }; }), reports, risks: k.map(mapRisk),
       comments: c.map(mapComment), changes: h.map(mapChange), canCreate: canAdd(perm), canApprove: canAdd(perm), approvals, feedback: canAdd(fbPerm), feedbackAdmin: canManage(fbPerm), feedbackRows,
@@ -267,7 +268,8 @@ export class SpRepo {
    *  отчёты на погодженні, дата последнего погодженого; для погодження — состояние отчёта и решения PMO по нему. */
   async fresh(projectId: number, reportId = 0): Promise<Fresh> {
     const [pj, st, reps, aps, pas] = await Promise.all([
-      this.getJson(this.itemUrl('Projects', projectId, PROJECT_SELECT, PROJECT_EXPAND), true),
+      this.getJson(this.itemUrl('Projects', projectId, PROJECT_SELECT + PROJECT_PARENT.select, PROJECT_EXPAND + PROJECT_PARENT.expand), true)
+        .catch(() => this.getJson(this.itemUrl('Projects', projectId, PROJECT_SELECT, PROJECT_EXPAND), true)),
       this.items('ProjectState', 'Id,psProject,psState,psLastApplied', '', `psProject eq ${projectId}`).catch(() => [] as any[]),
       this.items('StatusReports', REPORT_SELECT, REPORT_EXPAND, `srProjectId eq ${projectId}`),
       this.items('ReportApprovals', APPROVAL_SELECT, APPROVAL_EXPAND, `apProjectId eq ${projectId}`).catch(() => null as any[] | null),

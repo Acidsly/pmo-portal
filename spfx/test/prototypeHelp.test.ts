@@ -6,6 +6,7 @@ import { RELEASES } from '../src/webparts/pmoPortal/help/releases';
 import { OVERVIEW_CSS, OVERVIEW_HTML } from '../src/webparts/pmoPortal/help/overview';
 import { groupReleases } from '../src/webparts/pmoPortal/logic/releases';
 import { toCsv } from '../src/webparts/pmoPortal/logic/csv';
+import PV from '../../tests/cases/parent.json';
 
 // Прототип выровнен с тестовым порталом (17.10.2026): «Довідка», «Що змінилося», «Детальний огляд», «Відгуки»,
 // «Оновити дані» и «CSV» над таблицами, сповіщення «Відгук розглянуто» и «Новий випуск порталу» — как в приложении
@@ -131,5 +132,31 @@ describe('телефон (прототип)', () => {
     q('[data-act="nav"][data-page="feedback"]').click();
     const m = q('#main .mcards .mcard');
     expect(m.textContent).toMatch(/^#\d+/); expect(m.querySelector('.fbst')).not.toBeNull();
+  });
+});
+
+describe('«Батьківський проєкт» (прототип)', () => {
+  const P = PV.projects.map(x => ({ id: x.id, parentId: x.parent }));
+  test.each(PV.choices.map(c => [c.name, c]))('варианты — общие векторы: %s', (_, c: W) => expect(w.PPM_RULES.parentChoices(P, c.self).map((x: W) => x.id)).toEqual(c.out));
+  test.each(PV.children.map(c => [c.name, c]))('дочерние — общие векторы: %s', (_, c: W) => expect(w.PPM_RULES.childrenOf(P, c.id).map((x: W) => x.id)).toEqual(c.out));
+  test('демо: PRJ-007 — родитель PRJ-003 и PRJ-008; в карточке дочернего — ссылка на родителя', () => {
+    q('[data-act="nav"][data-page="projects"]').click();
+    q('[data-act="openp"][data-id="7"]').click();
+    expect(q('#card-parent').textContent).toContain('Дочірні проєкти (2)');
+    q('#card-parent [data-act="openp"][data-id="8"]').click();
+    expect(q('#card-parent').textContent).toContain('Батьківський проєкт');
+    expect(q('#card-parent [data-act="openp"][data-id="7"]')).not.toBeNull();
+  });
+  test('правка карточки: в списке нет себя и своих дочерних; смена родителя — в «Історії змін» «PRJ-xxx · Назва»', () => {
+    q('[data-act="nav"][data-page="projects"]').click();
+    q('[data-act="openp"][data-id="7"]').click();
+    q('[data-act="editproj"][data-id="7"]').click();
+    const sel = q('#p-parent'); const ids = Array.from(sel.options).map((o: W) => o.value);
+    expect(ids).not.toContain('7'); expect(ids).not.toContain('3'); expect(ids).not.toContain('8'); expect(ids).toContain('1');
+    sel.value = '1';
+    const f = q('#pform'); const d = f.querySelector('#p-desc'); if (!d.value.trim()) d.value = 'Мета';
+    submit(f);
+    expect(q('#card-parent').textContent).toContain('PRJ-001');
+    expect(q('#panel').textContent).toContain('PRJ-001 · ');
   });
 });

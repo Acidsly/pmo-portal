@@ -59,6 +59,7 @@ Everything is counted only over the projects you can see (excluding the archive)
 
 Click a project and its card opens on the right (full screen on a phone). Every side panel has a **coloured label** at the top showing what is open: Project, Status report, Risk, Issue, Assignment, Notifications, Feedback, Help — the same wherever you opened it from.
 - at the top — type, health, phase, priority and **Links** (Loop, documents, etc.); **Add status report** and **Edit project** buttons (PM only);
+- **Parent project** and **Child projects** — a link between projects (any nesting); click a name to open the project. The link grants no access: child projects show only if you can see them; a parent you cannot open shows its name without a link. «Projects» has a **Parent project** column (⚙ — column picker).
 - **Goal and description** — up to 10 lines (line breaks are kept); a longer text — **Show all** / **Collapse**.
 - approval notes: "Status report of … is awaiting PMO approval" or "Report of … returned for rework" with the PMO's comment;
 - **Stakeholders**: PM, owner and **Project team** — a table: member, role, what to contact them about;
@@ -158,7 +159,7 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
 
 - A **New project** is created by the PMO: the name (unique — no two projects share a name) and the PM are required (the PM is not prefilled — choose one); the project number is assigned by the system in order (PRJ-001, PRJ-002…) — it is unique and cannot be changed by hand.
 - For ~15 minutes after creation the project is **being prepared** (the card says "The project is being prepared"): after that the PM can add reports, risks and team members.
-- Only the PM can **Edit project**: name, department, priority, budget, description, and also:
+- Only the PM can **Edit project**: name, department, priority, budget, description, **parent project** (any project except itself and its own children; the PMO also sets it when creating), and also:
   - **Project team** — "+ Add member": a person, their **role** (required) and what to contact them about; × removes the member;
   - **Links** — "+ Add link": a name and an address (starting with `https://`); × removes it.
 - **«Goal and description»** is required when the PM saves the card (including projects created earlier — at the next save): briefly, the project goal and the expected result. The PMO can create a new project without a description — the PM adds it.

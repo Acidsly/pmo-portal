@@ -32,18 +32,21 @@ export function reportBody(d: ReportDraft, p: Project): Body {
 // стейкхолдеров (pmStakeholders) пишет синхронизация из «Команда проєкту»
 const people = (d: ProjectDraft): Body => ({ pmManagerId: d.manager ? d.manager.id : null, pmOwnerId: d.owner ? d.owner.id : null });
 
+// «Батьківський проєкт»: поле пишется, только если в форме оно есть (на сайте без поля pmParent запись не ломается)
+const parentOf = (d: ProjectDraft): Body => (d.parent === undefined ? {} : { pmParentId: d.parent ? d.parent.id : null });
+
 /** Новый проект: статус, тип и даты задаются при создании (дальше — только через отчёт). */
 export function projectBody(d: ProjectDraft, code: string): Body {
   return { Title: d.title.trim(), pmCode: code, pmType: d.type, pmPriority: d.priority, pmDepartment: d.department, ...people(d),
     pmStatus: d.status, pmStart: spDate(d.start), pmGoLive: spDate(d.goLive), pmPlanEnd: spDate(d.planEnd), pmBudget: roundAway(d.budget || 0),
-    pmDescription: d.description, pmLinks: JSON.stringify(d.links), pmProgress: 0 };
+    pmDescription: d.description, pmLinks: JSON.stringify(d.links), pmProgress: 0, ...parentOf(d) };
 }
 
 /** Правка карточки: без ключевых показателей и без PM / власника (#43: меняет только PMO через «Призначення»);
  *  изменения дописываются в pmEditLog — синхронизация перенесёт их в журнал. */
 export function projectEditBody(d: ProjectDraft, diffs: { f: string; from: string; to: string }[], who: string, reason: string, prevLog: string): Body {
   const b: Body = { Title: d.title.trim(), pmCode: d.code, pmPriority: d.priority, pmDepartment: d.department,
-    pmBudget: roundAway(d.budget || 0), pmDescription: d.description, pmLinks: JSON.stringify(d.links) };
+    pmBudget: roundAway(d.budget || 0), pmDescription: d.description, pmLinks: JSON.stringify(d.links), ...parentOf(d) };
   if (diffs.length) {
     let entries: unknown[] = [];
     try { const prev = prevLog ? JSON.parse(prevLog) : undefined; if (prev && Array.isArray(prev.entries)) entries = prev.entries; } catch { /* повреждённый журнал — начинаем заново */ }

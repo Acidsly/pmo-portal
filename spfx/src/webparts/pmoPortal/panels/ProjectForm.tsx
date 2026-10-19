@@ -6,6 +6,7 @@ import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
 import { Project, Person } from '../data/types';
 import { ProjectDraft, validateProject, nextCode, cardDiff } from '../logic/forms';
+import { parentChoices, parentLabel } from '../logic/projects';
 import { projectBody, projectEditBody, teamBody, teamRows } from '../data/write';
 import { TeamRow, cleanTeam, cleanLinks, teamPlan } from '../logic/team';
 import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts, errText, guardText, MoneyIn } from '../components/fields';
@@ -23,9 +24,16 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
   const [d, setD] = React.useState<ProjectDraft>(() => project
     ? { title: project.title, code: project.code, department: project.department, links: project.links, type: project.type, priority: project.priority,
         manager: project.manager, owner: project.owner, team: project.team.length ? teamRows(project.team) : [{ user: null, role: '', topics: '' }], start: project.start, goLive: project.goLive,
-        planEnd: project.planEnd, status: project.status, budget: project.budget, description: project.description }
+        planEnd: project.planEnd, status: project.status, budget: project.budget, description: project.description, parent: project.parent || null }
     : { title: '', code: '', department: 'ІТ', links: [], type: 'Звичайний', priority: '2 — Середній', manager: null, owner: null, team: [{ user: null, role: '', topics: '' }],
-        start: c.today, goLive: '', planEnd: '', status: 'Ініціація', budget: 0, description: '' });
+        start: c.today, goLive: '', planEnd: '', status: 'Ініціація', budget: 0, description: '', parent: null });
+  // варианты родителя — видимые проекты без себя и своих дочерних; прежний родитель, которого человек не видит, — остаётся в списке
+  const parents = React.useMemo(() => {
+    const list = parentChoices(data.projects.map(x => ({ id: x.id, parentId: x.parent ? x.parent.id : 0, title: x.title, code: x.code })), project ? project.id : 0)
+      .sort((a, b) => a.code.localeCompare(b.code, 'uk', { numeric: true }));
+    const cur = project && project.parent;
+    return cur && !list.some(x => x.id === cur.id) ? [{ id: cur.id, parentId: 0, title: cur.title, code: cur.code || '' }, ...list] : list;
+  }, [data.projects, project]);
   const [err, setErr] = React.useState('');
   const [descErr, setDescErr] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
@@ -109,6 +117,13 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
       {/* #105: пріоритет — рядом с типом, с подсказкой, чем они различаются */}
       <Frow label={fl('prio')} htmlFor="f-prio" hint={t('prioHint')}>
         <select id="f-prio" value={d.priority} onChange={e => set({ priority: e.target.value })}><Opts values={PRIOS} /></select></Frow>
+      {/* «Батьківський проєкт»: любой проект, кроме себя и своих дочерних (иначе цикл); только связь, прав не даёт */}
+      <Frow label={fl('parent')} htmlFor="f-parent" hint={t('parentHint')}>
+        <select id="f-parent" value={d.parent ? d.parent.id : 0} onChange={e => { const id = Number(e.target.value); const q = parents.filter(x => x.id === id)[0];
+          set({ parent: q ? { id: q.id, title: q.title, code: q.code } : null }); }}>
+          <option value={0}>{t('notSet')}</option>
+          {parents.map(x => <option key={x.id} value={x.id}>{parentLabel(x)}</option>)}
+        </select></Frow>
 
       <h3 className="fsec">{t('fPeople')}</h3>
       {/* #43: после создания PM и власника меняет только PMO («Змінити PM / власника» в карточке) */}

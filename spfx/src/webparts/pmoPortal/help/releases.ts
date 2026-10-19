@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.5.0",
+   "date": "19.10.2026",
+   "html": "<p><b>Нове</b></p>\n<ul>\n<li><b>Батьківський проєкт</b> у картці: зв'язок між проєктами (вкладеність будь-яка, не можна обрати сам проєкт і його дочірні). У картці — посилання на батьківський і список <b>Дочірні проєкти</b>; у «Проєктах» — колонка <b>Батьківський проєкт</b>. Зміна — в «Історії змін». Поки лише для зв'язку, далі — аналітика.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.4.7",
    "date": "18.10.2026",
    "html": "<p><b>Змінено</b></p>\n<ul>\n<li>На телефоні меню під аватаром відкривається одразу під ним, а не знизу екрана.</li>\n</ul>"
@@ -195,6 +200,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.5.0",
+   "date": "19.10.2026",
+   "html": "<p><b>New</b></p>\n<ul>\n<li><b>Parent project</b> on the card: a link between projects (any nesting; the project itself and its children cannot be chosen). The card shows a link to the parent and a <b>Child projects</b> list; «Projects» has a <b>Parent project</b> column. Changes appear in «Change history». For linking only for now, analytics later.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.4.7",
    "date": "18.10.2026",
    "html": "<p><b>Changed</b></p>\n<ul>\n<li>On a phone the avatar menu opens right under it, not at the bottom of the screen.</li>\n</ul>"
@@ -386,6 +396,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.5.0",
+   "date": "19.10.2026",
+   "html": "<p><b>Новое</b></p>\n<ul>\n<li><b>Родительский проект</b> в карточке: связь между проектами (вложенность любая, нельзя выбрать сам проект и его дочерние). В карточке — ссылка на родительский и список <b>Дочерние проекты</b>; в «Проектах» — колонка <b>Родительский проект</b>. Изменение — в «Истории изменений». Пока только для связи, дальше — аналитика.</li>\n</ul>"
+  },
   {
    "ver": "1.7.4.7",
    "date": "18.10.2026",

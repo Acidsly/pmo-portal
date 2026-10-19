@@ -281,6 +281,16 @@ export const T: Record<string, L3> = {
   "A link must start with https://",
   "Ссылка должна начинаться с https://"
  ],
+ "childProjects": [
+  "Дочірні проєкти",
+  "Child projects",
+  "Дочерние проекты"
+ ],
+ "parentHint": [
+  "Лише для зв'язку проєктів; прав не дає.",
+  "Only links projects; grants no access.",
+  "Только для связи проектов; прав не даёт."
+ ],
  "noTeam": [
   "Команду ще не додано",
   "No team members yet",
@@ -2242,6 +2252,11 @@ export const FLD: Record<string, L3> = {
   "Напрям",
   "Area",
   "Направление"
+ ],
+ "parent": [
+  "Батьківський проєкт",
+  "Parent project",
+  "Родительский проект"
  ],
  "status": [
   "Фаза проєкту",

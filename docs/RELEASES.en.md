@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.5.0 · 19.10.2026
+
+**New**
+- **Parent project** on the card: a link between projects (any nesting; the project itself and its children cannot be chosen). The card shows a link to the parent and a **Child projects** list; «Projects» has a **Parent project** column. Changes appear in «Change history». For linking only for now, analytics later.
+
 ## 1.7.4.7 · 18.10.2026
 
 **Changed**
