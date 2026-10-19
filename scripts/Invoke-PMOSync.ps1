@@ -463,7 +463,7 @@ $DATE_FIELDS = @("pmStart","pmGoLive","pmPlanEnd","pmForecastEnd","pmLastUpdate"
 # Правки карточки из приложения SPFx (поле pmEditLog): ключ прототипа -> внутреннее имя, подпись строки журнала
 $EDIT_DISPLAY = @{ Title = "Назва проєкту"; pmCode = "Код проєкту"; pmDepartment = "Напрям"; pmLoop = "Посилання на картку в Loop"; pmPriority = "Пріоритет"
                    pmManager = "PM"; pmOwner = "Власник"; pmStakeholders = "Стейкхолдери"; pmBudget = "Бюджет (план)"
-                   pmTeam = "Команда проєкту"; pmLinks = "Посилання"
+                   pmTeam = "Команда проєкту"; pmLinks = "Посилання"; pmParent = "Батьківський проєкт"
                    # #84: служебные отметки правки команды (e-mail): кого добавили, у кого сменилась роль — сповіщення этому человеку
                    teamIn = "Команда: додано учасників"; teamRole = "Команда: змінено роль"
                    srSchedule = "Терміни"; srBudget = "Бюджет"; srResources = "Ресурси"; srApproval = "Погодження звіту"
@@ -471,7 +471,7 @@ $EDIT_DISPLAY = @{ Title = "Назва проєкту"; pmCode = "Код про�
 function EditLogRows([string]$json) {
     # {"entries":[{"when","who","reason","diffs":[{"f","from","to"}]}]} -> строки журнала; повреждённое содержимое — пусто
     $key = @{ title = "Title"; code = "pmCode"; dept = "pmDepartment"; loop = "pmLoop"; prio = "pmPriority"; pm = "pmManager"
-              owner = "pmOwner"; stakeholders = "pmStakeholders"; budget = "pmBudget"; team = "pmTeam"; links = "pmLinks" }
+              owner = "pmOwner"; stakeholders = "pmStakeholders"; budget = "pmBudget"; team = "pmTeam"; links = "pmLinks"; parent = "pmParent" }
     if (-not $json) { return @() }
     try { $log = $json | ConvertFrom-Json -ErrorAction Stop } catch { return @() }
     $rows = @()

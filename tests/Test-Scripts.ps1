@@ -35,7 +35,7 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/assignments.json", "tests/cases/history.json", "tests/cases/notify-state.json", "tests/cases/archive.json", "tests/cases/feedback-decided.json", "tests/cases/archive-migration.json", "config/focus-group.example.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/parent.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/assignments.json", "tests/cases/history.json", "tests/cases/notify-state.json", "tests/cases/archive.json", "tests/cases/feedback-decided.json", "tests/cases/archive-migration.json", "config/focus-group.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
@@ -409,6 +409,11 @@ foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/card-edit.json") 
         "$($_.field)|$($_.from)|$($_.to)|$($_.who)|$($_.reason)|$w" }
     if ((@($got) -join "`n") -eq (@($want) -join "`n")) { Ok $c.note } else { Bad "$($c.note): получено $(@($got) -join '; ')" }
 }
+
+Write-Host "4d. «Батьківський проєкт» — не ключевой показатель (синхронизация не откатывает его правки)"
+$common = Get-Content -Raw (Join-Path $root "scripts/PMO.Common.ps1")
+$sk = [regex]::Match($common, '(?s)function Get-StateKeys \{ return @\((.*?)\) \}').Groups[1].Value
+if ($sk -and $sk -notmatch 'pmParent') { Ok "pmParent нет в Get-StateKeys" } else { Bad "pmParent в Get-StateKeys или функция не найдена" }
 
 Write-Host "5. Прототип"
 $html = Get-Content -Raw (Join-Path $root "prototype/pmo-prototype.html")

@@ -277,6 +277,14 @@ foreach ($code in $lastComment.Keys) {
     Set-PnPListItem -List "Lists/Projects" -Identity $ids[$code] -Values @{ pmLastComment = $txt } -UpdateType SystemUpdate | Out-Null
 }
 
+# «Батьківський проєкт» (план 2026-10-19-parent-project.md): демо-связи — только у новых демо-проектов и если поле есть
+# (повторный запуск ничего не меняет; связи, заданные в портале, не трогает)
+if (Get-PnPField -List "Lists/Projects" -Identity "pmParent" -ErrorAction SilentlyContinue) {
+    foreach ($pair in @(@("PRJ-007", "PRJ-002"), @("PRJ-008", "PRJ-003"))) {
+        if ($new[$pair[0]] -and $ids[$pair[1]]) { Set-PnPListItem -List "Lists/Projects" -Identity $ids[$pair[0]] -Values @{ pmParent = $ids[$pair[1]] } -UpdateType SystemUpdate | Out-Null }
+    }
+}
+
 Write-Host ("`nГотово: проектов {0}, статус-отчётов {1}, рисков {2}, комментариев {3}, записей журнала {4}" -f $n.projects, $n.reports, $n.risks, $n.comments, $n.changes) -ForegroundColor Green
 
 # ---------------------------------------------------------------------------

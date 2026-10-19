@@ -11,6 +11,9 @@ export const PROJECT_SELECT = ['Id', 'Title', 'pmCode', 'pmType', 'pmPriority', 
   'pmStart', 'pmGoLive', 'pmPlanEnd', 'pmForecastEnd', 'pmActualEnd', 'pmArchivedAt', 'pmBudget', 'pmActualCost', 'pmLastUpdate', 'pmLastReport',
   'pmLastComment', 'pmLoop', 'pmLinks', 'pmDescription', 'pmEditLog', 'pmAccess', 'Created', 'EffectiveBasePermissions', ...people('pmManager', 'pmOwner', 'pmStakeholders')].join(',');
 export const PROJECT_EXPAND = 'pmManager,pmOwner,pmStakeholders';
+/** «Батьківський проєкт» (pmParent, lookup на «Проєкти»): название — из записи, видно и без доступа к родителю. Отдельно:
+ *  поля может ещё не быть на сайте (приложение установили раньше Deploy-PMO.ps1) — тогда проекты читаются без него. */
+export const PROJECT_PARENT = { select: ',pmParentId,pmParent/Title', expand: ',pmParent' };
 export const REPORT_SELECT = ['Id', 'Title', 'srProjectId', 'srDate', 'srPeriod', 'srPeriodFrom', 'srSchedule', 'srBudget', 'srResources', 'srStatus', 'srType',
   'srProgress', 'srStart', 'srGoLive', 'srPlanEnd', 'srForecastEnd', 'srActualEnd', 'srActualCost', 'srKeyReason', 'srDone', 'srNext', 'srIssues',
   'srDecision', 'srDecisionText', 'srApplied', 'srApproval', 'srApprovedAt', 'srApprovalNote', 'Created', ...people('Author', 'srApprovedBy')].join(',');
@@ -51,7 +54,8 @@ export function mapProject(r: any): Project {
     start: dateOnly(r.pmStart), goLive: dateOnly(r.pmGoLive), planEnd: dateOnly(r.pmPlanEnd), forecastEnd: dateOnly(r.pmForecastEnd), actualEnd: dateOnly(r.pmActualEnd),
     archivedAt: dateOnly(r.pmArchivedAt), budget: n(r.pmBudget), actualCost: n(r.pmActualCost), lastUpdate: dateOnly(r.pmLastUpdate),
     lastReport: s(r.pmLastReport), lastComment: s(r.pmLastComment), links: parseLinks(s(r.pmLinks), r.pmLoop ? s(r.pmLoop.Url) : ''), team: [], description: s(r.pmDescription),
-    canEdit: canEdit(r.EffectiveBasePermissions), pending: false, editLog: s(r.pmEditLog), access: s(r.pmAccess), created: s(r.Created) };
+    canEdit: canEdit(r.EffectiveBasePermissions), pending: false, editLog: s(r.pmEditLog), access: s(r.pmAccess), created: s(r.Created),
+    parent: r.pmParentId ? { id: Number(r.pmParentId), title: s(r.pmParent && r.pmParent.Title) } : null };
 }
 
 export function mapReport(r: any): StatusReport {

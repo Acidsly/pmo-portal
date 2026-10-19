@@ -1,5 +1,28 @@
 # What's new
 
+## 1.7.5.0 · 19.10.2026
+
+**New**
+- **Parent project** on the card: a link between projects (any nesting; the project itself and its children cannot be chosen). The card shows a link to the parent and a **Child projects** list; «Projects» has a **Parent project** column. Changes appear in «Change history». For linking only for now, analytics later.
+
+## 1.7.4.7 · 18.10.2026
+
+**Changed**
+- On a phone the avatar menu opens right under it, not at the bottom of the screen.
+
+## 1.7.4.6 · 18.10.2026
+
+**Changed**
+- Technical update with no changes to how the portal works.
+
+## 1.7.4.5 · 18.10.2026
+
+**Changed**
+- On a phone: a single-row header, only the section menu stays when scrolling; language and theme — in the menu under the avatar. Filter and column windows open at the bottom, with «Default» and «Reset widths» at the top of the window (#107). The approval block in the report view no longer overlaps the title (#97). A report card in the list shows the PM, date and health first (#99). «Feedback» — as cards (#102).
+
+**Please re-check**
+- On a phone: the header, the avatar menu, filters and columns in lists, report approval, «Feedback».
+
 ## 1.7.4.4 · 17.10.2026
 
 **Fixed**

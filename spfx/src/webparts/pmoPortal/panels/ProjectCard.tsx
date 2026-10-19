@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { childrenOf, parentLabel } from '../logic/projects';
 import { shownDiffs, onlyHidden } from '../logic/team';
 import { EntTag } from '../components/EntTag';
 import { tv } from '../i18n/values';
@@ -83,6 +84,8 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
   const [pmTitle, setPmTitle] = React.useState('');
   React.useEffect(() => { if (p.manager) repo.jobTitle(p.manager.email).then(setPmTitle, () => undefined); }, [p.id]);
   const reps = ofProject(data.reports, p.id).slice().sort(byDateDesc);
+  const children = childrenOf(data.projects.map(x => ({ ...x, parentId: x.parent ? x.parent.id : 0 })), p.id).sort((a, b) => a.code.localeCompare(b.code, 'uk', { numeric: true }));
+  const parentSeen = !!p.parent && data.projects.some(x => x.id === p.parent!.id);
   const last8 = reps.slice(0, 8).reverse();
   const risks = ofProject(data.risks, p.id).slice().sort((a, b) => riskScore(b.probability, b.impact) - riskScore(a.probability, a.impact));
   const cms = ofProject(data.comments, p.id).slice().sort((a, b) => (a.created < b.created ? 1 : -1));
@@ -134,6 +137,13 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
     </div>
     {p.links.length ? <div className="lnk-sec"><div className="k">{fl('links')}</div><span className="lnks">{p.links.map((l, i) =>
       <a key={i} className="loop" href={l.u} target="_blank" data-interception="off" rel="noopener noreferrer">{l.t || l.u} ↗</a>)}</span></div> : null}
+    {/* «Батьківський проєкт» и дочерние: только связь; родитель, которого человек не видит, — без ссылки, дочерние — только видимые */}
+    {p.parent || children.length ? <div className="lnk-sec" id="card-parent">
+      {p.parent ? <><div className="k">{fl('parent')}</div><span className="lnks">{parentSeen
+        ? <button className="link" onClick={() => c.openProject(p.parent!.id)}>{parentLabel(p.parent)}</button> : <span>{parentLabel(p.parent)}</span>}</span></> : null}
+      {children.length ? <><div className="k" style={{ marginTop: p.parent ? 10 : 0 }}>{t('childProjects')} ({children.length})</div>
+        <span className="lnks">{children.map(x => <button key={x.id} className="link" onClick={() => c.openProject(x.id)}>{x.code} · {x.title}</button>)}</span></> : null}
+    </div> : null}
     {edit ? <div className="actbar">
       {/* один отчёт на погодженні на проект: пока PMO не решил, новый не подаётся */}
       {awaitingAll.length ? null : <button className="btn primary" onClick={() => c.openForm('report', p.id)}><Plus />{t('addReport')}</button>}

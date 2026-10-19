@@ -31,6 +31,8 @@ export interface Project {
   created?: string;
   /** Есть «Призначення» PMO, ещё не перенесённое синхронизацией (#43): новое не подаётся. */
   assignPending?: boolean;
+  /** «Батьківський проєкт» (pmParent): только связь, прав не даёт; нет — null. */
+  parent?: { id: number; title: string; code?: string } | null;
 }
 
 /** «Призначення» (#43): решение PMO о смене PM / власника; пусто — без изменений. Переносит синхронизация (paApplied). */

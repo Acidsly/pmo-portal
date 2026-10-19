@@ -3,6 +3,26 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.5.0",
+   "date": "19.10.2026",
+   "html": "<p><b>Нове</b></p>\n<ul>\n<li><b>Батьківський проєкт</b> у картці: зв'язок між проєктами (вкладеність будь-яка, не можна обрати сам проєкт і його дочірні). У картці — посилання на батьківський і список <b>Дочірні проєкти</b>; у «Проєктах» — колонка <b>Батьківський проєкт</b>. Зміна — в «Історії змін». Поки лише для зв'язку, далі — аналітика.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.4.7",
+   "date": "18.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>На телефоні меню під аватаром відкривається одразу під ним, а не знизу екрана.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.4.6",
+   "date": "18.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення без змін у роботі порталу.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.4.5",
+   "date": "18.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>На телефоні: шапка в один ряд, при прокрутці лишається тільки меню розділів; мова й тема — у меню під аватаром. Вікна фільтра й колонок — знизу, кнопки «Як за замовчуванням» і «Скинути ширини» — угорі вікна (#107). Блок погодження в перегляді звіту більше не налазить на заголовок (#97). Картка звіту в списку: спершу PM, дата й стан (#99). «Відгуки» — картками (#102).</li>\n</ul>\n<p><b>Перевірте повторно</b></p>\n<ul>\n<li>На телефоні: шапка, меню під аватаром, фільтри й колонки у списках, погодження звіту, «Відгуки».</li>\n</ul>"
+  },
+  {
    "ver": "1.7.4.4",
    "date": "17.10.2026",
    "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>«Детальний огляд системи»: таблиці переносять текст — без прокрутки вбік.</li>\n</ul>"
@@ -180,6 +200,26 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.5.0",
+   "date": "19.10.2026",
+   "html": "<p><b>New</b></p>\n<ul>\n<li><b>Parent project</b> on the card: a link between projects (any nesting; the project itself and its children cannot be chosen). The card shows a link to the parent and a <b>Child projects</b> list; «Projects» has a <b>Parent project</b> column. Changes appear in «Change history». For linking only for now, analytics later.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.4.7",
+   "date": "18.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>On a phone the avatar menu opens right under it, not at the bottom of the screen.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.4.6",
+   "date": "18.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update with no changes to how the portal works.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.4.5",
+   "date": "18.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>On a phone: a single-row header, only the section menu stays when scrolling; language and theme — in the menu under the avatar. Filter and column windows open at the bottom, with «Default» and «Reset widths» at the top of the window (#107). The approval block in the report view no longer overlaps the title (#97). A report card in the list shows the PM, date and health first (#99). «Feedback» — as cards (#102).</li>\n</ul>\n<p><b>Please re-check</b></p>\n<ul>\n<li>On a phone: the header, the avatar menu, filters and columns in lists, report approval, «Feedback».</li>\n</ul>"
+  },
+  {
    "ver": "1.7.4.4",
    "date": "17.10.2026",
    "html": "<p><b>Fixed</b></p>\n<ul>\n<li>«Detailed system overview»: tables wrap text — no sideways scrolling.</li>\n</ul>"
@@ -356,6 +396,26 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.5.0",
+   "date": "19.10.2026",
+   "html": "<p><b>Новое</b></p>\n<ul>\n<li><b>Родительский проект</b> в карточке: связь между проектами (вложенность любая, нельзя выбрать сам проект и его дочерние). В карточке — ссылка на родительский и список <b>Дочерние проекты</b>; в «Проектах» — колонка <b>Родительский проект</b>. Изменение — в «Истории изменений». Пока только для связи, дальше — аналитика.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.4.7",
+   "date": "18.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>На телефоне меню под аватаром открывается сразу под ним, а не внизу экрана.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.4.6",
+   "date": "18.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Техническое обновление без изменений в работе портала.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.4.5",
+   "date": "18.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>На телефоне: шапка в один ряд, при прокрутке остаётся только меню разделов; язык и тема — в меню под аватаром. Окна фильтра и колонок — снизу, кнопки «Как по умолчанию» и «Сбросить ширины» — вверху окна (#107). Блок согласования в просмотре отчёта больше не наезжает на заголовок (#97). Карточка отчёта в списке: сначала PM, дата и состояние (#99). «Отзывы» — карточками (#102).</li>\n</ul>\n<p><b>Проверьте повторно</b></p>\n<ul>\n<li>На телефоне: шапка, меню под аватаром, фильтры и колонки в списках, согласование отчёта, «Отзывы».</li>\n</ul>"
+  },
   {
    "ver": "1.7.4.4",
    "date": "17.10.2026",

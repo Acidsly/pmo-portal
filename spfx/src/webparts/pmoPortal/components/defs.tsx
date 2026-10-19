@@ -8,6 +8,7 @@ import { daysBetween } from '../logic/dates';
 import { freshBucket, scoreBucket, apBucket, AP_BUCKET } from '../logic/views';
 import { RagDot, PersonCell, People, Score, Progress, Muted, ApBadge, StatusPill, fmtDate, money, freshColor, RepMark, freshTip, periodText } from './Bits';
 import { Strat, Prio, Compass, Flag } from './Icons';
+import { parentLabel } from '../logic/projects';
 
 /** Колонка = данные для движка таблицы + отрисовка (PDEF / RDEF / KDEF прототипа, строки 997–1072). */
 export interface Col<R> extends ColDef<R> { head?: JSX.Element; cell: (r: R) => React.ReactNode; cls?: string; flabel?: (v: string) => React.ReactNode; }
@@ -79,6 +80,9 @@ export function projectDefs(x: DefsCtx, archive: boolean): TableDefs<Project> {
     cmtBy: { label: t('cCmtBy'), cell: p => { const c = lastCm(p); return c ? <PersonCell p={c.author} /> : <Muted />; },
       sort: p => { const c = lastCm(p); return c && c.author ? c.author.name : ''; }, filter: p => { const c = lastCm(p); return c && c.author ? c.author.name : ''; } },
     dept: { label: fl('dept'), cell: p => tv(p.department), sort: p => p.department, filter: p => p.department },
+    // «Батьківський проєкт»: видимый — ссылкой на карточку; фильтр и сортировка — по подписи «PRJ-001 · Назва»
+    parent: { label: fl('parent'), cell: p => (!p.parent ? <Muted /> : x.byId[p.parent.id] ? <button className="link" onClick={() => x.open(p.parent!.id)}>{parentLabel(p.parent)}</button>
+      : parentLabel(p.parent)), sort: p => parentLabel(p.parent), filter: p => parentLabel(p.parent) },
     loop: { label: fl('links'), cell: p => (p.links.length ? <>{p.links.map((l, i) => <React.Fragment key={i}>{i ? ', ' : ''}<a className="loop" href={l.u} target="_blank" data-interception="off" rel="noopener noreferrer">{l.t} ↗</a></React.Fragment>)}</> : null) },
     archived: { label: t('archivedAt'), cell: p => dateCell(p.archivedAt), sort: p => p.archivedAt },
     ae: { label: t('cAe'), cell: p => dateCell(p.actualEnd || ''), sort: p => p.actualEnd || '' }
@@ -151,7 +155,8 @@ export const reportCard = (x: DefsCtx) => (r: StatusReport): React.ReactNode => 
   const pj = x.byId[r.projectId];
   return <button className="mcard" onClick={() => x.openReport(r.id, r.projectId)}>
     <span className="mc-h"><b>{pj ? pj.title : ''}</b><ApBadge v={r.approval} /></span>
-    <span className="mc-m">{fmtDate(r.date)} · <span className="ilabel"><RagDot v={calc(r)} notRated={x.t('notRated')} />{calc(r) ? tv(calc(r)) : x.t('notRated')}</span></span>
+    {/* #99: сначала кто подал (PM), когда и состояние, затем резюме */}
+    <span className="mc-m">{r.author ? <>{r.author.name} · </> : null}{fmtDate(r.date)} · <span className="ilabel"><RagDot v={calc(r)} notRated={x.t('notRated')} />{calc(r) ? tv(calc(r)) : x.t('notRated')}</span></span>
     <span className="mc-t">{r.title}</span></button>;
 };
 export const riskCard = (x: DefsCtx) => (k: Risk): React.ReactNode => {

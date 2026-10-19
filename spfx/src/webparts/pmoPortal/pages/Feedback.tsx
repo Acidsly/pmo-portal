@@ -36,10 +36,15 @@ export const Feedback: React.FC<{ data: PortalData }> = ({ data }) => {
     shots: { label: t('fbShots'), cell: r => (r.shots ? String(r.shots) : <Muted />), sort: r => r.shots },
     screen: { label: t('fbScreen'), cell: r => (r.screen ? <span title={r.screen}>{screenLabel(r.screen, t, tv)}</span> : <Muted />), sort: r => screenLabel(r.screen, t, tv) }
   } };
+  // #102: на телефоне — карточки (№, дата, статус, автор, начало текста), а не таблица с прокруткой вбок
+  const card = (r: FeedbackRow): React.ReactNode => <button className="mcard" onClick={() => open(r)}>
+    <span className="mc-h"><b>#{r.id} · {fmtDT(r.created)}</b><FbStatus v={r.status} /></span>
+    <span className="mc-m">{r.author || '—'}{r.screen ? <> · {screenLabel(r.screen, t, tv)}</> : null}</span>
+    <span className="mc-t">{r.text}</span></button>;
   const views: [FbView, string][] = [['all', t('fbViewAll')], ['mine', t('fbViewMine')], ['open', t('fbViewOpen')]];
   return <>
     <Hero title={t('navFeedback')} sub={t('fbPageSub')} />
-    <div className="listcard"><DataTable tkey="feedback2" defs={defs} rows={rows} empty={t('fbNoItems')} onShown={rs => { SHOWN = rs.map(r => r.id); }}
+    <div className="listcard"><DataTable tkey="feedback2" defs={defs} rows={rows} empty={t('fbNoItems')} onShown={rs => { SHOWN = rs.map(r => r.id); }} card={card}
       left={<button className="cmd primary" onClick={() => c.openForm('feedback')}>{t('feedbackNew')}</button>}
       right={<label className="viewsel">{t('view')}<select value={view} onChange={e => setView(e.target.value as FbView)}>
         {views.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>} /></div>
