@@ -51,7 +51,15 @@ if (-not $has) { Add-PnPSiteCollectionAppCatalog -Site $SiteUrl; Write-Host "  +
 # 3. Приложение: загрузить (перезаписать), опубликовать, установить или обновить
 Write-Host "3. Приложение" -ForegroundColor Cyan
 Connect-To $SiteUrl
-$app = Add-PnPApp -Path $pkg -Scope Site -Overwrite -Publish
+# только что созданный каталог SharePoint готовит несколько минут (ошибка «appMetadata») — повторяем до 10 минут
+for ($try = 1; ; $try++) {
+    try { $app = Add-PnPApp -Path $pkg -Scope Site -Overwrite -Publish; break }
+    catch {
+        if ($try -ge 20) { throw }
+        Write-Host "  каталог приложений ещё не готов ($($_.Exception.Message)) — повтор через 30 с" -ForegroundColor Yellow
+        Start-Sleep 30
+    }
+}
 $inst = Get-PnPApp -Identity $app.Id -Scope Site
 if (-not $inst.InstalledVersion) { Install-PnPApp -Identity $app.Id -Scope Site -Wait; Write-Host "  + приложение установлено" -ForegroundColor Green }
 elseif ($inst.CanUpgrade) { Update-PnPApp -Identity $app.Id -Scope Site; Write-Host "  приложение обновлено до $($inst.AppCatalogVersion)" }
