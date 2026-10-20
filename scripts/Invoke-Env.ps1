@@ -120,16 +120,16 @@ if ($Action -eq "feedback") {
     $a.SiteUrl = $siteUrl; $a.File = $File
     & (Join-Path $PSScriptRoot "Export-ItemAcl.ps1") @a
 } elseif ($Action -eq "app") {
-    # приложение SPFx: сборка, каталог приложений сайта, страница на весь экран; этап 1 — только test
-    if ($Env -ne "test") { throw "Действие «app» на этапе 1 — только для окружения test." }
+    # приложение SPFx: сборка, каталог приложений сайта, страница на весь экран; прод — только с -ConfirmProduction (проверка выше)
     $a = Get-Auth $cfg.Deploy
     $a.SiteUrl = $siteUrl; $a.TenantName = $cfg.TenantName
+    if ($Env -eq "prod") { $a.Production = $true }
     & (Join-Path $PSScriptRoot "Deploy-App.ps1") @a
 } elseif ($Action -eq "deploy") {
     # без сертификата Deploy-PMO.ps1 откроет браузер для входа (рекомендуется для прода)
     $a = Get-Auth $cfg.Deploy
     $a.TenantName = $cfg.TenantName; $a.SiteAlias = $cfg.SiteAlias; $a.Owner = $cfg.Owner
-    if ($Env -eq "test") { $a.Feedback = $true }   # отзывы фокус-группы — только на тесте
+    $a.Feedback = $true   # «Відгуки» — на тесте и на проде (решение 20.10.2026: на проде тоже)
     & (Join-Path $PSScriptRoot "Deploy-PMO.ps1") @a
 } else {
     $a = Get-Auth $cfg.Sync

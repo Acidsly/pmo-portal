@@ -5,11 +5,13 @@
     Собирает приложение SPFx и ставит его на сайт: каталог приложений сайта -> приложение -> страница Portal -> главная.
 
 .DESCRIPTION
-    Этап 1 — только тестовый сайт (адрес заканчивается на -test). Каталог тенанта и прод — на этапе 4, с подтверждением человека.
+    Тестовый сайт (адрес на -test) — сразу; любой другой (прод /sites/ppm) — только с -Production, который передаёт Invoke-Env.ps1
+    для -Env prod -Action app -ConfirmProduction (после подтверждения человеком в чате). Каталог приложений — сайта, как на тесте.
     Идемпотентен: каталог и страница создаются один раз, приложение обновляется до новой версии пакета.
 
 .EXAMPLE
     pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action app
+    pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action app -ConfirmProduction   # только после «да»
 #>
 param(
     [Parameter(Mandatory)][string]$SiteUrl,
@@ -19,10 +21,11 @@ param(
     [string]$Thumbprint,
     [string]$CertificatePath,
     [SecureString]$CertificatePassword,
-    [switch]$SkipBuild
+    [switch]$SkipBuild,
+    [switch]$Production
 )
 $ErrorActionPreference = "Stop"
-if ($SiteUrl -notmatch '-test/?$') { throw "Этап 1: только тестовый сайт (…-test), получено $SiteUrl" }
+if ($SiteUrl -notmatch '-test/?$' -and -not $Production) { throw "Не тестовый сайт ($SiteUrl): установка только с -Production (Invoke-Env.ps1 -Env prod -Action app -ConfirmProduction)" }
 $root = Split-Path -Parent $PSScriptRoot
 $pkg = Join-Path $root "spfx/sharepoint/solution/pmo-portal.sppkg"
 
