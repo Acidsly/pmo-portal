@@ -27,8 +27,8 @@
 - [ ] Повторный `deploy` — ничего не дублирует (проверка идемпотентности).
 
 ### 2. Синхронизация — права выдаёте вы, Claude проверяет (~30 мин)
-- [ ] Приложение PMO Sync — доступ к сайту `ppm` (Sites.Selected): `Register-PMOApps.ps1 -Stage Sync -SiteUrl …/sites/ppm …` (вы, права администратора).
-- [ ] Azure Automation: доступ управляемой учётной записи к `ppm` — `Grant-PMOAutomation.ps1 -SiteUrl …/sites/ppm` (вы).
+- [ ] Приложение PMO Sync — то же, что для теста (новая регистрация перезаписала бы сертификат тестовой синхронизации): доступ к `ppm` — `pwsh -NoLogo -File scripts/Grant-PMOSyncSite.ps1 -Env prod` (вы, права администратора, вход в браузере).
+- [ ] Azure Automation: доступ управляемой учётной записи к `ppm` — `Grant-PMOAutomation.ps1 -SiteUrl …/sites/ppm -DeployClientId <prod Deploy> -SkipAppRoles` (вы; роли Graph уже выданы для теста).
 - [ ] Claude: `-Env prod -Action sync-dryrun` → ваше «да» → `sync`.
 - [ ] Claude: расписание — `Set-AzureSchedule.ps1 -Env prod -SiteUrl …/sites/ppm -AlertEmail <ваш e-mail>` (сначала без `-Live` — что будет создано, затем с `-Live`; каждые 15 минут, воскресенье 3:00 — пересчёт прав, письмо при сбое); проверка первого запуска в Azure.
 
