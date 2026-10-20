@@ -60,13 +60,13 @@ else { Write-Host "  приложение актуально ($($inst.InstalledV
 # 4. Страница приложения на весь экран — главная сайта
 Write-Host "4. Страница Portal" -ForegroundColor Cyan
 if (-not (Get-PnPPage -Identity "Portal" -ErrorAction SilentlyContinue)) {
-    $null = Add-PnPPage -Name "Portal" -Title "PPM — Портфель проєктів" -LayoutType SingleWebPartAppPage
-    Add-PnPPageWebPart -Page "Portal" -Component "PPM — Портфель проєктів" | Out-Null
+    $null = Add-PnPPage -Name "Portal" -Title "PPM — Управління портфелем проєктів" -LayoutType SingleWebPartAppPage
+    Add-PnPPageWebPart -Page "Portal" -Component "PPM — Project Portfolio Management" | Out-Null
     Set-PnPPage -Identity "Portal" -Publish | Out-Null
     Write-Host "  + страница Portal" -ForegroundColor Green
 }
 # название страницы (вкладка браузера) — как у сайта; на уже созданной странице тоже
-Set-PnPPage -Identity "Portal" -Title "PPM — Портфель проєктів" -Publish | Out-Null
+Set-PnPPage -Identity "Portal" -Title "PPM — Управління портфелем проєктів" -Publish | Out-Null
 Set-PnPHomePage -RootFolderRelativeUrl "SitePages/Portal.aspx"
 # компактная шапка сайта без названия: над приложением — только строка меню SharePoint
 Set-PnPWeb -HeaderLayout Minimal -HideTitleInHeader:$true

@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.5.1",
+   "date": "20.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Назва системи: <b>PPM — Управління портфелем проєктів</b> (Project Portfolio Management).</li>\n</ul>"
+  },
+  {
    "ver": "1.7.5.0",
    "date": "19.10.2026",
    "html": "<p><b>Нове</b></p>\n<ul>\n<li><b>Батьківський проєкт</b> у картці: зв'язок між проєктами (вкладеність будь-яка, не можна обрати сам проєкт і його дочірні). У картці — посилання на батьківський і список <b>Дочірні проєкти</b>; у «Проєктах» — колонка <b>Батьківський проєкт</b>. Зміна — в «Історії змін». Поки лише для зв'язку, далі — аналітика.</li>\n</ul>"
@@ -200,6 +205,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.5.1",
+   "date": "20.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>System name: <b>PPM — Project Portfolio Management</b>.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.5.0",
    "date": "19.10.2026",
    "html": "<p><b>New</b></p>\n<ul>\n<li><b>Parent project</b> on the card: a link between projects (any nesting; the project itself and its children cannot be chosen). The card shows a link to the parent and a <b>Child projects</b> list; «Projects» has a <b>Parent project</b> column. Changes appear in «Change history». For linking only for now, analytics later.</li>\n</ul>"
@@ -396,6 +406,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.5.1",
+   "date": "20.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Название системы: <b>PPM — Управление портфелем проектов</b> (Project Portfolio Management).</li>\n</ul>"
+  },
   {
    "ver": "1.7.5.0",
    "date": "19.10.2026",

@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.5.1 · 20.10.2026
+
+**Changed**
+- System name: **PPM — Project Portfolio Management**.
+
 ## 1.7.5.0 · 19.10.2026
 
 **New**

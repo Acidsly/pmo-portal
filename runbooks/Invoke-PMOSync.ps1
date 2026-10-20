@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:1bcc10b1d79e — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:6855f35bdc56 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -1585,10 +1585,10 @@ if ($SendReminders) {
         $body = @"
 <p>Доброго дня!</p>
 <p>За цими проєктами немає статус-звіту понад $ReminderDays днів:</p><ul>$rows</ul>
-<p><a href="$newForm">Додати статус-звіт</a> · <a href="$SiteUrl">Портфель проєктів</a></p>
+<p><a href="$newForm">Додати статус-звіт</a> · <a href="$SiteUrl">PPM — Управління портфелем проєктів</a></p>
 <hr><p style="color:#666">Добрый день! По этим проектам нет статус-отчёта более $ReminderDays дней. Ссылка выше открывает форму нового отчёта.</p>
 "@
-        $msg = @{ message = @{ subject = "Портфель проєктів: потрібен статус-звіт ($($byPm[$pm].Count))"
+        $msg = @{ message = @{ subject = "PPM: потрібен статус-звіт ($($byPm[$pm].Count))"
                                body = @{ contentType = "HTML"; content = $body }
                                toRecipients = @(@{ emailAddress = @{ address = $pm } }) }
                   saveToSentItems = $false }
