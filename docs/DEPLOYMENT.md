@@ -104,7 +104,7 @@ Install-Module Az.Accounts, Az.Resources, Az.Automation -Scope CurrentUser   # �
    ```
    Затем тот же запуск без `-DryRun`.
 
-7. **Приложение SPFx** — пока только на тестовом сайте: `Invoke-Env.ps1 -Env test -Action app` (см. «Приложение SPFx»). Установка на прод (каталог приложений тенанта) — этап 4, после подтверждения; `Deploy-App.ps1` сейчас отказывает для адресов не на `-test`.
+7. **Приложение SPFx:** тест — `Invoke-Env.ps1 -Env test -Action app`; прод — `Invoke-Env.ps1 -Env prod -Action app -ConfirmProduction` (только после подтверждения; каталог приложений сайта, как на тесте; `Deploy-App.ps1` без флага `-Production` отказывает для адресов не на `-test`). «Відгуки» `deploy` создаёт на обоих сайтах.
 
 8. **Расписание** синхронизации — см. следующий раздел.
 

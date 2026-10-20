@@ -32,7 +32,7 @@ param(
     [Parameter(Mandatory)][string]$TenantName,
     [Parameter(Mandatory)][string]$ClientId,
     [string]$SiteAlias = "ppm",
-    [string]$SiteTitle = "PPM — Портфель проєктів",
+    [string]$SiteTitle = "PPM — Управління портфелем проєктів",
     [string]$Owner,
     [string]$Tenant,
     [string]$Thumbprint,
@@ -176,7 +176,9 @@ $web = $ctx.Web
 $web.IsMultilingual = $true
 $web.AddSupportedUILanguage(1033)
 $web.AddSupportedUILanguage(1049)
-Set-Loc $web "PPM — Портфель проєктів" "PPM — Project Portfolio" "PPM — Портфель проектов"
+Set-Loc $web "PPM — Управління портфелем проєктів" "PPM — Project Portfolio Management" "PPM — Управление портфелем проектов"
+# название по умолчанию (украинское) — и в Title (на уже созданном сайте прежнее название меняется)
+$web.Title = "PPM — Управління портфелем проєктів"
 $web.Update()
 Invoke-PnPQuery
 Write-Host "  языки: uk-UA (по умолчанию), en-US, ru-RU"

@@ -9,8 +9,7 @@ export const AI_CONFIG = {
   tenantId: 'faa553e4-cc39-45f2-8dc6-ce0ae64d968b',
   clientId: '8ed067c1-2748-47f9-9d55-1c566ff1d68b',
   /** Пилотная группа — только удобство (кнопки не показываются остальным); настоящая защита — доступ к агенту. */
-  pilot: ['j.pochobut@eclectic.group', 'd.dovhobrod@smart-hr.com.ua', 's.dudchenko@smart-hr.com.ua', 'd.dvoretska@smart-hr.com.ua',
-    'test.kovalenko@smarthr.kz', 'test.burbega@fillin.kz']
+  pilot: ['j.pochobut@eclectic.group', 'd.dovhobrod@smart-hr.com.ua', 's.dudchenko@smart-hr.com.ua', 'd.dvoretska@smart-hr.com.ua']
 };
 
 /** Пилотный ли пользователь (e-mail без учёта регистра). */

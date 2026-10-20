@@ -30,6 +30,11 @@ $kyiv = [TimeZoneInfo]::FindSystemTimeZoneById("Europe/Kyiv")
 $nowK = [TimeZoneInfo]::ConvertTimeFromUtc((Get-Date).ToUniversalTime(), $kyiv)
 
 $base = @{ SiteUrl = $SiteUrl; ManagedIdentity = $true; ManagerCacheVariable = "pmo-managers-$Env" }
+# зашифрованная переменная кэша оргструктуры (значение пишет runbook); без неё — предупреждение в каждом запуске
+if (-not (Get-AzAutomationVariable @a -Name $base.ManagerCacheVariable -ErrorAction SilentlyContinue)) {
+    New-AzAutomationVariable @a -Name $base.ManagerCacheVariable -Encrypted $true -Value "" -Description "Кэш оргструктуры Entra ID ($Env)" | Out-Null
+    Write-Host "+ переменная $($base.ManagerCacheVariable) (зашифрованная)" -ForegroundColor Green
+}
 if (-not $Live) { $base.DryRun = $true }
 $plan = @(
     foreach ($m in 0, 15, 30, 45) { @{ name = "pmo-$Env-sync-{0:d2}" -f $m; hourly = $true; minute = $m; params = $base.Clone() } }
