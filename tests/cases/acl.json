@@ -1,33 +1,292 @@
 [
   {
     "name": "ієрархія: PM править, керівники PM (керівник PM-ів, CIO, CEO) лише дивляться",
-    "pm": "pm@c", "owner": "fin@c", "stakeholders": ["st@c"], "archived": false,
-    "managers": { "pm@c": "lead@c", "lead@c": "cio@c", "cio@c": "ceo@c", "fin@c": "ceo@c", "st@c": "fin@c" },
-    "expect": [["pm@c", "edit", "pm"], ["lead@c", "read", "pmMgr"], ["cio@c", "read", "pmMgr"], ["ceo@c", "read", "pmMgr"],
-               ["fin@c", "read", "owner"], ["st@c", "read", "stake"]]
+    "pm": "pm@c",
+    "owner": "fin@c",
+    "stakeholders": [
+      "st@c"
+    ],
+    "archived": false,
+    "managers": {
+      "pm@c": "lead@c",
+      "lead@c": "cio@c",
+      "cio@c": "ceo@c",
+      "fin@c": "ceo@c",
+      "st@c": "fin@c"
+    },
+    "expect": [
+      [
+        "pm@c",
+        "edit",
+        "pm"
+      ],
+      [
+        "lead@c",
+        "read",
+        "pmMgr"
+      ],
+      [
+        "cio@c",
+        "read",
+        "pmMgr"
+      ],
+      [
+        "ceo@c",
+        "read",
+        "pmMgr"
+      ],
+      [
+        "fin@c",
+        "read",
+        "owner"
+      ],
+      [
+        "st@c",
+        "read",
+        "stake"
+      ]
+    ]
   },
   {
     "name": "фін. директор бачить проєкт, де роль має його підлеглий",
-    "pm": "pm@c", "owner": "", "stakeholders": ["acc@c"], "archived": false,
-    "managers": { "acc@c": "fin@c", "fin@c": "ceo@c" },
-    "expect": [["pm@c", "edit", "pm"], ["acc@c", "read", "stake"], ["fin@c", "read", "mgr"], ["ceo@c", "read", "mgr"]]
+    "pm": "pm@c",
+    "owner": "",
+    "stakeholders": [
+      "acc@c"
+    ],
+    "archived": false,
+    "managers": {
+      "acc@c": "fin@c",
+      "fin@c": "ceo@c"
+    },
+    "expect": [
+      [
+        "pm@c",
+        "edit",
+        "pm"
+      ],
+      [
+        "acc@c",
+        "read",
+        "stake"
+      ],
+      [
+        "fin@c",
+        "read",
+        "mgr"
+      ],
+      [
+        "ceo@c",
+        "read",
+        "mgr"
+      ]
+    ]
   },
   {
     "name": "PM також у стейкхолдерах — один рядок, правка лишається",
-    "pm": "pm@c", "owner": "own@c", "stakeholders": ["pm@c", "x@c"], "archived": false,
-    "managers": { "x@c": "own@c" },
-    "expect": [["pm@c", "edit", "pm"], ["own@c", "read", "owner"], ["x@c", "read", "stake"]]
+    "pm": "pm@c",
+    "owner": "own@c",
+    "stakeholders": [
+      "pm@c",
+      "x@c"
+    ],
+    "archived": false,
+    "managers": {
+      "x@c": "own@c"
+    },
+    "expect": [
+      [
+        "pm@c",
+        "edit",
+        "pm"
+      ],
+      [
+        "own@c",
+        "read",
+        "owner"
+      ],
+      [
+        "x@c",
+        "read",
+        "stake"
+      ]
+    ]
   },
   {
     "name": "архів — лише перегляд, і для PM",
-    "pm": "pm@c", "owner": "own@c", "stakeholders": [], "archived": true,
-    "managers": { "pm@c": "lead@c" },
-    "expect": [["pm@c", "read", "pm"], ["lead@c", "read", "pmMgr"], ["own@c", "read", "owner"]]
+    "pm": "pm@c",
+    "owner": "own@c",
+    "stakeholders": [],
+    "archived": true,
+    "managers": {
+      "pm@c": "lead@c"
+    },
+    "expect": [
+      [
+        "pm@c",
+        "read",
+        "pm"
+      ],
+      [
+        "lead@c",
+        "read",
+        "pmMgr"
+      ],
+      [
+        "own@c",
+        "read",
+        "owner"
+      ]
+    ]
   },
   {
     "name": "без PM — ніхто не править",
-    "pm": "", "owner": "own@c", "stakeholders": [], "archived": false,
+    "pm": "",
+    "owner": "own@c",
+    "stakeholders": [],
+    "archived": false,
     "managers": {},
-    "expect": [["own@c", "read", "owner"]]
+    "expect": [
+      [
+        "own@c",
+        "read",
+        "owner"
+      ]
+    ]
+  },
+  {
+    "name": "CEO країни бачить проєкти своєї країни — в кінці списку",
+    "pm": "pm@c",
+    "owner": "own@c",
+    "stakeholders": [
+      "st@c"
+    ],
+    "archived": false,
+    "managers": {
+      "pm@c": "lead@c"
+    },
+    "ceos": [
+      "ceopl@c"
+    ],
+    "expect": [
+      [
+        "pm@c",
+        "edit",
+        "pm"
+      ],
+      [
+        "lead@c",
+        "read",
+        "pmMgr"
+      ],
+      [
+        "own@c",
+        "read",
+        "owner"
+      ],
+      [
+        "st@c",
+        "read",
+        "stake"
+      ],
+      [
+        "ceopl@c",
+        "read",
+        "ceo"
+      ]
+    ]
+  },
+  {
+    "name": "CEO країни вже керівник PM — один рядок, роль керівника",
+    "pm": "pm@c",
+    "owner": "",
+    "stakeholders": [],
+    "archived": false,
+    "managers": {
+      "pm@c": "ceopl@c"
+    },
+    "ceos": [
+      "ceopl@c"
+    ],
+    "expect": [
+      [
+        "pm@c",
+        "edit",
+        "pm"
+      ],
+      [
+        "ceopl@c",
+        "read",
+        "pmMgr"
+      ]
+    ]
+  },
+  {
+    "name": "CEO країни — власник проєкту: роль власника",
+    "pm": "pm@c",
+    "owner": "ceopl@c",
+    "stakeholders": [],
+    "archived": false,
+    "managers": {},
+    "ceos": [
+      "ceopl@c"
+    ],
+    "expect": [
+      [
+        "pm@c",
+        "edit",
+        "pm"
+      ],
+      [
+        "ceopl@c",
+        "read",
+        "owner"
+      ]
+    ]
+  },
+  {
+    "name": "кілька CEO країни; архів — лише перегляд",
+    "pm": "pm@c",
+    "owner": "",
+    "stakeholders": [],
+    "archived": true,
+    "managers": {},
+    "ceos": [
+      "ceo1@c",
+      "ceo2@c"
+    ],
+    "expect": [
+      [
+        "pm@c",
+        "read",
+        "pm"
+      ],
+      [
+        "ceo1@c",
+        "read",
+        "ceo"
+      ],
+      [
+        "ceo2@c",
+        "read",
+        "ceo"
+      ]
+    ]
+  },
+  {
+    "name": "країни немає — CEO не додається",
+    "pm": "pm@c",
+    "owner": "",
+    "stakeholders": [],
+    "archived": false,
+    "managers": {},
+    "ceos": [],
+    "expect": [
+      [
+        "pm@c",
+        "edit",
+        "pm"
+      ]
+    ]
   }
 ]

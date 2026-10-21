@@ -33,11 +33,13 @@ export interface Project {
   assignPending?: boolean;
   /** «Батьківський проєкт» (pmParent): только связь, прав не даёт; нет — null. */
   parent?: { id: number; title: string; code?: string } | null;
+  /** «Країна» (pmCountry): ставит PMO при создании, потом — только «Призначення»; CEO країни — просмотр. Нет — пусто. */
+  country?: string;
 }
 
-/** «Призначення» (#43): решение PMO о смене PM / власника; пусто — без изменений. Переносит синхронизация (paApplied). */
+/** «Призначення» (#43): решение PMO о смене PM / власника / країни; пусто — без изменений. Переносит синхронизация (paApplied). */
 export interface Assignment { id: number; projectId: number; manager: Person | null; owner: Person | null; note: string; applied: boolean;
-  author: Person | null; created: string; }
+  author: Person | null; created: string; country?: string; }
 
 /** Строка списка «Команда проєкту»: человек, роль, по каким вопросам обращаться. */
 export interface TeamMember { id: number; projectId: number; user: Person | null; role: string; topics: string;

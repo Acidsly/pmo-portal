@@ -1,5 +1,5 @@
 {
-  "_about": "Решение PMO о смене PM / власника («Призначення», #43): Get-AssignmentPlan синхронизации (Test-Scripts, раздел 3f) и assignmentPlan приложения (logic/assign.ts, spfx/test/assign.test.ts). out.changes — «поле:было>стало».",
+  "_about": "Решение PMO о смене PM / власника / країни («Призначення», #43): Get-AssignmentPlan синхронизации (Test-Scripts, раздел 3f) и assignmentPlan приложения (logic/assign.ts, spfx/test/assign.test.ts). out.changes — «поле:было>стало». Страна: a.country — новая (пусто — без изменений), country — текущая.",
   "pmo": [
     "pmo@x"
   ],
@@ -185,6 +185,108 @@
       "out": {
         "valid": false,
         "reason": "same",
+        "changes": []
+      }
+    },
+    {
+      "name": "PMO змінює лише країну",
+      "a": {
+        "author": "pmo@x",
+        "manager": "",
+        "owner": "",
+        "country": "Польща",
+        "note": "Помилка при створенні"
+      },
+      "pm": "pm@x",
+      "owner": "o@x",
+      "country": "Україна",
+      "archived": false,
+      "out": {
+        "valid": true,
+        "reason": "",
+        "changes": [
+          "pmCountry:Україна>Польща"
+        ]
+      }
+    },
+    {
+      "name": "країна та сама — немає змін",
+      "a": {
+        "author": "pmo@x",
+        "manager": "",
+        "owner": "",
+        "country": "Україна",
+        "note": "Перевірка"
+      },
+      "pm": "pm@x",
+      "owner": "o@x",
+      "country": "Україна",
+      "archived": false,
+      "out": {
+        "valid": false,
+        "reason": "same",
+        "changes": []
+      }
+    },
+    {
+      "name": "країна і PM разом",
+      "a": {
+        "author": "pmo@x",
+        "manager": "new@x",
+        "owner": "",
+        "country": "Чехія",
+        "note": "Передача"
+      },
+      "pm": "pm@x",
+      "owner": "o@x",
+      "country": "Польща",
+      "archived": false,
+      "out": {
+        "valid": true,
+        "reason": "",
+        "changes": [
+          "pmManager:pm@x>new@x",
+          "pmCountry:Польща>Чехія"
+        ]
+      }
+    },
+    {
+      "name": "країну вперше задано (раніше не було)",
+      "a": {
+        "author": "pmo@x",
+        "manager": "",
+        "owner": "",
+        "country": "Україна",
+        "note": "Країна"
+      },
+      "pm": "pm@x",
+      "owner": "o@x",
+      "country": "",
+      "archived": false,
+      "out": {
+        "valid": true,
+        "reason": "",
+        "changes": [
+          "pmCountry:>Україна"
+        ]
+      }
+    },
+    {
+      "name": "країна в архіві — не змінюється",
+      "a": {
+        "author": "pmo@x",
+        "manager": "",
+        "owner": "",
+        "country": "Польща",
+        "note": "Пізно"
+      },
+      "pm": "pm@x",
+      "owner": "o@x",
+      "country": "Україна",
+      "archived": true,
+      "out": {
+        "valid": false,
+        "reason": "arch",
         "changes": []
       }
     }

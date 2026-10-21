@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:6855f35bdc56 — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:49fb05382266 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -200,8 +200,8 @@ function Get-ArchiveOutcome([string]$lastAppliedStatus, $finals, [bool]$cancelle
 }
 function Get-StateKeys { return @("pmStatus", "pmRAG", "pmType", "pmProgress", "pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd",
                                   "pmActualCost", "pmArchivedAt", "pmLastUpdate", "pmLastReport", "pmCode", "pmActualEnd",
-                                  "pmManager", "pmOwner") }
-# PM и владелец в эталоне — e-mail в нижнем регистре (#43: меняет только PMO через «Призначення»)
+                                  "pmManager", "pmOwner", "pmCountry") }
+# PM и владелец в эталоне — e-mail в нижнем регистре (#43: меняет только PMO через «Призначення»); страна — значение выбора
 $STATE_PEOPLE = @("pmManager", "pmOwner")
 function Get-StateValue([string]$k, $v) {
     if ($k -in $STATE_PEOPLE) { if ($v -and $v.Email) { return ([string]$v.Email).ToLowerInvariant() } return "" }
@@ -544,10 +544,11 @@ function Get-StatePlan($card, $state, [bool]$hasRecord, [string]$editorT, [strin
     if (-not $diff.Count) { return @{ action = "none"; diff = @(); extended = $ext; state = $state } }
     return @{ action = $(if (Test-Trusted $editorT $ownerList) { "accept" } else { "rollback" }); diff = $diff; extended = $ext; state = $state }
 }
-# Решение PMO о смене PM / власника («Призначення», #43; векторы tests/cases/assignments.json, те же — assignmentPlan приложения).
+# Решение PMO о смене PM / власника / країни («Призначення», #43; векторы tests/cases/assignments.json, те же — assignmentPlan приложения).
 # Действует запись PMO, владельца сайта или приложения; проект не в архиве; комментарий обязателен; хотя бы одно поле меняется
-# (пустое — без изменений). $a: author (Who), manager, owner (e-mail), note. Возвращает valid, reason, changes (@{ f; from; to }).
-function Get-AssignmentPlan($a, [string]$curPm, [string]$curOwner, [bool]$archived, [string[]]$pmoList, [string[]]$ownerList) {
+# (пустое — без изменений). $a: author (Who), manager, owner (e-mail), country (значение выбора), note.
+# Возвращает valid, reason, changes (@{ f; from; to }).
+function Get-AssignmentPlan($a, [string]$curPm, [string]$curOwner, [bool]$archived, [string[]]$pmoList, [string[]]$ownerList, [string]$curCountry = "") {
     $author = [string]$a.author
     $bad = { param($why) return @{ valid = $false; reason = $why; changes = @() } }
     if (-not ((Test-Trusted $author $ownerList) -or ([bool]$author -and @($pmoList) -contains $author))) { return & $bad "author" }
@@ -556,6 +557,7 @@ function Get-AssignmentPlan($a, [string]$curPm, [string]$curOwner, [bool]$archiv
     $ch = @()
     if ($a.manager -and [string]$a.manager -ne $curPm) { $ch += , @{ f = "pmManager"; from = $curPm; to = [string]$a.manager } }
     if ($a.owner -and [string]$a.owner -ne $curOwner) { $ch += , @{ f = "pmOwner"; from = $curOwner; to = [string]$a.owner } }
+    if ($a.country -and [string]$a.country -ne $curCountry) { $ch += , @{ f = "pmCountry"; from = $curCountry; to = [string]$a.country } }
     if (-not $ch.Count) { return & $bad "same" }
     return @{ valid = $true; reason = ""; changes = $ch }
 }
@@ -1346,9 +1348,10 @@ function Get-Chain([string]$email) {
     return $chain
 }
 # Кто видит проект и что может (общие векторы tests/cases/acl.json). Править — только PM;
-# его руководители, собственник, стейкхолдеры и их руководители — просмотр и комментарии.
-# Порядок — как «Доступ до картки» в прототипе; первое вхождение человека побеждает. Архив — всем просмотр.
-function Get-Access([string]$pm, [string]$owner, [string[]]$st, [scriptblock]$chain, [bool]$archived) {
+# его руководители, собственник, стейкхолдеры и их руководители, CEO країни проекта — просмотр и комментарии.
+# Порядок — как «Доступ до картки» в прототипе; первое вхождение человека побеждает (CEO — в конце: уже руководитель PM
+# или собственник — остаётся с этой ролью). Архив — всем просмотр.
+function Get-Access([string]$pm, [string]$owner, [string[]]$st, [scriptblock]$chain, [bool]$archived, [string[]]$ceos = @()) {
     $list = [System.Collections.Generic.List[object]]::new(); $seen = @{}
     $add = { param($e, $l, $r) if (-not $e -or $seen.ContainsKey($e)) { return }; $seen[$e] = 1; $list.Add([ordered]@{ e = $e; l = $l; r = $r }) }
     & $add $pm "edit" "pm"
@@ -1356,6 +1359,7 @@ function Get-Access([string]$pm, [string]$owner, [string[]]$st, [scriptblock]$ch
     & $add $owner "read" "owner"
     foreach ($x in $st) { & $add $x "read" "stake" }
     foreach ($x in @($owner) + @($st)) { if ($x) { foreach ($m in (& $chain $x)) { & $add $m "read" "mgr" } } }
+    foreach ($x in $ceos) { & $add $x "read" "ceo" }
     if ($archived) { foreach ($a in $list) { $a.l = "read" } }
     return , $list
 }

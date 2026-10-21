@@ -3,7 +3,7 @@ import { ChangeEntry, ChangeEvent, Person } from '../data/types';
 /** Внутреннее имя поля проекта -> ключ FLD прототипа (подпись в истории изменений). */
 export const FIELD_KEY: Record<string, string> = { Title: 'title', pmStatus: 'status', pmRAG: 'rag', pmType: 'type', pmProgress: 'progress',
   pmStart: 'start', pmGoLive: 'golive', pmPlanEnd: 'plan', pmForecastEnd: 'fc', pmActualEnd: 'ae', pmActualCost: 'actual', pmPriority: 'prio', pmManager: 'pm',
-  pmOwner: 'owner', pmStakeholders: 'stakeholders', pmDepartment: 'dept', pmParent: 'parent', pmLoop: 'loop', pmLinks: 'links', pmTeam: 'team', pmCode: 'code', pmBudget: 'budget',
+  pmOwner: 'owner', pmStakeholders: 'stakeholders', pmDepartment: 'dept', pmParent: 'parent', pmCountry: 'country', pmLoop: 'loop', pmLinks: 'links', pmTeam: 'team', pmCode: 'code', pmBudget: 'budget',
   srSchedule: 'rSched', srBudget: 'rBudget', srResources: 'rRes', srApproval: 'apStatus',
   // #48: поля риска (вид «Ризик»)
   riCreated: 'kNew', riTitle: 'kDesc', riType: 'kType', riProbability: 'kProb', riImpact: 'kImp', riScore: 'kScore', riStatus: 'kStatus', riStrategy: 'kStrategy',

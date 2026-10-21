@@ -7,7 +7,7 @@ import { Project, Assignment } from '../src/webparts/pmoPortal/data/types';
 const V = cases as any;
 describe('смена PM / власника — правило с синхронизацией', () => {
   for (const c of V.cases) test(c.name, () => {
-    const r = assignmentPlan(c.a, c.pm, c.owner, c.archived, V.pmo, V.owners);
+    const r = assignmentPlan(c.a, c.pm, c.owner, c.archived, V.pmo, V.owners, c.country || '');
     expect({ valid: r.valid, reason: r.reason, changes: r.changes.map(x => `${x.f}:${x.from}>${x.to}`) }).toEqual(c.out);
   });
 });
@@ -35,6 +35,13 @@ describe('наложение «Призначення» на карточку (�
     const p = applyAssignments(proj(), [row({ id: 2, manager: null, owner: person('o2@x', 'Новий власник') }), row({ id: 1 })]);
     expect([p.manager!.email, p.owner!.email]).toEqual(['new@x', 'o2@x']);
     expect(p.pendingEvents!.map(e => e.diffs[0].f)).toEqual(['pm', 'owner']);
+  });
+  test('страна: новая видна сразу, событие «Країна було → стало»; пустая — без изменений', () => {
+    const p = applyAssignments(proj({ country: 'Україна' }), [row({ manager: null, country: 'Польща', note: 'Помилка' })]);
+    expect(p.country).toBe('Польща');
+    expect(p.pendingEvents![0].diffs).toEqual([{ f: 'country', from: 'Україна', to: 'Польща' }]);
+    const q = applyAssignments(proj({ country: 'Україна' }), [row({ manager: null, country: '' })]);
+    expect(q.country).toBe('Україна'); expect(q.pendingEvents).toEqual([]);
   });
   test('события отчётов (applyPending) сохраняются', () => {
     const ev = { id: -7, date: '2026-10-01', who: null, kind: 'report' as const, reason: 'Р', diffs: [] };

@@ -57,7 +57,7 @@ Invoke-Expression $ga.Extent.Text
 foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/acl.json") | ConvertFrom-Json)) {
     $mgrs = $c.managers
     $chainFn = { param($e) $out = @(); $cur = $e; while ($cur -and $mgrs.$cur -and $out -notcontains $mgrs.$cur) { $cur = $mgrs.$cur; $out += $cur }; $out }.GetNewClosure()
-    $res = Get-Access $c.pm $c.owner @($c.stakeholders) $chainFn $c.archived
+    $res = Get-Access $c.pm $c.owner @($c.stakeholders) $chainFn $c.archived @($c.ceos | Where-Object { $_ })
     $got = ($res | ForEach-Object { "$($_.e) $($_.l) $($_.r)" }) -join "; "
     $exp = ($c.expect | ForEach-Object { $_ -join " " }) -join "; "
     if ($got -eq $exp) { Ok $c.name } else { Bad "$($c.name): $got — ожидалось $exp" }
@@ -228,7 +228,7 @@ $fna = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.Fu
 if ($fna) { Invoke-Expression $fna.Extent.Text } else { Bad "нет функции Get-AssignmentPlan" }
 $asc = Get-Content -Raw (Join-Path $root "tests/cases/assignments.json") | ConvertFrom-Json
 foreach ($c in $asc.cases) {
-    $r = Get-AssignmentPlan @{ author = $c.a.author; manager = $c.a.manager; owner = $c.a.owner; note = $c.a.note } $c.pm $c.owner $c.archived @($asc.pmo) @($asc.owners)
+    $r = Get-AssignmentPlan @{ author = $c.a.author; manager = $c.a.manager; owner = $c.a.owner; country = $c.a.country; note = $c.a.note } $c.pm $c.owner $c.archived @($asc.pmo) @($asc.owners) ([string]$c.country)
     $got = "$($r.valid)|$($r.reason)|$(@($r.changes | ForEach-Object { "$($_.f):$($_.from)>$($_.to)" }) -join ',')"
     $exp = "$($c.out.valid)|$($c.out.reason)|$(@($c.out.changes) -join ',')"
     if ($got -eq $exp) { Ok "призначення: $($c.name)" } else { Bad "призначення: $($c.name): $got, ожидалось $exp" }
