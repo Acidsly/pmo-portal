@@ -194,8 +194,8 @@ function DgPortfolio($M, $T) {
     $countries = if (@($M.byCountry | Where-Object { $_ }).Count) {
         (DgH $T.byCountry $DG.violet) + "<tr><td style=`"padding:0 24px`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`">" +
         (($M.byCountry | ForEach-Object {
-            $t = [math]::Max(1, $_.g + $_.y + $_.r + $_.n)
-            "<tr><td style=`"padding:6px 10px 6px 0;width:120px;font-family:$($DG.font);font-size:13px;color:$($DG.ink)`">$(DgE $_.name) <span style=`"color:$($DG.muted)`">$($_.g + $_.y + $_.r + $_.n)</span></td><td style=`"padding:6px 0`">$(DgBar @(@{ w = $_.g * 100 / $t; c = $DG.g }, @{ w = $_.y * 100 / $t; c = $DG.y }, @{ w = $_.r * 100 / $t; c = $DG.r }, @{ w = $_.n * 100 / $t; c = $DG.n }) 10)</td></tr>" }) -join "") +
+            $cn = [math]::Max(1, $_.g + $_.y + $_.r + $_.n)
+            "<tr><td style=`"padding:6px 10px 6px 0;width:120px;font-family:$($DG.font);font-size:13px;color:$($DG.ink)`">$(DgE $_.name) <span style=`"color:$($DG.muted)`">$($_.g + $_.y + $_.r + $_.n)</span></td><td style=`"padding:6px 0`">$(DgBar @(@{ w = $_.g * 100 / $cn; c = $DG.g }, @{ w = $_.y * 100 / $cn; c = $DG.y }, @{ w = $_.r * 100 / $cn; c = $DG.r }, @{ w = $_.n * 100 / $cn; c = $DG.n }) 10)</td></tr>" }) -join "") +
         "</table></td></tr>"
     } else { "" }
     $tiles + $distRow + $att + $countries + $table
