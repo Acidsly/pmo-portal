@@ -18,7 +18,7 @@ export function reportPrint(d: ReportDraft): string {
   const n = (x: number | undefined | null): string => (x === undefined || x === null ? '' : String(x));
   return JSON.stringify([n(d.projectId), t(d.schedule), t(d.budget), t(d.resources), t(d.status), t(d.type), n(d.progress), t(d.start), t(d.goLive),
     t(d.planEnd), t(d.forecastEnd), t(d.actualEnd), n(d.actualCost), t(d.keyReason), t(d.done), t(d.next), t(d.issues), t(d.title),
-    d.decision ? '1' : '0', t(d.decisionText)]);
+    d.decision ? '1' : '0', t(d.decisionText), n(d.budgetPlan), n(d.forecastCost), t(d.notDone)]);   // 1.7.7 — в конце: прежние отпечатки не сдвигаются
 }
 
 /** Какая кнопка показана: вне пилота — «Зберегти», как сейчас; идёт проверка — «ШІ аналізує…» (повторно не нажать);

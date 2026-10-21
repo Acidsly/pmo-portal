@@ -1,418 +1,527 @@
 {
-  "_about": "Форма статус-отчёта: одни и те же сценарии проверяют приложение (spfx/test/reportForm.test.ts — logic/forms.ts) и прототип (spfx/test/prototypeForm.test.ts — prototype/pmo-prototype.html в jsdom). Даты задаются всегда (они отличаются от карточки — нужна причина, если keyReason не пуст). Фактическая дата (#54, actualEnd) — при «Завершено» / «Скасовано»: обязательна, не раньше старта, не позже даты отчёта (date).",
-  "status": [
-    {
-      "name": "#52 «Завершено» — 100 % и поле закрыто",
-      "start": {
-        "status": "Реалізація",
-        "progress": 40
-      },
-      "steps": [
-        "Завершено"
-      ],
-      "out": {
-        "progress": 100,
-        "locked": true
-      }
-    },
-    {
-      "name": "#52 «Завершено» → другой статус — прежнее значение",
-      "start": {
-        "status": "Реалізація",
-        "progress": 40
-      },
-      "steps": [
-        "Завершено",
-        "Призупинено"
-      ],
-      "out": {
-        "progress": 40,
-        "locked": false
-      }
-    },
-    {
-      "name": "#52 «Скасовано» — % не меняется",
-      "start": {
-        "status": "Реалізація",
-        "progress": 40
-      },
-      "steps": [
-        "Скасовано"
-      ],
-      "out": {
-        "progress": 40,
-        "locked": false
-      }
-    },
-    {
-      "name": "#52 черновик уже «Завершено» (на основе повернутого) — сразу 100 %",
-      "start": {
-        "status": "Завершено",
-        "progress": 80
-      },
-      "steps": [],
-      "out": {
-        "progress": 100,
-        "locked": true
-      }
-    }
-  ],
-  "validation": [
-    {
-      "name": "#40 пустая форма — все обязательные сразу",
-      "draft": {
-        "schedule": "",
-        "budget": "",
-        "resources": "",
-        "title": "",
-        "keyReason": "",
-        "status": "Реалізація",
-        "start": "2026-03-02",
-        "goLive": "",
-        "planEnd": "2026-12-01",
-        "forecastEnd": ""
-      },
-      "progressText": "40",
-      "out": [
-        "sched",
-        "budget",
-        "res",
-        "keyReason",
-        "title"
-      ],
-      "message": "errReqAll"
-    },
-    {
-      "name": "#53 % вне 0–100 и #54 план раньше старта — ошибки у полей",
-      "draft": {
-        "schedule": "Зелений",
-        "budget": "Зелений",
-        "resources": "Жовтий",
-        "title": "Резюме",
-        "keyReason": "Перенос",
-        "status": "Реалізація",
-        "start": "2026-03-02",
-        "goLive": "2026-01-01",
-        "planEnd": "2026-01-01",
-        "forecastEnd": "2022-01-01"
-      },
-      "progressText": "500",
-      "out": [
-        "progress",
-        "goLive",
-        "planEnd",
-        "forecastEnd"
-      ],
-      "message": "errProgress"
-    },
-    {
-      "name": "#54 дата раньше старта при заполненной форме",
-      "draft": {
-        "schedule": "Зелений",
-        "budget": "Зелений",
-        "resources": "Зелений",
-        "title": "Резюме",
-        "keyReason": "Перенос",
-        "status": "Реалізація",
-        "start": "2026-03-02",
-        "goLive": "",
-        "planEnd": "2026-12-01",
-        "forecastEnd": "2026-02-01"
-      },
-      "progressText": "40",
-      "out": [
-        "forecastEnd"
-      ],
-      "message": "errBeforeStart"
-    },
-    {
-      "name": "#53 ведущие нули допустимы, даты по порядку — без ошибок",
-      "draft": {
-        "schedule": "Зелений",
-        "budget": "Жовтий",
-        "resources": "Зелений",
-        "title": "Резюме",
-        "keyReason": "Перенос",
-        "status": "Реалізація",
-        "start": "2026-03-02",
-        "goLive": "2026-03-02",
-        "planEnd": "2026-12-01",
-        "forecastEnd": "2027-01-15"
-      },
-      "progressText": "00098",
-      "out": [],
-      "message": ""
-    },
-    {
-      "name": "#52 при «Завершено» % не проверяется (100)",
-      "draft": {
-        "schedule": "Зелений",
-        "budget": "Зелений",
-        "resources": "Зелений",
-        "title": "Резюме",
-        "keyReason": "Завершено",
-        "status": "Завершено",
-        "start": "2026-03-02",
-        "goLive": "",
-        "planEnd": "2026-12-01",
-        "forecastEnd": "",
-        "date": "2026-10-01",
-        "actualEnd": "2026-09-30"
-      },
-      "progressText": "500",
-      "out": [],
-      "message": ""
-    },
-    {
-      "name": "#54 «Скасовано» без фактической даты — обязательное поле",
-      "draft": {
-        "schedule": "Зелений",
-        "budget": "Зелений",
-        "resources": "Зелений",
-        "title": "Резюме",
-        "keyReason": "Скасовано",
-        "status": "Скасовано",
-        "start": "2026-03-02",
-        "goLive": "",
-        "planEnd": "2026-12-01",
-        "forecastEnd": "",
-        "date": "2026-10-01",
-        "actualEnd": ""
-      },
-      "progressText": "40",
-      "out": [
-        "actualEnd"
-      ],
-      "message": "errReqAll"
-    },
-    {
-      "name": "#54 «Завершено» без фактической даты — обязательное поле",
-      "draft": {
-        "schedule": "Зелений",
-        "budget": "Зелений",
-        "resources": "Зелений",
-        "title": "Резюме",
-        "keyReason": "Завершено",
-        "status": "Завершено",
-        "start": "2026-03-02",
-        "goLive": "",
-        "planEnd": "2026-12-01",
-        "forecastEnd": "",
-        "date": "2026-10-01",
-        "actualEnd": ""
-      },
-      "progressText": "100",
-      "out": [
-        "actualEnd"
-      ],
-      "message": "errReqAll"
-    },
-    {
-      "name": "#54 / #64 фактическая дата раньше старта — в сообщении дата старта",
-      "draft": {
-        "schedule": "Зелений",
-        "budget": "Зелений",
-        "resources": "Зелений",
-        "title": "Резюме",
-        "keyReason": "Скасовано",
-        "status": "Скасовано",
-        "start": "2026-03-02",
-        "goLive": "",
-        "planEnd": "2026-12-01",
-        "forecastEnd": "",
-        "date": "2026-10-01",
-        "actualEnd": "2026-02-01"
-      },
-      "progressText": "40",
-      "out": [
-        "actualEnd"
-      ],
-      "message": "errBeforeStartOn",
-      "messageDate": "2026-03-02"
-    },
-    {
-      "name": "#64 / #67 фактическая дата позже даты подання — в сообщении дата подання, будущее — как прогноз",
-      "draft": {
-        "schedule": "Зелений",
-        "budget": "Зелений",
-        "resources": "Зелений",
-        "title": "Резюме",
-        "keyReason": "Скасовано",
-        "status": "Скасовано",
-        "start": "2026-03-02",
-        "goLive": "",
-        "planEnd": "2026-12-01",
-        "forecastEnd": "",
-        "date": "2026-10-01",
-        "actualEnd": "2026-10-02"
-      },
-      "progressText": "40",
-      "out": [
-        "actualEnd"
-      ],
-      "message": "errAfterSubmit",
-      "messageDate": "2026-10-01"
-    },
-    {
-      "name": "#54 фактическая дата = дате подання и = старту — без ошибок",
-      "draft": {
-        "schedule": "Зелений",
-        "budget": "Зелений",
-        "resources": "Зелений",
-        "title": "Резюме",
-        "keyReason": "Скасовано",
-        "status": "Скасовано",
-        "start": "2026-03-02",
-        "goLive": "",
-        "planEnd": "2026-12-01",
-        "forecastEnd": "",
-        "date": "2026-10-01",
-        "actualEnd": "2026-10-01"
-      },
-      "progressText": "40",
-      "out": [],
-      "message": ""
-    },
-    {
-      "name": "#54 при обычном статусе фактическая дата не проверяется",
-      "draft": {
-        "schedule": "Зелений",
-        "budget": "Зелений",
-        "resources": "Зелений",
-        "title": "Резюме",
-        "keyReason": "Перенос",
-        "status": "Реалізація",
-        "start": "2026-03-02",
-        "goLive": "",
-        "planEnd": "2026-12-01",
-        "forecastEnd": "",
-        "date": "2026-10-01",
-        "actualEnd": ""
-      },
-      "progressText": "40",
-      "out": [],
-      "message": ""
-    },
-    {
-      "name": "#64 факт раньше плана и прогноза (досрочно) — можно",
-      "draft": {
-        "schedule": "Зелений",
-        "budget": "Зелений",
-        "resources": "Зелений",
-        "title": "Резюме",
-        "keyReason": "Завершено",
-        "status": "Завершено",
-        "start": "2026-03-02",
-        "goLive": "",
-        "planEnd": "2026-12-01",
-        "forecastEnd": "2026-11-15",
-        "date": "2026-10-01",
-        "actualEnd": "2026-09-20"
-      },
-      "progressText": "100",
-      "out": [],
-      "message": ""
-    },
-    {
-      "name": "#68 «Потрібне рішення» без опису — обязательно",
-      "draft": {
-        "schedule": "Зелений",
-        "budget": "Зелений",
-        "resources": "Зелений",
-        "title": "Резюме",
-        "keyReason": "Перенос",
-        "status": "Реалізація",
-        "start": "2026-03-02",
-        "goLive": "",
-        "planEnd": "2026-12-01",
-        "forecastEnd": "",
-        "date": "2026-10-01",
-        "actualEnd": "",
-        "decision": true,
-        "decisionText": ""
-      },
-      "progressText": "40",
-      "out": [
-        "decisionText"
-      ],
-      "message": "errDecision"
-    },
-    {
-      "name": "#68 опис из пробелов — как пустой",
-      "draft": {
-        "schedule": "Зелений",
-        "budget": "Зелений",
-        "resources": "Зелений",
-        "title": "Резюме",
-        "keyReason": "Перенос",
-        "status": "Реалізація",
-        "start": "2026-03-02",
-        "goLive": "",
-        "planEnd": "2026-12-01",
-        "forecastEnd": "",
-        "date": "2026-10-01",
-        "actualEnd": "",
-        "decision": true,
-        "decisionText": "   "
-      },
-      "progressText": "40",
-      "out": [
-        "decisionText"
-      ],
-      "message": "errDecision"
-    },
-    {
-      "name": "#68 галочка снята — опис не нужен",
-      "draft": {
-        "schedule": "Зелений",
-        "budget": "Зелений",
-        "resources": "Зелений",
-        "title": "Резюме",
-        "keyReason": "Перенос",
-        "status": "Реалізація",
-        "start": "2026-03-02",
-        "goLive": "",
-        "planEnd": "2026-12-01",
-        "forecastEnd": "",
-        "date": "2026-10-01",
-        "actualEnd": "",
-        "decision": false,
-        "decisionText": ""
-      },
-      "progressText": "40",
-      "out": [],
-      "message": ""
-    },
-    {
-      "name": "#68 опис заполнен — без ошибок",
-      "draft": {
-        "schedule": "Зелений",
-        "budget": "Зелений",
-        "resources": "Зелений",
-        "title": "Резюме",
-        "keyReason": "Перенос",
-        "status": "Реалізація",
-        "start": "2026-03-02",
-        "goLive": "",
-        "planEnd": "2026-12-01",
-        "forecastEnd": "",
-        "date": "2026-10-01",
-        "actualEnd": "",
-        "decision": true,
-        "decisionText": "Погодити додатковий бюджет"
-      },
-      "progressText": "40",
-      "out": [],
-      "message": ""
-    }
-  ],
-  "projectSwitch": [
-    {
-      "name": "#52 «Завершено», затем другой проект — поле % снова открыто, значение нового проекта",
-      "status": "Завершено",
-      "out": {
-        "locked": false
-      }
-    }
-  ]
+ "_about": "Форма статус-отчёта: одни и те же сценарии проверяют приложение (spfx/test/reportForm.test.ts — logic/forms.ts) и прототип (spfx/test/prototypeForm.test.ts — prototype/pmo-prototype.html в jsdom). Даты задаются всегда (они отличаются от карточки — нужна причина, если keyReason не пуст). Фактическая дата (#54, actualEnd) — при «Завершено» / «Скасовано»: обязательна, не раньше старта, не позже даты отчёта (date).",
+ "status": [
+  {
+   "name": "#52 «Завершено» — 100 % и поле закрыто",
+   "start": {
+    "status": "Реалізація",
+    "progress": 40
+   },
+   "steps": [
+    "Завершено"
+   ],
+   "out": {
+    "progress": 100,
+    "locked": true
+   }
+  },
+  {
+   "name": "#52 «Завершено» → другой статус — прежнее значение",
+   "start": {
+    "status": "Реалізація",
+    "progress": 40
+   },
+   "steps": [
+    "Завершено",
+    "Призупинено"
+   ],
+   "out": {
+    "progress": 40,
+    "locked": false
+   }
+  },
+  {
+   "name": "#52 «Скасовано» — % не меняется",
+   "start": {
+    "status": "Реалізація",
+    "progress": 40
+   },
+   "steps": [
+    "Скасовано"
+   ],
+   "out": {
+    "progress": 40,
+    "locked": false
+   }
+  },
+  {
+   "name": "#52 черновик уже «Завершено» (на основе повернутого) — сразу 100 %",
+   "start": {
+    "status": "Завершено",
+    "progress": 80
+   },
+   "steps": [],
+   "out": {
+    "progress": 100,
+    "locked": true
+   }
+  }
+ ],
+ "validation": [
+  {
+   "name": "#40 пустая форма — все обязательные сразу",
+   "draft": {
+    "schedule": "",
+    "budget": "",
+    "resources": "",
+    "title": "",
+    "keyReason": "",
+    "status": "Реалізація",
+    "start": "2026-03-02",
+    "goLive": "",
+    "planEnd": "2026-12-01",
+    "forecastEnd": ""
+   },
+   "progressText": "40",
+   "out": [
+    "sched",
+    "budget",
+    "res",
+    "keyReason",
+    "title"
+   ],
+   "message": "errReqAll"
+  },
+  {
+   "name": "#53 % вне 0–100 и #54 план раньше старта — ошибки у полей",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Зелений",
+    "resources": "Жовтий",
+    "title": "Резюме",
+    "keyReason": "Перенос",
+    "status": "Реалізація",
+    "start": "2026-03-02",
+    "goLive": "2026-01-01",
+    "planEnd": "2026-01-01",
+    "forecastEnd": "2022-01-01"
+   },
+   "progressText": "500",
+   "out": [
+    "progress",
+    "goLive",
+    "planEnd",
+    "forecastEnd"
+   ],
+   "message": "errProgress"
+  },
+  {
+   "name": "#54 дата раньше старта при заполненной форме",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Зелений",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Перенос",
+    "status": "Реалізація",
+    "start": "2026-03-02",
+    "goLive": "",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "2026-02-01"
+   },
+   "progressText": "40",
+   "out": [
+    "forecastEnd"
+   ],
+   "message": "errBeforeStart"
+  },
+  {
+   "name": "#53 ведущие нули допустимы, даты по порядку — без ошибок",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Жовтий",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Перенос",
+    "status": "Реалізація",
+    "start": "2026-03-02",
+    "goLive": "2026-03-02",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "2027-01-15"
+   },
+   "progressText": "00098",
+   "out": [],
+   "message": ""
+  },
+  {
+   "name": "#52 при «Завершено» % не проверяется (100)",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Зелений",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Завершено",
+    "status": "Завершено",
+    "start": "2026-03-02",
+    "goLive": "",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "",
+    "date": "2026-10-01",
+    "actualEnd": "2026-09-30"
+   },
+   "progressText": "500",
+   "out": [],
+   "message": ""
+  },
+  {
+   "name": "#54 «Скасовано» без фактической даты — обязательное поле",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Зелений",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Скасовано",
+    "status": "Скасовано",
+    "start": "2026-03-02",
+    "goLive": "",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "",
+    "date": "2026-10-01",
+    "actualEnd": ""
+   },
+   "progressText": "40",
+   "out": [
+    "actualEnd"
+   ],
+   "message": "errReqAll"
+  },
+  {
+   "name": "#54 «Завершено» без фактической даты — обязательное поле",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Зелений",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Завершено",
+    "status": "Завершено",
+    "start": "2026-03-02",
+    "goLive": "",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "",
+    "date": "2026-10-01",
+    "actualEnd": ""
+   },
+   "progressText": "100",
+   "out": [
+    "actualEnd"
+   ],
+   "message": "errReqAll"
+  },
+  {
+   "name": "#54 / #64 фактическая дата раньше старта — в сообщении дата старта",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Зелений",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Скасовано",
+    "status": "Скасовано",
+    "start": "2026-03-02",
+    "goLive": "",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "",
+    "date": "2026-10-01",
+    "actualEnd": "2026-02-01"
+   },
+   "progressText": "40",
+   "out": [
+    "actualEnd"
+   ],
+   "message": "errBeforeStartOn",
+   "messageDate": "2026-03-02"
+  },
+  {
+   "name": "#64 / #67 фактическая дата позже даты подання — в сообщении дата подання, будущее — как прогноз",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Зелений",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Скасовано",
+    "status": "Скасовано",
+    "start": "2026-03-02",
+    "goLive": "",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "",
+    "date": "2026-10-01",
+    "actualEnd": "2026-10-02"
+   },
+   "progressText": "40",
+   "out": [
+    "actualEnd"
+   ],
+   "message": "errAfterSubmit",
+   "messageDate": "2026-10-01"
+  },
+  {
+   "name": "#54 фактическая дата = дате подання и = старту — без ошибок",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Зелений",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Скасовано",
+    "status": "Скасовано",
+    "start": "2026-03-02",
+    "goLive": "",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "",
+    "date": "2026-10-01",
+    "actualEnd": "2026-10-01"
+   },
+   "progressText": "40",
+   "out": [],
+   "message": ""
+  },
+  {
+   "name": "#54 при обычном статусе фактическая дата не проверяется",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Зелений",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Перенос",
+    "status": "Реалізація",
+    "start": "2026-03-02",
+    "goLive": "",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "",
+    "date": "2026-10-01",
+    "actualEnd": ""
+   },
+   "progressText": "40",
+   "out": [],
+   "message": ""
+  },
+  {
+   "name": "#64 факт раньше плана и прогноза (досрочно) — можно",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Зелений",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Завершено",
+    "status": "Завершено",
+    "start": "2026-03-02",
+    "goLive": "",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "2026-11-15",
+    "date": "2026-10-01",
+    "actualEnd": "2026-09-20"
+   },
+   "progressText": "100",
+   "out": [],
+   "message": ""
+  },
+  {
+   "name": "#68 «Потрібне рішення» без опису — обязательно",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Зелений",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Перенос",
+    "status": "Реалізація",
+    "start": "2026-03-02",
+    "goLive": "",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "",
+    "date": "2026-10-01",
+    "actualEnd": "",
+    "decision": true,
+    "decisionText": ""
+   },
+   "progressText": "40",
+   "out": [
+    "decisionText"
+   ],
+   "message": "errDecision"
+  },
+  {
+   "name": "#68 опис из пробелов — как пустой",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Зелений",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Перенос",
+    "status": "Реалізація",
+    "start": "2026-03-02",
+    "goLive": "",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "",
+    "date": "2026-10-01",
+    "actualEnd": "",
+    "decision": true,
+    "decisionText": "   "
+   },
+   "progressText": "40",
+   "out": [
+    "decisionText"
+   ],
+   "message": "errDecision"
+  },
+  {
+   "name": "#68 галочка снята — опис не нужен",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Зелений",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Перенос",
+    "status": "Реалізація",
+    "start": "2026-03-02",
+    "goLive": "",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "",
+    "date": "2026-10-01",
+    "actualEnd": "",
+    "decision": false,
+    "decisionText": ""
+   },
+   "progressText": "40",
+   "out": [],
+   "message": ""
+  },
+  {
+   "name": "#68 опис заполнен — без ошибок",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Зелений",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Перенос",
+    "status": "Реалізація",
+    "start": "2026-03-02",
+    "goLive": "",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "",
+    "date": "2026-10-01",
+    "actualEnd": "",
+    "decision": true,
+    "decisionText": "Погодити додатковий бюджет"
+   },
+   "progressText": "40",
+   "out": [],
+   "message": ""
+  },
+  {
+   "name": "1.7.7 прогноз витрат менший за витрати на дату — помилка у поля",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Жовтий",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Перенос",
+    "status": "Реалізація",
+    "start": "2026-03-02",
+    "goLive": "2026-03-02",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "2027-01-15",
+    "actualCost": 71000,
+    "forecastCost": 50000,
+    "notDone": "Усе виконано"
+   },
+   "progressText": "00098",
+   "out": [
+    "forecastCost"
+   ],
+   "message": "errForecastLow"
+  },
+  {
+   "name": "1.7.7 прогноз не задано (порожньо) — можна",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Жовтий",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Перенос",
+    "status": "Реалізація",
+    "start": "2026-03-02",
+    "goLive": "2026-03-02",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "2027-01-15",
+    "actualCost": 71000,
+    "forecastCost": 0,
+    "notDone": "Усе виконано"
+   },
+   "progressText": "00098",
+   "out": [],
+   "message": ""
+  },
+  {
+   "name": "1.7.7 прогноз ≥ витрат — без помилок",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Жовтий",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Перенос",
+    "status": "Реалізація",
+    "start": "2026-03-02",
+    "goLive": "2026-03-02",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "2027-01-15",
+    "actualCost": 71000,
+    "forecastCost": 120000,
+    "notDone": "Усе виконано"
+   },
+   "progressText": "00098",
+   "out": [],
+   "message": ""
+  },
+  {
+   "name": "1.7.7 у минулому звіті був план, «Не зроблено» порожнє — обов'язкове",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Жовтий",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Перенос",
+    "status": "Реалізація",
+    "start": "2026-03-02",
+    "goLive": "2026-03-02",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "2027-01-15",
+    "notDone": "",
+    "planned": "Міграція 4 юросіб"
+   },
+   "progressText": "00098",
+   "out": [
+    "notDone"
+   ],
+   "message": "errReqAll"
+  },
+  {
+   "name": "1.7.7 «Не зроблено» — пробіли = порожньо",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Жовтий",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Перенос",
+    "status": "Реалізація",
+    "start": "2026-03-02",
+    "goLive": "2026-03-02",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "2027-01-15",
+    "notDone": "   ",
+    "planned": "Міграція 4 юросіб"
+   },
+   "progressText": "00098",
+   "out": [
+    "notDone"
+   ],
+   "message": "errReqAll"
+  }
+ ],
+ "projectSwitch": [
+  {
+   "name": "#52 «Завершено», затем другой проект — поле % снова открыто, значение нового проекта",
+   "status": "Завершено",
+   "out": {
+    "locked": false
+   }
+  }
+ ]
 }

@@ -14,9 +14,12 @@ import { Plus } from '../components/Icons';
 import { Lucide } from '../components/LucideIcons';
 import { aiView } from '../logic/aiFlow';
 
-type Ind = 'status' | 'type' | 'progress' | 'start' | 'goLive' | 'planEnd' | 'forecastEnd' | 'actualEnd' | 'actualCost';
+type Ind = 'status' | 'type' | 'progress' | 'start' | 'goLive' | 'planEnd' | 'forecastEnd' | 'actualEnd' | 'actualCost' | 'budgetPlan' | 'forecastCost';
 const IND: [Ind, string][] = [['status', 'status'], ['type', 'type'], ['progress', 'progress'], ['start', 'start'], ['goLive', 'golive'],
-  ['planEnd', 'plan'], ['forecastEnd', 'fc'], ['actualEnd', 'ae'], ['actualCost', 'rCost']];
+  ['planEnd', 'plan'], ['forecastEnd', 'fc'], ['actualEnd', 'ae'], ['actualCost', 'rCost'], ['budgetPlan', 'budget'], ['forecastCost', 'fcost']];
+const MONEY_IND: Ind[] = ['actualCost', 'budgetPlan', 'forecastCost'];
+/** поле карточки для сравнения «було → стало»: «Бюджет (план)» отчёта — budget карточки */
+const cardOf = (k: Ind): keyof Project => (k === 'budgetPlan' ? 'budget' : k);
 const DATES: Ind[] = ['start', 'goLive', 'planEnd', 'forecastEnd', 'actualEnd'];
 
 /** Статус-отчёт (reportView прототипа): содержание, погодження; PMO — погодити (меняет только оценки) или повернути на доопрацювання. */
@@ -56,9 +59,9 @@ export const ReportView: React.FC<{ data: PortalData; report: StatusReport | und
 
   // ключевые показатели, которые отчёт меняет; до погодження — «було → стало» относительно карточки
   const show = (k: Ind, v: string | number | null | undefined): React.ReactNode => (v === '' || v === null || v === undefined ? <span className="muted">—</span>
-    : k === 'progress' ? v + '%' : k === 'actualCost' ? money(Number(v)) : DATES.indexOf(k) >= 0 ? fmtDate(String(v)) : tv(String(v)));
+    : k === 'progress' ? v + '%' : MONEY_IND.indexOf(k) >= 0 ? money(Number(v)) : DATES.indexOf(k) >= 0 ? fmtDate(String(v)) : tv(String(v)));
   const ind = IND.filter(([k]) => { const v = r[k]; return v !== '' && v !== null && v !== undefined; }).map(([k, l]) => {
-    const cur = p[k] as string | number; const nv = r[k];
+    const cur = p[cardOf(k)] as string | number; const nv = r[k];
     const ch = state !== AP_OK && String(cur === undefined || cur === null ? '' : cur) !== String(nv === null ? '' : nv);
     return <div key={k} className="kv"><span className="k">{fl(l)}</span><span className="v">{ch ? <span className="dv"><s>{show(k, cur)}</s><span className="arr">→</span>{show(k, r[k])}</span> : show(k, r[k])}</span></div>;
   });
@@ -96,7 +99,7 @@ export const ReportView: React.FC<{ data: PortalData; report: StatusReport | und
       {r.keyReason ? <div className="kv"><span className="k">{t('keyReason')}</span><span className="v">{r.keyReason}</span></div> : null}</div></div> : null}
     <div className="sec"><div className="rep rv-text">
       <div className="rep-h"><PersonCell p={r.author} />{r.decision ? <span className="flag">{t('needDecision')}</span> : null}</div>
-      {txt(fl('rDone'), r.done)}{txt(fl('rNext'), r.next)}{txt(fl('rIssues'), r.issues)}{r.decision ? txt(fl('rDecText'), r.decisionText || '—') : null}
+      {txt(fl('rDone'), r.done)}{txt(fl('rNotDone'), r.notDone || '')}{txt(fl('rNext'), r.next)}{txt(fl('rIssues'), r.issues)}{r.decision ? txt(fl('rDecText'), r.decisionText || '—') : null}
     </div></div>
     {/* помощник ИИ (план этапа 4, задача 5): поле видят все, кто видит отчёт; на погодження не влияет — подсказка */}
     {aiView(r.aiCheck, r.aiCheckedAt) !== 'none' ? <div className="sec ai-field" id="rv-ai"><div className="ai-panel">

@@ -1261,6 +1261,31 @@ export const T: Record<string, L3> = {
   "Choose a new PM, a new owner or a new country.",
   "Выберите нового PM, нового владельца или новую страну."
  ],
+ "errForecastLow": [
+  "Прогноз менший за витрати на дату — оновіть прогноз.",
+  "The forecast is below the cost to date — update the forecast.",
+  "Прогноз меньше затрат на дату — обновите прогноз."
+ ],
+ "paceHint": [
+  "за темпом витрат: ~{v}",
+  "at the current spending rate: ~{v}",
+  "по темпу затрат: ~{v}"
+ ],
+ "plannedFrom": [
+  "звіт від {date}",
+  "report of {date}",
+  "отчёт от {date}"
+ ],
+ "notDoneHint": [
+  "Що з цього плану не зроблено і чому; усе виконано — так і напишіть.",
+  "What of this plan was not done and why; if everything is done, say so.",
+  "Что из этого плана не сделано и почему; всё выполнено — так и напишите."
+ ],
+ "budgetViaReport": [
+  "Бюджет (план) змінюється статус-звітом — з причиною, після погодження PMO.",
+  "The budget (plan) is changed by a status report — with a reason, after PMO approval.",
+  "Бюджет (план) меняется статус-отчётом — с причиной, после согласования PMO."
+ ],
  "errCountry": [
   "Оберіть країну проєкту.",
   "Choose the project country.",
@@ -2332,6 +2357,21 @@ export const FLD: Record<string, L3> = {
   "Бюджет (план)",
   "Budget (plan)",
   "Бюджет (план)"
+ ],
+ "fcost": [
+  "Прогноз витрат на завершення",
+  "Cost at completion forecast",
+  "Прогноз затрат на завершение"
+ ],
+ "rPlanned": [
+  "Планувалось",
+  "Planned",
+  "Планировалось"
+ ],
+ "rNotDone": [
+  "Не зроблено з плану і чому",
+  "Not done from the plan and why",
+  "Не сделано из плана и почему"
  ],
  "actual": [
   "Витрати (факт)",

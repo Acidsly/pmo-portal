@@ -54,7 +54,7 @@ function openFromCard(): W {
 }
 const setVal = (el: W, v: string): void => { el.value = v; ev(el, 'input'); ev(el, 'change'); };
 const setStatus = (g: (id: string) => W, st: string): void => { const s = g('f-st'); s.value = st; ev(s, 'change'); };
-const FIELD: Record<string, string> = { 'f-ae': 'actualEnd', 'f-dect': 'decisionText', 'f-kr': 'keyReason', 'f-t': 'title', 'f-pr': 'progress', 'f-golive': 'goLive', 'f-plan': 'planEnd', 'f-fc': 'forecastEnd' };
+const FIELD: Record<string, string> = { 'f-ae': 'actualEnd', 'f-dect': 'decisionText', 'f-kr': 'keyReason', 'f-t': 'title', 'f-pr': 'progress', 'f-golive': 'goLive', 'f-plan': 'planEnd', 'f-fc': 'forecastEnd', 'f-nd': 'notDone', 'f-fcost': 'forecastCost' };
 
 test('прототип: #37 из карточки проект зафиксирован; #51 проекты с отчётом на погодженні недоступны', () => {
   const form = openFromCard();
@@ -99,6 +99,10 @@ describe('прототип: проверка формы (#40, #53, #54, #64, #67
     setVal(g('f-t'), d.title); setVal(g('f-kr'), d.keyReason);
     if (d.decision !== undefined) { const cb = g('f-dec'); cb.checked = !!d.decision; ev(cb, 'change'); setVal(g('f-dect'), d.decisionText || ''); }
     if (d.actualEnd !== undefined) setVal(g('f-ae'), d.actualEnd);
+    // 1.7.7: у демо-проекта прототипа есть план прошлого погодженого отчёта — «Не зроблено» заполняется, если вектор не задаёт иначе
+    setVal(g('f-nd'), d.notDone !== undefined ? d.notDone : 'Усе виконано');
+    if (d.actualCost !== undefined) setVal(g('f-c'), String(d.actualCost));
+    if (d.forecastCost !== undefined) setVal(g('f-fcost'), d.forecastCost ? String(d.forecastCost) : '');
     form.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
     const got = Array.from(form.querySelectorAll('[aria-invalid="true"]')).map((el: W) => {
       if (el.tagName === 'FIELDSET') return (el.querySelector('input[type=radio]') || {}).name;

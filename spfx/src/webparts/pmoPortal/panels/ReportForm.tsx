@@ -6,7 +6,9 @@ import { Project } from '../data/types';
 import { isActive, byOrder } from '../logic/status';
 import { calcRag, Rag } from '../logic/rag';
 import { ReportDraft, reportPeriodFrom, reportFromProject, reportFromReturned, keyChanged, reportErrors, formErrorText, parseProgress, progressLocked, FieldErr,
-  initialReport, switchStatus, switchProject, reportToSave, reportProjectChoice, archiveStatus } from '../logic/forms';
+  initialReport, switchStatus, switchProject, reportToSave, reportProjectChoice, archiveStatus, lastPlan, withPlan } from '../logic/forms';
+import { paceForecast } from '../logic/status';
+import { money } from '../components/Bits';
 import { reportBody } from '../data/write';
 import { Frow, RagPick, SegPick, DateIn, Err, Opts, errText, guardText, FieldErrText, MoneyIn } from '../components/fields';
 import { fmtDate, periodText } from '../components/Bits';
@@ -30,7 +32,9 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
   // «Новий звіт на основі повернутого» — черновик из повернутого PMO отчёта этого проекта
   const from = fromId ? data.reports.filter(r => r.id === fromId && r.projectId === (first && first.id))[0] : undefined;
   // «Завершено» в повернутом звіті — 100 % сразу (#52)
-  const [d, setD] = React.useState<ReportDraft | undefined>(first ? initialReport(from ? reportFromReturned(from, first, c.today) : reportFromProject(first, c.today)) : undefined);
+  // 1.7.7: «Планувалось» — план последнего погодженого отчёта проекта (возвращённый — без себя)
+  const [d, setD] = React.useState<ReportDraft | undefined>(first ? initialReport(withPlan(from ? reportFromReturned(from, first, c.today) : reportFromProject(first, c.today),
+    lastPlan(data.reports, first.id, from ? from.id : 0))) : undefined);
   const [err, setErr] = React.useState('');
   const [errs, setErrs] = React.useState<FieldErr[]>([]);
   // «% виконання» — текст поля (#53: ошибка вне 0–100 вместо молчаливой замены); prevPr — значение до «Завершено» (#52)
@@ -94,7 +98,7 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
       {ai.top}
       {fixed ? <Frow label={fl('rProj')}><div className="fixedval">{fixed.title}</div></Frow>
         : <Frow label={fl('rProj')} htmlFor="f-p" req={true}>
-          <select id="f-p" value={d.projectId} onChange={e => { const np = act.filter(x => x.id === Number(e.target.value))[0]; if (np) { const nd = switchProject(d, np); setD(nd); setPrTxt(String(nd.progress)); setPrevPr(null); setErrs([]); setErr(''); } }}>
+          <select id="f-p" value={d.projectId} onChange={e => { const np = act.filter(x => x.id === Number(e.target.value))[0]; if (np) { const nd = switchProject(d, np, lastPlan(data.reports, np.id)); setD(nd); setPrTxt(String(nd.progress)); setPrevPr(null); setErrs([]); setErr(''); } }}>
             {act.map(x => <option key={x.id} value={x.id} disabled={!!x.pendingDate && x.id !== d.projectId}>{x.title}{x.pendingDate ? ' — ' + t('repPendingOpt').replace('{date}', fmtDate(x.pendingDate)) : ''}</option>)}</select></Frow>}
       {pendingBlock ? <p className="note lock">🔒 {pendingBlock}</p> : null}
       {/* #62 / #69: дата подання и период не вводятся — показываются, как будут записаны */}
@@ -126,6 +130,16 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
           <div className="k-cost"><label className="t" htmlFor="f-c">{fl('rCost')}, $</label>
             <MoneyIn id="f-c" value={d.actualCost} onChange={v => set({ actualCost: v })} /></div>
         </div>
+        {/* 1.7.7: бюджет (план) и прогноз витрат — как сроки: изменение — с причиной, в карточку — после погодження; «Завершено» /
+            «Скасовано» — прогноз = витрати на дату (поле закрыто); подсказка — по темпу витрат */}
+        <div className="fgrid2 frow">
+          <div><label className="t" htmlFor="f-bp">{fl('budget')}, $</label><MoneyIn id="f-bp" value={d.budgetPlan} onChange={v => set({ budgetPlan: v })} /></div>
+          <div><label className="t" htmlFor="f-fcost">{fl('fcost')}, $</label>
+            <MoneyIn id="f-fcost" value={archiveStatus(d.status) ? d.actualCost : d.forecastCost} disabled={archiveStatus(d.status)} invalid={bad('forecastCost')}
+              onChange={v => set({ forecastCost: v })} />
+            <FieldErrText msg={fErr('forecastCost')} />
+            {paceForecast(d.actualCost, d.progress) ? <p className="hint" id="f-pace">{t('paceHint').replace('{v}', money(paceForecast(d.actualCost, d.progress) as number))}</p> : null}</div>
+        </div>
         {archiveStatus(d.status) ? <><p className="note" style={{ margin: '-4px 0 14px' }}>{t('completeHint')}</p>
           {/* #54: когда проект фактически завершён или отменён — обязательно, не раньше старта, не позже даты подання (#64) */}
           <div className="frow" id="f-ae-wrap"><label className="t" htmlFor="f-ae">{fl('ae')} *</label>
@@ -143,7 +157,12 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
       </div>
 
       <Frow label={fl('rTitle')} htmlFor="f-t" req={true}><input type="text" id="f-t" placeholder={t('summaryPh')} aria-invalid={bad('title') || undefined} value={d.title} onChange={e => set({ title: e.target.value })} /></Frow>
+      {d.planned ? <div className="frow" id="f-pl-wrap"><label className="t">{fl('rPlanned')} <span className="muted">{t('plannedFrom').replace('{date}', fmtDate(d.plannedDate || ''))}</span></label>
+        <div className="fixedval" id="f-pl">{d.planned}</div></div> : null}
       <Frow label={fl('rDone')} htmlFor="f-done"><textarea id="f-done" value={d.done} onChange={e => set({ done: e.target.value })} /></Frow>
+      {/* 1.7.7: план / факт — обязательно, если в прошлом погодженом отчёте был план */}
+      <Frow label={fl('rNotDone')} htmlFor="f-nd" req={!!d.planned} hint={d.planned ? t('notDoneHint') : undefined}>
+        <textarea id="f-nd" aria-invalid={bad('notDone') || undefined} value={d.notDone} onChange={e => set({ notDone: e.target.value })} /></Frow>
       <Frow label={fl('rNext')} htmlFor="f-next"><textarea id="f-next" value={d.next} onChange={e => set({ next: e.target.value })} /></Frow>
       <Frow label={fl('rIssues')} htmlFor="f-iss"><textarea id="f-iss" value={d.issues} onChange={e => set({ issues: e.target.value })} />
         {/* #81: поле отчёта — не реестр рисков; сколько открытых рисков и проблем у проекта */}

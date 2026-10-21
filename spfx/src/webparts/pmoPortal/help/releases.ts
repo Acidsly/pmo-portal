@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.7.0",
+   "date": "21.10.2026",
+   "html": "<p><b>Нове</b></p>\n<ul>\n<li><b>Бюджет — як терміни.</b> У статус-звіті: <b>Бюджет (план)</b> і <b>Прогноз витрат на завершення</b> (підказка «за темпом витрат»); зміна — з причиною, у картку — після погодження PMO; у картці — прогноз і відхилення від бюджету. <b>План і факт:</b> «Планувалось» з останнього погодженого звіту і поле <b>Не зроблено з плану і чому</b> (обов'язкове, якщо план був); помічник ШІ враховує його під час перевірки.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.6.0",
    "date": "21.10.2026",
    "html": "<p><b>Нове</b></p>\n<ul>\n<li><b>Країна</b> проєкту: PMO обирає її при створенні, далі змінює через «Змінити PM / власника / країну». <b>CEO країни</b> бачить проєкти своїх країн і може коментувати. Колонка <b>Країна</b> у «Проєктах» і «Архіві», на «Головній» — <b>Портфель за країнами</b>.</li>\n</ul>"
@@ -215,6 +220,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.7.0",
+   "date": "21.10.2026",
+   "html": "<p><b>New</b></p>\n<ul>\n<li><b>Budget works like the schedule.</b> In the status report: <b>Budget (plan)</b> and <b>Cost at completion forecast</b> (\"at the current spending rate\" hint); a change needs a reason and reaches the card after PMO approval; the card shows the forecast and the deviation from the budget. <b>Plan vs actual:</b> \"Planned\" from the last approved report and <b>Not done from the plan and why</b> (required if there was a plan); the AI assistant takes it into account when checking.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.6.0",
    "date": "21.10.2026",
    "html": "<p><b>New</b></p>\n<ul>\n<li>Project <b>Country</b>: the PMO chooses it when creating a project and later changes it with \"Change PM / owner / country\". The <b>country CEO</b> sees the projects of their countries and can comment. <b>Country</b> column in \"Projects\" and \"Archive\"; <b>Portfolio by country</b> on the home page.</li>\n</ul>"
@@ -426,6 +436,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.7.0",
+   "date": "21.10.2026",
+   "html": "<p><b>Новое</b></p>\n<ul>\n<li><b>Бюджет — как сроки.</b> В статус-отчёте: <b>Бюджет (план)</b> и <b>Прогноз затрат на завершение</b> (подсказка «по темпу затрат»); изменение — с причиной, в карточку — после согласования PMO; в карточке — прогноз и отклонение от бюджета. <b>План и факт:</b> «Планировалось» из последнего согласованного отчёта и поле <b>Не сделано из плана и почему</b> (обязательно, если план был); помощник ИИ учитывает его при проверке.</li>\n</ul>"
+  },
   {
    "ver": "1.7.6.0",
    "date": "21.10.2026",

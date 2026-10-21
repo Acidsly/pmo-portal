@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.7.0 · 21.10.2026
+
+**New**
+- **Budget works like the schedule.** In the status report: **Budget (plan)** and **Cost at completion forecast** ("at the current spending rate" hint); a change needs a reason and reaches the card after PMO approval; the card shows the forecast and the deviation from the budget. **Plan vs actual:** "Planned" from the last approved report and **Not done from the plan and why** (required if there was a plan); the AI assistant takes it into account when checking.
+
 ## 1.7.6.0 · 21.10.2026
 
 **New**

@@ -188,6 +188,33 @@ describe('#54 форма отчёта: дата завершення (факт)'
   });
 });
 
+describe('1.7.7 форма отчёта: бюджет, прогноз витрат, план / факт', () => {
+  const data = { projects: [{ id: 5, title: 'Проєкт П', status: 'Реалізація', type: 'Звичайний', progress: 40, actualCost: 71000, budget: 95000, forecastCost: 95000,
+    start: '', goLive: '', planEnd: '', forecastEnd: '', canEdit: true, manager: { email: 'pm@x', name: 'PM' } }], risks: [],
+    reports: [{ id: 1, projectId: 5, date: '2026-09-29', approval: 'Погоджено', next: 'Міграція 4 юросіб' }], comments: [], team: [] } as any;
+  const type = (id: string, v: string): void => { act(() => { Simulate.change(root.querySelector('#' + id) as HTMLInputElement, { target: { value: v } } as any); }); };
+  test('«Планувалось» видно, «Не зроблено» обязательно; прогноз меньше витрат — ошибка у поля; подсказка темпа; причина при смене прогноза', () => {
+    mount(<ReportForm data={data} projectId={5} onCancel={() => undefined} />);
+    expect((root.querySelector('#f-pl') as HTMLElement).textContent).toBe('Міграція 4 юросіб');
+    expect((root.querySelector('label[for="f-nd"]') as HTMLElement).textContent).toContain('*');
+    expect((root.querySelector('#f-pace') as HTMLElement).textContent).toContain('177');
+    expect(root.querySelector('#f-kr')).toBeNull();
+    const fc = root.querySelector('#f-fcost') as HTMLInputElement;
+    act(() => { Simulate.focus(fc); }); type('f-fcost', '50000'); act(() => { Simulate.blur(fc); });
+    expect(root.querySelector('#f-kr')).not.toBeNull();   // прогноз изменён — нужна причина
+    act(() => { Simulate.submit(root.querySelector('form') as HTMLFormElement); });
+    expect(fc.getAttribute('aria-invalid')).toBe('true');
+    expect((root.querySelector('#f-nd') as HTMLElement).getAttribute('aria-invalid')).toBe('true');
+    expect(root.textContent).toContain('Прогноз менший за витрати на дату — оновіть прогноз.');
+  });
+  test('«Скасовано» — прогноз = витрати на дату, поле закрыто', () => {
+    mount(<ReportForm data={data} projectId={5} onCancel={() => undefined} />);
+    act(() => { Simulate.change(root.querySelector('#f-st') as HTMLSelectElement, { target: { value: 'Скасовано' } } as any); });
+    const fc = root.querySelector('#f-fcost') as HTMLInputElement;
+    expect(fc.disabled).toBe(true); expect(fc.value.replace(/\s/g, '')).toBe('71000');
+  });
+});
+
 describe('#43 «Змінити PM / власника» — только PMO', () => {
   const pr = { id: 5, code: 'PRJ-005', title: 'Проєкт П', status: 'Реалізація', canEdit: false, manager: { id: 1, email: 'pm@x', name: 'Старий PM' }, owner: null,
     links: [], team: [], department: 'ІТ', priority: '', budget: 0, description: '' };

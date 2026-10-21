@@ -72,6 +72,7 @@ export function projectDefs(x: DefsCtx, archive: boolean): TableDefs<Project> {
       sort: p => forecastDelta(p.planEnd, p.forecastEnd), cls: 'num' },
     budget: { label: t('cBudgetP'), cell: p => money(p.budget), sort: p => p.budget, cls: 'num' },
     actual: { label: t('cActual'), cell: p => money(p.actualCost), sort: p => p.actualCost, cls: 'num' },
+    fcost: { label: fl('fcost'), cell: p => (p.forecastCost ? money(p.forecastCost) : '—'), sort: p => p.forecastCost || 0, cls: 'num' },
     use: { label: t('cUse'), cell: p => { const u = budgetUse(p.budget, p.actualCost); return <span className={budgetLevel(u)}>{u}%</span>; },
       sort: p => (p.budget ? p.actualCost / p.budget : 0), cls: 'num' },
     update: { label: fl('lastReport'), cell: p => clamp(p.lastReport), sort: p => p.lastReport, cls: 'w-upd' },

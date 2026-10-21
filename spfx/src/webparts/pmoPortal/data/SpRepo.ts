@@ -2,7 +2,7 @@
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { withParentNames } from '../logic/projects';
 import { Project, StatusReport, Risk, Comment, ChangeEntry, Person, FeedbackRow, Approval } from './types';
-import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, PROJECT_PARENT, PROJECT_COUNTRY, ASSIGN_COUNTRY, REPORT_SELECT, REPORT_EXPAND, REPORT_AI, RISK_SELECT, RISK_EXPAND,
+import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, PROJECT_PARENT, PROJECT_COUNTRY, ASSIGN_COUNTRY, REPORT_SELECT, REPORT_EXPAND, REPORT_AI, REPORT_BUDGET, RISK_SELECT, RISK_EXPAND,
   COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, TEAM_SELECT, TEAM_EXPAND, mapTeam, APPROVAL_SELECT, APPROVAL_EXPAND, mapApproval, ASSIGN_SELECT, ASSIGN_EXPAND, mapAssign, canAdd, canManage,
   withoutFolders, CHANGES_ON_LOAD, changesOf, changesSince, NOTIFY_SELECT, NOTIFY_SELECT_BASE, mapNotify, NotifyRow } from './map';
 import { withApproval, approvedIds as approvedOf, pendingReports, latestReport } from '../logic/approval';
@@ -216,7 +216,8 @@ export class SpRepo {
    *  Ошибки: notReady — папки ещё нет (новый проект, синхронизация не прошла); noRights — нет права добавлять. */
   /** Все статус-отчёты с полями помощника ИИ; полей ещё нет на сайте (приложение раньше Deploy-PMO.ps1) — без них, отчёты не пропадают. */
   reportRows(): Promise<any[]> {
-    return this.items('StatusReports', REPORT_SELECT + REPORT_AI, REPORT_EXPAND).catch(() => this.items('StatusReports', REPORT_SELECT, REPORT_EXPAND));
+    return this.items('StatusReports', REPORT_SELECT + REPORT_AI + REPORT_BUDGET, REPORT_EXPAND)
+      .catch(() => this.items('StatusReports', REPORT_SELECT + REPORT_AI, REPORT_EXPAND)).catch(() => this.items('StatusReports', REPORT_SELECT, REPORT_EXPAND));
   }
 
   /** Время UTC (ISO) → время по поясу сайта («2026-10-13T11:30:00») — для полей «дата и время» в createIn (formDateTime). */
@@ -275,7 +276,8 @@ export class SpRepo {
         .catch(() => this.getJson(this.itemUrl('Projects', projectId, PROJECT_SELECT + PROJECT_PARENT.select, PROJECT_EXPAND + PROJECT_PARENT.expand), true))
         .catch(() => this.getJson(this.itemUrl('Projects', projectId, PROJECT_SELECT, PROJECT_EXPAND), true)),
       this.items('ProjectState', 'Id,psProject,psState,psLastApplied', '', `psProject eq ${projectId}`).catch(() => [] as any[]),
-      this.items('StatusReports', REPORT_SELECT, REPORT_EXPAND, `srProjectId eq ${projectId}`),
+      this.items('StatusReports', REPORT_SELECT + REPORT_BUDGET, REPORT_EXPAND, `srProjectId eq ${projectId}`)
+        .catch(() => this.items('StatusReports', REPORT_SELECT, REPORT_EXPAND, `srProjectId eq ${projectId}`)),
       this.items('ReportApprovals', APPROVAL_SELECT, APPROVAL_EXPAND, `apProjectId eq ${projectId}`).catch(() => null as any[] | null),
       this.items('ProjectAssignments', ASSIGN_SELECT + ASSIGN_COUNTRY, ASSIGN_EXPAND, `paProjectId eq ${projectId}`)
         .catch(() => this.items('ProjectAssignments', ASSIGN_SELECT, ASSIGN_EXPAND, `paProjectId eq ${projectId}`)).catch(() => [] as any[])]);

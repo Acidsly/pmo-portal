@@ -85,3 +85,15 @@ describe('набор проверок и пункты кода', () => {
     expect(JSON.stringify(o).length).toBeLessThan(3000);
   });
 });
+
+// 1.7.7: прогноз витрат выше бюджета при зелёном «Бюджет»; «Не зроблено з плану» — в контексте «Перевірки»
+import { ruleItems as codeRules177, buildCheckContext as ctx177 } from '../src/webparts/pmoPortal/logic/aiRules';
+test('1.7.7 прогноз витрат вище бюджету — пункт коду; «Не зроблено» — у контексті, порожнє — немає', () => {
+  const project: any = { id: 1, code: 'PRJ-001', title: 'П', budget: 95000, actualCost: 71000, progress: 40, status: 'Реалізація', planEnd: '', forecastEnd: '' };
+  const base: any = { project, reports: [], risks: [], today: '2026-10-20', lang: 'uk' };
+  const d: any = { projectId: 1, schedule: 'Зелений', budget: 'Зелений', resources: 'Зелений', actualCost: 71000, progress: 40, forecastCost: 120000, budgetPlan: 95000, decision: false, title: 'Р', done: '', next: '', issues: '', notDone: '' };
+  expect(codeRules177({ ...base, draft: d }).some((x: string) => /Прогноз витрат на завершення/.test(x))).toBe(true);
+  expect(codeRules177({ ...base, draft: { ...d, forecastCost: 90000 } }).some((x: string) => /Прогноз витрат/.test(x))).toBe(false);
+  expect(JSON.parse(ctx177({ ...base, draft: { ...d, notDone: 'UAT не зроблено' } }).json).draft.notDone).toBe('UAT не зроблено');
+  expect('notDone' in JSON.parse(ctx177({ ...base, draft: d }).json).draft).toBe(false);
+});

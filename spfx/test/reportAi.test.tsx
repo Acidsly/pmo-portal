@@ -43,6 +43,8 @@ const $ = (s: string): HTMLElement => root.querySelector(s) as HTMLElement;
 const fill = (title = 'Резюме'): void => {
   for (const n of ['sched', 'budget', 'res']) act(() => { Simulate.change(root.querySelector(`input[name="${n}"][value="Зелений"]`) as HTMLInputElement); });
   act(() => { Simulate.change($('#f-t') as HTMLInputElement, { target: { value: title } } as any); });
+  // 1.7.7: в прошлом погодженом отчёте был план — «Не зроблено з плану» обязательно
+  act(() => { Simulate.change($('#f-nd') as HTMLTextAreaElement, { target: { value: 'Усе виконано' } } as any); });
 };
 const submit = async (): Promise<void> => { await act(async () => { Simulate.submit(root.querySelector('form') as HTMLFormElement); }); await flush(); };
 const btn = (): string => $('#f-submit').textContent || '';

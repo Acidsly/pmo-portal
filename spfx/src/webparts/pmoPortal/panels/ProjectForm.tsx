@@ -12,6 +12,7 @@ import { TeamRow, cleanTeam, cleanLinks, teamPlan } from '../logic/team';
 import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts, errText, guardText, MoneyIn } from '../components/fields';
 import { guard, cardFields, changedFields } from '../logic/guard';
 import { tv } from '../i18n/values';
+import { money } from '../components/Bits';
 
 const TYPES = ['Стратегічний', 'Звичайний'];
 const PRIOS = ['1 — Високий', '2 — Середній', '3 — Низький'];
@@ -164,8 +165,10 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
 
       <h3 className="fsec">{t('secMoney')}</h3>
       <div className="fgrid2 frow">
-        <div><label className="t" htmlFor="f-bud">{fl('budget')}, $</label>
+        {/* 1.7.7: бюджет задаёт PMO при создании; дальше — статус-отчётом (с причиной, после погодження) */}
+        {isNew ? <div><label className="t" htmlFor="f-bud">{fl('budget')}, $</label>
           <MoneyIn id="f-bud" value={d.budget} onChange={v => set({ budget: v })} /></div>
+          : <div><label className="t">{fl('budget')}, $</label><div className="fixedval" id="f-bud-fixed">{money(project!.budget || 0)}</div><p className="hint">{t('budgetViaReport')}</p></div>}
       </div>
       {/* #96: при правке карточки описание обязательно — звёздочка, подсказка, ошибка у поля; остальное введённое остаётся */}
       <Frow label={fl('desc')} htmlFor="f-desc" req={!isNew} hint={isNew ? undefined : t('descHint')} err={descErr ? t('errDesc') : ''}>

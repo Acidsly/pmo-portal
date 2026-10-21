@@ -103,7 +103,7 @@ test('#54: «Скасовано» с фактической датой → по�
   set('f-st', 'Скасовано');
   expect(q('#f-ae-wrap').hidden).toBe(false);
   const start = g('f-start').value || '2000-01-01';
-  set('f-t', 'Скасовано'); set('f-kr', 'Рішення PMO');
+  set('f-t', 'Скасовано'); set('f-kr', 'Рішення PMO'); set('f-nd', 'Проєкт скасовано');
   set('f-ae', start > '2026-09-15' ? start : '2026-09-15');
   const ae = g('f-ae').value;
   f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
@@ -196,6 +196,7 @@ describe('#46 / #48 события отчётов и рисков в истор�
     ['sched', 'budget', 'res'].forEach(n => { const r = f.querySelector(`input[name="${n}"][value="Зелений"]`); r.checked = true; ev(r, 'change'); });
     const t = f.querySelector('#f-t'); t.value = title; ev(t, 'input');
     const kr = f.querySelector('#f-kr'); if (kr) { kr.value = 'Причина'; ev(kr, 'input'); }
+    const nd = f.querySelector('#f-nd'); if (nd) { nd.value = 'Усе виконано'; ev(nd, 'input'); }   // 1.7.7: был план — обязательно
     f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
   };
   test('#46 «Новий звіт на основі повернутого» — событие со ссылкой на отчёт', () => {

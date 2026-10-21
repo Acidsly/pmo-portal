@@ -14,6 +14,9 @@ export interface ReportDraft {
   /** #46: новый отчёт на основе повернутого — его номер (srBasedOn). */
   basedOn?: number;
   title: string; done: string; next: string; issues: string; decision: boolean; decisionText: string; keyReason: string;
+  /** 1.7.7: «Бюджет (план)» и «Прогноз витрат на завершення» (0 — не задан) — ключевые показатели (с причиной);
+   *  planned — «Планувалось» (план последнего погодженого отчёта, только чтение), notDone — «Не зроблено з плану і чому». */
+  budgetPlan: number; forecastCost: number; notDone: string; planned?: string; plannedDate?: string;
 }
 /** Черновик проекта (форма projectForm прототипа). */
 export interface ProjectDraft {
@@ -41,8 +44,19 @@ export function nextCode(codes: string[]): string {
 export function reportFromProject(p: Project, today: string): ReportDraft {
   return { projectId: p.id, date: today, schedule: '', budget: '', resources: '',
     status: p.status, type: p.type, progress: p.progress, start: p.start, goLive: p.goLive, planEnd: p.planEnd, forecastEnd: p.forecastEnd,
-    actualCost: p.actualCost, actualEnd: '', title: '', done: '', next: '', issues: '', decision: false, decisionText: '', keyReason: '' };
+    actualCost: p.actualCost, actualEnd: '', title: '', done: '', next: '', issues: '', decision: false, decisionText: '', keyReason: '',
+    budgetPlan: p.budget || 0, forecastCost: p.forecastCost || 0, notDone: '' };
 }
+
+/** «Планувалось» (1.7.7): «План на наступний період» последнего погодженого отчёта проекта (без погодження — применённого);
+ *  excludeId — сам отчёт (возвращённый, на основе которого новый). Нет — пусто (поле «Не зроблено» необязательно). */
+export function lastPlan(reports: StatusReport[], projectId: number, excludeId = 0): { text: string; date: string } {
+  const ok = reports.filter(r => r.projectId === projectId && r.id !== excludeId && (r.approval === 'Погоджено' || (!r.approval && r.applied)))
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id));
+  const last = ok[ok.length - 1];
+  return last && (last.next || '').trim() ? { text: last.next.trim(), date: last.date } : { text: '', date: '' };
+}
+export const withPlan = (d: ReportDraft, plan: { text: string; date: string }): ReportDraft => ({ ...d, planned: plan.text, plannedDate: plan.date });
 
 /** Новый отчёт на основе повернутого PMO: оценки, показатели и тексты повернутого, дата — сегодня. */
 export function reportFromReturned(r: StatusReport, p: Project, today: string): ReportDraft {
@@ -51,12 +65,16 @@ export function reportFromReturned(r: StatusReport, p: Project, today: string): 
     status: r.status || base.status, type: r.type || base.type, progress: r.progress === null ? base.progress : r.progress,
     start: r.start || base.start, goLive: r.goLive || base.goLive, planEnd: r.planEnd || base.planEnd, forecastEnd: r.forecastEnd || base.forecastEnd,
     actualCost: r.actualCost === null ? base.actualCost : r.actualCost, actualEnd: r.actualEnd || '', basedOn: r.id, title: r.title, done: r.done, next: r.next, issues: r.issues,
-    decision: r.decision, decisionText: r.decisionText, keyReason: r.keyReason };
+    decision: r.decision, decisionText: r.decisionText, keyReason: r.keyReason,
+    budgetPlan: r.budgetPlan === null || r.budgetPlan === undefined ? base.budgetPlan : r.budgetPlan,
+    forecastCost: r.forecastCost === null || r.forecastCost === undefined ? base.forecastCost : r.forecastCost, notDone: r.notDone || '' };
 }
 
-// показатели, изменение которых требует причины (keyChanged прототипа): статус, тип, даты — но не % и не затраты
+// показатели, изменение которых требует причины (keyChanged прототипа): статус, тип, даты, бюджет (план) и прогноз витрат (1.7.7) —
+// но не % и не витрати на дату
 const KEYS: ('status' | 'type' | 'start' | 'goLive' | 'planEnd' | 'forecastEnd')[] = ['status', 'type', 'start', 'goLive', 'planEnd', 'forecastEnd'];
-export const keyChanged = (d: ReportDraft, p: Project): boolean => KEYS.some(k => String(d[k] || '') !== String(p[k] || ''));
+export const keyChanged = (d: ReportDraft, p: Project): boolean => KEYS.some(k => String(d[k] || '') !== String(p[k] || ''))
+  || (d.budgetPlan || 0) !== (p.budget || 0) || (d.forecastCost || 0) !== (p.forecastCost || 0);
 
 /** Даты, которые раньше даты старта (#54): запуск, план и прогноз не могут быть раньше старта; пустые не проверяются. */
 export type DateKey = 'goLive' | 'planEnd' | 'forecastEnd';
@@ -86,12 +104,14 @@ export function switchStatus(d: ReportDraft, prev: number | null, status: string
   return { d: { ...d, status }, prev };
 }
 /** Смена проекта в общей форме: показатели — нового проекта (статус, %, даты; поле % снова открыто), оценки и тексты — введённые. */
-export const switchProject = (d: ReportDraft, np: Project): ReportDraft => initialReport({ ...reportFromProject(np, d.date), schedule: d.schedule, budget: d.budget, resources: d.resources,
-  title: d.title, done: d.done, next: d.next, issues: d.issues, decision: d.decision, decisionText: d.decisionText });
+export const switchProject = (d: ReportDraft, np: Project, plan: { text: string; date: string } = { text: '', date: '' }): ReportDraft =>
+  initialReport(withPlan({ ...reportFromProject(np, d.date), schedule: d.schedule, budget: d.budget, resources: d.resources,
+    title: d.title, done: d.done, next: d.next, issues: d.issues, decision: d.decision, decisionText: d.decisionText, notDone: d.notDone }, plan));
 /** Что записывается: при «Завершено» — всегда 100 %; фактическая дата — только при «Завершено» / «Скасовано» (#54). */
 export const reportToSave = (d: ReportDraft): ReportDraft => {
   const x = progressLocked(d.status) ? { ...d, progress: 100 } : d;
-  return archiveStatus(x.status) ? x : { ...x, actualEnd: '' };
+  // 1.7.7: «Завершено» / «Скасовано» — прогноз витрат = витрати на дату (поле закрыто)
+  return archiveStatus(x.status) ? { ...x, forecastCost: x.actualCost || 0 } : { ...x, actualEnd: '' };
 };
 /** Выбор проекта (#37, #51): из карточки (projectId) — проект зафиксирован; иначе — первый без отчёта на погодженні;
  *  недоступны проекты с отчётом на погодженні (кроме выбранного — для него форма покажет плашку и не даст сохранить). */
@@ -132,6 +152,9 @@ export function reportErrors(d: ReportDraft, p: Project, progressText?: string):
   }
   // #68: «Потрібне рішення керівництва» — опис обязателен (пробелы — пусто)
   if (d.decision && !d.decisionText.trim()) out.push({ f: 'decisionText', k: 'errDecision' });
+  // 1.7.7: прогноз (если задан) не меньше витрат на дату — «оновіть прогноз»; «Не зроблено» — обязательно, если был план
+  if (!archiveStatus(d.status) && d.forecastCost > 0 && d.forecastCost < (d.actualCost || 0)) out.push({ f: 'forecastCost', k: 'errForecastLow' });
+  if ((d.planned || '').trim() && !(d.notDone || '').trim()) out.push({ f: 'notDone', k: 'errReq' });
   return out;
 }
 /** Общее сообщение формы: есть незаполненные — «Заповніть усі обов'язкові поля, позначені *», иначе — первая ошибка поля. */
@@ -201,8 +224,8 @@ export function cardDiff(b: Project, d: ProjectDraft): { f: string; from: string
   const pairs: [string, string, string][] = [
     ['title', b.title, d.title], ['code', b.code, d.code], ['dept', b.department, d.department], ['links', linksText(b.links), linksText(d.links)],
     ['prio', b.priority, d.priority], ['pm', b.manager ? b.manager.name : '', d.manager ? d.manager.name : ''],
-    ['owner', b.owner ? b.owner.name : '', d.owner ? d.owner.name : ''], ['team', teamText(b.team), teamText(d.team)],
-    ['budget', String(b.budget || 0), String(d.budget || 0)]];
+    ['owner', b.owner ? b.owner.name : '', d.owner ? d.owner.name : ''], ['team', teamText(b.team), teamText(d.team)]];
+  // 1.7.7: «Бюджет (план)» правка карточки не меняет — только статус-отчёт
   // родитель — по номеру проекта (названия бывают одинаковыми); в журнал — «PRJ-001 · Назва»
   const parent = d.parent !== undefined && (b.parent ? b.parent.id : 0) !== (d.parent ? d.parent.id : 0) ? [{ f: 'parent', from: parentLabel(b.parent), to: parentLabel(d.parent) }] : [];
   const rows = (t: { user: Person | null; role: string }[]): { email: string; role: string }[] => t.filter(r => r.user).map(r => ({ email: r.user!.email, role: r.role }));

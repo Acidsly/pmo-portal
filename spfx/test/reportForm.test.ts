@@ -47,3 +47,42 @@ describe('смена проекта', () => {
     expect(nd.title).toBe('Резюме'); expect(nd.schedule).toBe('Зелений');   // введённое не теряется
   });
 });
+
+// 1.7.7: бюджет и прогноз — с причиной; «Завершено» / «Скасовано» — прогноз = витрати; «Планувалось» — план прошлого погодженого
+import { keyChanged, lastPlan, withPlan } from '../src/webparts/pmoPortal/logic/forms';
+import { reportBody } from '../src/webparts/pmoPortal/data/write';
+import { paceForecast } from '../src/webparts/pmoPortal/logic/status';
+describe('1.7.7 бюджет, прогноз витрат, план / факт', () => {
+  const p = proj({ budget: 95000, actualCost: 71000, forecastCost: 95000, start: '', goLive: '', planEnd: '', forecastEnd: '' });
+  const d0 = reportFromProject(p, '2026-10-20');
+  test('из карточки: бюджет и прогноз; без изменений — причина не нужна', () => {
+    expect([d0.budgetPlan, d0.forecastCost, d0.notDone]).toEqual([95000, 95000, '']);
+    expect(keyChanged(d0, p)).toBe(false);
+  });
+  test('изменение бюджета или прогноза — нужна причина; витрати на дату — нет', () => {
+    expect(keyChanged({ ...d0, budgetPlan: 120000 }, p)).toBe(true);
+    expect(keyChanged({ ...d0, forecastCost: 120000 }, p)).toBe(true);
+    expect(keyChanged({ ...d0, actualCost: 80000 }, p)).toBe(false);
+  });
+  test('запись: только изменённые бюджет и прогноз; «Не зроблено» — всегда', () => {
+    const b1 = reportBody(d0, p); expect('srBudgetPlan' in b1).toBe(false); expect('srForecastCost' in b1).toBe(false); expect(b1.srNotDone).toBe('');
+    const b2 = reportBody({ ...d0, budgetPlan: 120000.5, forecastCost: 130000, notDone: 'UAT' }, p);
+    expect([b2.srBudgetPlan, b2.srForecastCost, b2.srNotDone]).toEqual([120001, 130000, 'UAT']);
+  });
+  test('«Завершено» / «Скасовано» — прогноз = витрати на дату', () => {
+    expect(reportToSave({ ...d0, status: 'Скасовано', forecastCost: 200000 }).forecastCost).toBe(71000);
+    expect(reportToSave({ ...d0, status: 'Реалізація', forecastCost: 200000 }).forecastCost).toBe(200000);
+  });
+  test('подсказка темпа: витрати ÷ % виконання; 0 % — нет', () => {
+    expect(paceForecast(71000, 40)).toBe(177500); expect(paceForecast(71000, 0)).toBeNull(); expect(paceForecast(0, 40)).toBeNull();
+  });
+  test('«Планувалось» — последний погоджений отчёт проекта; повернутые, чужие и сам возвращённый — нет', () => {
+    const r = (x: any): any => ({ id: 1, projectId: 1, date: '2026-10-01', approval: 'Погоджено', next: 'План A', ...x });
+    const reps = [r({ id: 1, date: '2026-09-01', next: 'План старий' }), r({ id: 2, date: '2026-10-01', next: ' План A ' }),
+      r({ id: 3, date: '2026-10-10', approval: 'Повернуто', next: 'План B' }), r({ id: 4, projectId: 2, date: '2026-10-15', next: 'Чужий' })];
+    expect(lastPlan(reps, 1)).toEqual({ text: 'План A', date: '2026-10-01' });
+    expect(lastPlan(reps, 1, 2)).toEqual({ text: 'План старий', date: '2026-09-01' });
+    expect(lastPlan([r({ next: '' })], 1)).toEqual({ text: '', date: '' });
+    expect(withPlan(d0, { text: 'План A', date: '2026-10-01' }).planned).toBe('План A');
+  });
+});
