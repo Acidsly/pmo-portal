@@ -28,6 +28,7 @@ This guide is always available under the **?** button at the top of the portal.
 | Project PM | own project | edit the card (team, links), submit status reports, manage risks, comment |
 | The PM's managers (org chart) | projects of their reports | view and comment |
 | Owner, project team and their managers | projects where they or their reports have a role | view and comment |
+| Country CEO | projects of their countries (the "Country" field) | view and comment |
 | PMO | all projects | create new projects, approve or return status reports, view and comment |
 | Other employees | an empty portal | — |
 
@@ -39,6 +40,7 @@ An archived project is view-only for everyone. If the portal is empty for you, y
 - **Portfolio by health** — a ring: how many active projects are green, yellow, red and not rated yet; **Portfolio health over time** — how health changed over the last 12 weeks: every project as of the snapshot date by its latest approved report, grey — no approved report yet; today's column matches the ring.
 - **Risk map** 5 × 5: rows are probability, columns are impact, each cell shows the number of open risks. Click a cell to list its risks below the map.
 - **Portfolio by department** — active projects of each department broken down by health; the number inside each coloured part of the bar is how many projects are in that state.
+- **Portfolio by country** — the same by the "Country" field.
 - **Biggest schedule slips** — the three projects whose forecast completion is later than planned: by how many days and how many times the plan was moved. **Go-lives in the next 7 days** — go-live date, health, PM.
 - Below — **Projects at risk**, **No recent status report**, **Management decisions needed**, **Open risks**; "See all" opens the full list.
 
@@ -166,7 +168,8 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
 - **Type and priority are different things.** **Type** («Strategic» / «Regular») is the project's importance to the company; it is set at creation and then changes only through a status report. **Priority** («1 — High» … «3 — Low») is the current order of resource allocation; the PM changes it in the card (the field next to the department). A strategic project may temporarily have a low priority — this is not an error.
 - Phase, health, dates and costs change only through a status report (see "How to change the project phase").
 - After the team changes, access rights are recalculated automatically **within ~15 minutes**: then the person sees the project in their list and in «Card access» and can comment.
-- After the project is created, only the PMO changes the **PM and the owner**: in the card — **"Change PM / owner"** (new PM, new owner — an empty field means no change, the reason is required). The change shows in the card and in the "Change history" ("Assignment") right away and is finally applied by synchronization within ~15 minutes; until then a new change cannot be submitted. A report of the former PM that is pending approval is returned automatically.
+- The PMO chooses the project **country** when creating it (required; a project of several countries is created separately for each country). The country CEO sees the projects of their countries and can comment.
+- After the project is created, only the PMO changes the **PM, the owner and the country**: in the card — **"Change PM / owner / country"** (new PM, new owner, new country — an empty field means no change, the reason is required). The change shows in the card and in the "Change history" ("Assignment") right away and is finally applied by synchronization within ~15 minutes; until then a new change cannot be submitted. A report of the former PM that is pending approval is returned automatically.
 - After a **PM change** the former PM can no longer change the project right away; the new PM sees "You are assigned as PM of this project: edit access appears within 15 minutes" — the page refreshes by itself.
 
 ## Archive

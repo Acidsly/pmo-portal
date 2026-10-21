@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.6.0 · 21.10.2026
+
+**New**
+- Project **Country**: the PMO chooses it when creating a project and later changes it with "Change PM / owner / country". The **country CEO** sees the projects of their countries and can comment. **Country** column in "Projects" and "Archive"; **Portfolio by country** on the home page.
+
 ## 1.7.5.2 · 20.10.2026
 
 **Changed**

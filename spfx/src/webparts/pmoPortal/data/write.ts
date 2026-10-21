@@ -39,10 +39,10 @@ const parentOf = (d: ProjectDraft): Body => (d.parent === undefined ? {} : { pmP
 export function projectBody(d: ProjectDraft, code: string): Body {
   return { Title: d.title.trim(), pmCode: code, pmType: d.type, pmPriority: d.priority, pmDepartment: d.department, ...people(d),
     pmStatus: d.status, pmStart: spDate(d.start), pmGoLive: spDate(d.goLive), pmPlanEnd: spDate(d.planEnd), pmBudget: roundAway(d.budget || 0),
-    pmDescription: d.description, pmLinks: JSON.stringify(d.links), pmProgress: 0, ...parentOf(d) };
+    pmDescription: d.description, pmLinks: JSON.stringify(d.links), pmProgress: 0, ...parentOf(d), ...(d.country ? { pmCountry: d.country } : {}) };
 }
 
-/** Правка карточки: без ключевых показателей и без PM / власника (#43: меняет только PMO через «Призначення»);
+/** Правка карточки: без ключевых показателей и без PM / власника / країни (#43: меняет только PMO через «Призначення»);
  *  изменения дописываются в pmEditLog — синхронизация перенесёт их в журнал. */
 export function projectEditBody(d: ProjectDraft, diffs: { f: string; from: string; to: string }[], who: string, reason: string, prevLog: string): Body {
   const b: Body = { Title: d.title.trim(), pmCode: d.code, pmPriority: d.priority, pmDepartment: d.department,

@@ -5,7 +5,7 @@ import { PortalData } from '../data/SpRepo';
 import { Project, StatusReport, Risk } from '../data/types';
 import { isArch, isActive, freshness, riskScore, byOrder, staleFirst } from '../logic/status';
 import { donutCounts, snapshots } from '../logic/dynamics';
-import { kpis, riskMatrix, slips, launches, byDept, Slip } from '../logic/analytics';
+import { kpis, riskMatrix, slips, launches, byDept, byCountry, Slip } from '../logic/analytics';
 import { KpiStrip, RiskMap, DeptBars } from '../components/Analytics';
 import { Page } from '../components/ctx';
 import { Wp } from '../components/Wp';
@@ -85,7 +85,11 @@ export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
     </div>
     <div className="grid2">
       <Wp title={t('wpRiskMap')} more={() => go('risks', 'open')} moreLabel={t('showAll')}><RiskMap m={riskMatrix(vis, data.risks)} byId={byId} t={t} openRisk={(id, pid) => openForm('risk:' + id, pid)} /></Wp>
-      <Wp title={t('wpDept')}><DeptBars rows={byDept(vis)} t={t} empty={t('emptyProblem')} /></Wp>
+      {/* справа от карты рисков — напрями и країни друг под другом (как прототип) */}
+      <div className="stack2">
+        <Wp title={t('wpDept')}><DeptBars rows={byDept(vis)} t={t} empty={t('emptyProblem')} /></Wp>
+        <Wp title={t('wpCountry')}><DeptBars rows={byCountry(vis)} t={t} empty={t('emptyProblem')} /></Wp>
+      </div>
     </div>
     <div className="grid2">
       <Wp title={t('wpSlips')}><SimpleTable cols={slipCols} rows={sl} empty={t('emptySlips')} /></Wp>

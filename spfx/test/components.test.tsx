@@ -207,7 +207,7 @@ describe('#43 «Змінити PM / власника» — только PMO', ()
     const c2 = { ...ctx, repo, reload: async () => undefined, toast() { /* */ }, openProject() { /* */ } };
     act(() => { ReactDOM.render(<AppCtx.Provider value={c2}><AssignForm data={data()} projectId={5} onCancel={() => undefined} /></AppCtx.Provider>, root); });
     const submit = async (): Promise<void> => { await act(async () => { Simulate.submit(root.querySelector('form') as HTMLFormElement); await Promise.resolve(); }); };
-    await submit(); expect(root.textContent).toContain('Оберіть нового PM або нового власника.');
+    await submit(); expect(root.textContent).toContain('Оберіть нового PM, нового власника або нову країну.');
     await pick('a-pm', 'Нов');
     await submit(); expect(root.textContent).toContain('Вкажіть причину зміни.');
     act(() => { Simulate.change(root.querySelector('#a-note') as HTMLTextAreaElement, { target: { value: 'Ротація' } } as any); });
@@ -216,6 +216,23 @@ describe('#43 «Змінити PM / власника» — только PMO', ()
     expect(calls[0][0]).toBe('ProjectAssignments'); expect(calls[0][1]).toBe(5);
     expect(calls[0][2]).toMatchObject({ paProjectId: 5, paNote: 'Ротація', paApplied: false });
     expect(calls[0][3]).toEqual({ paManagerId: 'new@x', paOwnerId: '' });
+  });
+  test('страна: только новая страна — запись paCountry; та же страна — ошибка «ничего не меняется»', async () => {
+    const calls: any[] = [];
+    const repo = { searchPeople: async () => [], fresh: async () => ({ project: { ...pr, country: 'Україна' }, pending: [], assigns: 0 }),
+      createIn: async (...a: any[]) => { calls.push(a); return 9; } };
+    const c2 = { ...ctx, repo, reload: async () => undefined, toast() { /* */ }, openProject() { /* */ } };
+    const d0 = data({ country: 'Україна' } as any);
+    act(() => { ReactDOM.render(<AppCtx.Provider value={c2}><AssignForm data={d0} projectId={5} onCancel={() => undefined} /></AppCtx.Provider>, root); });
+    const submit = async (): Promise<void> => { await act(async () => { Simulate.submit(root.querySelector('form') as HTMLFormElement); await Promise.resolve(); }); };
+    act(() => { Simulate.change(root.querySelector('#a-note') as HTMLTextAreaElement, { target: { value: 'Країна' } } as any); });
+    act(() => { Simulate.change(root.querySelector('#a-country') as HTMLSelectElement, { target: { value: 'Україна' } } as any); });
+    await submit(); expect(root.textContent).toContain('Оберіть нового PM, нового власника або нову країну.');
+    act(() => { Simulate.change(root.querySelector('#a-country') as HTMLSelectElement, { target: { value: 'Польща' } } as any); });
+    await submit(); await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    expect(calls.length).toBe(1);
+    expect(calls[0][2]).toMatchObject({ paProjectId: 5, paCountry: 'Польща', paNote: 'Країна' });
+    expect(calls[0][3]).toEqual({ paManagerId: '', paOwnerId: '' });
   });
   test('не PMO, архив, уже ожидает — формы нет', () => {
     for (const d of [{ ...data(), canApprove: false }, data({ status: 'Завершено' }), data({ status: 'Скасовано' }), data({ assignPending: true })]) {
@@ -252,7 +269,7 @@ describe('#43 «Змінити PM / власника» — только PMO', ()
     expect((root.querySelector('#f-pm') as HTMLElement).tagName).toBe('DIV');
     expect((root.querySelector('#f-pm') as HTMLElement).textContent).toBe('Старий PM');
     expect(root.querySelector('#f-own input')).toBeNull();
-    expect(root.textContent).toContain('PM і власника змінює лише PMO.');
+    expect(root.textContent).toContain('PM, власника і країну змінює лише PMO.');
   });
 });
 

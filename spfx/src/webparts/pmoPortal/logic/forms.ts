@@ -20,6 +20,8 @@ export interface ProjectDraft {
   title: string; code: string; department: string; links: Link[]; type: string; priority: string;
   manager: Person | null; owner: Person | null; team: TeamRow[]; start: string; goLive: string; planEnd: string; status: string;
   budget: number; description: string;
+  /** «Країна»: ставит PMO при создании (обязательно), потом — только «Призначення»; правка карточки её не пишет. */
+  country?: string;
   /** «Батьківський проєкт»: только связь; null — нет. */
   parent?: { id: number; title: string; code?: string } | null;
 }
@@ -152,7 +154,7 @@ export const titleKey = (s: string): string => (s || '').trim().replace(/\s+/g, 
 /** otherTitles — названия других проектов, которые видит пользователь (PMO — все); prevTitle — прежнее название при правке:
  *  если название не меняли, уже существующий дубль сохранить можно. isNew — новый проект (даты по #54; описание не обязательно). */
 export const validateProject = (d: ProjectDraft, otherCodes: string[] = [], otherTitles: string[] = [], prevTitle = '', isNew = true): string =>
-  (!d.title.trim() ? 'errTitle' : !d.manager ? 'errPM'
+  (!d.title.trim() ? 'errTitle' : !d.manager ? 'errPM' : isNew && !d.country ? 'errCountry'
     // #96: при правке карточки (PM) «Мета та опис» обязательно; новый проект PMO заводит без него — описание дописывает PM
     : !isNew && !(d.description || '').trim() ? 'errDesc'
     : titleKey(d.title) !== titleKey(prevTitle) && otherTitles.some(x => titleKey(x) === titleKey(d.title)) ? 'errTitleTaken'

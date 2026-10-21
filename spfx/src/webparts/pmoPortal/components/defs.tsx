@@ -80,6 +80,7 @@ export function projectDefs(x: DefsCtx, archive: boolean): TableDefs<Project> {
     cmtBy: { label: t('cCmtBy'), cell: p => { const c = lastCm(p); return c ? <PersonCell p={c.author} /> : <Muted />; },
       sort: p => { const c = lastCm(p); return c && c.author ? c.author.name : ''; }, filter: p => { const c = lastCm(p); return c && c.author ? c.author.name : ''; } },
     dept: { label: fl('dept'), cell: p => tv(p.department), sort: p => p.department, filter: p => p.department },
+    country: { label: fl('country'), cell: p => (p.country ? tv(p.country) : '—'), sort: p => tv(p.country || ''), filter: p => p.country || '' },
     // «Батьківський проєкт»: видимый — ссылкой на карточку; фильтр и сортировка — по подписи «PRJ-001 · Назва»
     parent: { label: fl('parent'), cell: p => (!p.parent ? <Muted /> : x.byId[p.parent.id] ? <button className="link" onClick={() => x.open(p.parent!.id)}>{parentLabel(p.parent)}</button>
       : parentLabel(p.parent)), sort: p => parentLabel(p.parent), filter: p => parentLabel(p.parent) },

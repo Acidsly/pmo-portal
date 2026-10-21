@@ -8,7 +8,7 @@ const PERSON = ['Id', 'Title', 'EMail'];
 const people = (...fields: string[]): string[] => fields.reduce<string[]>((a, f) => a.concat(PERSON.map(x => `${f}/${x}`)), []);
 
 export const PROJECT_SELECT = ['Id', 'Title', 'pmCode', 'pmType', 'pmPriority', 'pmDepartment', 'pmStatus', 'pmRAG', 'pmProgress',
-  'pmStart', 'pmGoLive', 'pmPlanEnd', 'pmForecastEnd', 'pmActualEnd', 'pmArchivedAt', 'pmBudget', 'pmActualCost', 'pmLastUpdate', 'pmLastReport',
+  'pmStart', 'pmGoLive', 'pmPlanEnd', 'pmForecastEnd', 'pmActualEnd', 'pmArchivedAt', 'pmBudget', 'pmActualCost', 'pmLastUpdate', 'pmLastReport', 'pmCountry',
   'pmLastComment', 'pmLoop', 'pmLinks', 'pmDescription', 'pmEditLog', 'pmAccess', 'Created', 'EffectiveBasePermissions', ...people('pmManager', 'pmOwner', 'pmStakeholders')].join(',');
 export const PROJECT_EXPAND = 'pmManager,pmOwner,pmStakeholders';
 /** «Батьківський проєкт» (pmParent, lookup на «Проєкти»): название — из записи, видно и без доступа к родителю. Отдельно:
@@ -50,7 +50,7 @@ export function mapProject(r: any): Project {
   return { id: r.Id, code: s(r.pmCode), title: s(r.Title), type: s(r.pmType), priority: s(r.pmPriority),
     manager: mapPerson(r.pmManager), owner: mapPerson(r.pmOwner),
     stakeholders: (r.pmStakeholders || []).map(mapPerson).filter(Boolean) as Person[],
-    department: s(r.pmDepartment), status: s(r.pmStatus), rag: s(r.pmRAG) as Rag, progress: n(r.pmProgress),
+    department: s(r.pmDepartment), country: s(r.pmCountry), status: s(r.pmStatus), rag: s(r.pmRAG) as Rag, progress: n(r.pmProgress),
     start: dateOnly(r.pmStart), goLive: dateOnly(r.pmGoLive), planEnd: dateOnly(r.pmPlanEnd), forecastEnd: dateOnly(r.pmForecastEnd), actualEnd: dateOnly(r.pmActualEnd),
     archivedAt: dateOnly(r.pmArchivedAt), budget: n(r.pmBudget), actualCost: n(r.pmActualCost), lastUpdate: dateOnly(r.pmLastUpdate),
     lastReport: s(r.pmLastReport), lastComment: s(r.pmLastComment), links: parseLinks(s(r.pmLinks), r.pmLoop ? s(r.pmLoop.Url) : ''), team: [], description: s(r.pmDescription),
@@ -79,10 +79,10 @@ export const TEAM_EXPAND = 'tmUser,Author';
 export const mapTeam = (r: any): TeamMember => ({ id: r.Id, projectId: r.tmProjectId, user: mapPerson(r.tmUser), role: s(r.tmRole), topics: s(r.tmTopics),
   dir: s(r.FileDirRef), author: mapPerson(r.Author) });
 
-export const ASSIGN_SELECT = ['Id', 'paProjectId', 'paNote', 'paApplied', 'Created', ...people('paManager', 'paOwner', 'Author')].join(',');
+export const ASSIGN_SELECT = ['Id', 'paProjectId', 'paNote', 'paApplied', 'paCountry', 'Created', ...people('paManager', 'paOwner', 'Author')].join(',');
 export const ASSIGN_EXPAND = 'paManager,paOwner,Author';
 export const mapAssign = (r: any): Assignment => ({ id: r.Id, projectId: r.paProjectId, manager: mapPerson(r.paManager), owner: mapPerson(r.paOwner),
-  note: s(r.paNote), applied: r.paApplied === true, author: mapPerson(r.Author), created: s(r.Created) });
+  note: s(r.paNote), applied: r.paApplied === true, author: mapPerson(r.Author), created: s(r.Created), country: s(r.paCountry) });
 export const APPROVAL_SELECT = ['Id', 'apReportId', 'apProjectId', 'apDecision', 'apSchedule', 'apBudget', 'apResources', 'apNote', 'apApplied', 'Created', ...people('Author')].join(',');
 export const APPROVAL_EXPAND = 'Author';
 export const mapApproval = (r: any): Approval => ({ id: r.Id, reportId: r.apReportId, projectId: r.apProjectId, decision: s(r.apDecision),

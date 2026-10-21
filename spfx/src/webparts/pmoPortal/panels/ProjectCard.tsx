@@ -32,7 +32,8 @@ const Who: React.FC<{ p: Person | null; repo: SpRepo; sub?: string }> = ({ p, re
 const Access: React.FC<{ p: Project }> = ({ p }) => {
   const { t, fl } = React.useContext(AppCtx);
   const a = parseAccess(p.access || '', isArch(p.status));
-  const sub = (x: AccessRow): string => (x.r === 'pm' ? t('pmRole') : x.r === 'owner' ? fl('owner') : x.r === 'stake' ? fl('team') : x.j);
+  const sub = (x: AccessRow): string => (x.r === 'pm' ? t('pmRole') : x.r === 'owner' ? fl('owner') : x.r === 'stake' ? fl('team')
+    : x.r === 'ceo' ? t('ceoRole') + (p.country ? ' · ' + tv(p.country) : '') : x.j);
   return <div className="sec"><h3>{t('accessTitle')}</h3><div className="access"><div className="muted" style={{ fontSize: 13 }}>{a ? t('accessDesc') : t('accessPending')}</div>
     <ol>{a ? a.people.map(x => <li key={x.e}><span className="person" title={x.e}><Avatar name={x.n} /><span className="pn"><b>{x.n}</b>{sub(x) ? <small>{sub(x)}</small> : null}</span></span>
       <span className="lvl">{t(x.l === 'edit' ? 'lvlEdit' : 'lvlRead')}</span></li>) : null}
@@ -187,6 +188,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
       <Kv k={fl('budget')}>{money(p.budget)}</Kv>
       <Kv k={fl('actual')}>{money(p.actualCost)} · <span className={budgetLevel(use)}>{use}%</span></Kv>
       <Kv k={fl('dept')}>{tv(p.department)}</Kv>
+      <Kv k={fl('country')}>{p.country ? tv(p.country) : ''}</Kv>
     </div></div>
 
     <div className="sec"><h3>{t('secChanges')}</h3>

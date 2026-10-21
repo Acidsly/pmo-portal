@@ -45,11 +45,13 @@ export const launches = (projects: Project[], today: string, days = 7): Project[
 };
 
 export interface DeptRow { dept: string; g: number; y: number; r: number; na: number; total: number; }
-/** Портфель за напрямами: активні проєкти, розбивка за станом; більші напрями — вгорі. */
-export function byDept(projects: Project[]): DeptRow[] {
+/** Портфель за напрямами (або за країнами — key): активні проєкти, розбивка за станом; більші групи — вгорі. */
+/** Портфель за країнами (pmCountry). */
+export const byCountry = (projects: Project[]): DeptRow[] => byDept(projects, p => p.country || '');
+export function byDept(projects: Project[], key: (p: Project) => string = p => p.department): DeptRow[] {
   const m: Record<string, DeptRow> = {};
   projects.filter(p => isActive(p.status)).forEach(p => {
-    const d = p.department || '—';
+    const d = key(p) || '—';
     const row = m[d] || (m[d] = { dept: d, g: 0, y: 0, r: 0, na: 0, total: 0 });
     const k = p.rag === 'Зелений' ? 'g' : p.rag === 'Жовтий' ? 'y' : p.rag === 'Червоний' ? 'r' : 'na';
     row[k]++; row.total++;

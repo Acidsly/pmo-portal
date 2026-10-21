@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.6.0",
+   "date": "21.10.2026",
+   "html": "<p><b>Нове</b></p>\n<ul>\n<li><b>Країна</b> проєкту: PMO обирає її при створенні, далі змінює через «Змінити PM / власника / країну». <b>CEO країни</b> бачить проєкти своїх країн і може коментувати. Колонка <b>Країна</b> у «Проєктах» і «Архіві», на «Головній» — <b>Портфель за країнами</b>.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.5.2",
    "date": "20.10.2026",
    "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення без змін у роботі порталу.</li>\n</ul>"
@@ -210,6 +215,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.6.0",
+   "date": "21.10.2026",
+   "html": "<p><b>New</b></p>\n<ul>\n<li>Project <b>Country</b>: the PMO chooses it when creating a project and later changes it with \"Change PM / owner / country\". The <b>country CEO</b> sees the projects of their countries and can comment. <b>Country</b> column in \"Projects\" and \"Archive\"; <b>Portfolio by country</b> on the home page.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.5.2",
    "date": "20.10.2026",
    "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update with no changes to how the portal works.</li>\n</ul>"
@@ -416,6 +426,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.6.0",
+   "date": "21.10.2026",
+   "html": "<p><b>Новое</b></p>\n<ul>\n<li><b>Страна</b> проекта: PMO выбирает её при создании, дальше меняет через «Сменить PM / владельца / страну». <b>CEO страны</b> видит проекты своих стран и может комментировать. Колонка <b>Страна</b> в «Проектах» и «Архиве», на «Главной» — <b>Портфель по странам</b>.</li>\n</ul>"
+  },
   {
    "ver": "1.7.5.2",
    "date": "20.10.2026",
