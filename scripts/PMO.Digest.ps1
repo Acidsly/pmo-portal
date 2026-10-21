@@ -370,12 +370,21 @@ function DgRisks($list, $T) {
 }
 
 # «Що змінилося»: общий список (руководитель, CEO) или по проектам (участник)
-function DgChanges($M, $T, [bool]$byProject) {
-    $since = if ($M.first) { "" } else { "<div style=`"font-size:12px;color:$($DG.muted);padding-bottom:6px`">" + (DgE ($T.since -f (DgDate $M.prevDate))) + "</div>" }
+function DgChanges($M, $T) {
+    $since = if ($M.first) { "" } else { "<div style=`"font-size:12px;color:$($DG.muted);padding-bottom:2px`">" + (DgE ($T.since -f (DgDate $M.prevDate))) + "</div>" }
+    # по проектам: сначала проекты с ухудшениями, внутри — ухудшения, улучшения, остальное
+    $rank = @{ worse = 0; better = 1; info = 2 }
+    $groups = @($M.projects | Where-Object { @($_.changes | Where-Object { $_ }).Count } |
+        Sort-Object { @($_.changes | ForEach-Object { $rank[$_.kind] } | Sort-Object)[0] }, { -@($_.changes | Where-Object { $_.kind -eq "worse" }).Count })
     $inner = if ($M.first) { "<p style=`"margin:0;color:$($DG.muted);font-size:13px`">$($T.first)</p>" }
-        elseif ($byProject) {
-            ($M.projects | ForEach-Object { "<div style=`"font-size:13px;font-weight:700;color:$($DG.ink);padding:10px 0 2px`">$(DgE $_.code) · $(DgE $_.title)</div>" + (DgChangeRows $_.changes $T) }) -join ""
-        } else { DgChangeRows $M.changes $T }
+        elseif (-not $groups.Count) { "<p style=`"margin:0;color:$($DG.muted);font-size:13px`">$($T.nothing)</p>" }
+        else {
+            ($groups | ForEach-Object {
+                $rows = @($_.changes | Where-Object { $_ } | Sort-Object { $rank[$_.kind] })
+                "<table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`" style=`"margin-top:10px;border-bottom:1px solid $($DG.line)`"><tr><td style=`"padding:4px 0 2px`">" +
+                "<a href=`"$($_.url)`" style=`"font-size:13px;font-weight:700;color:$($DG.ink);text-decoration:none`">$(DgDot (DgRag $_.rag) 9) $(DgE $_.code) · $(DgE $_.title)</a></td></tr>" +
+                "<tr><td style=`"padding:0 0 8px 15px`">$(DgChangeRows $rows $T)</td></tr></table>" }) -join ""
+        }
     (DgH $T.changed $DG.violet) + "<tr><td style=`"padding:0 24px;font-family:$($DG.font)`">$since$inner</td></tr>"
 }
 
@@ -389,9 +398,9 @@ function New-DigestHtml($M, [string]$Logo) {
     $M = Complete-DigestModel $M
     $pre = if ($M.kind -eq "member") { ($M.projects | ForEach-Object { "$($_.code) — $($T[(DgRag $_.rag)])" }) -join " · " } else { "$($M.kpi.total) $($T.kpiTotal) · $($M.kpi.r) $($T.kpiRed) · $($M.kpi.decisions) $($T.kpiDecision)" }
     $body = if ($M.kind -eq "member") {
-        (DgH $T.now $DG.coral) + (($M.projects | ForEach-Object { DgProjectCard $_ $T $M }) -join "") + (DgChanges $M $T $true)
+        (DgH $T.now $DG.coral) + (($M.projects | ForEach-Object { DgProjectCard $_ $T $M }) -join "") + (DgChanges $M $T)
     } else {
-        (DgH $T.now $DG.coral) + (DgPortfolio $M $T) + (DgDecisions $M.decisionsList $T) + (DgRisks $M.topRisks $T) + (DgChanges $M $T $false)
+        (DgH $T.now $DG.coral) + (DgPortfolio $M $T) + (DgDecisions $M.decisionsList $T) + (DgRisks $M.topRisks $T) + (DgChanges $M $T)
     }
     $firstNote = if ($M.first -and $M.kind -eq "member") { "<tr><td style=`"padding:0 24px 8px;font-family:$($DG.font);font-size:12px;color:$($DG.muted)`">$($T.first)</td></tr>" } else { "" }
     @"
