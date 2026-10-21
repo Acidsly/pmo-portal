@@ -49,7 +49,7 @@ export function guard(action: Action, me: string, f: Fresh, opts: { reportDate?:
 /** Поля карточки, которые правит PM (форма «Редагувати»): сравнение снимка с открытия формы и свежей записи — конфликт правок. */
 export function cardFields(p: Project): Record<string, string> {
   return { title: p.title, code: p.code, priority: p.priority, department: p.department, pm: low(p.manager ? p.manager.email : ''),
-    owner: low(p.owner ? p.owner.email : ''), budget: String(p.budget || 0), description: p.description || '', links: JSON.stringify(p.links || []),
+    owner: low(p.owner ? p.owner.email : ''), description: p.description || '', links: JSON.stringify(p.links || []),
     parent: String(p.parent ? p.parent.id : 0) };
 }
 /** Изменённые другим пользователем поля: ключи, где свежее значение отличается от снимка. */

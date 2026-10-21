@@ -63,8 +63,9 @@ export function applyPending(project: Project, reports: StatusReport[], approved
       else (p as unknown as Record<string, string>)[k] = v;
     });
     // событие истории — как строки журнала синхронизации (поля DISPLAY, значения — как Human)
-    const diffs = SHOWN.filter(([k]) => String(before[k] || '') !== String(p[k] || ''))
-      .map(([k, f]) => ({ f, from: human(k, String(before[k] || '')), to: human(k, String(p[k] || '')) }));
+    const str = (v: unknown): string => (v === null || v === undefined ? '' : String(v));   // 0 — значение (как Human синхронизации)
+    const diffs = SHOWN.filter(([k]) => str(before[k]) !== str(p[k]))
+      .map(([k, f]) => ({ f, from: human(k, str(before[k])), to: human(k, str(p[k])) }));
     if (diffs.length) events.push({ id: -r.id, date: r.date, who: r.author, kind: 'report', reason: [r.keyReason, r.title].filter(Boolean).join(' · '), diffs });
   }
   p.pendingEvents = events;

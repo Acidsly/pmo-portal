@@ -76,12 +76,12 @@ describe('країна', () => {
 });
 
 // кросс-ревью: приложение раньше Deploy-PMO.ps1 — проекты и «Призначення» читаются и без «Країни» (запасные запросы)
-import { PROJECT_SELECT, ASSIGN_SELECT, PROJECT_COUNTRY, ASSIGN_COUNTRY } from '../src/webparts/pmoPortal/data/map';
+import { PROJECT_SELECT, ASSIGN_SELECT, PROJECT_OPTIONAL, ASSIGN_COUNTRY } from '../src/webparts/pmoPortal/data/map';
 test('«Країна» — не в основном запросе, а отдельной частью с запасным запросом без неё', () => {
   expect(PROJECT_SELECT).not.toMatch(/pmCountry|pmForecastCost/); expect(ASSIGN_SELECT).not.toMatch(/paCountry/);
-  expect(PROJECT_COUNTRY).toBe(',pmCountry,pmForecastCost');   // 1.7.7: и прогноз витрат — тем же запасным запросом expect(ASSIGN_COUNTRY).toBe(',paCountry');
+  expect(PROJECT_OPTIONAL).toBe(',pmCountry,pmForecastCost');   // 1.7.7: и прогноз витрат — тем же запасным запросом expect(ASSIGN_COUNTRY).toBe(',paCountry');
   const src = require('fs').readFileSync(require('path').join(__dirname, '../src/webparts/pmoPortal/data/SpRepo.ts'), 'utf8');
   // загрузка и свежая проверка: сначала со страной, затем без неё
-  expect((src.match(/PROJECT_PARENT\.select \+ PROJECT_COUNTRY/g) || []).length).toBe(2);
+  expect((src.match(/PROJECT_PARENT\.select \+ PROJECT_OPTIONAL/g) || []).length).toBe(2);
   expect((src.match(/ASSIGN_SELECT \+ ASSIGN_COUNTRY, ASSIGN_EXPAND[^)]*\)\s*\.catch\(\(\) => this\.items\('ProjectAssignments', ASSIGN_SELECT, ASSIGN_EXPAND/g) || []).length).toBe(2);
 });

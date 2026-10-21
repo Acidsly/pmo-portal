@@ -32,3 +32,12 @@ test('сумма: формат журнала = формат экрана (money
     if (v !== null) expect(screenMoney(v).replace(/ /g, ' ')).toBe(s);
   }
 });
+
+// кросс-ревью: в истории наложения бюджет 0 — «0 $» (как Human синхронизации), а не «—»
+import { applyPending as ap177 } from '../src/webparts/pmoPortal/logic/overlay';
+test('история наложения: бюджет 0 → 120 000 $ — «0 $ → 120 000 $»', () => {
+  const p: any = { id: 1, status: 'Реалізація', budget: 0, manager: { email: 'pm@x' }, lastUpdate: '', lastApplied: '', pendingEvents: [] };
+  const r: any = { id: 7, projectId: 1, date: '2026-10-20', approval: 'Погоджено', applied: false, author: { email: 'pm@x', name: 'PM' }, budgetPlan: 120000, title: 'Т' };
+  const e = ap177(p, [r]).pendingEvents![0].diffs.filter((x: any) => x.f === 'budget')[0];
+  expect(e).toEqual({ f: 'budget', from: '0 $', to: '120\u00a0000 $' });
+});

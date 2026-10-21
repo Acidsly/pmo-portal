@@ -15,7 +15,7 @@ export const PROJECT_EXPAND = 'pmManager,pmOwner,pmStakeholders';
  *  поля может ещё не быть на сайте (приложение установили раньше Deploy-PMO.ps1) — тогда проекты читаются без него. */
 export const PROJECT_PARENT = { select: ',pmParentId,pmParent/Title', expand: ',pmParent' };
 /** Поля, которых на сайте до Deploy-PMO.ps1 может не быть: без них проекты и «Призначення» всё равно читаются (запасной запрос). */
-export const PROJECT_COUNTRY = ',pmCountry,pmForecastCost';
+export const PROJECT_OPTIONAL = ',pmCountry,pmForecastCost';
 export const REPORT_SELECT = ['Id', 'Title', 'srProjectId', 'srDate', 'srPeriod', 'srPeriodFrom', 'srSchedule', 'srBudget', 'srResources', 'srStatus', 'srType',
   'srProgress', 'srStart', 'srGoLive', 'srPlanEnd', 'srForecastEnd', 'srActualEnd', 'srActualCost', 'srKeyReason', 'srDone', 'srNext', 'srIssues',
   'srDecision', 'srDecisionText', 'srApplied', 'srApproval', 'srApprovedAt', 'srApprovalNote', 'Created', ...people('Author', 'srApprovedBy')].join(',');

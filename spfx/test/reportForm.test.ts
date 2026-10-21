@@ -59,13 +59,16 @@ describe('1.7.7 бюджет, прогноз витрат, план / факт',
     expect([d0.budgetPlan, d0.forecastCost, d0.notDone]).toEqual([95000, 95000, '']);
     expect(keyChanged(d0, p)).toBe(false);
   });
+  test('кросс-ревью: обнуление прогноза — «не задан», причина не нужна (не переносится)', () => {
+    expect(keyChanged({ ...d0, forecastCost: 0 }, p)).toBe(false);
+  });
   test('изменение бюджета или прогноза — нужна причина; витрати на дату — нет', () => {
     expect(keyChanged({ ...d0, budgetPlan: 120000 }, p)).toBe(true);
     expect(keyChanged({ ...d0, forecastCost: 120000 }, p)).toBe(true);
     expect(keyChanged({ ...d0, actualCost: 80000 }, p)).toBe(false);
   });
-  test('запись: только изменённые бюджет и прогноз; «Не зроблено» — всегда', () => {
-    const b1 = reportBody(d0, p); expect('srBudgetPlan' in b1).toBe(false); expect('srForecastCost' in b1).toBe(false); expect(b1.srNotDone).toBe('');
+  test('запись: только изменённые бюджет и прогноз; «Не зроблено» — только непустое (кросс-ревью: поля до deploy)', () => {
+    const b1 = reportBody(d0, p); expect('srBudgetPlan' in b1).toBe(false); expect('srForecastCost' in b1).toBe(false); expect('srNotDone' in b1).toBe(false);
     const b2 = reportBody({ ...d0, budgetPlan: 120000.5, forecastCost: 130000, notDone: 'UAT' }, p);
     expect([b2.srBudgetPlan, b2.srForecastCost, b2.srNotDone]).toEqual([120001, 130000, 'UAT']);
   });

@@ -74,7 +74,7 @@ export function reportFromReturned(r: StatusReport, p: Project, today: string): 
 // но не % и не витрати на дату
 const KEYS: ('status' | 'type' | 'start' | 'goLive' | 'planEnd' | 'forecastEnd')[] = ['status', 'type', 'start', 'goLive', 'planEnd', 'forecastEnd'];
 export const keyChanged = (d: ReportDraft, p: Project): boolean => KEYS.some(k => String(d[k] || '') !== String(p[k] || ''))
-  || (d.budgetPlan || 0) !== (p.budget || 0) || (d.forecastCost || 0) !== (p.forecastCost || 0);
+  || (d.budgetPlan || 0) !== (p.budget || 0) || (!!d.forecastCost && d.forecastCost !== (p.forecastCost || 0));
 
 /** Даты, которые раньше даты старта (#54): запуск, план и прогноз не могут быть раньше старта; пустые не проверяются. */
 export type DateKey = 'goLive' | 'planEnd' | 'forecastEnd';

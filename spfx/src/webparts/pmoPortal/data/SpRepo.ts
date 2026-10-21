@@ -2,7 +2,7 @@
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { withParentNames } from '../logic/projects';
 import { Project, StatusReport, Risk, Comment, ChangeEntry, Person, FeedbackRow, Approval } from './types';
-import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, PROJECT_PARENT, PROJECT_COUNTRY, ASSIGN_COUNTRY, REPORT_SELECT, REPORT_EXPAND, REPORT_AI, REPORT_BUDGET, RISK_SELECT, RISK_EXPAND,
+import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, PROJECT_PARENT, PROJECT_OPTIONAL, ASSIGN_COUNTRY, REPORT_SELECT, REPORT_EXPAND, REPORT_AI, REPORT_BUDGET, RISK_SELECT, RISK_EXPAND,
   COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, TEAM_SELECT, TEAM_EXPAND, mapTeam, APPROVAL_SELECT, APPROVAL_EXPAND, mapApproval, ASSIGN_SELECT, ASSIGN_EXPAND, mapAssign, canAdd, canManage,
   withoutFolders, CHANGES_ON_LOAD, changesOf, changesSince, NOTIFY_SELECT, NOTIFY_SELECT_BASE, mapNotify, NotifyRow } from './map';
 import { withApproval, approvedIds as approvedOf, pendingReports, latestReport } from '../logic/approval';
@@ -67,7 +67,7 @@ export class SpRepo {
     const since = new Date(Date.now() - NOTIFY_DAYS * 864e5).toISOString();
     const [p, r, k, c, h, tm, ap, ps, perm, fbPerm, pa, rc, ns] = await Promise.all([
       // запасные запросы: на сайте ещё нет «Країна» / «Батьківський проєкт» (приложение раньше Deploy-PMO.ps1) — без них
-      this.items('Projects', PROJECT_SELECT + PROJECT_PARENT.select + PROJECT_COUNTRY, PROJECT_EXPAND + PROJECT_PARENT.expand)
+      this.items('Projects', PROJECT_SELECT + PROJECT_PARENT.select + PROJECT_OPTIONAL, PROJECT_EXPAND + PROJECT_PARENT.expand)
         .catch(() => this.items('Projects', PROJECT_SELECT + PROJECT_PARENT.select, PROJECT_EXPAND + PROJECT_PARENT.expand))
         .catch(() => this.items('Projects', PROJECT_SELECT, PROJECT_EXPAND)),
       this.reportRows(),
@@ -272,7 +272,7 @@ export class SpRepo {
    *  отчёты на погодженні, дата последнего погодженого; для погодження — состояние отчёта и решения PMO по нему. */
   async fresh(projectId: number, reportId = 0): Promise<Fresh> {
     const [pj, st, reps, aps, pas] = await Promise.all([
-      this.getJson(this.itemUrl('Projects', projectId, PROJECT_SELECT + PROJECT_PARENT.select + PROJECT_COUNTRY, PROJECT_EXPAND + PROJECT_PARENT.expand), true)
+      this.getJson(this.itemUrl('Projects', projectId, PROJECT_SELECT + PROJECT_PARENT.select + PROJECT_OPTIONAL, PROJECT_EXPAND + PROJECT_PARENT.expand), true)
         .catch(() => this.getJson(this.itemUrl('Projects', projectId, PROJECT_SELECT + PROJECT_PARENT.select, PROJECT_EXPAND + PROJECT_PARENT.expand), true))
         .catch(() => this.getJson(this.itemUrl('Projects', projectId, PROJECT_SELECT, PROJECT_EXPAND), true)),
       this.items('ProjectState', 'Id,psProject,psState,psLastApplied', '', `psProject eq ${projectId}`).catch(() => [] as any[]),

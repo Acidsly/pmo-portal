@@ -23,7 +23,7 @@ export function reportBody(d: ReportDraft, p: Project): Body {
   // 1.7.7: бюджет и прогноз — только изменённые (как даты); прогноз 0 — «не задан»; план / факт — текст
   if (d.budgetPlan !== p.budget) b.srBudgetPlan = Math.max(0, roundAway(d.budgetPlan));
   if (d.forecastCost && d.forecastCost !== (p.forecastCost || 0)) b.srForecastCost = Math.max(0, roundAway(d.forecastCost));
-  b.srNotDone = d.notDone;
+  if ((d.notDone || '').trim()) b.srNotDone = d.notDone.trim();
   const dates: [keyof ReportDraft & keyof Project, string][] = [['start', 'srStart'], ['goLive', 'srGoLive'], ['planEnd', 'srPlanEnd'], ['forecastEnd', 'srForecastEnd']];
   dates.forEach(([k, f]) => { if ((d[k] || '') !== (p[k] || '')) b[f] = spDate(String(d[k] || '')); });
   // #54: фактическая дата — только при «Завершено» / «Скасовано»
