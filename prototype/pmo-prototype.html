@@ -1950,7 +1950,7 @@ function riskMap(){
 function deptBars(key = 'dept'){
   const act = visP().filter(isActive), g = {};
   act.forEach(p => { const k = p[key] || '—'; (g[k] = g[k] || []).push(p); });
-  const rows = Object.entries(g).sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], 'uk'));
+  const rows = Object.entries(g).sort((a, b) => Number(a[0] === '—') - Number(b[0] === '—') || b[1].length - a[1].length || a[0].localeCompare(b[0], 'uk'));   // «—» — в конце
   if (!rows.length) return `<p class="empty">${t('emptyProblem')}</p>`;   // как портал
   const max = rows[0][1].length;
   const segs = [['Червоний','var(--r)'],['Жовтий','var(--y)'],['Зелений','var(--g)'],['','var(--na)']], ragKey = p => ['Червоний','Жовтий','Зелений'].includes(p.rag) ? p.rag : '';

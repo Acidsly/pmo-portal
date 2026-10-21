@@ -64,6 +64,9 @@ describe('країна', () => {
     const rows = byCountry([{ status: 'Реалізація', country: 'Польща', rag: 'Зелений' }, { status: 'Реалізація', country: 'Польща', rag: 'Червоний' },
       { status: 'Реалізація', rag: '' }, { status: 'Завершено', country: 'Чехія', rag: 'Зелений' }] as any);
     expect(rows.map(r => `${r.dept}:${r.total}:${r.g}${r.r}${r.na}`)).toEqual(['Польща:2:110', '—:1:001']);
+    // «—» в конце, даже если таких проектов больше
+    const many = byCountry([{ status: 'Реалізація', rag: '' }, { status: 'Реалізація', rag: '' }, { status: 'Реалізація', country: 'Чехія', rag: '' }] as any);
+    expect(many.map(r => r.dept)).toEqual(['Чехія', '—']);
   });
   test('список стран приложения — как выбор «Країна» в Deploy-PMO.ps1', () => {
     const src = require('fs').readFileSync(require('path').join(__dirname, '../../scripts/Deploy-PMO.ps1'), 'utf8');

@@ -56,5 +56,6 @@ export function byDept(projects: Project[], key: (p: Project) => string = p => p
     const k = p.rag === 'Зелений' ? 'g' : p.rag === 'Жовтий' ? 'y' : p.rag === 'Червоний' ? 'r' : 'na';
     row[k]++; row.total++;
   });
-  return Object.keys(m).map(k => m[k]).sort((a, b) => b.total - a.total || a.dept.localeCompare(b.dept, 'uk'));
+  // без значения («—») — всегда в конце
+  return Object.keys(m).map(k => m[k]).sort((a, b) => Number(a.dept === '—') - Number(b.dept === '—') || b.total - a.total || a.dept.localeCompare(b.dept, 'uk'));
 }
