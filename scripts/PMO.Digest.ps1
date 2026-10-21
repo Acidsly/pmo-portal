@@ -19,8 +19,8 @@ $DG_T = @{
         introCeo = "Проєкти країн: {0} — стан зараз і що змінилося з минулого листа."
         now = "Стан зараз"; changed = "Що змінилося"; since = "з листа від {0}"; first = "Перший дайджест — зміни з'являться в наступному листі."
         nothing = "Без змін."; attention = "Потребує уваги"; projects = "Проєкти"; byCountry = "За країнами"
-        kpiTotal = "проєктів"; kpiRed = "червоних"; kpiDecision = "чекають рішення"; kpiStale = "без свіжого звіту"
-        g = "Зелений"; y = "Жовтий"; r = "Червоний"; n = "Немає звіту"
+        kpiTotal = "проєктів"; kpiRed = "червоних"; kpiDecision = "чекають рішення"; kpiStale = "без свіжого звіту (14 дн.)"
+        g = "Зелений"; y = "Жовтий"; r = "Червоний"; n = "Не оцінено"
         progress = "Виконання"; budget = "Бюджет"; spent = "витрачено {0} з {1}"; start = "Старт"; plan = "План"; forecast = "Прогноз"
         slip = "+{0} дн."; ahead = "−{0} дн."; report = "Статус-звіт від {0}"; noReport = "Погоджених звітів ще немає"
         done = "Зроблено"; next = "Далі"; issues = "Проблеми"; risks = "Ризики"; decisions = "Потрібне рішення"
@@ -33,6 +33,7 @@ $DG_T = @{
         gantt = "Терміни"; legDone = "виконано"; legLeft = "залишилось за планом"; legSlip = "зсув прогнозу"; legEarly = "раніше плану"; legToday = "сьогодні"
         wasF = "було {0}"; fcost = "прогноз витрат {0}"; over = "+{0} ({1}%) до бюджету"; under = "−{0} до бюджету"; budgetFc = "Прогноз витрат портфеля"
         months = "січ,лют,бер,кві,тра,чер,лип,сер,вер,жов,лис,гру"; aOver = "прогноз перевитрат +{0}%"
+        colDone = "виконання"; colTerm = "строки"; staleN = "без свіжого звіту: {0}"; repOf = "звіт від {0}"; noRep = "звітів немає"
         footer = "PPM — Управління портфелем проєктів · Eclectic Group"
     }
     en = @{
@@ -43,8 +44,8 @@ $DG_T = @{
         introCeo = "Projects in {0} — current state and what changed since the last letter."
         now = "Current state"; changed = "What changed"; since = "since the letter of {0}"; first = "First digest — changes will appear in the next letter."
         nothing = "No changes."; attention = "Needs attention"; projects = "Projects"; byCountry = "By country"
-        kpiTotal = "projects"; kpiRed = "red"; kpiDecision = "awaiting decision"; kpiStale = "no fresh report"
-        g = "Green"; y = "Amber"; r = "Red"; n = "No report"
+        kpiTotal = "projects"; kpiRed = "red"; kpiDecision = "awaiting decision"; kpiStale = "no fresh report (14 d)"
+        g = "Green"; y = "Amber"; r = "Red"; n = "Not rated"
         progress = "Progress"; budget = "Budget"; spent = "spent {0} of {1}"; start = "Start"; plan = "Plan"; forecast = "Forecast"
         slip = "+{0} d"; ahead = "−{0} d"; report = "Status report of {0}"; noReport = "No approved reports yet"
         done = "Done"; next = "Next"; issues = "Issues"; risks = "Risks"; decisions = "Decision needed"
@@ -57,6 +58,7 @@ $DG_T = @{
         gantt = "Timeline"; legDone = "done"; legLeft = "remaining to plan"; legSlip = "forecast slip"; legEarly = "ahead of plan"; legToday = "today"
         wasF = "was {0}"; fcost = "cost forecast {0}"; over = "+{0} ({1}%) over budget"; under = "−{0} under budget"; budgetFc = "Portfolio cost forecast"
         months = "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec"; aOver = "forecast overrun +{0}%"
+        colDone = "progress"; colTerm = "timeline"; staleN = "no fresh report: {0}"; repOf = "report of {0}"; noRep = "no reports"
         footer = "PPM — Project Portfolio Management · Eclectic Group"
     }
     ru = @{
@@ -67,8 +69,8 @@ $DG_T = @{
         introCeo = "Проекты стран: {0} — состояние сейчас и что изменилось с прошлого письма."
         now = "Состояние сейчас"; changed = "Что изменилось"; since = "с письма от {0}"; first = "Первый дайджест — изменения появятся в следующем письме."
         nothing = "Без изменений."; attention = "Требует внимания"; projects = "Проекты"; byCountry = "По странам"
-        kpiTotal = "проектов"; kpiRed = "красных"; kpiDecision = "ждут решения"; kpiStale = "без свежего отчёта"
-        g = "Зелёный"; y = "Жёлтый"; r = "Красный"; n = "Нет отчёта"
+        kpiTotal = "проектов"; kpiRed = "красных"; kpiDecision = "ждут решения"; kpiStale = "без свежего отчёта (14 дн.)"
+        g = "Зелёный"; y = "Жёлтый"; r = "Красный"; n = "Не оценено"
         progress = "Выполнение"; budget = "Бюджет"; spent = "потрачено {0} из {1}"; start = "Старт"; plan = "План"; forecast = "Прогноз"
         slip = "+{0} дн."; ahead = "−{0} дн."; report = "Статус-отчёт от {0}"; noReport = "Согласованных отчётов ещё нет"
         done = "Сделано"; next = "Далее"; issues = "Проблемы"; risks = "Риски"; decisions = "Нужно решение"
@@ -81,6 +83,7 @@ $DG_T = @{
         gantt = "Сроки"; legDone = "выполнено"; legLeft = "осталось по плану"; legSlip = "сдвиг прогноза"; legEarly = "раньше плана"; legToday = "сегодня"
         wasF = "было {0}"; fcost = "прогноз затрат {0}"; over = "+{0} ({1}%) к бюджету"; under = "−{0} к бюджету"; budgetFc = "Прогноз затрат портфеля"
         months = "янв,фев,мар,апр,май,июн,июл,авг,сен,окт,ноя,дек"; aOver = "прогноз перерасхода +{0}%"
+        colDone = "выполнение"; colTerm = "сроки"; staleN = "без свежего отчёта: {0}"; repOf = "отчёт от {0}"; noRep = "отчётов нет"
         footer = "PPM — Управление портфелем проектов · Eclectic Group"
     }
 }
@@ -260,7 +263,8 @@ function Complete-DigestModel($M) {
     foreach ($p in $ps) {
         $rk = DgRag $p.rag; $k[$rk]++
         $k.budget += [double]$p.budget; $k.cost += [double]$p.cost; $k.forecast += [double]($p.forecastCost ?? $p.budget)
-        $stale = $p.stale -or -not $p.report
+        $stale = -not $p.report -or ([datetime]$M.asOf - [datetime]$p.report.date).TotalDays -gt 14
+        $p.isStale = $stale
         if ($stale) { $k.stale++ }
         $burn = if ($p.budget) { [math]::Round([double]$p.cost / [double]$p.budget * 100) } else { 0 }
         $why = @()
@@ -285,8 +289,8 @@ function Complete-DigestModel($M) {
     $M.changes = @($chg | Sort-Object { $rank[$_.kind] })
     if ($M.kind -eq "ceo") {
         $M.byCountry = @($M.countries | ForEach-Object { $c = $_; $in = @($ps | Where-Object { $_.country -eq $c })
-            $row = @{ name = $c; g = 0; y = 0; r = 0; n = 0; budget = 0.0; cost = 0.0 }
-            foreach ($p in $in) { $row[(DgRag $p.rag)]++; $row.budget += [double]$p.budget; $row.cost += [double]$p.cost }
+            $row = @{ name = $c; g = 0; y = 0; r = 0; n = 0; budget = 0.0; cost = 0.0; stale = 0 }
+            foreach ($p in $in) { $row[(DgRag $p.rag)]++; $row.budget += [double]$p.budget; $row.cost += [double]$p.cost; if ($p.isStale) { $row.stale++ } }
             $row })
     }
     $M
@@ -322,7 +326,7 @@ function DgPortfolio($M, $T) {
             $cb = if ($_.budget) { [math]::Round($_.cost / $_.budget * 100) } else { 0 }
             "<tr><td valign=`"top`" style=`"padding:7px 10px 7px 0;width:110px;font-family:$($DG.font);font-size:13px;color:$($DG.ink)`"><b>$(DgE $_.name)</b> <span style=`"color:$($DG.muted)`">$($_.g + $_.y + $_.r + $_.n)</span></td>" +
             "<td style=`"padding:9px 0 7px 0;font-family:$($DG.font)`">$(DgBar @(@{ w = $_.g * 100 / $cn; c = $DG.g }, @{ w = $_.y * 100 / $cn; c = $DG.y }, @{ w = $_.r * 100 / $cn; c = $DG.r }, @{ w = $_.n * 100 / $cn; c = $DG.n }) 10)" +
-            "<div style=`"font-size:11px;line-height:15px;color:$($DG.muted);padding-top:4px`">$(DgE ($T.spentPct -f (DgMoney $_.cost), (DgMoney $_.budget), $cb))</div></td></tr>" }) -join "") +
+            "<div style=`"font-size:11px;line-height:15px;color:$($DG.muted);padding-top:4px`">$(DgE ($T.spentPct -f (DgMoney $_.cost), (DgMoney $_.budget), $cb))$(if ($_.stale) { ' · <b style="color:' + $DG.violet + '">' + (DgE ($T.staleN -f $_.stale)) + '</b>' })</div></td></tr>" }) -join "") +
         "</table></td></tr>"
     } else { "" }
     $rows = ($M.projects | ForEach-Object {
@@ -330,9 +334,9 @@ function DgPortfolio($M, $T) {
         $pb = if ($_.budget) { [math]::Round([double]$_.cost / [double]$_.budget * 100) } else { 0 }
         $pbC = if ($pb -gt [double]$_.progress + 20) { $DG.coral } else { $DG.n }
         "<tr><td valign=`"top`" style=`"padding:11px 6px 9px 0;border-bottom:1px solid $($DG.line);width:14px`">$(DgDot (DgRag $_.rag) 10)</td>" +
-        "<td style=`"padding:8px 6px;border-bottom:1px solid $($DG.line);font-family:$($DG.font);font-size:13px;line-height:17px`"><a href=`"$($_.url)`" style=`"color:$($DG.ink);font-weight:700;text-decoration:none`">$(DgE $_.title)</a><br><span style=`"font-size:11px;color:$($DG.muted)`">$(DgE $_.code)$(if ($_.country) { ' · ' + (DgE $_.country) }) · $(DgPeople $_ $T)</span></td>" +
-        "<td valign=`"top`" style=`"padding:8px 6px;border-bottom:1px solid $($DG.line);width:92px;font-family:$($DG.font);font-size:11px;color:$($DG.muted)`"><b style=`"color:$($DG.ink);font-size:12px`">$($_.progress)%</b><div style=`"padding:3px 0 5px`">$(DgPct $_.progress $DG.violet)</div>$($T.colBudget) <b style=`"color:$($DG.ink)`">$pb%</b><div style=`"padding-top:3px`">$(DgBudgetBar $_ 6)</div><div style=`"padding-top:3px;white-space:nowrap`">$(DgMoney $_.cost) / $(DgMoney $_.budget)</div><div style=`"white-space:nowrap`">$(DgBudgetNote $_ $T)</div></td>" +
-        "<td valign=`"top`" align=`"right`" style=`"padding:8px 0 8px 6px;border-bottom:1px solid $($DG.line);width:52px;font-family:$($DG.font);font-size:12px;white-space:nowrap`">$slip</td></tr>" }) -join ""
+        "<td style=`"padding:8px 6px;border-bottom:1px solid $($DG.line);font-family:$($DG.font);font-size:13px;line-height:17px`"><a href=`"$($_.url)`" style=`"color:$($DG.ink);font-weight:700;text-decoration:none`">$(DgE $_.title)</a><br><span style=`"font-size:11px;color:$($DG.muted)`">$(DgE $_.code)$(if ($_.country) { ' · ' + (DgE $_.country) }) · $(DgPeople $_ $T)</span><br><span style=`"font-size:11px;color:$(if ($_.isStale) { $DG.violet } else { $DG.muted });$(if ($_.isStale) { 'font-weight:700' })`">$(if ($_.report) { DgE ($T.repOf -f (DgDate $_.report.date)) } else { DgE $T.noRep })</span></td>" +
+        "<td valign=`"top`" style=`"padding:8px 6px;border-bottom:1px solid $($DG.line);width:92px;font-family:$($DG.font);font-size:11px;color:$($DG.muted)`">$($T.colDone) <b style=`"color:$($DG.ink);font-size:12px`">$($_.progress)%</b><div style=`"padding:3px 0 5px`">$(DgPct $_.progress $DG.violet)</div>$($T.colBudget) <b style=`"color:$($DG.ink)`">$pb%</b><div style=`"padding-top:3px`">$(DgBudgetBar $_ 6)</div><div style=`"padding-top:3px;white-space:nowrap`">$(DgMoney $_.cost) / $(DgMoney $_.budget)</div><div style=`"white-space:nowrap`">$(DgBudgetNote $_ $T)</div></td>" +
+        "<td valign=`"top`" align=`"right`" style=`"padding:8px 0 8px 6px;border-bottom:1px solid $($DG.line);width:52px;font-family:$($DG.font);font-size:12px;white-space:nowrap`"><span style=`"font-size:11px;color:$($DG.muted)`">$($T.colTerm)</span><br>$slip</td></tr>" }) -join ""
     $table = (DgH $T.projects $DG.violet) + "<tr><td style=`"padding:0 24px`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`" style=`"border-collapse:collapse`">$rows</table></td></tr>"
     $tiles + $distRow + $budgetRow + $att + $countries + (DgGantt $M $T) + $table
 }

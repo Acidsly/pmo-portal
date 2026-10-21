@@ -216,7 +216,6 @@
    "cost": 0,
    "risks": [],
    "decisions": [],
-   "stale": true,
    "changes": [
     {
      "kind": "info",
@@ -465,7 +464,6 @@
    "decisions": [
     "Обрати BI-платформу групи (Power BI або Looker)"
    ],
-   "stale": true,
    "changes": [
     {
      "kind": "worse",
