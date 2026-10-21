@@ -25,10 +25,21 @@ else                      { Connect-PnPOnline -Url $SiteUrl -ClientId $ClientId 
 
 function G([string]$url) { try { return Invoke-PnPGraphMethod -Url $url -Method Get } catch { return $null } }
 $enc = [uri]::EscapeDataString($Email)
-$u = G "v1.0/users/$enc`?`$select=displayName,mail,userPrincipalName,jobTitle,accountEnabled,proxyAddresses"
+$sel = "displayName,mail,userPrincipalName,jobTitle,accountEnabled,proxyAddresses,userType,id"
+$u = G "v1.0/users/$enc`?`$select=$sel"
+# по почте: учётные записи межтенантной синхронизации (UPN …#EXT#@…, почта — адрес в своём тенанте)
+if (-not $u) { $u = @((G "v1.0/users?`$filter=mail eq '$($Email -replace "'", "''")'&`$select=$sel").value)[0] }
 if (-not $u) { Write-Host "Entra ID: пользователь $Email не найден (ни по UPN, ни по почте)." -ForegroundColor Red; return }
+$enc = [uri]::EscapeDataString([string]$u.id)
 $mail = ([string]($u.mail ?? $u.userPrincipalName)).ToLowerInvariant()
-Write-Host "Entra ID: $($u.displayName) · $($u.jobTitle) · UPN $($u.userPrincipalName) · почта $($u.mail) · вход разрешён: $($u.accountEnabled)"
+Write-Host "Entra ID: $($u.displayName) · $($u.jobTitle) · UPN $($u.userPrincipalName) · почта $($u.mail) · вход разрешён: $($u.accountEnabled)$(if ($u.userPrincipalName -match '#EXT#') { " · из другого тенанта ($($u.userType))" })"
+# как SharePoint сопоставит e-mail с учётной записью (так права выдаёт синхронизация) — только чтение, без добавления на сайт
+try {
+    $ctx = Get-PnPContext
+    $res = [Microsoft.SharePoint.Client.Utilities.Utility]::ResolvePrincipal($ctx, $ctx.Web, $Email, [Microsoft.SharePoint.Client.Utilities.PrincipalType]::User, [Microsoft.SharePoint.Client.Utilities.PrincipalSource]::All, $null, $false)
+    $ctx.ExecuteQuery()
+    Write-Host "  SharePoint: $Email → $(if ($res.Value) { $res.Value.LoginName } else { 'не сопоставляется (права по этому адресу не выдать)' })"
+} catch { Write-Host "  SharePoint: сопоставление не проверено ($($_.Exception.Message))" -ForegroundColor Yellow }
 $aliases = @($u.proxyAddresses | Where-Object { $_ -like "smtp:*" } | ForEach-Object { ($_ -replace '^smtp:', '').ToLowerInvariant() })
 if ($aliases.Count) { Write-Host "  адреса: $($aliases -join ', ')" }
 $m = G "v1.0/users/$enc/manager?`$select=displayName,mail,userPrincipalName"
