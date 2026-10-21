@@ -34,6 +34,7 @@ $DG_T = @{
         wasF = "було {0}"; fcost = "прогноз витрат {0}"; over = "+{0} ({1}%) до бюджету"; under = "−{0} до бюджету"; budgetFc = "Прогноз витрат портфеля"
         months = "січ,лют,бер,кві,тра,чер,лип,сер,вер,жов,лис,гру"; aOver = "прогноз перевитрат +{0}%"
         colDone = "виконання"; colTerm = "строки"; staleN = "без свіжого звіту: {0}"; repOf = "звіт від {0}"; noRep = "звітів немає"
+        planned = "Планувалось"; notDone = "Не зроблено"; allDone = "заплановане виконано"; notDoneH = "Не виконано з плану"
         footer = "PPM — Управління портфелем проєктів · Eclectic Group"
     }
     en = @{
@@ -59,6 +60,7 @@ $DG_T = @{
         wasF = "was {0}"; fcost = "cost forecast {0}"; over = "+{0} ({1}%) over budget"; under = "−{0} under budget"; budgetFc = "Portfolio cost forecast"
         months = "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec"; aOver = "forecast overrun +{0}%"
         colDone = "progress"; colTerm = "timeline"; staleN = "no fresh report: {0}"; repOf = "report of {0}"; noRep = "no reports"
+        planned = "Planned"; notDone = "Not done"; allDone = "plan completed"; notDoneH = "Not done from the plan"
         footer = "PPM — Project Portfolio Management · Eclectic Group"
     }
     ru = @{
@@ -84,6 +86,7 @@ $DG_T = @{
         wasF = "было {0}"; fcost = "прогноз затрат {0}"; over = "+{0} ({1}%) к бюджету"; under = "−{0} к бюджету"; budgetFc = "Прогноз затрат портфеля"
         months = "янв,фев,мар,апр,май,июн,июл,авг,сен,окт,ноя,дек"; aOver = "прогноз перерасхода +{0}%"
         colDone = "выполнение"; colTerm = "сроки"; staleN = "без свежего отчёта: {0}"; repOf = "отчёт от {0}"; noRep = "отчётов нет"
+        planned = "Планировалось"; notDone = "Не сделано"; allDone = "запланированное выполнено"; notDoneH = "Не выполнено из плана"
         footer = "PPM — Управление портфелем проектов · Eclectic Group"
     }
 }
@@ -142,8 +145,11 @@ function DgProjectCard($p, $T, $M) {
     $burn = if ($p.budget) { [double]$p.cost / [double]$p.budget * 100 } else { 0 }
     $burnC = if ($burn -gt [double]$p.progress + 15) { $DG.coral } else { $DG.violet }
     $rep = if ($p.report) {
-        $rows = foreach ($x in @(@($T.done, $p.report.done), @($T.next, $p.report.next), @($T.issues, $p.report.issues))) {
-            if ($x[1]) { "<tr><td valign=`"top`" style=`"width:84px;padding:3px 8px 3px 0;font-size:12px;line-height:18px;color:$($DG.muted);font-weight:700`">$(DgE $x[0])</td><td style=`"padding:3px 0;font-size:13px;line-height:18px;color:$($DG.text)`">$(DgE $x[1])</td></tr>" } }
+        # план / факт: «Планувалось» — план из прошлого отчёта, «Не зроблено» — из этого (пусто при плане — «заплановане виконано»)
+        $nd = if ($p.report.planned) { if ($p.report.notDone) { $p.report.notDone } else { "✓ " + $T.allDone } } else { "" }
+        $rows = foreach ($x in @(@($T.planned, $p.report.planned, $DG.muted), @($T.done, $p.report.done, $DG.muted), @($T.notDone, $nd, $(if ($p.report.notDone) { $DG.coral } else { $DG.g })),
+                                 @($T.next, $p.report.next, $DG.muted), @($T.issues, $p.report.issues, $DG.muted))) {
+            if ($x[1]) { "<tr><td valign=`"top`" style=`"width:92px;padding:3px 8px 3px 0;font-size:12px;line-height:18px;color:$($x[2]);font-weight:700`">$(DgE $x[0])</td><td style=`"padding:3px 0;font-size:13px;line-height:18px;color:$($DG.text)`">$(DgE $x[1])</td></tr>" } }
         "<div style=`"font-size:12px;color:$($DG.muted);padding:14px 0 4px`">$(DgE ($T.report -f (DgDate $p.report.date)))</div><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`" style=`"font-family:$($DG.font)`">$($rows -join '')</table>"
     } else { "<div style=`"font-size:13px;color:$($DG.muted);padding-top:14px`">$($T.noReport)</div>" }
     $risks = if (@($p.risks | Where-Object { $_ }).Count) {
@@ -359,6 +365,19 @@ function DgDecisions($list, $T) {
     "</table></td></tr>"
 }
 
+# «Не виконано з плану»: что из плана прошлого отчёта не сделано (по проектам, только где есть)
+function DgNotDone($M, $T) {
+    $ps = @($M.projects | Where-Object { $_.report -and $_.report.notDone })
+    if (-not $ps.Count) { return "" }
+    (DgH $T.notDoneH $DG.coral) + "<tr><td style=`"padding:0 24px`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`" style=`"font-family:$($DG.font)`">" +
+    (($ps | ForEach-Object {
+        "<tr><td style=`"padding:8px 0;border-bottom:1px solid $($DG.line)`"><a href=`"$($_.url)`" style=`"font-size:13px;font-weight:700;color:$($DG.ink);text-decoration:none`">$(DgDot (DgRag $_.rag) 9) $(DgE $_.code) · $(DgE $_.title)</a>" +
+        "<div style=`"font-size:12px;line-height:17px;color:$($DG.muted);padding:4px 0 0 15px`">$($T.planned): $(DgE $_.report.planned)</div>" +
+        "<div style=`"font-size:13px;line-height:18px;color:$($DG.text);padding:2px 0 0 15px`"><b style=`"color:$($DG.coral)`">$($T.notDone):</b> $(DgE $_.report.notDone)</div>" +
+        "<div style=`"font-size:11px;color:$($DG.muted);padding:2px 0 0 15px`">$(DgPeople $_ $T)</div></td></tr>" }) -join "") +
+    "</table></td></tr>"
+}
+
 # «Головні ризики» портфеля: просроченные и с оценкой от 12
 function DgRisks($list, $T) {
     if (-not @($list | Where-Object { $_ }).Count) { return "" }
@@ -401,7 +420,7 @@ function New-DigestHtml($M, [string]$Logo) {
     $body = if ($M.kind -eq "member") {
         (DgH $T.now $DG.coral) + (($M.projects | ForEach-Object { DgProjectCard $_ $T $M }) -join "") + (DgChanges $M $T)
     } else {
-        (DgH $T.now $DG.coral) + (DgPortfolio $M $T) + (DgDecisions $M.decisionsList $T) + (DgRisks $M.topRisks $T) + (DgChanges $M $T)
+        (DgH $T.now $DG.coral) + (DgPortfolio $M $T) + (DgDecisions $M.decisionsList $T) + (DgNotDone $M $T) + (DgRisks $M.topRisks $T) + (DgChanges $M $T)
     }
     $firstNote = if ($M.first -and $M.kind -eq "member") { "<tr><td style=`"padding:0 24px 8px;font-family:$($DG.font);font-size:12px;color:$($DG.muted)`">$($T.first)</td></tr>" } else { "" }
     @"
