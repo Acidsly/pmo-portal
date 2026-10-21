@@ -1222,19 +1222,19 @@ export const T: Record<string, L3> = {
   "Открыть риск"
  ],
  "assignBtn": [
-  "Змінити PM / власника",
-  "Change PM / owner",
-  "Сменить PM / владельца"
+  "Змінити PM / власника / країну",
+  "Change PM / owner / country",
+  "Сменить PM / владельца / страну"
  ],
  "assignTitle": [
-  "Зміна PM / власника",
-  "Change of PM / owner",
-  "Смена PM / владельца"
+  "Зміна PM / власника / країни",
+  "Change of PM / owner / country",
+  "Смена PM / владельца / страны"
  ],
  "assignHint": [
-  "Після створення проєкту PM і власника змінює лише PMO. Порожнє поле — без змін.",
-  "After the project is created, only the PMO changes the PM and the owner. An empty field means no change.",
-  "После создания проекта PM и владельца меняет только PMO. Пустое поле — без изменений."
+  "Після створення проєкту PM, власника і країну змінює лише PMO. Порожнє поле — без змін.",
+  "After the project is created, only the PMO changes the PM, the owner and the country. An empty field means no change.",
+  "После создания проекта PM, владельца и страну меняет только PMO. Пустое поле — без изменений."
  ],
  "assignNewPm": [
   "Новий PM",
@@ -1246,15 +1246,35 @@ export const T: Record<string, L3> = {
   "New owner",
   "Новый владелец"
  ],
+ "assignNewCountry": [
+  "Нова країна",
+  "New country",
+  "Новая страна"
+ ],
  "assignNote": [
   "Коментар (причина)",
   "Comment (reason)",
   "Комментарий (причина)"
  ],
  "errAssignSame": [
-  "Оберіть нового PM або нового власника.",
-  "Choose a new PM or a new owner.",
-  "Выберите нового PM или нового владельца."
+  "Оберіть нового PM, нового власника або нову країну.",
+  "Choose a new PM, a new owner or a new country.",
+  "Выберите нового PM, нового владельца или новую страну."
+ ],
+ "errCountry": [
+  "Оберіть країну проєкту.",
+  "Choose the project country.",
+  "Выберите страну проекта."
+ ],
+ "wpCountry": [
+  "Портфель за країнами",
+  "Portfolio by country",
+  "Портфель по странам"
+ ],
+ "ceoRole": [
+  "CEO країни",
+  "Country CEO",
+  "CEO страны"
  ],
  "errAssignNote": [
   "Вкажіть причину зміни.",
@@ -1267,19 +1287,19 @@ export const T: Record<string, L3> = {
   "Изменение сохранено — карточка обновится после синхронизации."
  ],
  "assignPendingNote": [
-  "Зміна PM / власника очікує обробки синхронізацією.",
-  "The PM / owner change is waiting for synchronization.",
-  "Смена PM / владельца ожидает обработки синхронизацией."
+  "Зміна PM / власника / країни очікує обробки синхронізацією.",
+  "The PM / owner / country change is waiting for synchronization.",
+  "Смена PM / владельца / страны ожидает обработки синхронизацией."
  ],
  "gAssignPending": [
-  "Зміна PM / власника вже очікує обробки — дочекайтеся синхронізації.",
-  "A PM / owner change is already waiting — wait for synchronization.",
-  "Смена PM / владельца уже ожидает обработки — дождитесь синхронизации."
+  "Зміна PM / власника / країни вже очікує обробки — дочекайтеся синхронізації.",
+  "A PM / owner / country change is already waiting — wait for synchronization.",
+  "Смена PM / владельца / страны уже ожидает обработки — дождитесь синхронизации."
  ],
  "pmOnlyPmo": [
-  "PM і власника змінює лише PMO.",
-  "Only the PMO changes the PM and the owner.",
-  "PM и владельца меняет только PMO."
+  "PM, власника і країну змінює лише PMO.",
+  "Only the PMO changes the PM, the owner and the country.",
+  "PM, владельца и страну меняет только PMO."
  ],
  "kReport": [
   "Оновлено статус-звітом",
@@ -2252,6 +2272,11 @@ export const FLD: Record<string, L3> = {
   "Напрям",
   "Area",
   "Направление"
+ ],
+ "country": [
+  "Країна",
+  "Country",
+  "Страна"
  ],
  "parent": [
   "Батьківський проєкт",

@@ -22,13 +22,14 @@ const ev = (el: W, t: string): void => { el.dispatchEvent(new w.Event(t, { bubbl
 // «войти как» PMO (кнопка меню пользователя; обработчик — по data-act на документе)
 function asUser(n: string): void { const b = w.document.createElement('button'); b.dataset.act = 'asuser'; b.dataset.n = n; w.document.body.appendChild(b); b.click(); b.remove(); }
 function asPmo(): void { const b = w.document.createElement('button'); b.dataset.act = 'asuser'; b.dataset.n = 'Олександра Мороз'; w.document.body.appendChild(b); b.click(); b.remove(); }
-function newProject(title: string, start: string, golive: string): W {
+function newProject(title: string, start: string, golive: string, country = 'Польща'): W {
   asPmo();
   q('[data-act="nav"][data-page="projects"]').click();
   q('[data-act="newproj"]').click();
   const f = q('#pform'); const g = (id: string): W => f.querySelector('#' + id);
   g('p-title').value = title; ev(g('p-title'), 'input');
   const pm = g('p-pm'); if (pm.tagName === 'SELECT') { pm.value = Array.from(pm.options).map((o: W) => o.value).filter(Boolean)[1]; ev(pm, 'change'); }
+  if (g('p-country')) { g('p-country').value = country; ev(g('p-country'), 'change'); }
   if (g('p-start')) { g('p-start').value = start; ev(g('p-start'), 'change'); }
   if (g('p-golive')) { g('p-golive').value = golive; ev(g('p-golive'), 'change'); }
   f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
@@ -151,13 +152,14 @@ describe('#43 смена PM / власника — только PMO', () => {
     q('[data-act="editproj"][data-id="2"]').click();
     expect(q('#pform select#p-pm')).toBeNull();
     expect(q('#p-pm-fixed').textContent).toBe('Андрій Мельник');
-    expect(q('#pform').textContent).toContain('PM і власника змінює лише PMO.');
+    expect(q('#pform').textContent).toContain('PM, власника і країну змінює лише PMO.');
+    expect(q('#pform select#p-country')).toBeNull();
   });
   test('PMO: без выбора и без причины — ошибки; затем новый PM в карточке и «Призначення» в истории', () => {
     asPmo(); card(1);
     q('[data-act="assign"][data-id="1"]').click();
     const f = q('#aform'); const submit = (): void => { f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true })); };
-    submit(); expect(err(f)).toBe('Оберіть нового PM або нового власника.');
+    submit(); expect(err(f)).toBe('Оберіть нового PM, нового власника або нову країну.');
     const pm = f.querySelector('#a-pm'); pm.value = 'Андрій Мельник'; ev(pm, 'change');
     submit(); expect(err(f)).toBe('Вкажіть причину зміни.');
     f.querySelector('#a-note').value = 'Ротація PM'; submit();
@@ -167,6 +169,16 @@ describe('#43 смена PM / власника — только PMO', () => {
     q('[data-act="togglech"]') && q('[data-act="togglech"]').click();
     expect(w.document.body.textContent).toContain('Призначення');
     expect(w.document.body.textContent).toContain('Ротація PM');
+  });
+  test('PMO: смена страны — в карточке и в истории, «Країна було → стало»', () => {
+    asPmo(); card(1);
+    q('[data-act="assign"][data-id="1"]').click();
+    const f = q('#aform');
+    const c = f.querySelector('#a-country'); c.value = 'Польща'; ev(c, 'change');
+    f.querySelector('#a-note').value = 'Проєкт польської компанії'; f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    expect(q('#aform')).toBeNull();
+    expect(w.document.body.textContent).toContain('Польща');
+    expect(w.document.body.textContent).toContain('Проєкт польської компанії');
   });
   test('PMO: архивный проект — кнопки нет', () => {
     asPmo();
@@ -463,5 +475,23 @@ describe('реєстр ризиків (#91, #92): прототип', () => {
     k.querySelector('#k-mit').value = 'Нові заходи'; ev(k.querySelector('#k-mit'), 'input');
     k.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
     expect(mine().length).toBe(n0 * 2);
+  });
+});
+
+describe('Країна: обязательна у нового проекта, CEO країни видит проекты своих стран', () => {
+  test('новый проект без страны — ошибка; со страной — создан, страна в карточке', () => {
+    const f = newProject('Проєкт без країни', '2026-03-02', '2026-04-01', '');
+    expect(err(f)).toBe('Оберіть країну проєкту.');
+    const ok = newProject('Проєкт у Чехії', '2026-03-02', '2026-04-01', 'Чехія');
+    expect(err(ok)).toBe('');
+    expect(w.document.body.textContent).toContain('Чехія');
+  });
+  test('CEO Європа видит польский проект (CEO країни в «Доступ до картки»), украинский — нет', () => {
+    asUser('Марта Новак');
+    q('[data-act="nav"][data-page="projects"]').click();
+    expect(q('[data-act="openp"][data-id="3"]')).not.toBeNull();   // PRJ-003 — Польща
+    expect(q('[data-act="openp"][data-id="1"]')).toBeNull();       // PRJ-001 — Україна
+    q('[data-act="openp"][data-id="3"]').click();
+    expect(w.document.body.textContent).toContain('CEO країни · Польща');
   });
 });

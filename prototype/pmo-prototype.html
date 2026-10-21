@@ -102,6 +102,7 @@ main{max-width:1440px;margin:0 auto;padding:40px 32px 96px}
 .msgbar{display:flex;gap:10px;align-items:flex-start;background:var(--theme-soft);color:var(--text);border-radius:14px;padding:12px 16px;font-size:13px;margin-bottom:28px;max-width:900px}
 .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;margin-bottom:24px}
 .stack{margin-bottom:24px}
+.stack2{display:grid;gap:24px;align-content:start;min-width:0}
 @media (max-width:920px){.grid2{grid-template-columns:minmax(0,1fr)}}
 .wp{background:var(--bg);border-radius:var(--radius);padding:24px 26px;min-width:0;box-shadow:var(--shadow)}
 .wp-h{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 16px;flex-wrap:wrap}
@@ -1026,15 +1027,16 @@ const T = {
  nkDecided:['Погодження звіту','Report approval','Согласование отчёта'], nkApplied:['Оновлено статус-звітом','Updated by status report','Обновлено статус-отчётом'],
  nkArchived:['Проєкт в архіві','Project archived','Проект в архиве'], nkRisk:['Ризик / проблема','Risk / issue','Риск / проблема'],
  nkCardEdit:['Редагування картки','Card edited','Редактирование карточки'], nkTeamAdded:['Вас додано до команди','You were added to the team','Вас добавили в команду'], nkTeamRole:['Змінено вашу роль у команді','Your team role was changed','Изменена ваша роль в команде'], ntfMyRole:['Ваша роль: {r}','Your role: {r}','Ваша роль: {r}'], nkComment:['Коментар','Comment','Комментарий'], kRiskEv:['Ризик / проблема','Risk / issue','Риск / проблема'], openRisk:['Відкрити ризик','Open risk','Открыть риск'],
- assignBtn:['Змінити PM / власника','Change PM / owner','Сменить PM / владельца'], assignTitle:['Зміна PM / власника','Change of PM / owner','Смена PM / владельца'],
- assignHint:['Після створення проєкту PM і власника змінює лише PMO. Порожнє поле — без змін.','After the project is created, only the PMO changes the PM and the owner. An empty field means no change.','После создания проекта PM и владельца меняет только PMO. Пустое поле — без изменений.'],
- assignNewPm:['Новий PM','New PM','Новый PM'], assignNewOwner:['Новий власник','New owner','Новый владелец'], assignNote:['Коментар (причина)','Comment (reason)','Комментарий (причина)'],
- errAssignSame:['Оберіть нового PM або нового власника.','Choose a new PM or a new owner.','Выберите нового PM или нового владельца.'],
+ assignBtn:['Змінити PM / власника / країну','Change PM / owner / country','Сменить PM / владельца / страну'], assignTitle:['Зміна PM / власника / країни','Change of PM / owner / country','Смена PM / владельца / страны'],
+ assignHint:['Після створення проєкту PM, власника і країну змінює лише PMO. Порожнє поле — без змін.','After the project is created, only the PMO changes the PM, the owner and the country. An empty field means no change.','После создания проекта PM, владельца и страну меняет только PMO. Пустое поле — без изменений.'],
+ assignNewPm:['Новий PM','New PM','Новый PM'], assignNewOwner:['Новий власник','New owner','Новый владелец'], assignNewCountry:['Нова країна','New country','Новая страна'], assignNote:['Коментар (причина)','Comment (reason)','Комментарий (причина)'],
+ errAssignSame:['Оберіть нового PM, нового власника або нову країну.','Choose a new PM, a new owner or a new country.','Выберите нового PM, нового владельца или новую страну.'],
+ errCountry:['Оберіть країну проєкту.','Choose the project country.','Выберите страну проекта.'], wpCountry:['Портфель за країнами','Portfolio by country','Портфель по странам'], ceoRole:['CEO країни','Country CEO','CEO страны'],
  errAssignNote:['Вкажіть причину зміни.','Enter the reason for the change.','Укажите причину изменения.'],
  savedAssign:['Зміну збережено — картка оновиться після синхронізації.','Change saved — the card updates after synchronization.','Изменение сохранено — карточка обновится после синхронизации.'],
- assignPendingNote:['Зміна PM / власника очікує обробки синхронізацією.','The PM / owner change is waiting for synchronization.','Смена PM / владельца ожидает обработки синхронизацией.'],
- gAssignPending:['Зміна PM / власника вже очікує обробки — дочекайтеся синхронізації.','A PM / owner change is already waiting — wait for synchronization.','Смена PM / владельца уже ожидает обработки — дождитесь синхронизации.'],
- pmOnlyPmo:['PM і власника змінює лише PMO.','Only the PMO changes the PM and the owner.','PM и владельца меняет только PMO.'], kReport:['Оновлено статус-звітом','Updated by status report','Обновлено статус-отчётом'],
+ assignPendingNote:['Зміна PM / власника / країни очікує обробки синхронізацією.','The PM / owner / country change is waiting for synchronization.','Смена PM / владельца / страны ожидает обработки синхронизацией.'],
+ gAssignPending:['Зміна PM / власника / країни вже очікує обробки — дочекайтеся синхронізації.','A PM / owner / country change is already waiting — wait for synchronization.','Смена PM / владельца / страны уже ожидает обработки — дождитесь синхронизации.'],
+ pmOnlyPmo:['PM, власника і країну змінює лише PMO.','Only the PMO changes the PM, the owner and the country.','PM, владельца и страну меняет только PMO.'], kReport:['Оновлено статус-звітом','Updated by status report','Обновлено статус-отчётом'],
  loading:['Завантаження даних зі списків…','Loading data from lists…','Загрузка данных из списков…'],
  emptyDb:['Список «Проєкти» порожній. Створіть перший проєкт або завантажте демо-дані.','The Projects list is empty. Create the first project or load demo data.','Список «Проекты» пуст. Создайте первый проект или загрузите демо-данные.'],
  seed:['Завантажити демо-дані','Load demo data','Загрузить демо-данные'], seeding:['Завантаження…','Loading…','Загрузка…'],
@@ -1124,6 +1126,10 @@ const VAL = {
  'Зелений':['Зелений','Green','Зелёный'],
  'Жовтий':['Жовтий','Yellow','Жёлтый'],
  'Червоний':['Червоний','Red','Красный'],
+ // країни (pmCountry)
+ 'Україна':['Україна','Ukraine','Украина'], 'Польща':['Польща','Poland','Польша'], 'Чехія':['Чехія','Czechia','Чехия'], 'Нідерланди':['Нідерланди','Netherlands','Нидерланды'],
+ 'Велика Британія':['Велика Британія','United Kingdom','Великобритания'], 'Казахстан':['Казахстан','Kazakhstan','Казахстан'], 'Узбекистан':['Узбекистан','Uzbekistan','Узбекистан'],
+ 'Киргизстан':['Киргизстан','Kyrgyzstan','Кыргызстан'], 'Грузія':['Грузія','Georgia','Грузия'], 'Азербайджан':['Азербайджан','Azerbaijan','Азербайджан'],
  'Стратегічний':['Стратегічний','Strategic','Стратегический'],
  'Звичайний':['Звичайний','Regular','Обычный'],
  '1 — Високий':['1 — Високий','1 — High','1 — Высокий'],
@@ -1177,7 +1183,7 @@ const FLD = {
  tmTopics:['З яких питань звертатися','Contact about','По каким вопросам обращаться'],
  links:['Посилання','Links','Ссылки'], linkTitle:['Назва посилання','Link title','Название ссылки'], linkUrl:['Адреса','Address','Адрес'],
  pm:['PM','PM','PM'], owner:['Власник','Owner','Собственник'], product:['Стейкхолдери','Stakeholders','Стейкхолдеры'], stakeholders:['Стейкхолдери','Stakeholders','Стейкхолдеры'],
- dept:['Напрям','Area','Направление'], parent:['Батьківський проєкт','Parent project','Родительский проект'], status:['Фаза проєкту','Project phase','Фаза проекта'], prio:['Пріоритет','Priority','Приоритет'],
+ dept:['Напрям','Area','Направление'], country:['Країна','Country','Страна'], parent:['Батьківський проєкт','Parent project','Родительский проект'], status:['Фаза проєкту','Project phase','Фаза проекта'], prio:['Пріоритет','Priority','Приоритет'],
  rag:['Загальний стан','Overall health','Общее состояние'], progress:['% виконання','% complete','% выполнения'],
  start:['Дата старту','Start date','Дата старта'], golive:['Дата запуску (продакшн)','Go-live date (production)','Дата запуска (продакшн)'],
  plan:['Дата завершення (план)','Planned completion','Дата завершения (план)'], fc:['Прогноз завершення','Forecast completion','Прогноз завершения'], ae:['Дата завершення (факт)','Actual completion date','Дата завершения (факт)'],
@@ -1216,6 +1222,8 @@ const REPORT_STATUSES = ['Ініціація','Планування','Реалі
 const TYPES = ['Стратегічний','Звичайний'];
 const PRIOS = ['1 — Високий','2 — Середній','3 — Низький'];
 const DEPTS = ['ІТ','HR та кадрове адміністрування','Розрахунок зарплати','Продажі','Фінанси','Операції','Юридичний'];
+// одна країна на проєкт (як Deploy-PMO.ps1 $countries); CEO країни — перегляд і коментарі (як список «Країни» порталу)
+const COUNTRIES = ['Україна','Польща','Чехія','Нідерланди','Велика Британія','Казахстан','Узбекистан','Киргизстан','Грузія','Азербайджан'];
 const COLORS = ['#8764b8','#038387','#ca5010','#0078d4','#498205','#c239b3','#986f0b','#4f6bed'];
 const initials = n => n.split(' ').map(x => x[0]).join('').slice(0, 2);
 const pcolor = n => COLORS[[...n].reduce((a, c) => a + c.charCodeAt(0), 0) % COLORS.length];
@@ -1235,8 +1243,13 @@ const ORG = {
  'Віктор Олійник':{mgr:'Сергій Литвиненко', mail:'v.oliinyk', role:['Операційний директор','COO','Операционный директор']},
  'Ірина Бондаренко':{mgr:'Віктор Олійник', mail:'i.bondarenko', role:['Керівник операційних проєктів','Operations project lead','Руководитель операционных проектов']},
  'Тетяна Кравець':{mgr:'Сергій Литвиненко', mail:'t.kravets', role:['HR-директор','HR director','HR-директор']},
- 'Марина Ткаченко':{mgr:'Тетяна Кравець', mail:'m.tkachenko', role:['Керівник HR-проєктів','HR project lead','Руководитель HR-проектов']}
+ 'Марина Ткаченко':{mgr:'Тетяна Кравець', mail:'m.tkachenko', role:['Керівник HR-проєктів','HR project lead','Руководитель HR-проектов']},
+ 'Марта Новак':{mgr:'Сергій Литвиненко', mail:'m.novak', role:['CEO Європа','CEO Europe','CEO Европа']},
+ 'Айгерім Сейтова':{mgr:'Сергій Литвиненко', mail:'a.seitova', role:['CEO Азія','CEO Asia','CEO Азия']}
 };
+const COUNTRY_CEO = {'Україна':['Сергій Литвиненко'], 'Велика Британія':['Сергій Литвиненко'], 'Польща':['Марта Новак'], 'Чехія':['Марта Новак'], 'Нідерланди':['Марта Новак'],
+ 'Казахстан':['Айгерім Сейтова'], 'Узбекистан':['Айгерім Сейтова'], 'Киргизстан':['Айгерім Сейтова'], 'Грузія':['Айгерім Сейтова'], 'Азербайджан':['Айгерім Сейтова']};
+const ceosOf = p => (p && COUNTRY_CEO[p.country]) || [];
 const email = n => ORG[n] ? ORG[n].mail + '@company.ua' : '';
 const roleOf = n => ORG[n] ? ORG[n].role[LI] : '';
 const chain = n => { const c = []; let m = ORG[n] && ORG[n].mgr; while (m){ c.push(m); m = ORG[m] && ORG[m].mgr; } return c; };
@@ -1245,7 +1258,7 @@ const isPMO = () => !!(ORG[VIEWER] && ORG[VIEWER].pmo);
 // команда проекта: p.team = [{n, role, topics}]; p.stakeholders — производное (уникальные участники команды)
 const syncStakeholders = p => { p.stakeholders = [...new Set((p.team || []).map(m => m.n).filter(Boolean))]; return p; };
 const participants = p => [p.pm, p.owner].concat(p.stakeholders || []).filter(Boolean);
-const canSee = p => isPMO() || VIEWER === ME || participants(p).some(x => x === VIEWER || chain(x).includes(VIEWER));   // как портал: владельцы сайта видят всё
+const canSee = p => isPMO() || VIEWER === ME || participants(p).some(x => x === VIEWER || chain(x).includes(VIEWER)) || ceosOf(p).includes(VIEWER);   // как портал: владельцы сайта видят всё
 // править проект, отчёты и риски может только PM; руководители, собственник, стейкхолдеры и PMO — смотрят и комментируют
 const canEditP = p => p.pm === VIEWER || VIEWER === ME;   // как портал: право SharePoint — PM и владельцы сайта (в демо — Юрій)
 // новый проект заводит PMO (и назначает PM)
@@ -1322,7 +1335,7 @@ function buildSeed(){
   // #69: период демо-отчётов — от предыдущего погодженого (как у новых)
   reports.slice().sort((a, c) => (a.date < c.date ? -1 : a.date > c.date ? 1 : 0)).forEach((r, i, a) => { r.pfrom = reportPeriodFrom(a.slice(0, i), p.start || '', '', r.date); });
   const team = TEAM[p.id] || [p.product].concat(({5:['Віктор Олійник']})[p.id] || []).filter(Boolean).map(n => ({n, role:'Стейкхолдер', topics:''}));
-  return {id:p.id, code:p.code, title:p.title, type:p.type, pm:p.pm, owner:p.owner, team, stakeholders:[...new Set(team.map(m => m.n))], dept:p.dept, status:p.status, prio:p.prio,
+  return {id:p.id, code:p.code, title:p.title, type:p.type, pm:p.pm, owner:p.owner, team, stakeholders:[...new Set(team.map(m => m.n))], dept:p.dept, country:({3:'Польща', 4:'Велика Британія', 5:'Казахстан', 8:'Польща'})[p.id] || 'Україна', status:p.status, prio:p.prio,
    progress:p.progress, start:p.start, golive:p.golive, plan:p.plan, fc:p.fc, budget:p.budget, actual:p.actual, parent:({3:7, 8:7})[p.id] || 0,
    links:[{t:'Loop', u:'https://loop.cloud.microsoft/'}].concat(p.id === 1 ? [{t:'Технічне завдання', u:'https://company.sharepoint.com/sites/pmo/Shared%20Documents/TZ-CRM.docx'}] : []), desc:'', archivedAt: p.arch ? iso(daysAgo(p.arch)) : '',
    rag: last ? last.rag : '', lastUpdate: last ? last.date : '', lastReport: last ? last.title : '',
@@ -1709,6 +1722,7 @@ const PDEF = {
   comment:{l:() => fl('comments'), main:p => { const c = lastCm(p); return c ? `<span class="clamp2">${esc(c.txt)}</span> <button class="cnt" data-act="openp" data-id="${p.id}">${p.comments.length}</button>` : '<span class="muted">—</span>'; }, sort:p => { const c = lastCm(p); return c ? c.date : ''; }, cls:'w-wide'},
   cmtBy:{l:() => t('cCmtBy'), main:p => { const c = lastCm(p); return c ? person(c.who) : '<span class="muted">—</span>'; }, sort:p => { const c = lastCm(p); return c ? c.who : ''; }, filter:p => { const c = lastCm(p); return c ? c.who : ''; }},
   dept:{l:() => fl('dept'), main:p => esc(tv(p.dept)), sort:p => p.dept, filter:p => p.dept},
+  country:{l:() => fl('country'), main:p => p.country ? esc(tv(p.country)) : '<span class="muted">—</span>', sort:p => tv(p.country || ''), filter:p => p.country || ''},
   parent:{l:() => fl('parent'), main:p => !p.parent ? '<span class="muted">—</span>' : pById(p.parent) && canSee(pById(p.parent)) ? `<button class="link" data-act="openp" data-id="${p.parent}">${esc(pLabel(p.parent))}</button>` : esc(pLabel(p.parent)), sort:p => pLabel(p.parent), filter:p => pLabel(p.parent)},
   loop:{l:() => fl('links'), main:p => (p.links || []).map(l => `<a class="loop" href="${esc(l.u)}" target="_blank" rel="noopener">${esc(l.t)} ↗</a>`).join(', ')},
   archived:{l:() => t('archivedAt'), main:p => dateCell(p.archivedAt), sort:p => p.archivedAt || ''},
@@ -1933,9 +1947,9 @@ function riskMap(){
     else state.rmCell = null; }
   return `<div class="rmap"><span class="rm-y">${t('cProb')}</span><div class="rm-grid">${cells}</div></div>${list}`;
 }
-function deptBars(){
+function deptBars(key = 'dept'){
   const act = visP().filter(isActive), g = {};
-  act.forEach(p => { const k = p.dept || '—'; (g[k] = g[k] || []).push(p); });
+  act.forEach(p => { const k = p[key] || '—'; (g[k] = g[k] || []).push(p); });
   const rows = Object.entries(g).sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], 'uk'));
   if (!rows.length) return `<p class="empty">${t('emptyProblem')}</p>`;   // как портал
   const max = rows[0][1].length;
@@ -1976,7 +1990,7 @@ function pageHome(){
   return `${hero(t('dash'), t('visible') + vis.length, true)}
   ${kpiStrip()}
   <div class="grid2">${wp(t('wpHealth'), donut())}${wp(t('wpDyn'), dynamics())}</div>
-  <div class="grid2">${wp(t('wpRiskMap'), riskMap(), ['risks','open'])}${wp(t('wpDept'), deptBars())}</div>
+  <div class="grid2">${wp(t('wpRiskMap'), riskMap(), ['risks','open'])}<div class="stack2">${wp(t('wpDept'), deptBars())}${wp(t('wpCountry'), deptBars('country'))}</div></div>
   <div class="grid2">${wp(t('wpSlips'), slipsTable())}${wp(t('wpLaunch'), launchTable())}</div>
   <div class="dash">
     ${wp(t('wpProblem'), table(probCols, prob, {empty:t('emptyProblem')}), ['projects','problem'])}
@@ -2119,6 +2133,7 @@ function accessList(p){
   add(p.owner, t('lvlRead'), fl('owner'));
   (p.stakeholders || []).forEach(n => add(n, t('lvlRead'), fl('team')));
   [p.owner].concat(p.stakeholders || []).filter(Boolean).forEach(x => chain(x).forEach(m => add(m, t('lvlRead'), roleOf(m))));
+  ceosOf(p).forEach(n => add(n, t('lvlRead'), t('ceoRole') + ' · ' + tv(p.country)));   // в конце, как Get-Access: уже есть — своя роль
   return rows.join('') + `<li><span class="pav" style="background:var(--text-3)">PMO</span><span class="pn"><b>${t('pmoGroup')}</b></span><span class="lvl">${t('lvlPmo')}</span></li>`;
 }
 // ===== Сповіщення (колокольчик) — те же правила, что logic/notify.ts приложения: кто что видит, что новое =====
@@ -2289,7 +2304,7 @@ function projectPanel(id, showCm, keep, showCh){
     <div class="sec"><h3>${t('secDates')}</h3><div class="group">
       ${kv('start', fmt(D(p.start)))}${kv('golive', fmt(D(p.golive)))}${kv('plan', planHtml(p))}${kv('fc', p.fc ? fmt(D(p.fc)) + dev : '')}${p.ae ? kv('ae', fmt(D(p.ae))) : ''}${p.archivedAt ? kv('archived', fmt(D(p.archivedAt))) : ''}</div></div>
     <div class="sec"><h3>${t('secMoney')}</h3><div class="group">
-      ${kv('progress', barHtml(p.progress))}${kv('last', freshHtml(p).replace(/^<span class="rag" title="[^"]*">/, '<span class="rag">'))}${kv('budget', money(p.budget))}${kv('actual', money(p.actual) + ' · ' + useHtml(p))}${kv('dept', esc(tv(p.dept)))}</div></div>
+      ${kv('progress', barHtml(p.progress))}${kv('last', freshHtml(p).replace(/^<span class="rag" title="[^"]*">/, '<span class="rag">'))}${kv('budget', money(p.budget))}${kv('actual', money(p.actual) + ' · ' + useHtml(p))}${kv('dept', esc(tv(p.dept)))}${kv('country', p.country ? esc(tv(p.country)) : '')}</div></div>
     <div class="sec"><h3>${t('secChanges')}</h3>${changesHtml(p, showCh)}</div>
     <div class="sec"><h3>${fl('comments')}</h3>${cmBlock}
       ${isArch(p) ? `<p class="note lock" style="margin-top:12px">🔒 ${t('archNoComments')}</p>` : `<form id="cmform" class="frow" style="margin-top:12px" novalidate>
@@ -2339,6 +2354,8 @@ function projectForm(p){
       <div><label class="t" for="p-code">${fl('code')}</label><input type="text" id="p-code" value="${esc(p.code || '')}" placeholder="${t('codeAuto')}" readonly disabled></div>
       <div><label class="t" for="p-dept">${fl('dept')}</label><select id="p-dept">${DEPTS.map(d => opt(d, p.dept)).join('')}</select></div>
     </div>
+    ${isNew ? `<div class="frow"><label class="t" for="p-country">${fl('country')} *</label><select id="p-country"><option value="">${t('notSet')}</option>${COUNTRIES.map(c => opt(c, p.country, tv(c))).join('')}</select></div>`
+      : `<div class="frow"><label class="t">${fl('country')}</label><div class="fixedval" id="p-country-fixed">${p.country ? esc(tv(p.country)) : '—'}</div></div>`}
     ${isNew ? `<fieldset class="ragpick"><legend>${fl('type')}</legend>${segPick('p-type', TYPES, p.type)}</fieldset>` : ''}
     <div class="frow"><label class="t" for="p-prio">${fl('prio')}</label><select id="p-prio">${PRIOS.map(s => opt(s, p.prio)).join('')}</select><p class="hint">${t('prioHint')}</p></div>
     <div class="frow"><label class="t" for="p-parent">${fl('parent')}</label><select id="p-parent"><option value="0">${t('notSet')}</option>${parentChoices(visAll().map(x => ({id:x.id, parentId:x.parent || 0, code:x.code})), isNew ? 0 : p.id).sort((a, b) => a.code.localeCompare(b.code, 'uk', {numeric:true})).map(x => `<option value="${x.id}"${x.id === (p.parent || 0) ? ' selected' : ''}>${esc(pLabel(x.id))}</option>`).join('')}</select><p class="hint">${t('parentHint')}</p></div>
@@ -2386,6 +2403,8 @@ function projectForm(p){
       pm:g('p-pm').value, owner:g('p-owner').value, prio:g('p-prio').value, parent:+g('p-parent').value || 0, budget:Math.round(+g('p-budget').value.replace(/\s/g, '') || 0), desc:g('p-desc').value.trim()};
     if (!vals.title) return err(t('errTitle'));
     if (!vals.pm) return err(t('errPM'));
+    // страна — только у нового проекта (PMO), обязательна; потом — «Призначення»
+    if (isNew){ vals.country = g('p-country').value; if (!vals.country) return err(t('errCountry')); }
     // #96: при правке карточки (PM) «Мета та опис» обязательно; новый проект PMO заводит без него
     const de = g('e-desc'); de.hidden = true; g('p-desc').removeAttribute('aria-invalid');
     if (!isNew && !vals.desc){ de.textContent = t('errDesc'); de.hidden = false; g('p-desc').setAttribute('aria-invalid', 'true'); g('p-desc').focus(); return err(t('errDesc')); }
@@ -2447,6 +2466,8 @@ function assignForm(p){
     <div class="frow"><label class="t" for="a-pm">${t('assignNewPm')}</label>${peopleSelect('a-pm', '')}</div>
     <div class="frow"><label class="t">${fl('owner')}</label><div class="fixedval">${esc(p.owner || '—')}</div></div>
     <div class="frow"><label class="t" for="a-own">${t('assignNewOwner')}</label>${peopleSelect('a-own', '')}</div>
+    <div class="frow"><label class="t">${fl('country')}</label><div class="fixedval">${p.country ? esc(tv(p.country)) : '—'}</div></div>
+    <div class="frow"><label class="t" for="a-country">${t('assignNewCountry')}</label><select id="a-country"><option value="">${t('notSet')}</option>${COUNTRIES.map(c => opt(c, '', tv(c))).join('')}</select></div>
     <div class="frow"><label class="t" for="a-note">${t('assignNote')} *</label><textarea id="a-note"></textarea></div>
     <p class="err" hidden></p>
     <div class="actions"><button type="submit" class="btn primary">${t('save')}</button><button type="button" class="btn" data-act="backp" data-id="${p.id}">${t('cancel')}</button></div>
@@ -2455,14 +2476,16 @@ function assignForm(p){
   form.addEventListener('submit', e => {
     e.preventDefault();
     // те же правила, что у синхронизации (tests/cases/assignments.json): что-то меняется, комментарий есть
-    const pm = g('a-pm').value, own = g('a-own').value, note = g('a-note').value.trim();
+    const pm = g('a-pm').value, own = g('a-own').value, ctry = g('a-country').value, note = g('a-note').value.trim();
     const diffs = [];
     if (pm && pm !== p.pm) diffs.push({f:'pm', from:p.pm || '—', to:pm});
     if (own && own !== p.owner) diffs.push({f:'owner', from:p.owner || '—', to:own});
+    if (ctry && ctry !== p.country) diffs.push({f:'country', from:p.country || '—', to:ctry});
     if (!diffs.length) return err(t('errAssignSame'));
     if (!note) return err(t('errAssignNote'));
     if (pm) p.pm = pm;
     if (own) p.owner = own;
+    if (ctry) p.country = ctry;
     p.changes = (p.changes || []).concat([{id:uid(), date:new Date().toISOString(), who:VIEWER, kind:'assign', reason:note, diffs}]);
     rerenderMain(); projectPanel(p.id, false); persist(p); toast(t('savedAssign'));
   });

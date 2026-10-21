@@ -96,6 +96,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .msgbar{display:flex;gap:10px;align-items:flex-start;background:var(--theme-soft);color:var(--text);border-radius:14px;padding:12px 16px;font-size:13px;margin-bottom:28px;max-width:900px}
 .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;margin-bottom:24px}
 .stack{margin-bottom:24px}
+.stack2{display:grid;gap:24px;align-content:start;min-width:0}
 @media (max-width:920px){.grid2{grid-template-columns:minmax(0,1fr)}}
 .wp{background:var(--bg);border-radius:var(--radius);padding:24px 26px;min-width:0;box-shadow:var(--shadow)}
 .wp-h{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 16px;flex-wrap:wrap}
