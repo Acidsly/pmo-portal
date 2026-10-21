@@ -626,6 +626,8 @@ $CEO = @{}
 if ($HAS_CO) {
     foreach ($x in (Get-ListRows $L_CO)) {
         $CEO[[string]$x["Title"]] = @($x["coCeo"] | Where-Object { $_ -and $_.Email } | ForEach-Object { ([string]$_.Email).ToLowerInvariant() })
+        # CEO без e-mail в SharePoint прав не получит — видно в журнале запуска, а не молча
+        foreach ($u in @($x["coCeo"] | Where-Object { $_ -and -not $_.Email })) { Warn "Країни «$($x["Title"])»: у CEO «$($u.LookupValue)» немає e-mail — права не видано" }
     }
 }
 # поле kcItem журнала и psHistory эталона появляются с Deploy-PMO.ps1 (#46 / #48); до развёртывания — без ссылок и без истории

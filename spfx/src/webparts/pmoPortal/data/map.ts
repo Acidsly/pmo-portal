@@ -8,12 +8,14 @@ const PERSON = ['Id', 'Title', 'EMail'];
 const people = (...fields: string[]): string[] => fields.reduce<string[]>((a, f) => a.concat(PERSON.map(x => `${f}/${x}`)), []);
 
 export const PROJECT_SELECT = ['Id', 'Title', 'pmCode', 'pmType', 'pmPriority', 'pmDepartment', 'pmStatus', 'pmRAG', 'pmProgress',
-  'pmStart', 'pmGoLive', 'pmPlanEnd', 'pmForecastEnd', 'pmActualEnd', 'pmArchivedAt', 'pmBudget', 'pmActualCost', 'pmLastUpdate', 'pmLastReport', 'pmCountry',
+  'pmStart', 'pmGoLive', 'pmPlanEnd', 'pmForecastEnd', 'pmActualEnd', 'pmArchivedAt', 'pmBudget', 'pmActualCost', 'pmLastUpdate', 'pmLastReport',
   'pmLastComment', 'pmLoop', 'pmLinks', 'pmDescription', 'pmEditLog', 'pmAccess', 'Created', 'EffectiveBasePermissions', ...people('pmManager', 'pmOwner', 'pmStakeholders')].join(',');
 export const PROJECT_EXPAND = 'pmManager,pmOwner,pmStakeholders';
 /** «Батьківський проєкт» (pmParent, lookup на «Проєкти»): название — из записи, видно и без доступа к родителю. Отдельно:
  *  поля может ещё не быть на сайте (приложение установили раньше Deploy-PMO.ps1) — тогда проекты читаются без него. */
 export const PROJECT_PARENT = { select: ',pmParentId,pmParent/Title', expand: ',pmParent' };
+/** Поля, которых на сайте до Deploy-PMO.ps1 может не быть: без них проекты и «Призначення» всё равно читаются (запасной запрос). */
+export const PROJECT_COUNTRY = ',pmCountry';
 export const REPORT_SELECT = ['Id', 'Title', 'srProjectId', 'srDate', 'srPeriod', 'srPeriodFrom', 'srSchedule', 'srBudget', 'srResources', 'srStatus', 'srType',
   'srProgress', 'srStart', 'srGoLive', 'srPlanEnd', 'srForecastEnd', 'srActualEnd', 'srActualCost', 'srKeyReason', 'srDone', 'srNext', 'srIssues',
   'srDecision', 'srDecisionText', 'srApplied', 'srApproval', 'srApprovedAt', 'srApprovalNote', 'Created', ...people('Author', 'srApprovedBy')].join(',');
@@ -79,8 +81,9 @@ export const TEAM_EXPAND = 'tmUser,Author';
 export const mapTeam = (r: any): TeamMember => ({ id: r.Id, projectId: r.tmProjectId, user: mapPerson(r.tmUser), role: s(r.tmRole), topics: s(r.tmTopics),
   dir: s(r.FileDirRef), author: mapPerson(r.Author) });
 
-export const ASSIGN_SELECT = ['Id', 'paProjectId', 'paNote', 'paApplied', 'paCountry', 'Created', ...people('paManager', 'paOwner', 'Author')].join(',');
+export const ASSIGN_SELECT = ['Id', 'paProjectId', 'paNote', 'paApplied', 'Created', ...people('paManager', 'paOwner', 'Author')].join(',');
 export const ASSIGN_EXPAND = 'paManager,paOwner,Author';
+export const ASSIGN_COUNTRY = ',paCountry';
 export const mapAssign = (r: any): Assignment => ({ id: r.Id, projectId: r.paProjectId, manager: mapPerson(r.paManager), owner: mapPerson(r.paOwner),
   note: s(r.paNote), applied: r.paApplied === true, author: mapPerson(r.Author), created: s(r.Created), country: s(r.paCountry) });
 export const APPROVAL_SELECT = ['Id', 'apReportId', 'apProjectId', 'apDecision', 'apSchedule', 'apBudget', 'apResources', 'apNote', 'apApplied', 'Created', ...people('Author')].join(',');

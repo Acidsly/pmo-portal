@@ -43,7 +43,8 @@
   SPEC (поле, роли, доступ, главная, колонки), DATA-MODEL (поле, `paCountry`, «Країни», роль `ceo`), DEPLOYMENT (поля, `config/countries.json`, доступ), USER-GUIDE ×3 + `npm run guide`, RELEASES ×3 (1.7.6.0), CLAUDE.md (модель данных, правило доступа), CHANGELOG; `Build-Runbook.ps1` → коммит → `Publish-Runbook.ps1`.
   Приёмка: Jest сверяет разделы «Довідки» и первый выпуск = версия пакета; `Test-Scripts.ps1` — runbook совпадает.
 
-- [ ] **Этап 6. Ворота.** Diff и итоги теста — пользователю; push / слияние — после «да»; прод (сначала создать `config/countries.json` прода; `deploy` с ним → `app` → `sync-dryrun` → `sync`, runbook уже опубликован) — после отдельного «да».
+- [x] **Этап 3–5** — 21.10: прототип, приложение 1.7.6.0 на тесте, «Довідка» ×3, SPEC, DEPLOYMENT, CLAUDE.md; кросс-ревью кода (Sonnet): без блокирующих; исправлено — запасные запросы без «Країни» (приложение раньше `deploy`), предупреждение синхронизации о CEO без e-mail.
+- [ ] **Этап 6. Ворота.** Прод — порядок: `Publish-Runbook.ps1` → `config/countries-prod.json` → `deploy` → `app` → `sync-dryrun` → `sync` → **`rebuild-permissions`** (архивные проекты получают CEO только при полном пересчёте) → `whois` трёх CEO. Diff и итоги теста — пользователю; push / слияние — после «да»; прод (сначала создать `config/countries.json` прода; `deploy` с ним → `app` → `sync-dryrun` → `sync`, runbook уже опубликован) — после отдельного «да».
 
 ## Риски
 
