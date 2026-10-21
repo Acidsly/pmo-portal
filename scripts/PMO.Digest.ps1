@@ -19,7 +19,7 @@ $DG_T = @{
         introCeo = "Проєкти країн: {0} — стан зараз і що змінилося з минулого листа."
         now = "Стан зараз"; changed = "Що змінилося"; since = "з листа від {0}"; first = "Перший дайджест — зміни з'являться в наступному листі."
         nothing = "Без змін."; attention = "Потребує уваги"; projects = "Проєкти"; byCountry = "За країнами"
-        kpiTotal = "проєктів"; kpiRed = "червоних"; kpiDecision = "чекають рішення"; kpiStale = "без свіжого звіту (14 дн.)"
+        kpiTotal = "проєктів"; kpiRed = "червоних"; kpiDecision = "чекають рішення"; kpiStale = "без звіту понад 14 дн."
         g = "Зелений"; y = "Жовтий"; r = "Червоний"; n = "Не оцінено"
         progress = "Виконання"; budget = "Бюджет"; spent = "витрачено {0} з {1}"; start = "Старт"; plan = "План"; forecast = "Прогноз"
         slip = "+{0} дн."; ahead = "−{0} дн."; report = "Статус-звіт від {0}"; noReport = "Погоджених звітів ще немає"
@@ -44,7 +44,7 @@ $DG_T = @{
         introCeo = "Projects in {0} — current state and what changed since the last letter."
         now = "Current state"; changed = "What changed"; since = "since the letter of {0}"; first = "First digest — changes will appear in the next letter."
         nothing = "No changes."; attention = "Needs attention"; projects = "Projects"; byCountry = "By country"
-        kpiTotal = "projects"; kpiRed = "red"; kpiDecision = "awaiting decision"; kpiStale = "no fresh report (14 d)"
+        kpiTotal = "projects"; kpiRed = "red"; kpiDecision = "awaiting decision"; kpiStale = "no report for 14+ days"
         g = "Green"; y = "Amber"; r = "Red"; n = "Not rated"
         progress = "Progress"; budget = "Budget"; spent = "spent {0} of {1}"; start = "Start"; plan = "Plan"; forecast = "Forecast"
         slip = "+{0} d"; ahead = "−{0} d"; report = "Status report of {0}"; noReport = "No approved reports yet"
@@ -69,7 +69,7 @@ $DG_T = @{
         introCeo = "Проекты стран: {0} — состояние сейчас и что изменилось с прошлого письма."
         now = "Состояние сейчас"; changed = "Что изменилось"; since = "с письма от {0}"; first = "Первый дайджест — изменения появятся в следующем письме."
         nothing = "Без изменений."; attention = "Требует внимания"; projects = "Проекты"; byCountry = "По странам"
-        kpiTotal = "проектов"; kpiRed = "красных"; kpiDecision = "ждут решения"; kpiStale = "без свежего отчёта (14 дн.)"
+        kpiTotal = "проектов"; kpiRed = "красных"; kpiDecision = "ждут решения"; kpiStale = "без отчёта более 14 дн."
         g = "Зелёный"; y = "Жёлтый"; r = "Красный"; n = "Не оценено"
         progress = "Выполнение"; budget = "Бюджет"; spent = "потрачено {0} из {1}"; start = "Старт"; plan = "План"; forecast = "Прогноз"
         slip = "+{0} дн."; ahead = "−{0} дн."; report = "Статус-отчёт от {0}"; noReport = "Согласованных отчётов ещё нет"
@@ -307,8 +307,9 @@ function DgPeople($x, $T) { "$($T.pm) $(DgE $x.pm) · $($T.ownerP) $(DgE $x.owne
 # сводка портфеля (руководитель, CEO): показатели, состояние, бюджет, «потребує уваги», страны, таблица
 function DgPortfolio($M, $T) {
     $k = $M.kpi
-    $tile = { param($num, $label, $color) "<td width=`"25%`" valign=`"top`" style=`"padding:4px`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`" style=`"background:$($DG.soft);border-radius:8px`"><tr><td style=`"padding:12px 10px;font-family:$($DG.font)`"><div style=`"font-size:30px;line-height:32px;font-weight:900;color:$color`">$num</div><div style=`"font-size:11px;line-height:14px;color:$($DG.muted);padding-top:4px`">$(DgE $label)</div></td></tr></table></td>" }
-    $tiles = "<tr><td style=`"padding:4px 20px`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`"><tr>" +
+    # плитки — ячейки одной строки таблицы: высота у всех одинаковая, даже если подпись переносится
+    $tile = { param($num, $label, $color) "<td width=`"25%`" valign=`"top`" style=`"background:$($DG.soft);border-radius:8px;padding:12px 10px;font-family:$($DG.font)`"><div style=`"font-size:30px;line-height:32px;font-weight:900;color:$color`">$num</div><div style=`"font-size:11px;line-height:14px;color:$($DG.muted);padding-top:4px`">$(DgE $label)</div></td>" }
+    $tiles = "<tr><td style=`"padding:4px 18px`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"6`" border=`"0`" style=`"border-collapse:separate;border-spacing:6px 0`"><tr>" +
         (& $tile $k.total $T.kpiTotal $DG.ink) + (& $tile $k.r $T.kpiRed $DG.r) + (& $tile $k.decisions $T.kpiDecision $DG.coral) + (& $tile $k.stale $T.kpiStale $DG.violet) + "</tr></table></td></tr>"
     $tot = [math]::Max(1, $k.g + $k.y + $k.r + $k.n)
     $dist = DgBar @(@{ w = $k.g * 100 / $tot; c = $DG.g }, @{ w = $k.y * 100 / $tot; c = $DG.y }, @{ w = $k.r * 100 / $tot; c = $DG.r }, @{ w = $k.n * 100 / $tot; c = $DG.n }) 14
@@ -316,7 +317,7 @@ function DgPortfolio($M, $T) {
     $distRow = "<tr><td style=`"padding:12px 24px 0 24px`">$dist<div style=`"font-family:$($DG.font);font-size:12px;line-height:20px;color:$($DG.text);padding-top:8px`">$legend</div></td></tr>"
     $burn = if ($k.budget) { [math]::Round($k.cost / $k.budget * 100) } else { 0 }
     $budgetRow = "<tr><td style=`"padding:16px 24px 0 24px;font-family:$($DG.font)`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`"><tr>" +
-        "<td style=`"font-size:12px;color:$($DG.muted);padding-bottom:4px`">$($T.budgetPf)</td><td align=`"right`" style=`"font-size:13px;color:$($DG.ink);padding-bottom:4px`"><b>$(DgE ($T.spentPct -f (DgMoney $k.cost), (DgMoney $k.budget), $burn))</b></td></tr>" +
+        "<td valign=`"bottom`" style=`"font-size:12px;color:$($DG.muted);padding-bottom:4px;white-space:nowrap;padding-right:8px`">$($T.budgetPf)</td><td align=`"right`" style=`"font-size:13px;color:$($DG.ink);padding-bottom:4px`"><b>$(DgE ($T.spentPct -f (DgMoney $k.cost), (DgMoney $k.budget), $burn))</b></td></tr>" +
         "<tr><td colspan=`"2`">$(DgBudgetBar @{ budget = $k.budget; cost = $k.cost; forecastCost = $k.forecast; progress = 100 } 10)</td></tr>" +
         "<tr><td colspan=`"2`" style=`"font-size:12px;color:$($DG.muted);padding-top:4px`">$(DgE ($T.fcost -f (DgMoney $k.forecast))) $(DgBudgetNote @{ budget = $k.budget; forecastCost = $k.forecast } $T)</td></tr></table></td></tr>"
     $att = if (@($M.attention | Where-Object { $_ }).Count) {
