@@ -27,6 +27,9 @@ $DG_T = @{
         owner = "відп."; due = "до {0}"; overdue = "прострочено"; pm = "PM"; open = "Відкрити картку"; portal = "Відкрити портал"
         why = "Ви отримуєте цей лист як {0}. Лист щопонеділка; якщо змін і питань немає — листа немає."
         roleMember = "власник або учасник команди проєктів"; roleManager = "керівник PM"; roleCeo = "CEO країни"
+        budgetPf = "Бюджет портфеля"; spentPct = "витрачено {0} з {1} · {2}%"; decisionsH = "Потрібні рішення"; risksH = "Головні ризики"; waits = "чекає з {0}"
+        ownerP = "власник"; colBudget = "бюджет"; aRed = "червоний стан"; aSlip = "прогноз +{0} дн."; aOverdue = "прострочений ризик"; aStale = "немає свіжого звіту"
+        aPaused = "призупинено"; aBurn = "освоєно {0}% бюджету при виконанні {1}%"; ask = "До кого"
         footer = "PPM — Управління портфелем проєктів · Eclectic Group"
     }
     en = @{
@@ -45,6 +48,9 @@ $DG_T = @{
         owner = "owner"; due = "due {0}"; overdue = "overdue"; pm = "PM"; open = "Open the card"; portal = "Open the portal"
         why = "You receive this letter as {0}. Sent every Monday; no changes and no open questions — no letter."
         roleMember = "a project owner or team member"; roleManager = "a PM's manager"; roleCeo = "a country CEO"
+        budgetPf = "Portfolio budget"; spentPct = "spent {0} of {1} · {2}%"; decisionsH = "Decisions needed"; risksH = "Top risks"; waits = "waiting since {0}"
+        ownerP = "owner"; colBudget = "budget"; aRed = "red status"; aSlip = "forecast +{0} d"; aOverdue = "overdue risk"; aStale = "no fresh report"
+        aPaused = "on hold"; aBurn = "{0}% of budget spent at {1}% progress"; ask = "Contact"
         footer = "PPM — Project Portfolio Management · Eclectic Group"
     }
     ru = @{
@@ -63,6 +69,9 @@ $DG_T = @{
         owner = "отв."; due = "до {0}"; overdue = "просрочено"; pm = "PM"; open = "Открыть карточку"; portal = "Открыть портал"
         why = "Вы получаете это письмо как {0}. Письмо по понедельникам; нет изменений и вопросов — нет письма."
         roleMember = "владелец или участник команды проектов"; roleManager = "руководитель PM"; roleCeo = "CEO страны"
+        budgetPf = "Бюджет портфеля"; spentPct = "потрачено {0} из {1} · {2}%"; decisionsH = "Нужные решения"; risksH = "Главные риски"; waits = "ждёт с {0}"
+        ownerP = "владелец"; colBudget = "бюджет"; aRed = "красное состояние"; aSlip = "прогноз +{0} дн."; aOverdue = "просроченный риск"; aStale = "нет свежего отчёта"
+        aPaused = "приостановлен"; aBurn = "освоено {0}% бюджета при выполнении {1}%"; ask = "К кому"
         footer = "PPM — Управление портфелем проектов · Eclectic Group"
     }
 }
@@ -135,9 +144,6 @@ function DgProjectCard($p, $T, $M) {
     $dec = if (@($p.decisions | Where-Object { $_ }).Count) {
         "<table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`" style=`"margin-top:14px`"><tr><td style=`"background:#FFF1EC;border-left:4px solid $($DG.coral);padding:10px 12px;font-family:$($DG.font);font-size:13px;line-height:18px;color:$($DG.ink)`"><b>$($T.decisions):</b> " + (($p.decisions | ForEach-Object { DgE $_ }) -join "; ") + "</td></tr></table>"
     } else { "" }
-    $changes = if (-not $M.first) {
-        "<div style=`"font-size:12px;font-weight:700;color:$($DG.violet);padding:16px 0 4px;text-transform:uppercase;letter-spacing:.5px`">$($T.changed) <span style=`"color:$($DG.muted);font-weight:400;text-transform:none;letter-spacing:0`">$(DgE ($T.since -f (DgDate $M.prevDate)))</span></div>" + (DgChangeRows $p.changes $T)
-    } else { "" }
     @"
 <tr><td style="padding:6px 24px 14px 24px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid $($DG.line);border-radius:10px;border-collapse:separate">
@@ -146,7 +152,8 @@ function DgProjectCard($p, $T, $M) {
     <td style="font-size:12px;color:$($DG.muted);font-weight:700">$(DgE $p.code) · $(DgE $p.status)</td>
     <td align="right" style="white-space:nowrap">$(DgDot $k 10) <span style="font-size:12px;font-weight:700;color:$($DG.ink)">$($T[$k])</span></td>
   </tr></table>
-  <div style="font-size:18px;line-height:23px;font-weight:700;color:$($DG.ink);padding:4px 0 12px"><a href="$($p.url)" style="color:$($DG.ink);text-decoration:none">$(DgE $p.title)</a></div>
+  <div style="font-size:18px;line-height:23px;font-weight:700;color:$($DG.ink);padding:4px 0 2px"><a href="$($p.url)" style="color:$($DG.ink);text-decoration:none">$(DgE $p.title)</a></div>
+  <div style="font-size:12px;line-height:17px;color:$($DG.muted);padding-bottom:12px">$($T.pm) $(DgE $p.pm) · $($T.ownerP) $(DgE $p.owner)</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
     <td style="font-size:12px;color:$($DG.muted);padding-bottom:4px">$($T.progress)</td><td align="right" style="font-size:20px;font-weight:900;color:$($DG.ink);padding-bottom:4px">$($p.progress)%</td></tr>
     <tr><td colspan="2">$(DgPct $p.progress $DG.violet)</td></tr></table>
@@ -161,14 +168,55 @@ function DgProjectCard($p, $T, $M) {
   $rep
   $risks
   $dec
-  $changes
   <div style="padding-top:14px"><a href="$($p.url)" style="font-size:13px;font-weight:700;color:$($DG.violet);text-decoration:none">$($T.open) →</a></div>
 </td></tr></table>
 </td></tr>
 "@
 }
 
-# сводка портфеля (руководитель, CEO): показатели, распределение по состоянию, «потребує уваги», таблица
+# сводные данные письма из проектов: показатели, «Потребує уваги», решения, ризики, изменения, страны
+function Complete-DigestModel($M) {
+    $T = $DG_T[$M.lang]; if (-not $T) { $T = $DG_T.uk }
+    $ps = @($M.projects)
+    $k = @{ total = $ps.Count; g = 0; y = 0; r = 0; n = 0; decisions = 0; stale = 0; budget = 0.0; cost = 0.0 }
+    $att = @(); $dec = @(); $risks = @(); $chg = @()
+    foreach ($p in $ps) {
+        $rk = DgRag $p.rag; $k[$rk]++
+        $k.budget += [double]$p.budget; $k.cost += [double]$p.cost
+        $stale = $p.stale -or -not $p.report
+        if ($stale) { $k.stale++ }
+        $burn = if ($p.budget) { [math]::Round([double]$p.cost / [double]$p.budget * 100) } else { 0 }
+        $why = @()
+        if ($rk -eq "r") { $why += $T.aRed }
+        if ($p.status -eq "Призупинено") { $why += $T.aPaused }
+        if ($p.slipDays -gt 30) { $why += ($T.aSlip -f $p.slipDays) }
+        if ($burn -gt [double]$p.progress + 20) { $why += ($T.aBurn -f $burn, $p.progress) }
+        if (@($p.risks | Where-Object { $_ -and $_.overdue }).Count) { $why += $T.aOverdue }
+        if ($stale) { $why += $T.aStale }
+        if ($why.Count) { $att += @{ code = $p.code; title = $p.title; url = $p.url; rag = $p.rag; pm = $p.pm; owner = $p.owner; reason = ($why -join " · ") } }
+        foreach ($d in @($p.decisions | Where-Object { $_ })) { $k.decisions++; $dec += @{ code = $p.code; title = $p.title; url = $p.url; text = $d; pm = $p.pm; owner = $p.owner; since = $p.report.date } }
+        foreach ($x in @($p.risks | Where-Object { $_ })) { $risks += @{ code = $p.code; title = $x.title; score = [int]$x.score; owner = $x.owner; due = $x.due; overdue = [bool]$x.overdue } }
+        foreach ($c in @($p.changes | Where-Object { $_ })) { $chg += @{ code = $p.code; kind = $c.kind; text = $c.text } }
+    }
+    $M.kpi = $k
+    $order = @{ r = 0; y = 1; n = 2; g = 3 }
+    $M.attention = @($att | Sort-Object { $order[(DgRag $_.rag)] })
+    $M.decisionsList = $dec
+    $M.topRisks = @($risks | Where-Object { $_.overdue -or $_.score -ge 12 } | Sort-Object @{ e = { -[int]$_.overdue } }, @{ e = { -$_.score } } | Select-Object -First 6)
+    $rank = @{ worse = 0; better = 1; info = 2 }
+    $M.changes = @($chg | Sort-Object { $rank[$_.kind] })
+    if ($M.kind -eq "ceo") {
+        $M.byCountry = @($M.countries | ForEach-Object { $c = $_; $in = @($ps | Where-Object { $_.country -eq $c })
+            $row = @{ name = $c; g = 0; y = 0; r = 0; n = 0; budget = 0.0; cost = 0.0 }
+            foreach ($p in $in) { $row[(DgRag $p.rag)]++; $row.budget += [double]$p.budget; $row.cost += [double]$p.cost }
+            $row })
+    }
+    $M
+}
+
+function DgPeople($x, $T) { "$($T.pm) $(DgE $x.pm) · $($T.ownerP) $(DgE $x.owner)" }
+
+# сводка портфеля (руководитель, CEO): показатели, состояние, бюджет, «потребує уваги», страны, таблица
 function DgPortfolio($M, $T) {
     $k = $M.kpi
     $tile = { param($num, $label, $color) "<td width=`"25%`" valign=`"top`" style=`"padding:4px`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`" style=`"background:$($DG.soft);border-radius:8px`"><tr><td style=`"padding:12px 10px;font-family:$($DG.font)`"><div style=`"font-size:30px;line-height:32px;font-weight:900;color:$color`">$num</div><div style=`"font-size:11px;line-height:14px;color:$($DG.muted);padding-top:4px`">$(DgE $label)</div></td></tr></table></td>" }
@@ -178,27 +226,68 @@ function DgPortfolio($M, $T) {
     $dist = DgBar @(@{ w = $k.g * 100 / $tot; c = $DG.g }, @{ w = $k.y * 100 / $tot; c = $DG.y }, @{ w = $k.r * 100 / $tot; c = $DG.r }, @{ w = $k.n * 100 / $tot; c = $DG.n }) 14
     $legend = (@("g", "y", "r", "n") | ForEach-Object { "<span style=`"white-space:nowrap;padding-right:12px`">$(DgDot $_ 8) $($T[$_]) <b style=`"color:$($DG.ink)`">$($k[$_])</b></span>" }) -join " "
     $distRow = "<tr><td style=`"padding:12px 24px 0 24px`">$dist<div style=`"font-family:$($DG.font);font-size:12px;line-height:20px;color:$($DG.text);padding-top:8px`">$legend</div></td></tr>"
+    $burn = if ($k.budget) { [math]::Round($k.cost / $k.budget * 100) } else { 0 }
+    $budgetRow = "<tr><td style=`"padding:16px 24px 0 24px;font-family:$($DG.font)`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`"><tr>" +
+        "<td style=`"font-size:12px;color:$($DG.muted);padding-bottom:4px`">$($T.budgetPf)</td><td align=`"right`" style=`"font-size:13px;color:$($DG.ink);padding-bottom:4px`"><b>$(DgE ($T.spentPct -f (DgMoney $k.cost), (DgMoney $k.budget), $burn))</b></td></tr>" +
+        "<tr><td colspan=`"2`">$(DgPct $burn $DG.violet)</td></tr></table></td></tr>"
     $att = if (@($M.attention | Where-Object { $_ }).Count) {
         (DgH $T.attention $DG.coral) + "<tr><td style=`"padding:0 24px`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`">" +
         (($M.attention | ForEach-Object {
-            "<tr><td style=`"padding:4px 0`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`"><tr><td style=`"border-left:4px solid $($DG[(DgRag $_.rag)]);background:$($DG.soft);padding:9px 12px;font-family:$($DG.font);font-size:13px;line-height:18px;color:$($DG.text)`"><a href=`"$($_.url)`" style=`"color:$($DG.ink);font-weight:700;text-decoration:none`">$(DgE $_.code) · $(DgE $_.title)</a><br>$(DgE $_.reason)</td></tr></table></td></tr>" }) -join "") +
+            "<tr><td style=`"padding:4px 0`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`"><tr><td style=`"border-left:4px solid $($DG[(DgRag $_.rag)]);background:$($DG.soft);padding:9px 12px;font-family:$($DG.font);font-size:13px;line-height:18px;color:$($DG.text)`"><a href=`"$($_.url)`" style=`"color:$($DG.ink);font-weight:700;text-decoration:none`">$(DgE $_.code) · $(DgE $_.title)</a><br>$(DgE $_.reason)<br><span style=`"font-size:11px;color:$($DG.muted)`">$(DgPeople $_ $T)</span></td></tr></table></td></tr>" }) -join "") +
         "</table></td></tr>"
     } else { "" }
-    $rows = ($M.projects | ForEach-Object {
-        $slip = if ($_.slipDays -gt 0) { "<span style=`"color:$($DG.r);font-weight:700`">$(DgE ($T.slip -f $_.slipDays))</span>" } else { "<span style=`"color:$($DG.muted)`">—</span>" }
-        "<tr><td valign=`"top`" style=`"padding:9px 6px 9px 0;border-bottom:1px solid $($DG.line);width:14px`">$(DgDot (DgRag $_.rag) 10)</td>" +
-        "<td style=`"padding:8px 6px;border-bottom:1px solid $($DG.line);font-family:$($DG.font);font-size:13px;line-height:17px`"><a href=`"$($_.url)`" style=`"color:$($DG.ink);font-weight:700;text-decoration:none`">$(DgE $_.title)</a><br><span style=`"font-size:11px;color:$($DG.muted)`">$(DgE $_.code) · $($T.pm) $(DgE $_.pm)$(if ($_.country) { ' · ' + (DgE $_.country) })</span></td>" +
-        "<td valign=`"top`" style=`"padding:8px 6px;border-bottom:1px solid $($DG.line);width:64px;font-family:$($DG.font);font-size:12px;color:$($DG.ink);font-weight:700`">$($_.progress)%<div style=`"padding-top:4px`">$(DgPct $_.progress $DG.violet)</div></td>" +
-        "<td valign=`"top`" align=`"right`" style=`"padding:8px 0 8px 6px;border-bottom:1px solid $($DG.line);width:56px;font-family:$($DG.font);font-size:12px;white-space:nowrap`">$slip</td></tr>" }) -join ""
-    $table = (DgH $T.projects $DG.violet) + "<tr><td style=`"padding:0 24px`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`" style=`"border-collapse:collapse`">$rows</table></td></tr>"
     $countries = if (@($M.byCountry | Where-Object { $_ }).Count) {
         (DgH $T.byCountry $DG.violet) + "<tr><td style=`"padding:0 24px`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`">" +
         (($M.byCountry | ForEach-Object {
             $cn = [math]::Max(1, $_.g + $_.y + $_.r + $_.n)
-            "<tr><td style=`"padding:6px 10px 6px 0;width:120px;font-family:$($DG.font);font-size:13px;color:$($DG.ink)`">$(DgE $_.name) <span style=`"color:$($DG.muted)`">$($_.g + $_.y + $_.r + $_.n)</span></td><td style=`"padding:6px 0`">$(DgBar @(@{ w = $_.g * 100 / $cn; c = $DG.g }, @{ w = $_.y * 100 / $cn; c = $DG.y }, @{ w = $_.r * 100 / $cn; c = $DG.r }, @{ w = $_.n * 100 / $cn; c = $DG.n }) 10)</td></tr>" }) -join "") +
+            $cb = if ($_.budget) { [math]::Round($_.cost / $_.budget * 100) } else { 0 }
+            "<tr><td valign=`"top`" style=`"padding:7px 10px 7px 0;width:110px;font-family:$($DG.font);font-size:13px;color:$($DG.ink)`"><b>$(DgE $_.name)</b> <span style=`"color:$($DG.muted)`">$($_.g + $_.y + $_.r + $_.n)</span></td>" +
+            "<td style=`"padding:9px 0 7px 0;font-family:$($DG.font)`">$(DgBar @(@{ w = $_.g * 100 / $cn; c = $DG.g }, @{ w = $_.y * 100 / $cn; c = $DG.y }, @{ w = $_.r * 100 / $cn; c = $DG.r }, @{ w = $_.n * 100 / $cn; c = $DG.n }) 10)" +
+            "<div style=`"font-size:11px;line-height:15px;color:$($DG.muted);padding-top:4px`">$(DgE ($T.spentPct -f (DgMoney $_.cost), (DgMoney $_.budget), $cb))</div></td></tr>" }) -join "") +
         "</table></td></tr>"
     } else { "" }
-    $tiles + $distRow + $att + $countries + $table
+    $rows = ($M.projects | ForEach-Object {
+        $slip = if ($_.slipDays -gt 0) { "<span style=`"color:$($DG.r);font-weight:700`">$(DgE ($T.slip -f $_.slipDays))</span>" } elseif ($_.slipDays -lt 0) { "<span style=`"color:$($DG.g);font-weight:700`">$(DgE ($T.ahead -f (-$_.slipDays)))</span>" } else { "<span style=`"color:$($DG.muted)`">—</span>" }
+        $pb = if ($_.budget) { [math]::Round([double]$_.cost / [double]$_.budget * 100) } else { 0 }
+        $pbC = if ($pb -gt [double]$_.progress + 20) { $DG.coral } else { $DG.n }
+        "<tr><td valign=`"top`" style=`"padding:11px 6px 9px 0;border-bottom:1px solid $($DG.line);width:14px`">$(DgDot (DgRag $_.rag) 10)</td>" +
+        "<td style=`"padding:8px 6px;border-bottom:1px solid $($DG.line);font-family:$($DG.font);font-size:13px;line-height:17px`"><a href=`"$($_.url)`" style=`"color:$($DG.ink);font-weight:700;text-decoration:none`">$(DgE $_.title)</a><br><span style=`"font-size:11px;color:$($DG.muted)`">$(DgE $_.code)$(if ($_.country) { ' · ' + (DgE $_.country) }) · $(DgPeople $_ $T)</span></td>" +
+        "<td valign=`"top`" style=`"padding:8px 6px;border-bottom:1px solid $($DG.line);width:92px;font-family:$($DG.font);font-size:11px;color:$($DG.muted)`"><b style=`"color:$($DG.ink);font-size:12px`">$($_.progress)%</b><div style=`"padding:3px 0 5px`">$(DgPct $_.progress $DG.violet)</div>$($T.colBudget) <b style=`"color:$($DG.ink)`">$pb%</b><div style=`"padding-top:3px`">$(DgPct $pb $pbC)</div><div style=`"padding-top:3px;white-space:nowrap`">$(DgMoney $_.cost) / $(DgMoney $_.budget)</div></td>" +
+        "<td valign=`"top`" align=`"right`" style=`"padding:8px 0 8px 6px;border-bottom:1px solid $($DG.line);width:52px;font-family:$($DG.font);font-size:12px;white-space:nowrap`">$slip</td></tr>" }) -join ""
+    $table = (DgH $T.projects $DG.violet) + "<tr><td style=`"padding:0 24px`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`" style=`"border-collapse:collapse`">$rows</table></td></tr>"
+    $tiles + $distRow + $budgetRow + $att + $countries + $table
+}
+
+# «Потрібні рішення»: что, по какому проекту, к кому обращаться, с какой даты ждёт
+function DgDecisions($list, $T) {
+    if (-not @($list | Where-Object { $_ }).Count) { return "" }
+    (DgH $T.decisionsH $DG.coral) + "<tr><td style=`"padding:0 24px`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`">" +
+    (($list | ForEach-Object {
+        $since = if ($_.since) { " · " + (DgE ($T.waits -f (DgDate $_.since))) } else { "" }
+        "<tr><td style=`"padding:4px 0`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`"><tr><td style=`"background:#FFF1EC;border-left:4px solid $($DG.coral);padding:10px 12px;font-family:$($DG.font);font-size:13px;line-height:18px;color:$($DG.ink)`"><b>$(DgE $_.text)</b><br>" +
+        "<a href=`"$($_.url)`" style=`"color:$($DG.text);text-decoration:none`">$(DgE $_.code) · $(DgE $_.title)</a><br><span style=`"font-size:11px;color:$($DG.muted)`">$($T.ask): $(DgPeople $_ $T)$since</span></td></tr></table></td></tr>" }) -join "") +
+    "</table></td></tr>"
+}
+
+# «Головні ризики» портфеля: просроченные и с оценкой от 12
+function DgRisks($list, $T) {
+    if (-not @($list | Where-Object { $_ }).Count) { return "" }
+    (DgH $T.risksH $DG.r) + "<tr><td style=`"padding:0 24px`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`" style=`"font-family:$($DG.font)`">" +
+    (($list | ForEach-Object {
+        $c = if ($_.score -ge 15) { $DG.r } elseif ($_.score -ge 8) { $DG.y } else { $DG.g }
+        $d = if ($_.overdue) { DgPill $T.overdue $DG.r } else { "<span style=`"color:$($DG.muted)`">$(DgE ($T.due -f (DgDate $_.due)))</span>" }
+        "<tr><td valign=`"top`" style=`"width:34px;padding:6px 8px 6px 0;border-bottom:1px solid $($DG.line)`">$(DgPill ([string]$_.score) $c)</td><td style=`"padding:6px 0;border-bottom:1px solid $($DG.line);font-size:13px;line-height:18px;color:$($DG.text)`"><b style=`"color:$($DG.ink)`">$(DgE $_.code)</b> $(DgE $_.title)<br><span style=`"font-size:11px;color:$($DG.muted)`">$($T.owner) $(DgE $_.owner) · </span><span style=`"font-size:11px`">$d</span></td></tr>" }) -join "") +
+    "</table></td></tr>"
+}
+
+# «Що змінилося»: общий список (руководитель, CEO) или по проектам (участник)
+function DgChanges($M, $T, [bool]$byProject) {
+    $since = if ($M.first) { "" } else { "<div style=`"font-size:12px;color:$($DG.muted);padding-bottom:6px`">" + (DgE ($T.since -f (DgDate $M.prevDate))) + "</div>" }
+    $inner = if ($M.first) { "<p style=`"margin:0;color:$($DG.muted);font-size:13px`">$($T.first)</p>" }
+        elseif ($byProject) {
+            ($M.projects | ForEach-Object { "<div style=`"font-size:13px;font-weight:700;color:$($DG.ink);padding:10px 0 2px`">$(DgE $_.code) · $(DgE $_.title)</div>" + (DgChangeRows $_.changes $T) }) -join ""
+        } else { DgChangeRows $M.changes $T }
+    (DgH $T.changed $DG.violet) + "<tr><td style=`"padding:0 24px;font-family:$($DG.font)`">$since$inner</td></tr>"
 }
 
 # письмо целиком; $Logo — "cid:ppm-logo" (рассылка) или data URI (просмотр)
@@ -208,14 +297,12 @@ function New-DigestHtml($M, [string]$Logo) {
     $intro = switch ($M.kind) { "member" { $T.introMember } "manager" { $T.introManager } default { $T.introCeo -f ($M.countries -join ", ") } }
     $role = switch ($M.kind) { "member" { $T.roleMember } "manager" { $T.roleManager } default { $T.roleCeo } }
     $week = $T.week -f (DgDate $M.from), (DgDate $M.to)
+    $M = Complete-DigestModel $M
     $pre = if ($M.kind -eq "member") { ($M.projects | ForEach-Object { "$($_.code) — $($T[(DgRag $_.rag)])" }) -join " · " } else { "$($M.kpi.total) $($T.kpiTotal) · $($M.kpi.r) $($T.kpiRed) · $($M.kpi.decisions) $($T.kpiDecision)" }
     $body = if ($M.kind -eq "member") {
-        (DgH $T.now $DG.coral) + (($M.projects | ForEach-Object { DgProjectCard $_ $T $M }) -join "")
+        (DgH $T.now $DG.coral) + (($M.projects | ForEach-Object { DgProjectCard $_ $T $M }) -join "") + (DgChanges $M $T $true)
     } else {
-        $ch = if ($M.first) { "<p style=`"margin:0;color:$($DG.muted);font-size:13px`">$($T.first)</p>" } else { DgChangeRows $M.changes $T }
-        $sinceDiv = if ($M.first) { "" } else { "<div style=`"font-size:12px;color:$($DG.muted);padding-bottom:6px`">" + (DgE ($T.since -f (DgDate $M.prevDate))) + "</div>" }
-        (DgH $T.now $DG.coral) + (DgPortfolio $M $T) +
-        (DgH $T.changed $DG.violet) + "<tr><td style=`"padding:0 24px;font-family:$($DG.font)`">$sinceDiv$ch</td></tr>"
+        (DgH $T.now $DG.coral) + (DgPortfolio $M $T) + (DgDecisions $M.decisionsList $T) + (DgRisks $M.topRisks $T) + (DgChanges $M $T $false)
     }
     $firstNote = if ($M.first -and $M.kind -eq "member") { "<tr><td style=`"padding:0 24px 8px;font-family:$($DG.font);font-size:12px;color:$($DG.muted)`">$($T.first)</td></tr>" } else { "" }
     @"
