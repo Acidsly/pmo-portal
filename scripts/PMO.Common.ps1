@@ -140,7 +140,7 @@ function Get-StateValue([string]$k, $v) {
 # значения ключевых полей записи проекта (как их видит синхронизация: Norm)
 function Get-CardState($item) {
     $st = [ordered]@{}
-    foreach ($k in Get-StateKeys) { $st[$k] = Get-StateValue $k $item[$k] }
+    foreach ($k in Get-StateKeys) { $st[$k] = if ($item.FieldValues.ContainsKey($k)) { Get-StateValue $k $item[$k] } else { "" } }
     return $st
 }
 # расхождения карточки с эталоном: @{ f; card; state } по каждому отличающемуся полю

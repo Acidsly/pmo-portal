@@ -680,7 +680,8 @@ $PROJ = @{}
 foreach ($it in $projects) {
     $PROJ[$it.Id] = [pscustomobject]@{ Item = $it; Values = @{} }
     foreach ($f in @($DISPLAY.Keys) + @("pmActualCost","pmLastUpdate","pmLastReport","pmLastComment","pmArchivedAt","pmoAcl","pmCode","pmCountry")) {
-        $PROJ[$it.Id].Values[$f] = Norm $it[$f]
+        # поля, которых на сайте ещё нет (до Deploy-PMO.ps1, например pmCountry), — пусто, а не ошибка
+        $PROJ[$it.Id].Values[$f] = if ($it.FieldValues.ContainsKey($f)) { Norm $it[$f] } else { "" }
     }
     # PM и владелец — e-mail (как в эталоне); все правила читают их отсюда: «Призначення» меняет их в этом же запуске
     foreach ($f in $STATE_PEOPLE) { $PROJ[$it.Id].Values[$f] = Get-StateValue $f $it[$f] }

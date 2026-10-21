@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:487f9f3839e9 — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:4a7ac26be3d6 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -211,7 +211,7 @@ function Get-StateValue([string]$k, $v) {
 # значения ключевых полей записи проекта (как их видит синхронизация: Norm)
 function Get-CardState($item) {
     $st = [ordered]@{}
-    foreach ($k in Get-StateKeys) { $st[$k] = Get-StateValue $k $item[$k] }
+    foreach ($k in Get-StateKeys) { $st[$k] = if ($item.FieldValues.ContainsKey($k)) { Get-StateValue $k $item[$k] } else { "" } }
     return $st
 }
 # расхождения карточки с эталоном: @{ f; card; state } по каждому отличающемуся полю
@@ -887,7 +887,8 @@ $PROJ = @{}
 foreach ($it in $projects) {
     $PROJ[$it.Id] = [pscustomobject]@{ Item = $it; Values = @{} }
     foreach ($f in @($DISPLAY.Keys) + @("pmActualCost","pmLastUpdate","pmLastReport","pmLastComment","pmArchivedAt","pmoAcl","pmCode","pmCountry")) {
-        $PROJ[$it.Id].Values[$f] = Norm $it[$f]
+        # поля, которых на сайте ещё нет (до Deploy-PMO.ps1, например pmCountry), — пусто, а не ошибка
+        $PROJ[$it.Id].Values[$f] = if ($it.FieldValues.ContainsKey($f)) { Norm $it[$f] } else { "" }
     }
     # PM и владелец — e-mail (как в эталоне); все правила читают их отсюда: «Призначення» меняет их в этом же запуске
     foreach ($f in $STATE_PEOPLE) { $PROJ[$it.Id].Values[$f] = Get-StateValue $f $it[$f] }
