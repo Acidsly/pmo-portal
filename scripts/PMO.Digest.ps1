@@ -230,7 +230,7 @@ function DgGantt($M, $T) {
         $done = $s.AddDays(($fc - $s).TotalDays * [double]$_.progress / 100)
         $P0 = & $pos $s; $Pd = & $pos $done; $Pp = & $pos $pl; $Pf = & $pos $fc
         $pts = @(0, 100, $P0, $Pd, $Pp, $Pf, $tp, [math]::Min(100, $tp + $tw)) | Sort-Object -Unique
-        $cells = for ($i = 0; $i -lt $pts.Count - 1; $i++) {
+        $segs = for ($i = 0; $i -lt $pts.Count - 1; $i++) {
             $a = $pts[$i]; $b = $pts[$i + 1]; if ($b - $a -lt 0.05) { continue }
             $mid = ($a + $b) / 2
             $col = if ($mid -ge $tp -and $mid -le $tp + $tw) { $DG.black }
@@ -238,14 +238,20 @@ function DgGantt($M, $T) {
                 elseif ($mid -lt $Pd) { $DG.violet }
                 elseif ($Pf -ge $Pp) { if ($mid -lt $Pp) { $DG.line } elseif ($mid -lt $Pf) { $DG.r } else { $DG.soft } }
                 else { if ($mid -lt $Pf) { $DG.line } elseif ($mid -lt $Pp) { "#BFE8CB" } else { $DG.soft } }
-            "<td width=`"$([math]::Round($b - $a, 2))%`" style=`"background:$col;height:10px;line-height:10px;font-size:1px;mso-line-height-rule:exactly`">&nbsp;</td>"
+            @{ w = $b - $a; c = $col }
+        }
+        # концы полосы проекта скруглены (как у остальных полос); фон и «сьогодні» — не полоса
+        $bar = @(for ($i = 0; $i -lt $segs.Count; $i++) { if ($segs[$i].c -ne $DG.soft -and $segs[$i].c -ne $DG.black) { $i } })
+        $cells = for ($i = 0; $i -lt $segs.Count; $i++) {
+            $rad = if ($bar.Count -and $i -eq $bar[0] -and $i -eq $bar[-1]) { "border-radius:5px;" } elseif ($bar.Count -and $i -eq $bar[0]) { "border-radius:5px 0 0 5px;" } elseif ($bar.Count -and $i -eq $bar[-1]) { "border-radius:0 5px 5px 0;" } else { "" }
+            "<td width=`"$([math]::Round($segs[$i].w, 2))%`" style=`"background:$($segs[$i].c);${rad}height:10px;line-height:10px;font-size:1px;mso-line-height-rule:exactly`">&nbsp;</td>"
         }
         $slip = if ($_.slipDays -gt 0) { DgPill ($T.slip -f $_.slipDays) $DG.r } elseif ($_.slipDays -lt 0) { DgPill ($T.ahead -f (-$_.slipDays)) $DG.g } else { "" }
         $was = if ($_.prevForecastEnd -and $_.prevForecastEnd -ne $_.forecastEnd) { " · " + (DgE ($T.wasF -f (DgDate $_.prevForecastEnd))) } else { "" }
         "<tr><td style=`"padding:10px 0 3px 0;font-family:$($DG.font)`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`"><tr>" +
         "<td style=`"font-size:12px;line-height:16px;color:$($DG.ink)`"><b>$(DgE $_.code)</b> $(DgE $_.title)<br><span style=`"font-size:11px;color:$($DG.muted)`">$(DgDate $_.start) → $($T.plan.ToLower()) $(DgDate $_.planEnd) · $($T.forecast.ToLower()) $(DgDate $_.forecastEnd)$was</span></td>" +
         "<td align=`"right`" valign=`"top`" style=`"white-space:nowrap;padding-left:6px`">$slip</td></tr></table></td></tr>" +
-        "<tr><td><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`" style=`"border-collapse:collapse`"><tr>$($cells -join '')</tr></table></td></tr>" }) -join ""
+        "<tr><td><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`" style=`"border-collapse:separate;border-spacing:0;border-radius:5px;overflow:hidden`"><tr>$($cells -join '')</tr></table></td></tr>" }) -join ""
     $leg = @(@($DG.violet, $T.legDone), @($DG.line, $T.legLeft), @($DG.r, $T.legSlip), @("#BFE8CB", $T.legEarly), @($DG.black, $T.legToday)) |
         ForEach-Object { "<span style=`"white-space:nowrap;padding-right:10px`"><span style=`"display:inline-block;width:10px;height:10px;background:$($_[0]);vertical-align:middle`">&nbsp;</span> $(DgE $_[1])</span>" }
     (DgH $T.gantt $DG.violet) +
