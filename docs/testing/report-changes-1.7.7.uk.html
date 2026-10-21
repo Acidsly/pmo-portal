@@ -1,0 +1,198 @@
+<title>Статус-звіт 1.7.7</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Roboto+Mono:wght@400;500&display=swap">
+<style>
+/* Макет: одна колонка «пояснювальної записки» для команди PM; ліворуч — номер зміни, праворуч — фрагмент форми, як у порталі.
+   Палітра — eclectic.group: чорний, кораловий, фіолетовий; семантика — зелений / жовтий / червоний. */
+:root{
+  --bg:#F6F5F8; --paper:#FFFFFF; --ink:#141217; --text:#3D3A44; --muted:#7A7682; --line:#E2DFE8; --soft:#F1EFF5;
+  --coral:#F2805F; --violet:#8C6CCB; --violet-soft:#EEE8FA; --coral-soft:#FFEDE7; --ok:#2E9E57; --warn:#D98A00; --bad:#D9443B;
+  --head:#0D0D0D; --head-fg:#FFFFFF;
+  --display:"Roboto", "Segoe UI", Arial, sans-serif; --body:"Roboto", "Segoe UI", Arial, sans-serif; --mono:"Roboto Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#121114; --paper:#1B1A1F; --ink:#F3F1F7; --text:#CFCBD6; --muted:#9A95A3; --line:#2F2C36; --soft:#24222A;
+  --coral:#FF957A; --violet:#AA8EE6; --violet-soft:#2C2540; --coral-soft:#3A2620; --ok:#45C06E; --warn:#F2A93B; --bad:#F0675E;
+  --head:#000000; --head-fg:#FFFFFF; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#121114; --paper:#1B1A1F; --ink:#F3F1F7; --text:#CFCBD6; --muted:#9A95A3; --line:#2F2C36; --soft:#24222A;
+  --coral:#FF957A; --violet:#AA8EE6; --violet-soft:#2C2540; --coral-soft:#3A2620; --ok:#45C06E; --warn:#F2A93B; --bad:#F0675E;
+  --head:#000000; --head-fg:#FFFFFF; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font:15px/1.6 var(--body);margin:0}
+.band{background:var(--head);color:var(--head-fg);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 34px}
+.band .in,.wrap{max-width:860px;margin:0 auto}
+.stripe{height:4px;background:linear-gradient(90deg,var(--coral) 0 50%,var(--violet) 50% 100%)}
+.eyebrow{font:500 12px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:#B9B4C2}
+h1{font:900 clamp(28px,5vw,44px)/1.05 var(--display);text-transform:uppercase;letter-spacing:.01em;margin:14px 0 12px;text-wrap:balance}
+.lead{max-width:62ch;color:#D9D5E0;margin:0;font-size:16px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:18px;font-size:13px;color:#B9B4C2}
+.meta b{color:#fff;font-weight:500}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:30px 56px;display:grid;gap:28px}
+h2{font:900 15px/1.2 var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);margin:0 0 12px;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:4px;height:18px;background:var(--coral);border-radius:2px}
+h3{font:700 18px/1.3 var(--display);color:var(--ink);margin:0 0 6px;text-wrap:balance}
+p{margin:0 0 10px;max-width:68ch}
+.why{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:20px 22px}
+.why ul{margin:6px 0 0;padding-left:20px}
+.why li{margin:4px 0}
+.change{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:20px 22px}
+.num{font:900 26px/1 var(--display);color:var(--violet);font-variant-numeric:tabular-nums}
+.change .body{min-width:0}
+.rule{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px}
+.chip{font:500 12px/1 var(--body);padding:6px 9px;border-radius:999px;background:var(--soft);color:var(--text);border:1px solid var(--line)}
+.chip.req{background:var(--coral-soft);color:var(--ink);border-color:transparent}
+.chip.new{background:var(--violet-soft);color:var(--ink);border-color:transparent}
+/* фрагмент форми — як у порталі */
+.form{margin-top:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:14px;display:grid;gap:12px}
+.form .cap{font:700 11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.fld{display:grid;gap:5px;min-width:0}
+.fld label{font:500 12.5px/1.2 var(--body);color:var(--ink)}
+.fld label i{color:var(--bad);font-style:normal}
+.inp{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:9px 11px;font:500 14px/1.2 var(--body);color:var(--ink);font-variant-numeric:tabular-nums;min-height:38px}
+.inp.ro{background:var(--soft);color:var(--text);font-weight:400}
+.inp.err{border-color:var(--bad)}
+.hint{font-size:12px;color:var(--muted);line-height:1.4}
+.hint.bad{color:var(--bad)}
+.hint.ai{color:var(--violet)}
+.area{min-height:62px;line-height:1.45}
+.wide{grid-column:1/-1}
+.then{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-top:4px}
+.then div{background:var(--soft);border-radius:8px;padding:10px 12px;font-size:13.5px}
+.then b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+.tw{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:12px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:700 11px/1.2 var(--body);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+td.y{color:var(--bad);font-weight:700;white-space:nowrap} td.n{color:var(--muted);white-space:nowrap}
+.mail{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.mail div{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.mail b{color:var(--ink)}
+.ask{background:var(--violet-soft);border-radius:12px;padding:20px 22px}
+.ask ol{margin:6px 0 0;padding-left:22px} .ask li{margin:6px 0}
+.mono{font-family:var(--mono);font-size:12.5px}
+@media (max-width:560px){ .change{grid-template-columns:1fr;gap:6px} .then{grid-template-columns:1fr} }
+</style>
+
+<header>
+  <div class="band"><div class="in">
+    <div class="eyebrow">PPM · для команди проєктних менеджерів</div>
+    <h1>Що зміниться у статус-звіті</h1>
+    <p class="lead">Бюджет починає жити так само, як терміни, а звіт показує план і факт: що планували, що зробили, чого не зробили. Цього не було в початковому ТЗ — тому просимо подивитися й погодити до виходу на робочий портал.</p>
+    <div class="meta"><span>Версія <b>1.7.7</b></span><span>Спершу — <b>тестовий портал</b></span><span>Робочий портал — <b>після вашого погодження</b></span></div>
+  </div></div>
+  <div class="stripe"></div>
+</header>
+
+<main class="wrap">
+  <section class="why">
+    <h2>Навіщо</h2>
+    <p>Керівники та CEO країн отримуватимуть щопонеділка лист-дайджест по своїх проєктах. Щоб лист відповідав на головні питання, у звіті бракує трьох речей:</p>
+    <ul>
+      <li><b>скільки проєкт коштуватиме до кінця</b> — зараз видно лише вже витрачене;</li>
+      <li><b>чому змінився бюджет</b> — плановий бюджет зараз правиться в картці без пояснення;</li>
+      <li><b>що з запланованого не зроблено</b> — зараз це треба шукати в тексті двох звітів.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Що змінюється у формі звіту</h2>
+    <div style="display:grid;gap:14px">
+
+      <article class="change">
+        <div class="num">1</div>
+        <div class="body">
+          <h3>«Бюджет (план)» — у ключових показниках звіту</h3>
+          <p>Плановий бюджет PMO задає при створенні проєкту. Далі PM змінює його лише у статус-звіті, як дати. У картку новий бюджет потрапляє після погодження PMO, в «Історії змін» — з причиною. У формі картки бюджет тепер тільки для перегляду.</p>
+          <div class="rule"><span class="chip new">поле звіту</span><span class="chip req">зміна — з причиною</span><span class="chip">після погодження PMO</span></div>
+        </div>
+      </article>
+
+      <article class="change">
+        <div class="num">2</div>
+        <div class="body">
+          <h3>Новий показник «Прогноз витрат на завершення»</h3>
+          <p>Скільки, за вашою оцінкою, проєкт коштуватиме до кінця — так само, як «Прогноз завершення» для дат. Форма підставляє значення з попереднього звіту; змінюєте лише тоді, коли змінилась оцінка. Під полем — підказка «за темпом витрат»: витрати на дату ÷ % виконання.</p>
+          <div class="rule"><span class="chip new">поле звіту</span><span class="chip req">зміна — з причиною</span><span class="chip">не менше за «Витрати на дату»</span><span class="chip">«Завершено» / «Скасовано» — дорівнює витратам</span></div>
+          <div class="form" aria-label="Приклад блоку «Ключові показники»">
+            <div class="cap">Ключові показники — приклад</div>
+            <div class="grid">
+              <div class="fld"><label>Бюджет (план), $</label><div class="inp">95 000</div></div>
+              <div class="fld"><label>Витрати на дату, $</label><div class="inp">71 000</div></div>
+              <div class="fld"><label>Прогноз витрат на завершення, $</label><div class="inp">120 000</div><div class="hint">за темпом витрат: ~177 500 $ (71 000 ÷ 40%)</div></div>
+              <div class="fld wide"><label>Причина зміни показників <i>*</i></label><div class="inp area">Прогноз +25 000 $: ліцензія агентства потребує локального директора (додатково юридичні послуги та зарплата директора до кінця проєкту).</div><div class="hint">Обов'язкова, бо змінився прогноз витрат.</div></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="change">
+        <div class="num">3</div>
+        <div class="body">
+          <h3>Причина обов'язкова для термінів і бюджету</h3>
+          <p>Як і зараз — для статусу, типу та всіх дат. Додаються «Бюджет (план)» і «Прогноз витрат на завершення». «Витрати на дату» та «% виконання» причини не потребують — це факт, він змінюється в кожному звіті.</p>
+        </div>
+      </article>
+
+      <article class="change">
+        <div class="num">4</div>
+        <div class="body">
+          <h3>План і факт: «Планувалось» та «Не зроблено з плану»</h3>
+          <p>Над новим полем форма показує «Планувалось» — ваш «План на наступний період» з останнього погодженого звіту. У новому полі коротко пишете, що з цього не зроблено і чому. Якщо все виконано — так і пишете.</p>
+          <div class="rule"><span class="chip new">поле звіту</span><span class="chip req">обов'язкове, якщо в минулому звіті був план</span><span class="chip">перший звіт — не обов'язкове</span></div>
+          <div class="form" aria-label="Приклад блоку «План і факт»">
+            <div class="cap">План і факт — приклад</div>
+            <div class="fld"><label>Планувалось <span class="hint">(звіт від 09.10.2026, лише перегляд)</span></label><div class="inp ro">Міграція 4 юросіб; UAT payroll.</div></div>
+            <div class="fld"><label>Зроблено за період</label><div class="inp area">Міграція даних 3 з 4 юросіб; навчання ключових користувачів.</div></div>
+            <div class="fld"><label>Не зроблено з плану і чому <i>*</i></label><div class="inp area">Міграцію останньої юрособи і UAT payroll не зроблено: постачальник не надав API.</div><div class="hint ai">Помічник ШІ: «UAT payroll» з плану згадано — добре. Якщо пункт плану не згадано ні тут, ні в «Зроблено», помічник попередить.</div></div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>Що потребує причини</h2>
+    <div class="tw"><table>
+      <thead><tr><th>Показник у звіті</th><th>Причина</th><th>Звідки береться</th></tr></thead>
+      <tbody>
+        <tr><td>Статус, тип, дати (старт, запуск, план, прогноз)</td><td class="y">так</td><td>як зараз</td></tr>
+        <tr><td>Бюджет (план)</td><td class="y">так</td><td>з картки; новий — після погодження</td></tr>
+        <tr><td>Прогноз витрат на завершення</td><td class="y">так</td><td>з попереднього звіту</td></tr>
+        <tr><td>Витрати на дату</td><td class="n">ні</td><td>з попереднього звіту</td></tr>
+        <tr><td>% виконання</td><td class="n">ні</td><td>з попереднього звіту</td></tr>
+        <tr><td>Не зроблено з плану</td><td class="n">—</td><td>обов'язкове, якщо був план</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Що побачать керівники в листі</h2>
+    <div class="mail">
+      <div><b>Бюджет і прогноз.</b> Освоєння бюджету, прогноз до кінця й відхилення: «+25 000 $ (26%) до бюджету» червоним або економія зеленим.</div>
+      <div><b>Потребує уваги.</b> Проєкт із прогнозом перевитрат понад 10% потрапляє в цей розділ разом із PM і власником.</div>
+      <div><b>Не виконано з плану.</b> Що планували, що не зроблено і чому — по кожному проєкту.</div>
+      <div><b>Що змінилося.</b> «Бюджет (план): 100 000 → 120 000 $» і «Прогноз витрат: 95 000 → 120 000 $» — з причиною зі звіту.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Що не змінюється</h2>
+    <p>Уже подані та погоджені звіти лишаються як є: нові поля в них порожні, і прогноз у картці від цього не стирається. Погодження PMO, оцінки «Терміни / Бюджет / Ресурси» і правила подання — без змін. Перший звіт після оновлення: бюджет і витрати підставляться з картки, прогноз — порожній, його варто вказати.</p>
+  </section>
+
+  <section class="ask">
+    <h2>Просимо вашої відповіді</h2>
+    <ol>
+      <li>Чи зручно міняти плановий бюджет лише через звіт (з погодженням PMO), а не в картці?</li>
+      <li>Чи погоджуєтесь, що причина обов'язкова для бюджету й прогнозу витрат?</li>
+      <li>«Не зроблено з плану» — обов'язкове, якщо в минулому звіті був план. Не забагато?</li>
+      <li>Чого бракує у звіті, щоб керівник зрозумів стан проєкту без дзвінка вам?</li>
+    </ol>
+    <p style="margin-top:10px">Відповіді — у «Відгуках» тестового порталу (кнопка «?» → «Залишити відгук») або PMO напряму.</p>
+  </section>
+</main>
