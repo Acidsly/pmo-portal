@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.7.5",
+   "date": "21.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>«Довідка» і «Детальний огляд системи» — про країну, бюджет і прогноз витрат, план і факт; помічник ШІ — чим більше звітів, тим корисніший.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.7.4",
    "date": "21.10.2026",
    "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення без змін у роботі порталу.</li>\n</ul>"
@@ -240,6 +245,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.7.5",
+   "date": "21.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>\"Help\" and \"Detailed system overview\" — country, budget and cost forecast, plan vs actual; the AI assistant — the more reports, the more useful.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.7.4",
    "date": "21.10.2026",
    "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update with no changes to how the portal works.</li>\n</ul>"
@@ -476,6 +486,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.7.5",
+   "date": "21.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>«Справка» и «Подробный обзор системы» — о стране, бюджете и прогнозе затрат, плане и факте; помощник ИИ — чем больше отчётов, тем полезнее.</li>\n</ul>"
+  },
   {
    "ver": "1.7.7.4",
    "date": "21.10.2026",

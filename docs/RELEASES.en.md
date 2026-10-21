@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.7.5 · 21.10.2026
+
+**Changed**
+- "Help" and "Detailed system overview" — country, budget and cost forecast, plan vs actual; the AI assistant — the more reports, the more useful.
+
 ## 1.7.7.4 · 21.10.2026
 
 **Changed**

@@ -1,0 +1,130 @@
+<title>Як заповнювати статус-звіт</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap">
+<style>
+/* Макет: коротка пам'ятка PM — одна колонка, кроки форми звіту за порядком, у кожному — правило і приклад «так / не так».
+   Палітра — eclectic.group: чорна шапка, кораловий і фіолетовий акценти; зелений / червоний — лише для прикладів. */
+:root{
+  --bg:#F6F5F8; --paper:#FFFFFF; --ink:#141217; --text:#3D3A44; --muted:#7A7682; --line:#E2DFE8; --soft:#F1EFF5;
+  --coral:#F2805F; --violet:#8C6CCB; --violet-soft:#EEE8FA; --coral-soft:#FFEDE7; --ok:#2E9E57; --ok-soft:#E7F5EC; --bad:#D9443B; --bad-soft:#FCEBEA;
+  --head:#0D0D0D; --font:"Roboto","Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#121114; --paper:#1B1A1F; --ink:#F3F1F7; --text:#CFCBD6; --muted:#9A95A3; --line:#2F2C36; --soft:#24222A;
+  --coral:#FF957A; --violet:#AA8EE6; --violet-soft:#2C2540; --coral-soft:#3A2620; --ok:#45C06E; --ok-soft:#1D3325; --bad:#F0675E; --bad-soft:#3A2321; --head:#000; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#121114; --paper:#1B1A1F; --ink:#F3F1F7; --text:#CFCBD6; --muted:#9A95A3; --line:#2F2C36; --soft:#24222A;
+  --coral:#FF957A; --violet:#AA8EE6; --violet-soft:#2C2540; --coral-soft:#3A2620; --ok:#45C06E; --ok-soft:#1D3325; --bad:#F0675E; --bad-soft:#3A2321; --head:#000; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font:15px/1.6 var(--font);margin:0}
+.band{background:var(--head);color:#fff;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:36px 30px}
+.in,.wrap{max-width:820px;margin:0 auto}
+.stripe{height:4px;background:linear-gradient(90deg,var(--coral) 0 50%,var(--violet) 50% 100%)}
+.eyebrow{font:500 12px/1 var(--font);letter-spacing:.12em;text-transform:uppercase;color:#B9B4C2}
+h1{font:900 clamp(26px,5vw,40px)/1.08 var(--font);text-transform:uppercase;margin:12px 0 10px;text-wrap:balance}
+.lead{max-width:62ch;color:#D9D5E0;margin:0;font-size:16px}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px;display:grid;gap:22px}
+h2{font:900 14px/1.2 var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);margin:0 0 10px;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:4px;height:17px;background:var(--coral);border-radius:2px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.step{display:grid;grid-template-columns:120px minmax(0,1fr);gap:16px;padding:14px 0;border-top:1px solid var(--line)}
+.step:first-of-type{border-top:0;padding-top:4px}
+.field{font:700 13px/1.35 var(--font);color:var(--ink)}
+.field small{display:block;font-weight:400;color:var(--muted);margin-top:3px}
+.rule p{margin:0 0 8px;max-width:64ch}
+.ex{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:6px}
+.ex div{border-radius:8px;padding:8px 11px;font-size:13.5px;line-height:1.45}
+.ex .yes{background:var(--ok-soft)} .ex .no{background:var(--bad-soft)}
+.ex b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.ex .yes b{color:var(--ok)} .ex .no b{color:var(--bad)}
+.req{display:inline-block;font:500 11px/1 var(--font);padding:4px 7px;border-radius:999px;background:var(--coral-soft);color:var(--ink);margin-left:6px;vertical-align:1px}
+.chain{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:4px}
+.chain div{background:var(--soft);border-radius:10px;padding:12px;font-size:13.5px}
+.chain b{display:block;color:var(--ink);font-size:13px;margin-bottom:3px}
+.ai{background:var(--violet-soft);border-radius:12px;padding:18px 20px}
+.ai p{margin:0 0 8px;max-width:66ch}
+ul{margin:4px 0 0;padding-left:20px} li{margin:4px 0}
+@media print{ .step,.ex,.chain,.ai,.card h2{break-inside:avoid} }
+@media (max-width:600px){ .step{grid-template-columns:1fr;gap:6px} .ex,.chain{grid-template-columns:1fr} }
+</style>
+
+<header>
+  <div class="band"><div class="in">
+    <div class="eyebrow">PPM · пам'ятка для PM · версія 1.7.7</div>
+    <h1>Як заповнювати статус-звіт</h1>
+    <p class="lead">Звіт — головне джерело даних про проєкт: з нього оновлюється картка, а щотижня — лист керівникам і CEO країн. Пишіть так, щоб керівник зрозумів стан проєкту без дзвінка вам.</p>
+  </div></div>
+  <div class="stripe"></div>
+</header>
+
+<main class="wrap">
+  <section class="card">
+    <h2>Три правила</h2>
+    <ul>
+      <li><b>Регулярно.</b> Звіт, старший за 14 днів, для керівників — «немає свіжого звіту».</li>
+      <li><b>Чесно.</b> Жовта чи червона оцінка — не провал, а сигнал, що потрібна допомога. Зелений «Бюджет» при прогнозі вище бюджету — помилка.</li>
+      <li><b>Конкретно.</b> Результати, суми, дати й імена замість «ведеться робота».</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Поле за полем</h2>
+
+    <div class="step"><div class="field">Терміни, Бюджет, Ресурси<small>оцінки</small></div><div class="rule">
+      <p><b>Бюджет</b> — за прогнозом до кінця проєкту, а не лише за вже витраченим: прогноз у межах бюджету — зелений, трохи вище — жовтий, суттєво вище — червоний.</p>
+    </div></div>
+
+    <div class="step"><div class="field">Витрати на дату<small>накопичено з початку</small></div><div class="rule">
+      <p>Усі витрати проєкту на сьогодні, наростаючим підсумком. Причина не потрібна — це факт.</p>
+    </div></div>
+
+    <div class="step"><div class="field">Бюджет (план)<span class="req">з причиною</span></div><div class="rule">
+      <p>Змінюйте, лише коли бюджет змінено погодженим рішенням (додатковий обсяг, нова фаза). У картку новий бюджет потрапить після погодження PMO.</p>
+    </div></div>
+
+    <div class="step"><div class="field">Прогноз витрат на завершення<span class="req">з причиною</span></div><div class="rule">
+      <p>Скільки проєкт коштуватиме до кінця, за вашою оцінкою. Звірте з підказкою «за темпом витрат» під полем: якщо ваша цифра сильно менша — поясніть чому. Прогноз не може бути меншим за витрати на дату.</p>
+      <div class="ex"><div class="yes"><b>Так</b>Прогноз 120 000 $: ліцензія агентства потребує локального директора (+18 000 $) і юриста (+7 000 $).</div>
+        <div class="no"><b>Не так</b>Прогноз не змінювали півроку, хоча витрачено вже 90% бюджету при виконанні 40%.</div></div>
+    </div></div>
+
+    <div class="step"><div class="field">Причина зміни показників</div><div class="rule">
+      <p>Обов'язкова, якщо змінили фазу, тип, дати, бюджет або прогноз. Що змінилось, чому і що це означає для проєкту.</p>
+      <div class="ex"><div class="yes"><b>Так</b>Запуск 15.12 → 20.01: постачальник надасть API payroll на 3 тижні пізніше; без payroll запускати не можна.</div>
+        <div class="no"><b>Не так</b>Зсув термінів.</div></div>
+    </div></div>
+  </section>
+
+  <section class="card">
+    <h2>План і факт</h2>
+    <p style="margin:0 0 10px">Ваш «План на наступний період» у наступному звіті стане «Планувалось» — тож план має бути таким, щоб за тиждень-два можна було сказати: зроблено чи ні.</p>
+    <div class="chain">
+      <div><b>Планувалось</b>план із минулого погодженого звіту — портал показує сам</div>
+      <div><b>Зроблено</b>результати періоду: що можна показати або перевірити</div>
+      <div><b>Не зроблено з плану і чому</b>кожен невиконаний пункт, причина і новий строк</div>
+    </div>
+    <div class="ex" style="margin-top:12px"><div class="yes"><b>Так</b>UAT payroll не проведено: постачальник не надав API; нова дата UAT — 05.11, якщо API буде до 30.10.</div>
+      <div class="no"><b>Не так</b>Частково виконано.</div></div>
+    <p style="margin:12px 0 0">«Не зроблено з плану» <b>обов'язкове</b>, якщо в минулому звіті був план. Зробили все — так і напишіть: «Усе виконано».</p>
+  </section>
+
+  <section class="card">
+    <h2>План, проблеми, рішення</h2>
+    <ul>
+      <li><b>План на наступний період</b> — 2–5 конкретних пунктів із результатом: «Підписати договір оренди», а не «Робота над офісом».</li>
+      <li><b>Проблеми та ризики за період</b> — що заважало і що робите; великі ризики ведіть у реєстрі «Ризики та проблеми» в картці.</li>
+      <li><b>Потрібне рішення керівництва</b> — лише коли рішення поза вашими повноваженнями: яке рішення, до коли, що буде без нього. Його побачать керівники в листі разом з вами як контактом.</li>
+    </ul>
+  </section>
+
+  <section class="ai">
+    <h2>Помічник ШІ — чим далі, тим корисніший</h2>
+    <p>Помічник (пілот) спирається на попередні погоджені звіти проєкту: що планували, що не зробили, як змінювались бюджет і прогноз. Коли по проєкту збереться хоча б кілька звітів, він:</p>
+    <ul>
+      <li><b>«Заповнити з ШІ»</b> — підготує чернетку звіту за даними проєкту й вашим стилем;</li>
+      <li><b>«Перевірити з ШІ»</b> — нагадає пункти минулого плану, про які ви не написали, високі ризики без дій, незгадане рішення, оцінки, що суперечать цифрам.</li>
+    </ul>
+    <p style="margin-top:10px">Тому вже зараз заповнюйте «Зроблено», «Не зроблено з плану» і «План» повно й конкретно — це «пам'ять» проєкту для вас, керівників і помічника. Звіт і оцінки однаково лишаються вашою відповідальністю.</p>
+  </section>
+</main>
