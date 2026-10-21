@@ -192,6 +192,9 @@ function Add-Change($pid_, [string]$title, [string]$field, [string]$from, [strin
     $script:n.changes++
 }
 
+# 1.7.7: прогноз затрат демо-проектов — доля бюджета (разные случаи: перерасход, экономия, по бюджету; PRJ-010 — не задан)
+$FORECAST = @{ "PRJ-001" = 1.15; "PRJ-003" = 0.95; "PRJ-005" = 1.25; "PRJ-009" = 1.08 }
+function ForecastOf($p) { if ($p.Code -eq "PRJ-010") { return $null } $k = if ($FORECAST.ContainsKey($p.Code)) { $FORECAST[$p.Code] } else { 1.0 }; [math]::Round([double]$p.Budget * $k) }
 foreach ($p in $projects) {
     if ($existing.ContainsKey($p.Code)) {
         $ids[$p.Code] = $existing[$p.Code]; Write-Host "  = $($p.Code) уже есть"
@@ -201,6 +204,14 @@ foreach ($p in $projects) {
             Set-PnPListItem -List "Lists/Projects" -Identity $existing[$p.Code] -Values @{ pmCountry = $p.Country } -UpdateType SystemUpdate | Out-Null
             Sync-ProjectStateFromCard $existing[$p.Code]
             Write-Host "    країна: $($p.Country)"
+        }
+        # прогноз затрат (1.7.7) — только пустой, карточка и эталон вместе
+        $fcNow = Get-PnPListItem -List "Lists/Projects" -Id $existing[$p.Code] -Fields "pmForecastCost"
+        $fc = ForecastOf $p
+        if ($fc -and -not [string]$fcNow["pmForecastCost"]) {
+            Set-PnPListItem -List "Lists/Projects" -Identity $existing[$p.Code] -Values @{ pmForecastCost = $fc } -UpdateType SystemUpdate | Out-Null
+            Sync-ProjectStateFromCard $existing[$p.Code]
+            Write-Host "    прогноз витрат: $fc"
         }
         continue
     }
@@ -253,7 +264,7 @@ foreach ($p in $projects) {
 
     # карточка после отчётов = последний отчёт (как после синхронизации)
     if ($last) {
-        $cv = @{ pmStatus = $state.pmStatus; pmProgress = $last.Progress; pmActualCost = $last.Cost
+        $cv = @{ pmStatus = $state.pmStatus; pmProgress = $last.Progress; pmActualCost = $last.Cost; pmForecastCost = (ForecastOf $p)
                  pmRAG = (CalcRag $RAG[$last.S] $RAG[$last.B] $RAG[$last.R]); pmLastUpdate = (SpDate (D $last.Days)); pmLastReport = $last.Title }
         if ($state.pmForecastEnd) { $cv.pmForecastEnd = SpDate $state.pmForecastEnd }
         if (Test-ArchivedStatus $last.Status) { $cv.pmArchivedAt = SpDate (D $last.Days) }

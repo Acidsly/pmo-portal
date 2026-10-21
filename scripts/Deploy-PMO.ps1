@@ -263,6 +263,8 @@ F $P pmActualEnd   DateTime "Дата завершення (факт)" "Actual c
 F $P pmArchivedAt  DateTime "Дата завершення / скасування" "Completed / cancelled on" "Дата завершения / отмены" "Format='DateOnly'"
 F $P pmBudget      Currency "Бюджет (план)"      "Budget (plan)"       "Бюджет (план)"        "LCID='1058' Decimals='0'"
 F $P pmActualCost  Currency "Витрати (факт)"     "Actual cost"         "Затраты (факт)"       "LCID='1058' Decimals='0'"
+# 1.7.7: прогноз затрат к завершению — ключевой показатель из погодженого отчёта (пишет синхронизация)
+F $P pmForecastCost Currency "Прогноз витрат на завершення" "Cost at completion forecast" "Прогноз затрат на завершение" "LCID='1058' Decimals='0'"
 F $P pmLastUpdate  DateTime "Останній статус-звіт" "Last status report" "Последний статус-отчёт" "Format='DateOnly'"
 F $P pmLastReport  Note     "Останній апдейт"    "Latest update"       "Последний апдейт"     "NumLines='3' RichText='FALSE'"
 F $P pmLastComment Note     "Останній коментар"  "Latest comment"      "Последний комментарий" "NumLines='3' RichText='FALSE'"
@@ -355,10 +357,15 @@ F $R srForecastEnd DateTime "Прогноз завершення" "Forecast comp
 F $R srBasedOn     Number   "На основі звіту"    "Based on report"     "На основе отчёта"     "Decimals='0'"
 F $R srActualEnd   DateTime "Дата завершення (факт)" "Actual completion date" "Дата завершения (факт)" "Format='DateOnly'"
 F $R srActualCost  Currency "Витрати на дату"    "Cost to date"        "Затраты на дату"      "LCID='1058' Decimals='0'"
+# 1.7.7: бюджет ведётся как сроки — план и прогноз меняются отчётом (с причиной), в карточку — после погодження
+F $R srBudgetPlan  Currency "Бюджет (план)"      "Budget (plan)"       "Бюджет (план)"        "LCID='1058' Decimals='0'"
+F $R srForecastCost Currency "Прогноз витрат на завершення" "Cost at completion forecast" "Прогноз затрат на завершение" "LCID='1058' Decimals='0'"
 F $R srKeyReason   Note     "Причина зміни показників" "Reason for changing indicators" "Причина изменения показателей" "NumLines='3' RichText='FALSE'"
 F $R srDone        Note     "Зроблено за період" "Done this period"    "Сделано за период"    "NumLines='5' RichText='FALSE'"
 F $R srNext        Note     "План на наступний період" "Plan for next period" "План на следующий период" "NumLines='5' RichText='FALSE'"
 F $R srIssues      Note     "Проблеми та ризики за період" "Issues and risks for the period" "Проблемы и риски за период" "NumLines='5' RichText='FALSE'"
+# 1.7.7: план / факт — что из «Плану на наступний період» прошлого погодженого отчёта не сделано и почему
+F $R srNotDone     Note     "Не зроблено з плану і чому" "Not done from the plan and why" "Не сделано из плана и почему" "NumLines='4' RichText='FALSE'"
 F $R srDecision    Boolean  "Потрібне рішення керівництва" "Management decision needed" "Требуется решение руководства" "" "<Default>0</Default>"
 F $R srDecisionText Note    "Яке рішення потрібне" "Decision required" "Какое решение нужно"  "NumLines='3' RichText='FALSE'"
 # помощник отчёта (copilot/README.md): пишет приложение; синхронизация не читает и не пишет, в журнал не попадает
@@ -654,13 +661,14 @@ if ($Feedback) {
 # Подсказки к полям (описания столбцов, uk / en / ru)
 # ---------------------------------------------------------------------------
 $keep = @("Залиште порожнім, якщо не змінюється.", "Leave empty if unchanged.", "Оставьте пустым, если не меняется.")
-foreach ($n in @("srStart","srGoLive","srPlanEnd","srForecastEnd","srActualCost")) { Desc $R $n $keep[0] $keep[1] $keep[2] }
+foreach ($n in @("srStart","srGoLive","srPlanEnd","srForecastEnd","srActualCost","srBudgetPlan","srForecastCost")) { Desc $R $n $keep[0] $keep[1] $keep[2] }
 # #77: статус, тип и % — в каждом отчёте (зафиксированы в нём; равные карточке синхронизация не меняет)
 Desc $R srType "Тип проєкту на дату звіту (записується завжди)." "Project type as of the report (always recorded)." "Тип проекта на дату отчёта (записывается всегда)."
 Desc $R srProgress "% виконання на дату звіту (записується завжди)." "% complete as of the report (always recorded)." "% выполнения на дату отчёта (записывается всегда)."
 Desc $R srStatus "Фаза проєкту на дату звіту (записується завжди). «Завершено» / «Скасовано» переводить проєкт в архів." "Project phase as of the report (always recorded). «Завершено» / «Скасовано» moves the project to the archive." "Фаза проекта на дату отчёта (записывается всегда). «Завершено» / «Скасовано» переводит проект в архив."
 Desc $R srActualEnd "Обов'язково для «Завершено» і «Скасовано»: коли проєкт фактично завершено або скасовано (не раніше старту, не пізніше дати подання)." "Required for «Завершено» and «Скасовано»: when the project was actually completed or cancelled (not before the start, not after the submission date)." "Обязательно для «Завершено» и «Скасовано»: когда проект фактически завершён или отменён (не раньше старта, не позже даты подачи)."
-Desc $R srKeyReason "Обов'язково, якщо змінюєте статус, тип або дати — потрапить у журнал змін." "Required if you change the status, type or dates — goes to the change log." "Обязательно, если меняете статус, тип или даты — попадёт в журнал изменений."
+Desc $R srKeyReason "Обов'язково, якщо змінюєте статус, тип, дати, бюджет або прогноз витрат — потрапить у журнал змін." "Required if you change the status, type, dates, budget or cost forecast — goes to the change log." "Обязательно, если меняете статус, тип, даты, бюджет или прогноз затрат — попадёт в журнал изменений."
+Desc $R srNotDone "Обов'язково, якщо в минулому погодженому звіті був план: що з нього не зроблено і чому (або «усе виконано»)." "Required if the last approved report had a plan: what of it was not done and why (or “all done”)." "Обязательно, если в прошлом согласованном отчёте был план: что из него не сделано и почему (или «всё выполнено»)."
 Desc $R srDecisionText "Заповніть, якщо позначено «Потрібне рішення керівництва»." "Fill in if «Management decision needed» is checked." "Заполните, если отмечено «Требуется решение руководства»."
 Desc $R srSchedule "Загальний стан звіту — найгірша з трьох оцінок." "Overall health is the worst of the three ratings." "Общее состояние отчёта — худшая из трёх оценок."
 Desc $K riScore "Оцінка = ймовірність × вплив. Від 15 — червоний, від 8 — жовтий." "Score = probability × impact. 15+ red, 8+ yellow." "Оценка = вероятность × влияние. От 15 — красный, от 8 — жёлтый."
@@ -712,8 +720,8 @@ Write-Host "7. Формы и права списков" -ForegroundColor Cyan
 # Ключевые показатели и служебные поля не редактируются в карточке — только через статус-отчёт
 # страна — при создании (PMO), потом только «Призначення»
 Set-FormVisibility $P @("pmStatus","pmRAG","pmType","pmProgress","pmStart","pmGoLive","pmPlanEnd","pmForecastEnd","pmActualEnd",
-                        "pmActualCost","pmArchivedAt","pmLastUpdate","pmLastReport","pmLastComment","pmCountry") $true $false
-Set-FormVisibility $P @("pmRAG","pmForecastEnd","pmActualEnd","pmActualCost","pmArchivedAt","pmLastUpdate","pmLastReport","pmLastComment") $false $false
+                        "pmActualCost","pmArchivedAt","pmLastUpdate","pmLastReport","pmLastComment","pmCountry","pmBudget") $true $false
+Set-FormVisibility $P @("pmRAG","pmForecastEnd","pmActualEnd","pmActualCost","pmForecastCost","pmArchivedAt","pmLastUpdate","pmLastReport","pmLastComment") $false $false
 # «Стратегічний» в отчётах и рисках заполняет синхронизация
 # «Стратегічний» и «Пріоритет» в отчётах и рисках — копия из проекта, заполняет синхронизация
 Set-FormVisibility $R @("srProjectType","srProjectPriority","srApproval","srApprovedBy","srApprovedAt","srApprovalNote") $false $false
