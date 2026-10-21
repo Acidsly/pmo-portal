@@ -98,9 +98,9 @@ function DgH([string]$text, [string]$accent) {
 }
 # кнопка для всех Outlook: VML для Windows, ссылка-таблица для остальных
 function DgButton([string]$href, [string]$text, [string]$bg) {
-    $t = DgE $text
-    "<!--[if mso]><v:roundrect xmlns:v=`"urn:schemas-microsoft-com:vml`" href=`"$href`" style=`"height:40px;v-text-anchor:middle;width:220px`" arcsize=`"50%`" stroke=`"f`" fillcolor=`"$bg`"><center style=`"color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:bold`">$t</center></v:roundrect><![endif]-->" +
-    "<!--[if !mso]><!--><a class=`"btn`" href=`"$href`" style=`"display:inline-block;background:$bg;color:#ffffff;font-family:$($DG.font);font-size:14px;font-weight:700;line-height:40px;padding:0 26px;border-radius:20px;text-decoration:none`">$t</a><!--<![endif]-->"
+    $label = DgE $text
+    "<!--[if mso]><v:roundrect xmlns:v=`"urn:schemas-microsoft-com:vml`" href=`"$href`" style=`"height:40px;v-text-anchor:middle;width:220px`" arcsize=`"50%`" stroke=`"f`" fillcolor=`"$bg`"><center style=`"color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:bold`">$label</center></v:roundrect><![endif]-->" +
+    "<!--[if !mso]><!--><a class=`"btn`" href=`"$href`" style=`"display:inline-block;background:$bg;color:#ffffff;font-family:$($DG.font);font-size:14px;font-weight:700;line-height:40px;padding:0 26px;border-radius:20px;text-decoration:none`">$label</a><!--<![endif]-->"
 }
 
 function DgChangeRows($changes, $T) {
