@@ -2612,7 +2612,14 @@ function riskDueMin(due, prev, created, today){
   const min = c || today;
   return due < min ? min : '';
 }
-window.PPM_RULES = Object.assign(window.PPM_RULES || {}, {reportPeriodFrom, riskDueMin});
+// 1.7.7: «Планувалось» — «План на наступний період» последнего погодженого отчёта (без погодження — применённого); excludeId — сам
+// возвращённый отчёт; «—» и пусто — плана нет (как lastPlan приложения, общие векторы tests/cases/last-plan.json)
+function lastPlanOf(reports, excludeId){
+  const ok = (reports || []).filter(r => r.id !== excludeId && (r.approval === AP_OK || (!r.approval && r.applied))).sort((a, c) => (a.date < c.date ? -1 : a.date > c.date ? 1 : (a.id > c.id ? 1 : -1)));
+  const l = ok[ok.length - 1], t = l && l.next && l.next !== '—' ? String(l.next).trim() : '';
+  return t ? {text:t, date:l.date} : {text:'', date:''};
+}
+window.PPM_RULES = Object.assign(window.PPM_RULES || {}, {reportPeriodFrom, riskDueMin, lastPlanOf});
 const pCreated = p => ((p.changes || []).find(x => x.kind === 'create') || {}).date || '';
 const pFrom = (p, today) => reportPeriodFrom(p.reports || [], p.start || '', pCreated(p), today);
 const periodTxt = r => r.pfrom ? (r.pfrom < r.date ? t('periodFT').replace('{from}', fmt(D(r.pfrom))).replace('{to}', fmt(D(r.date))) : t('periodDay').replace('{date}', fmt(D(r.date)))) : (r.period ? tv(r.period) : '');
@@ -2893,8 +2900,7 @@ function reportForm(pid, base){
     start:bv('start', p0.start), golive:bv('golive', p0.golive), plan:bv('plan', p0.plan), fc:bv('fc', p0.fc), actual:bv('cost', p0.actual),
     budget:bv('bplan', p0.budget), fcost:bv('fcost', p0.fcost)}) : p0;
   // 1.7.7: «Планувалось» — план последнего погодженого отчёта (как lastPlan приложения); возвращённый — без себя
-  const planOf = p => { const ok = (p.reports || []).filter(r => r.approval === AP_OK && (!base || r.id !== base.id)).sort((a, c) => (a.date < c.date ? -1 : a.date > c.date ? 1 : 0));
-    const l = ok[ok.length - 1]; return l && l.next && l.next !== '—' ? {text:l.next, date:l.date} : {text:'', date:''}; };
+  const planOf = p => lastPlanOf(p.reports, base ? base.id : null);
   const pl0 = planOf(sel);
   openPanel(`${formHead(t('newReport'), `${t('listLabel')} «${t('navReports')}»`, 'report')}
   <form id="repform" novalidate>

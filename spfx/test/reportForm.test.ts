@@ -89,3 +89,24 @@ describe('1.7.7 бюджет, прогноз витрат, план / факт',
     expect(withPlan(d0, { text: 'План A', date: '2026-10-01' }).planned).toBe('План A');
   });
 });
+
+// общие векторы «Планувалось»: lastPlan приложения и lastPlanOf прототипа (jsdom)
+import lastPlanCases from '../../tests/cases/last-plan.json';
+describe('«Планувалось» — общие векторы (приложение и прототип)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { JSDOM } = require('jsdom');
+  const html = fs.readFileSync(path.join(__dirname, '../../prototype/pmo-prototype.html'), 'utf8');
+  let win: any;
+  beforeAll(async () => {
+    win = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true, url: 'https://pmo.test/', beforeParse(x: any) {
+      x.matchMedia = () => ({ matches: false, addEventListener() { /* */ }, removeEventListener() { /* */ }, addListener() { /* */ } });
+      x.HTMLElement.prototype.scrollIntoView = function (): void { /* */ }; x.scrollTo = () => undefined; } }).window;
+    for (let i = 0; i < 20 && !(win.PPM_RULES && win.PPM_RULES.lastPlanOf); i++) await new Promise(r => setTimeout(r, 0));
+  });
+  afterAll(() => win && win.close());
+  for (const c of (lastPlanCases as any).cases) test(c.name, () => {
+    const reps = c.reports.map((r: any) => ({ projectId: 1, ...r }));
+    expect(lastPlan(reps, 1, c.excludeId || 0)).toEqual(c.out);
+    expect(JSON.parse(JSON.stringify(win.PPM_RULES.lastPlanOf(c.reports, c.excludeId || null)))).toEqual(c.out);
+  });
+});

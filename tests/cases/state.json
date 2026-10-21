@@ -942,6 +942,144 @@
     "pmBudget",
     "pmForecastCost"
    ]
+  },
+  {
+   "name": "1.7.7: бюджет (план) змінено в обхід звіту (PM у картці) — відкат",
+   "card": {
+    "pmStatus": "Реалізація",
+    "pmRAG": "Жовтий",
+    "pmType": "Звичайний",
+    "pmProgress": "40",
+    "pmStart": "2026-06-01",
+    "pmGoLive": "",
+    "pmPlanEnd": "2026-12-01",
+    "pmForecastEnd": "",
+    "pmActualCost": "100",
+    "pmArchivedAt": "",
+    "pmLastUpdate": "2026-09-20",
+    "pmLastReport": "Звіт",
+    "pmCode": "PRJ-005",
+    "pmActualEnd": "",
+    "pmManager": "pm@x",
+    "pmOwner": "own2@x",
+    "pmCountry": "Польща",
+    "pmBudget": "120000",
+    "pmForecastCost": "95000"
+   },
+   "stateJson": "{\"pmStatus\": \"Реалізація\", \"pmRAG\": \"Жовтий\", \"pmType\": \"Звичайний\", \"pmProgress\": \"40\", \"pmStart\": \"2026-06-01\", \"pmGoLive\": \"\", \"pmPlanEnd\": \"2026-12-01\", \"pmForecastEnd\": \"\", \"pmActualCost\": \"100\", \"pmArchivedAt\": \"\", \"pmLastUpdate\": \"2026-09-20\", \"pmLastReport\": \"Звіт\", \"pmCode\": \"PRJ-005\", \"pmActualEnd\": \"\", \"pmManager\": \"pm@x\", \"pmOwner\": \"own2@x\", \"pmCountry\": \"Польща\", \"pmBudget\": \"95000\", \"pmForecastCost\": \"95000\"}",
+   "record": true,
+   "editor": "pm@x",
+   "owners": [
+    "own@x"
+   ],
+   "out": "rollback",
+   "fields": [
+    "pmBudget"
+   ],
+   "extended": []
+  },
+  {
+   "name": "1.7.7: прогноз витрат змінено в обхід звіту — відкат",
+   "card": {
+    "pmStatus": "Реалізація",
+    "pmRAG": "Жовтий",
+    "pmType": "Звичайний",
+    "pmProgress": "40",
+    "pmStart": "2026-06-01",
+    "pmGoLive": "",
+    "pmPlanEnd": "2026-12-01",
+    "pmForecastEnd": "",
+    "pmActualCost": "100",
+    "pmArchivedAt": "",
+    "pmLastUpdate": "2026-09-20",
+    "pmLastReport": "Звіт",
+    "pmCode": "PRJ-005",
+    "pmActualEnd": "",
+    "pmManager": "pm@x",
+    "pmOwner": "own2@x",
+    "pmCountry": "Польща",
+    "pmBudget": "95000",
+    "pmForecastCost": "200000"
+   },
+   "stateJson": "{\"pmStatus\": \"Реалізація\", \"pmRAG\": \"Жовтий\", \"pmType\": \"Звичайний\", \"pmProgress\": \"40\", \"pmStart\": \"2026-06-01\", \"pmGoLive\": \"\", \"pmPlanEnd\": \"2026-12-01\", \"pmForecastEnd\": \"\", \"pmActualCost\": \"100\", \"pmArchivedAt\": \"\", \"pmLastUpdate\": \"2026-09-20\", \"pmLastReport\": \"Звіт\", \"pmCode\": \"PRJ-005\", \"pmActualEnd\": \"\", \"pmManager\": \"pm@x\", \"pmOwner\": \"own2@x\", \"pmCountry\": \"Польща\", \"pmBudget\": \"95000\", \"pmForecastCost\": \"95000\"}",
+   "record": true,
+   "editor": "pm@x",
+   "owners": [
+    "own@x"
+   ],
+   "out": "rollback",
+   "fields": [
+    "pmForecastCost"
+   ],
+   "extended": []
+  },
+  {
+   "name": "1.7.7: бюджет змінив власник сайту — прийняти",
+   "card": {
+    "pmStatus": "Реалізація",
+    "pmRAG": "Жовтий",
+    "pmType": "Звичайний",
+    "pmProgress": "40",
+    "pmStart": "2026-06-01",
+    "pmGoLive": "",
+    "pmPlanEnd": "2026-12-01",
+    "pmForecastEnd": "",
+    "pmActualCost": "100",
+    "pmArchivedAt": "",
+    "pmLastUpdate": "2026-09-20",
+    "pmLastReport": "Звіт",
+    "pmCode": "PRJ-005",
+    "pmActualEnd": "",
+    "pmManager": "pm@x",
+    "pmOwner": "own2@x",
+    "pmCountry": "Польща",
+    "pmBudget": "120000",
+    "pmForecastCost": "95000"
+   },
+   "stateJson": "{\"pmStatus\": \"Реалізація\", \"pmRAG\": \"Жовтий\", \"pmType\": \"Звичайний\", \"pmProgress\": \"40\", \"pmStart\": \"2026-06-01\", \"pmGoLive\": \"\", \"pmPlanEnd\": \"2026-12-01\", \"pmForecastEnd\": \"\", \"pmActualCost\": \"100\", \"pmArchivedAt\": \"\", \"pmLastUpdate\": \"2026-09-20\", \"pmLastReport\": \"Звіт\", \"pmCode\": \"PRJ-005\", \"pmActualEnd\": \"\", \"pmManager\": \"pm@x\", \"pmOwner\": \"own2@x\", \"pmCountry\": \"Польща\", \"pmBudget\": \"95000\", \"pmForecastCost\": \"95000\"}",
+   "record": true,
+   "editor": "own@x",
+   "owners": [
+    "own@x"
+   ],
+   "out": "accept",
+   "fields": [
+    "pmBudget"
+   ],
+   "extended": []
+  },
+  {
+   "name": "1.7.7: бюджет і прогноз збігаються з еталоном — нічого",
+   "card": {
+    "pmStatus": "Реалізація",
+    "pmRAG": "Жовтий",
+    "pmType": "Звичайний",
+    "pmProgress": "40",
+    "pmStart": "2026-06-01",
+    "pmGoLive": "",
+    "pmPlanEnd": "2026-12-01",
+    "pmForecastEnd": "",
+    "pmActualCost": "100",
+    "pmArchivedAt": "",
+    "pmLastUpdate": "2026-09-20",
+    "pmLastReport": "Звіт",
+    "pmCode": "PRJ-005",
+    "pmActualEnd": "",
+    "pmManager": "pm@x",
+    "pmOwner": "own2@x",
+    "pmCountry": "Польща",
+    "pmBudget": "95000",
+    "pmForecastCost": "95000"
+   },
+   "stateJson": "{\"pmStatus\": \"Реалізація\", \"pmRAG\": \"Жовтий\", \"pmType\": \"Звичайний\", \"pmProgress\": \"40\", \"pmStart\": \"2026-06-01\", \"pmGoLive\": \"\", \"pmPlanEnd\": \"2026-12-01\", \"pmForecastEnd\": \"\", \"pmActualCost\": \"100\", \"pmArchivedAt\": \"\", \"pmLastUpdate\": \"2026-09-20\", \"pmLastReport\": \"Звіт\", \"pmCode\": \"PRJ-005\", \"pmActualEnd\": \"\", \"pmManager\": \"pm@x\", \"pmOwner\": \"own2@x\", \"pmCountry\": \"Польща\", \"pmBudget\": \"95000\", \"pmForecastCost\": \"95000\"}",
+   "record": true,
+   "editor": "pm@x",
+   "owners": [
+    "own@x"
+   ],
+   "out": "none",
+   "fields": [],
+   "extended": []
   }
  ]
 }

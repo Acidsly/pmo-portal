@@ -496,3 +496,44 @@ describe('Країна: обязательна у нового проекта, C
     expect(w.document.body.textContent).toContain('CEO країни · Польща');
   });
 });
+
+describe('1.7.7 прототип: бюджет, прогноз витрат, план / факт', () => {
+  const card = (id: number): void => { q('[data-act="nav"][data-page="projects"]').click(); q(`[data-act="openp"][data-id="${id}"]`).click(); };
+  const txt = (): string => (w.document.body.textContent || '').replace(/[  ]/g, ' ');
+  test('карточка: прогноз и перевитрата; форма карточки — бюджет только для чтения', () => {
+    card(1);                                                  // демо PRJ-001: прогноз = бюджет × 1,12
+    expect(txt()).toContain('Прогноз витрат на завершення');
+    expect(txt()).toMatch(/\+[\d ]+ \$ \(12%\)/);
+    q('[data-act="editproj"][data-id="1"]').click();
+    expect(q('#p-budget-fixed')).not.toBeNull();
+    expect(txt()).toContain('Бюджет (план) змінюється статус-звітом');
+  });
+  test('отчёт: «Скасовано» — прогноз = витрати, поле закрыто; «Планувалось» показано; новый бюджет і прогноз — после погодження в карточке и истории', () => {
+    q('[data-act="nav"][data-page="reports"]').click();
+    q('[data-act="newrep"]:not([data-id])').click();
+    const f = q('#repform'); const g = (id: string): W => f.querySelector('#' + id);
+    const set = (id: string, v: string): void => { g(id).value = v; ev(g(id), 'input'); ev(g(id), 'change'); };
+    expect(g('f-pl-wrap').hidden).toBe(false);                // у демо-проекта есть погоджений отчёт с планом
+    set('f-st', 'Скасовано');
+    expect(g('f-fcost').disabled).toBe(true);
+    expect(g('f-fcost').value).toBe(g('f-c').value);
+    set('f-st', 'Реалізація');
+    expect(g('f-fcost').disabled).toBe(false);
+    const pid = +g('f-p').value;
+    ['sched', 'budget', 'res'].forEach(n => { f.querySelector(`input[name="${n}"][value="Жовтий"]`).checked = true; });
+    set('f-bp', '9999000'); set('f-fcost', '12345000'); set('f-c', '1000');
+    expect(g('f-kr-wrap').hidden).toBe(false);                // бюджет и прогноз изменены — причина обязательна
+    set('f-t', 'Новий бюджет'); set('f-kr', 'Додатковий обсяг'); set('f-nd', 'Усе виконано');
+    f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    expect(q('#repform')).toBeNull();
+    // PMO погоджує — бюджет і прогноз у картці, «було → стало» в історії
+    asPmo(); card(pid);
+    const rep = Array.from(w.document.querySelectorAll('[data-act="repopen"]'))[0] as W; rep.click();
+    q('#ap-ok').click();
+    card(pid);
+    expect(txt()).toContain('9 999 000 $');
+    expect(txt()).toContain('12 345 000 $');
+    q('[data-act="togglech"]') && q('[data-act="togglech"]').click();
+    expect(txt()).toContain('Прогноз витрат на завершення');
+  });
+});

@@ -54,7 +54,8 @@ export function lastPlan(reports: StatusReport[], projectId: number, excludeId =
   const ok = reports.filter(r => r.projectId === projectId && r.id !== excludeId && (r.approval === 'Погоджено' || (!r.approval && r.applied)))
     .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id));
   const last = ok[ok.length - 1];
-  return last && (last.next || '').trim() ? { text: last.next.trim(), date: last.date } : { text: '', date: '' };
+  const text = last ? (last.next || '').trim() : '';
+  return text && text !== '—' ? { text, date: last.date } : { text: '', date: '' };
 }
 export const withPlan = (d: ReportDraft, plan: { text: string; date: string }): ReportDraft => ({ ...d, planned: plan.text, plannedDate: plan.date });
 

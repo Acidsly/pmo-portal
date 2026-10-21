@@ -35,7 +35,7 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/parent.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/money.json", "tests/cases/assignments.json", "tests/cases/history.json", "tests/cases/notify-state.json", "tests/cases/archive.json", "tests/cases/feedback-decided.json", "tests/cases/archive-migration.json", "config/focus-group.example.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/parent.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/money.json", "tests/cases/last-plan.json", "tests/cases/assignments.json", "tests/cases/history.json", "tests/cases/notify-state.json", "tests/cases/archive.json", "tests/cases/feedback-decided.json", "tests/cases/archive-migration.json", "config/focus-group.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
@@ -334,6 +334,11 @@ foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/money.json") | Co
     }
 }
 Ok "суммы в журнале — формат приложения (money.json)"
+# 1.7.7: перенос бюджета и прогноза — поля отчёта читаются только если они есть на сайте (до deploy — без них); в журнал — «Статус-звіт»
+if ($syncSrc -match 'budgetPlan = \$\(if \(\$r\.FieldValues\.ContainsKey\("srBudgetPlan"\)\)' -and $syncSrc -match 'forecastCost = \$\(if \(\$r\.FieldValues\.ContainsKey\("srForecastCost"\)\)') { Ok "перенос бюджета и прогноза — с проверкой наличия полей" } else { Bad "раздел 1: бюджет / прогноз читаются без проверки полей (до deploy — ошибка)" }
+if ($syncSrc -match 'pmBudget = "Бюджет \(план\)"; pmForecastCost = "Прогноз витрат на завершення"' -and $syncSrc -match 'budgetPlan = "pmBudget"; forecastCost = "pmForecastCost"') { Ok "бюджет и прогноз — в журнале и в цели переноса" } else { Bad "Invoke-PMOSync.ps1: бюджет / прогноз не в `$DISPLAY или `$TARGET_FIELD" }
+$keys = Get-StateKeys
+if ($keys -contains "pmBudget" -and $keys -contains "pmForecastCost") { Ok "бюджет и прогноз — ключевые поля эталона" } else { Bad "Get-StateKeys: нет pmBudget / pmForecastCost" }
 # переходный режим (на сайте ещё нет «Завершено» в выборе): итоговый отчёт пишет прежнее «Архівний»
 $tl = Get-ReportTarget @{ status = "Скасовано"; date = "2026-10-01"; schedule = ""; budget = ""; resources = ""; title = "" } "" $true
 if ($tl["status"] -eq "Архівний" -and $tl["archivedAt"] -eq "2026-10-01") { Ok "перенос в карточку: переходный режим — «Архівний»" } else { Bad "перенос в карточку: переходный режим — $($tl["status"])" }
