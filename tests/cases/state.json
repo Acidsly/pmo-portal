@@ -382,6 +382,32 @@
    "expect": {
     "country": "Польща"
    }
+  },
+  {
+   "name": "1.7.7: прогноз витрат не задан в еталоні — порожньо («—»), не 0",
+   "project": {
+    "forecastCost": 5,
+    "code": "PRJ-005"
+   },
+   "state": {
+    "pmStatus": "Реалізація",
+    "pmRAG": "Жовтий",
+    "pmType": "Звичайний",
+    "pmProgress": "40",
+    "pmStart": "2026-06-01",
+    "pmGoLive": "",
+    "pmPlanEnd": "2026-12-01",
+    "pmForecastEnd": "2027-01-15",
+    "pmActualCost": "100",
+    "pmArchivedAt": "",
+    "pmLastUpdate": "2026-09-20",
+    "pmLastReport": "Звіт",
+    "pmCode": "PRJ-005",
+    "pmForecastCost": ""
+   },
+   "expect": {
+    "forecastCost": null
+   }
   }
  ],
  "parse": [

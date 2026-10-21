@@ -21,7 +21,8 @@ export function applyState(p: Project, st: StateJson | undefined): Project {
   for (const [k, prop, kind] of MAP) {
     if (!(k in st)) continue;
     const v = st[k] === null || st[k] === undefined ? '' : String(st[k]);
-    w[prop] = kind === 'number' ? (v === '' ? 0 : Number(v)) : v;
+    // прогноз витрат не задан — null («—»), а не 0 (1.7.7); остальные числа — 0
+    w[prop] = kind === 'number' ? (v === '' ? (prop === 'forecastCost' ? null : 0) : Number(v)) : v;
   }
   return out;
 }
