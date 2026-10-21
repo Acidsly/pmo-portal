@@ -16,7 +16,8 @@
          и строка «Створення» для новых проектов.
       3. «Останній коментар» в карточке — из списка «Коментарі».
       4. «Стратегічний» и «Пріоритет» в статус-отчётах и рисках — копия из проекта.
-      5. Права: PM — редактирование; его руководители, Собственник, команда и их руководители — просмотр и комментарии;
+      5. Права: PM — редактирование; его руководители, Собственник, команда и их руководители, CEO країни проекта
+         («Країни») — просмотр и комментарии;
          группа PMO — просмотр, владельцы сайта — полный доступ. Цепочка руководителей берётся из Entra ID.
          Права выдаются записи проекта и папке проекта P<ID> в каждом дочернем списке; записи наследуют права папки
          (синхронизация переносит в папку записи, созданные в корне списка). Отчёты, комментарии, журнал и погодження —
@@ -74,6 +75,7 @@ $ROLE_UPDATE_NAME = "Оновлення (портал)"
 $L_PROJ = "Lists/Projects"; $L_REP = "Lists/StatusReports"; $L_RISK = "Lists/RisksIssues"
 $L_CHG  = "Lists/KeyChanges"; $L_CMT = "Lists/ProjectComments"; $L_TEAM = "Lists/ProjectTeam"; $L_AP = "Lists/ReportApprovals"
 $L_PA   = "Lists/ProjectAssignments"
+$L_CO   = "Lists/Countries"
 $L_NS   = "Lists/NotifyState"
 $stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; folders = 0; moved = 0; reset = 0; access = 0; feedback = 0; approvals = 0; assigns = 0; notifyRows = 0; members = 0; reminders = 0; stateNew = 0; stateFixed = 0; returned = 0; warnings = 0; errors = 0 }
 
@@ -465,7 +467,7 @@ $DATE_FIELDS = @("pmStart","pmGoLive","pmPlanEnd","pmForecastEnd","pmLastUpdate"
 # Правки карточки из приложения SPFx (поле pmEditLog): ключ прототипа -> внутреннее имя, подпись строки журнала
 $EDIT_DISPLAY = @{ Title = "Назва проєкту"; pmCode = "Код проєкту"; pmDepartment = "Напрям"; pmLoop = "Посилання на картку в Loop"; pmPriority = "Пріоритет"
                    pmManager = "PM"; pmOwner = "Власник"; pmStakeholders = "Стейкхолдери"; pmBudget = "Бюджет (план)"
-                   pmTeam = "Команда проєкту"; pmLinks = "Посилання"; pmParent = "Батьківський проєкт"
+                   pmTeam = "Команда проєкту"; pmLinks = "Посилання"; pmParent = "Батьківський проєкт"; pmCountry = "Країна"
                    # #84: служебные отметки правки команды (e-mail): кого добавили, у кого сменилась роль — сповіщення этому человеку
                    teamIn = "Команда: додано учасників"; teamRole = "Команда: змінено роль"
                    srSchedule = "Терміни"; srBudget = "Бюджет"; srResources = "Ресурси"; srApproval = "Погодження звіту"
@@ -618,6 +620,14 @@ $comments = Get-ListRows $L_CMT
 $HAS_TEAM = [bool](Get-PnPList -Identity $L_TEAM -ErrorAction SilentlyContinue)
 $HAS_AP   = [bool](Get-PnPList -Identity $L_AP -ErrorAction SilentlyContinue)
 $HAS_PA   = [bool](Get-PnPList -Identity $L_PA -ErrorAction SilentlyContinue)
+# «Країни» (CEO по странам) — с Deploy-PMO.ps1; нет списка — права без CEO країни
+$HAS_CO   = [bool](Get-PnPList -Identity $L_CO -ErrorAction SilentlyContinue)
+$CEO = @{}
+if ($HAS_CO) {
+    foreach ($x in (Get-ListRows $L_CO)) {
+        $CEO[[string]$x["Title"]] = @($x["coCeo"] | Where-Object { $_ -and $_.Email } | ForEach-Object { ([string]$_.Email).ToLowerInvariant() })
+    }
+}
 # поле kcItem журнала и psHistory эталона появляются с Deploy-PMO.ps1 (#46 / #48); до развёртывания — без ссылок и без истории
 $HAS_ITEM = [bool](Get-PnPField -List $L_CHG -Identity "kcItem" -ErrorAction SilentlyContinue)
 function Get-ItemsIfExists([string]$list, [bool]$has) { if ($has) { return , (Get-ListRows $list) } return @() }
@@ -669,7 +679,7 @@ function Get-Stakeholders($item) {
 $PROJ = @{}
 foreach ($it in $projects) {
     $PROJ[$it.Id] = [pscustomobject]@{ Item = $it; Values = @{} }
-    foreach ($f in @($DISPLAY.Keys) + @("pmActualCost","pmLastUpdate","pmLastReport","pmLastComment","pmArchivedAt","pmoAcl","pmCode")) {
+    foreach ($f in @($DISPLAY.Keys) + @("pmActualCost","pmLastUpdate","pmLastReport","pmLastComment","pmArchivedAt","pmoAcl","pmCode","pmCountry")) {
         $PROJ[$it.Id].Values[$f] = Norm $it[$f]
     }
     # PM и владелец — e-mail (как в эталоне); все правила читают их отсюда: «Призначення» меняет их в этом же запуске
@@ -759,7 +769,7 @@ if ($HAS_PS) {
 #     Сначала эталон, потом карточка: иначе следующий запуск откатил бы запись как правку в обход.
 # ---------------------------------------------------------------------------
 $PMO_EMAILS = @(Get-PnPGroupMember -Group $PMO_GROUP | ForEach-Object { ([string]$_.Email).ToLowerInvariant() } | Where-Object { $_ })
-$ASSIGN_WHY = @{ author = "автор — не PMO"; arch = "проєкт в архіві"; note = "немає коментаря"; same = "PM і власник не змінюються" }
+$ASSIGN_WHY = @{ author = "автор — не PMO"; arch = "проєкт в архіві"; note = "немає коментаря"; same = "PM, власник і країна не змінюються" }
 if ($HAS_PA) {
     $assigns = Select-Placed (Get-ItemsIfExists $L_PA $HAS_PA) $L_PA "paProject"
     foreach ($a in (@($assigns) | Where-Object { $_ } | Where-Object { $_["paApplied"] -ne $true } | Sort-Object Id)) {
@@ -768,15 +778,15 @@ if ($HAS_PA) {
         if (-not $p) { Warn "Призначення #$($a.Id): проєкт не знайдено" }
         else {
             # решение — общим правилом Get-AssignmentPlan (векторы tests/cases/assignments.json, те же — assignmentPlan приложения)
-            $plan = Get-AssignmentPlan @{ author = $whoT; manager = (Email $a["paManager"]); owner = (Email $a["paOwner"]); note = [string]$a["paNote"] } `
-                $p.Values.pmManager $p.Values.pmOwner (Test-ArchivedStatus $p.Values.pmStatus) $PMO_EMAILS $OWNER_EMAILS
+            $plan = Get-AssignmentPlan @{ author = $whoT; manager = (Email $a["paManager"]); owner = (Email $a["paOwner"]); country = (Norm $a["paCountry"]); note = [string]$a["paNote"] } `
+                $p.Values.pmManager $p.Values.pmOwner (Test-ArchivedStatus $p.Values.pmStatus) $PMO_EMAILS $OWNER_EMAILS $p.Values.pmCountry
             if (-not $plan.valid) { Warn "Призначення #$($a.Id) «$($p.Item["Title"])» не застосовано: $($ASSIGN_WHY[$plan.reason])" }
             else {
                 $stats.assigns++
                 $when = $a["Created"].ToUniversalTime().ToString("o"); $note = ([string]$a["paNote"]).Trim()
                 $src = @{ pmManager = $a["paManager"]; pmOwner = $a["paOwner"] }
-                # пользователь — по LookupId записи «Призначення» (человек уже есть на сайте), а не по e-mail
-                $write = @{}; foreach ($c in $plan.changes) { $write[$c.f] = [int]$src[$c.f].LookupId }
+                # пользователь — по LookupId записи «Призначення» (человек уже есть на сайте), а не по e-mail; страна — значение выбора
+                $write = @{}; foreach ($c in $plan.changes) { if ($c.f -eq "pmCountry") { $write.pmCountry = $c.to } else { $write[$c.f] = [int]$src[$c.f].LookupId } }
                 Log "  призначення #$($a.Id) «$($p.Item["Title"])»: $(@($plan.changes | ForEach-Object { "$($_.f) $($_.from) -> $($_.to)" }) -join '; ')"
                 $prevState = if ($HAS_PS -and $STATES[$p.Item.Id]) { $STATES[$p.Item.Id].state } else { $null }
                 $next = [ordered]@{}; foreach ($k in Get-StateKeys) { $next[$k] = [string]$p.Values[$k] }
@@ -796,8 +806,8 @@ if ($HAS_PA) {
                 if ($ok) {
                     # журнал — после успешной записи карточки: повтор не задваивает строки
                     foreach ($c in $plan.changes) {
-                        $nm = [string]$src[$c.f].LookupValue
-                        $from = if ($p.Names[$c.f]) { $p.Names[$c.f] } else { Human $c.f $c.from }
+                        $nm = if ($c.f -eq "pmCountry") { $c.to } else { [string]$src[$c.f].LookupValue }
+                        $from = if ($c.f -ne "pmCountry" -and $p.Names[$c.f]) { $p.Names[$c.f] } else { Human $c.f $c.from }
                         Add-Change $p.Item.Id $c.f $from $(if ($nm) { $nm } else { $c.to }) "Призначення" $who $note $when
                         $p.Values[$c.f] = $c.to; $p.Names[$c.f] = $nm
                     }
@@ -1230,7 +1240,7 @@ foreach ($p in $PROJ.Values) {
     $ready = -not @($CHILD.Keys | Where-Object { -not $FOLDERS[$_].ContainsKey($name) -or $FOLDERS[$_][$name].mark -ne $p.Values.pmoAcl }).Count
     # архив, права которого уже выданы проекту и папкам: без Entra ID, без «Доступ до картки», без прав (пересчёт — воскресный rebuild)
     if (Test-ArchiveFrozen $p.Values.pmStatus $p.Values.pmoAcl $ready ([bool]$RebuildPermissions) (Get-ArchPrefix $PERM_V2)) { $frozen++; $MARK[$p.Item.Id] = $p.Values.pmoAcl; continue }
-    $access = Get-Access $p.Values.pmManager $p.Values.pmOwner $st $chainOf $archived
+    $access = Get-Access $p.Values.pmManager $p.Values.pmOwner $st $chainOf $archived @($CEO[[string]$p.Values.pmCountry] | Where-Object { $_ })
     $acl = Get-Acl $access
     $h = Get-AclMark (Get-Hash $acl) $archived $PERM_V2
     # «Доступ до картки» в приложении: имя и должность из Entra ID, пишется только при изменении
@@ -1274,7 +1284,8 @@ foreach ($e in $needed) {
     if ($inMembers.ContainsKey($e)) { continue }
     $stats.members++
     if ($DryRun) { Log "  учасник сайту: + $e"; continue }
-    try { Add-PnPGroupMember -Group $MEMBERS -LoginName "i:0#.f|membership|$e" | Out-Null; Log "  учасник сайту: + $e" }
+    # логин — от SharePoint (EnsureUser): у учётных записей других тенантов он не «membership|<e-mail>», а «…#ext#@…»
+    try { $pr = Get-Principal $e $false; if (-not $pr) { throw "не найден на сайте" }; Add-PnPGroupMember -Group $MEMBERS -LoginName $pr.LoginName | Out-Null; Log "  учасник сайту: + $e" }
     catch { Fail "Не удалось добавить $e в участники сайта: $($_.Exception.Message)" }
 }
 

@@ -233,6 +233,10 @@ foreach ($c in $asc.cases) {
     $exp = "$($c.out.valid)|$($c.out.reason)|$(@($c.out.changes) -join ',')"
     if ($got -eq $exp) { Ok "призначення: $($c.name)" } else { Bad "призначення: $($c.name): $got, ожидалось $exp" }
 }
+# страна: читается в $PROJ (иначе эталон нового проекта — без страны и откат), CEO — в Get-Access, участники сайта — по логину SharePoint
+if ($syncSrc -match '"pmoAcl","pmCode","pmCountry"\)') { Ok "страна читается в значения проекта (эталон, «Призначення»)" } else { Bad "Invoke-PMOSync.ps1: pmCountry не читается в `$PROJ" }
+if ($syncSrc -match 'Get-Access [^\n]+\$CEO\[') { Ok "CEO країни передаётся в Get-Access" } else { Bad "Invoke-PMOSync.ps1: Get-Access без CEO країни" }
+if ($syncSrc -notmatch 'LoginName "i:0#\.f\|membership\|\$e"') { Ok "участники сайта — по логину SharePoint (учётные записи других тенантов)" } else { Bad "Invoke-PMOSync.ps1: логин участника собирается из e-mail — люди других тенантов не добавятся" }
 # порядок разделов: «Призначення» — после эталона (0a) и до автовозврата (0b); все правила читают PM из памяти
 $i0a = $syncSrc.IndexOf("# 0a. Эталон"); $i0c = $syncSrc.IndexOf("# 0c. «Призначення»"); $i0b = $syncSrc.IndexOf("# 0b. Автоматический возврат")
 if ($i0a -ge 0 -and $i0a -lt $i0c -and $i0c -lt $i0b) { Ok "«Призначення» — между эталоном (0a) и автовозвратом (0b)" } else { Bad "Invoke-PMOSync.ps1: «Призначення» должно стоять после 0a и до 0b" }

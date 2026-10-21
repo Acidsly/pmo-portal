@@ -39,7 +39,10 @@ param(
     [string]$CertificatePath,
     [SecureString]$CertificatePassword,
     # список «Відгуки» и кнопка «Відгук» в приложении — для теста с фокус-группой (Invoke-Env передаёт только для test)
-    [switch]$Feedback
+    [switch]$Feedback,
+    # «Країни»: CEO по странам — JSON { "Країна": ["e-mail", …] } вне git (config/countries-<env>.json; Invoke-Env передаёт, если файл есть).
+    # Источник CEO — только файл: строки «Країни» приводятся к нему; нет файла — CEO не меняются
+    [string]$CeoFile
 )
 
 $ErrorActionPreference = "Stop"
@@ -224,6 +227,8 @@ $rag       = @("Зелений", "Жовтий", "Червоний")
 $status    = @("Ініціація", "Планування", "Реалізація", "Призупинено", "Завершено", "Скасовано")
 $repStatus = @("Ініціація", "Планування", "Реалізація", "Призупинено", "Скасовано", "Завершено")
 $types     = @("Стратегічний", "Звичайний")
+# одна страна на проект (проект нескольких стран — копией на каждую); ставит PMO при создании, потом — «Призначення»
+$countries = @("Україна", "Польща", "Чехія", "Нідерланди", "Велика Британія", "Казахстан", "Узбекистан", "Киргизстан", "Грузія", "Азербайджан")
 
 # ===========================================================================
 # 2. Проєкти — карточка проекта
@@ -237,6 +242,7 @@ F $P pmType        Choice   "Тип проєкту"        "Project type"       
 F $P pmManager     User     "PM"                 "PM"                  "PM"                   "UserSelectionMode='PeopleOnly' Required='TRUE'"
 F $P pmOwner       User     "Власник"            "Owner"               "Собственник"          "UserSelectionMode='PeopleOnly'"
 F $P pmStakeholders UserMulti "Стейкхолдери"     "Stakeholders"        "Стейкхолдеры"         "UserSelectionMode='PeopleOnly' Mult='TRUE'"
+F $P pmCountry     Choice   "Країна"             "Country"             "Страна"               "Format='Dropdown'" (Choices $countries)
 F $P pmDepartment  Choice   "Напрям"             "Area"                "Направление"          "Format='Dropdown'" (Choices @("ІТ","HR та кадрове адміністрування","Розрахунок зарплати","Продажі","Фінанси","Операції","Юридичний"))
 # #78: отображаемое «Фаза проєкту» (этап жизненного цикла); внутреннее имя pmStatus не меняется
 F $P pmStatus      Choice   "Фаза проєкту"       "Project phase"       "Фаза проекта"       "Format='Dropdown' Required='TRUE'" (Choices $status "Ініціація")
@@ -481,6 +487,8 @@ $PA = Ensure-List "Lists/ProjectAssignments" "Призначення" "Assignmen
 F $PA paProject     Lookup   "Проєкт"             "Project"             "Проект"               $lookup
 F $PA paManager     User     "Новий PM"           "New PM"              "Новый PM"             "UserSelectionMode='PeopleOnly'"
 F $PA paOwner       User     "Новий власник"      "New owner"           "Новый владелец"       "UserSelectionMode='PeopleOnly'"
+# пусто — страна без изменений (значения по умолчанию нет)
+F $PA paCountry     Choice   "Нова країна"        "New country"         "Новая страна"         "Format='Dropdown' FillInChoice='FALSE'" (Choices $countries)
 F $PA paNote        Note     "Коментар"           "Comment"             "Комментарий"          "NumLines='4' RichText='FALSE'"
 F $PA paApplied     Boolean  "Службове: застосовано" "System: applied"  "Служебное: применено" "Hidden='TRUE'" "<Default>0</Default>"
 F $PA pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='64'"
@@ -522,6 +530,32 @@ foreach ($it in (Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "T
         $vals.pmMigrated = $newMarks
         Set-PnPListItem -List "Lists/Projects" -Identity $it.Id -Values $vals -UpdateType SystemUpdate | Out-Null
         Write-Host "    миграция «$($it["Title"])»: $newMarks"
+    }
+}
+
+# 6f. Країни — CEO країни по каждой стране (просмотр и комментарии на проекты своих стран; права выдаёт синхронизация).
+#     Строка на страну (Title — значение выбора pmCountry), CEO — из файла -Countries; список видят только владельцы сайта.
+Write-Host "6f. Список «Країни»" -ForegroundColor Cyan
+$CO = Ensure-List "Lists/Countries" "Країни" "Countries" "Страны"
+F $CO coCeo         UserMulti "CEO країни"        "Country CEO"         "CEO страны"           "UserSelectionMode='PeopleOnly' Mult='TRUE'"
+$script:Loc += , @($CO, "Title", "Країна", "Country", "Страна")
+$ceoMap = $null
+if ($CeoFile) {
+    if (-not (Test-Path $CeoFile)) { throw "Нет файла CEO по странам: $CeoFile" }
+    $ceoMap = Get-Content -Raw $CeoFile | ConvertFrom-Json -AsHashtable
+    foreach ($cty in @($ceoMap.Keys | Where-Object { -not $_.StartsWith("_") })) { if ($countries -notcontains $cty) { throw "$CeoFile : страны «$cty» нет в выборе «Країна»" } }
+}
+$coRows = @{}; foreach ($x in (Get-PnPListItem -List "Lists/Countries" -PageSize 100 -Fields "Title","coCeo")) { $coRows[[string]$x["Title"]] = $x }
+foreach ($cty in $countries) {
+    $row = $coRows[$cty]
+    if (-not $row) { $row = Add-PnPListItem -List "Lists/Countries" -Values @{ Title = $cty }; Write-Host "    + країна $cty" }
+    if ($ceoMap) {
+        $ceoWant = @($ceoMap[$cty] | Where-Object { $_ } | ForEach-Object { ([string]$_).ToLowerInvariant() } | Sort-Object)
+        $ceoHave = @($row["coCeo"] | Where-Object { $_ -and $_.Email } | ForEach-Object { ([string]$_.Email).ToLowerInvariant() } | Sort-Object)
+        if (($ceoWant -join ";") -ne ($ceoHave -join ";")) {
+            Set-PnPListItem -List "Lists/Countries" -Identity $row.Id -Values @{ coCeo = @($ceoWant) } -UpdateType SystemUpdate | Out-Null
+            Write-Host "    CEO $cty : $(if ($ceoWant.Count) { $ceoWant -join ', ' } else { '—' })"
+        }
     }
 }
 
@@ -676,8 +710,9 @@ Invoke-PnPQuery
 # ===========================================================================
 Write-Host "7. Формы и права списков" -ForegroundColor Cyan
 # Ключевые показатели и служебные поля не редактируются в карточке — только через статус-отчёт
+# страна — при создании (PMO), потом только «Призначення»
 Set-FormVisibility $P @("pmStatus","pmRAG","pmType","pmProgress","pmStart","pmGoLive","pmPlanEnd","pmForecastEnd","pmActualEnd",
-                        "pmActualCost","pmArchivedAt","pmLastUpdate","pmLastReport","pmLastComment") $true $false
+                        "pmActualCost","pmArchivedAt","pmLastUpdate","pmLastReport","pmLastComment","pmCountry") $true $false
 Set-FormVisibility $P @("pmRAG","pmForecastEnd","pmActualEnd","pmActualCost","pmArchivedAt","pmLastUpdate","pmLastReport","pmLastComment") $false $false
 # «Стратегічний» в отчётах и рисках заполняет синхронизация
 # «Стратегічний» и «Пріоритет» в отчётах и рисках — копия из проекта, заполняет синхронизация
@@ -727,6 +762,18 @@ foreach ($grp in @($members.Title, $PMO_GROUP)) {
     }
 }
 Set-ListRoles "Lists/ProjectState"    @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
+# «Країни» — e-mail CEO: только владельцы сайта (и синхронизация), участники и PMO не читают
+$col = Get-PnPList -Identity "Lists/Countries" -Includes HasUniqueRoleAssignments
+if (-not $col.HasUniqueRoleAssignments) { Set-PnPList -Identity "Lists/Countries" -BreakRoleInheritance | Out-Null; Write-Host "  «Країни»: собственные права списка" }
+Set-ListRoles "Lists/Countries" @{ (Get-PnPGroup -AssociatedOwnerGroup).Title = (Get-RoleName "Administrator") }
+$ctxCo = Get-PnPContext; $raCo = (Get-PnPList -Identity "Lists/Countries").RoleAssignments; $ctxCo.Load($raCo); Invoke-PnPQuery
+foreach ($a in $raCo) { $ctxCo.Load($a.Member) }; Invoke-PnPQuery
+foreach ($grp in @($members.Title, $PMO_GROUP)) {
+    if (@($raCo | Where-Object { $_.Member.Title -eq $grp }).Count) {
+        $gObj = Get-PnPGroup -Identity $grp; (Get-PnPList -Identity "Lists/Countries").RoleAssignments.GetByPrincipal($gObj).DeleteObject(); Invoke-PnPQuery
+        Write-Host "  «Країни» $grp : права списка сняты (только владельцы)"
+    }
+}
 # свежие проверки приложения перед записью — фильтры по индексированным полям
 foreach ($ix in @(@("Lists/Projects", "Title"), @("Lists/StatusReports", "srProject"), @("Lists/RisksIssues", "riProject"), @("Lists/ProjectComments", "cmProject"),
                   @("Lists/ProjectTeam", "tmProject"), @("Lists/ReportApprovals", "apReport"), @("Lists/ReportApprovals", "apProject"), @("Lists/ProjectAssignments", "paProject"), @("Lists/NotifyState", "Title"), @("Lists/KeyChanges", "kcDate"))) {
@@ -754,7 +801,7 @@ $archived = "<Or><Or><Eq><FieldRef Name='pmStatus'/><Value Type='Choice'>Зав�
 $order = "<OrderBy><FieldRef Name='pmType' Ascending='FALSE'/><FieldRef Name='pmPriority'/></OrderBy>"
 
 # Порядок колонок во всех представлениях: стратегический, приоритет, название, затем остальные
-$pFields = @("pmType","pmPriority","LinkTitle","pmManager","pmStatus","pmRAG","pmLastUpdate","pmProgress","pmPlanEnd","pmLastReport")
+$pFields = @("pmType","pmPriority","LinkTitle","pmManager","pmCountry","pmStatus","pmRAG","pmLastUpdate","pmProgress","pmPlanEnd","pmLastReport")
 $vAll     = Set-BaseView $P "Усі проєкти" $pFields "$order<Where>$notArchived</Where>"
 $null     = Ensure-View $P "Стратегічні" $pFields "$order<Where><And>$active<Eq><FieldRef Name='pmType'/><Value Type='Choice'>Стратегічний</Value></Eq></And></Where>"
 $null     = Ensure-View $P "Проблемні" @("pmType","pmPriority","LinkTitle","pmRAG","pmManager","pmLastReport","pmLastUpdate") `
@@ -782,7 +829,7 @@ $vRisks = Ensure-View $K "Відкриті" $kFields `
 
 $null = Set-BaseView $C "Усі зміни" @("kcProject","kcDate","kcChangedBy","kcKind","LinkTitle","kcFrom","kcTo","kcReason") "<OrderBy><FieldRef Name='kcDate' Ascending='FALSE'/></OrderBy>"
 $null = Set-BaseView $NS "Усі" @("LinkTitle","nsUser","nsReadId","nsReadCmId","nsReadSet","Modified") "<OrderBy><FieldRef Name='Title'/></OrderBy>"
-$null = Set-BaseView $PA "Усі призначення" @("paProject","paManager","paOwner","paNote","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
+$null = Set-BaseView $PA "Усі призначення" @("paProject","paManager","paOwner","paCountry","paNote","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
 $null = Set-BaseView $AP "Усі погодження" @("apProject","apReport","apDecision","apSchedule","apBudget","apResources","apNote","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
 $null = Set-BaseView $TM "Уся команда" @("tmProject","tmUser","tmRole","tmTopics") "<OrderBy><FieldRef Name='tmProject'/></OrderBy>"
 $null = Set-BaseView $M "Усі коментарі" @("cmProject","cmText","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
@@ -843,7 +890,7 @@ foreach ($lib in @("SitePages", "SiteAssets", "Shared Documents")) {
     if (Get-PnPList -Identity $lib -ErrorAction SilentlyContinue) { Set-ListRoles $lib @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ } }
 }
 # списки портала не видны в «Вміст сайту» и поиске по сайту; приложение и владельцы открывают их по адресу
-$portalLists = @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/KeyChanges", "Lists/ProjectComments", "Lists/ProjectTeam", "Lists/ReportApprovals", "Lists/ProjectAssignments", "Lists/NotifyState", "Lists/ProjectState") + $(if ($Feedback) { @("Lists/Feedback", "Lists/FeedbackPublic") } else { @() })
+$portalLists = @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/KeyChanges", "Lists/ProjectComments", "Lists/ProjectTeam", "Lists/ReportApprovals", "Lists/ProjectAssignments", "Lists/NotifyState", "Lists/ProjectState", "Lists/Countries") + $(if ($Feedback) { @("Lists/Feedback", "Lists/FeedbackPublic") } else { @() })
 foreach ($u in $portalLists) {
     $l = Get-PnPList -Identity $u -Includes Hidden
     if (-not $l.Hidden) { Set-PnPList -Identity $u -Hidden $true | Out-Null; Write-Host "    скрыт список $u" }

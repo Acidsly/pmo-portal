@@ -66,7 +66,7 @@ $RAG = @{ g = "Зелений"; y = "Жовтий"; r = "Червоний" }
 # демо-проекты — первые десять номеров единой нумерации (номер присваивается только автоматически)
 $DEMO = @(1..10 | ForEach-Object { "PRJ-{0:d3}" -f $_ })
 $projects = @(
-    @{ Code = "PRJ-001"; Title = "Впровадження 1С:ЗУП у Казахстані"; Type = "Стратегічний"; Priority = "1 — Високий"; Dept = "Розрахунок зарплати"
+    @{ Code = "PRJ-001"; Country = "Казахстан"; Title = "Впровадження 1С:ЗУП у Казахстані"; Type = "Стратегічний"; Priority = "1 — Високий"; Dept = "Розрахунок зарплати"
        PM = 0; Owner = 1; St = @(2); Start = D -206; GoLive = D 53; PlanEnd = D 85; Budget = 2400000
        Desc = "Перехід розрахунку зарплати казахстанських клієнтів на 1С:ЗУП КОРП: міграція даних, налаштування розрахунку, навчання розрахунковців."
        Reports = @(
@@ -77,7 +77,7 @@ $projects = @(
             Done = "Проведено паралельний розрахунок для трьох клієнтів; у двох розбіжності в утриманнях."; Next = "Виправити формули утримань, повторити розрахунок."; Issues = "Зсув запуску на 6 тижнів, якщо розбіжності не закриємо до кінця місяця." }
          @{ Days = -3;  Title = "Розбіжності закрито у першого клієнта, другий — у роботі"; Status = "Реалізація"; Progress = 55; Cost = 1450000; S = "y"; B = "g"; R = "g"
             Done = "Виправлено формули утримань; перший клієнт звірений без розбіжностей. Підключено другого консультанта."; Next = "Звірити другого клієнта, почати навчання розрахунковців."; Issues = "Прогноз завершення — кінець січня." } ) }
-    @{ Code = "PRJ-002"; Title = "Портал самообслуговування співробітників"; Type = "Стратегічний"; Priority = "1 — Високий"; Dept = "HR та кадрове адміністрування"
+    @{ Code = "PRJ-002"; Country = "Україна"; Title = "Портал самообслуговування співробітників"; Type = "Стратегічний"; Priority = "1 — Високий"; Dept = "HR та кадрове адміністрування"
        PM = 1; Owner = 0; St = @(2); Start = D -150; GoLive = D 20; PlanEnd = D 45; Budget = 1800000
        Desc = "Особистий кабінет співробітника: заявки на відпустку, довідки, розрахункові листи, підпис документів КЕП."
        Reports = @(
@@ -86,7 +86,7 @@ $projects = @(
          @{ Days = -5;  Title = "Інтеграція з ЗУП затримується, бюджет перевищено"; Status = "Реалізація"; Progress = 35; Cost = 1350000; S = "r"; B = "r"; R = "y"; Forecast = D 110
             Reason = "Затримка інтеграції з ЗУП і подорожчання КЕП."; Decision = "Погодити додатковий бюджет 400 000 ₴ або скоротити обсяг першого релізу (без підпису КЕП)."
             Done = "Реалізовано заявки на відпустку. Інтеграція довідок блокована доступом до API ЗУП."; Next = "Отримати доступ до API, вирішити питання бюджету."; Issues = "Без рішення по бюджету запуск у листопаді неможливий." } ) }
-    @{ Code = "PRJ-003"; Title = "Міграція пошти та файлів у Microsoft 365"; Type = "Звичайний"; Priority = "2 — Середній"; Dept = "ІТ"
+    @{ Code = "PRJ-003"; Country = "Україна"; Title = "Міграція пошти та файлів у Microsoft 365"; Type = "Звичайний"; Priority = "2 — Середній"; Dept = "ІТ"
        PM = 2; Owner = 0; St = @(1); Start = D -120; GoLive = D -10; PlanEnd = D 20; Budget = 650000
        Desc = "Перенесення поштових скриньок, спільних папок і файлових серверів у Exchange Online та SharePoint."
        Reports = @(
@@ -96,13 +96,13 @@ $projects = @(
             Done = "Усі поштові скриньки в Exchange Online, старий сервер у режимі читання."; Next = "Перенесення файлових серверів."; Issues = "" }
          @{ Days = -2;  Title = "Почато перенесення файлових серверів"; Status = "Реалізація"; Progress = 80; Cost = 505000; S = "g"; B = "g"; R = "g"
             Done = "Перенесено папки бухгалтерії та HR."; Next = "Папки продажів і юридичного відділу."; Issues = "" } ) }
-    @{ Code = "PRJ-004"; Title = "CRM для відділу продажів"; Type = "Стратегічний"; Priority = "2 — Середній"; Dept = "Продажі"
+    @{ Code = "PRJ-004"; Country = "Польща"; Title = "CRM для відділу продажів"; Type = "Стратегічний"; Priority = "2 — Середній"; Dept = "Продажі"
        PM = 0; Owner = 2; St = @(1); Start = D -20; GoLive = D 160; PlanEnd = D 200; Budget = 1200000
        Desc = "Вибір і впровадження CRM: воронка продажів, історія клієнтів, інтеграція з поштою та 1С."
        Reports = @(
          @{ Days = -6; Title = "Зібрано вимоги, короткий список з трьох систем"; Status = "Планування"; Progress = 10; Cost = 60000; S = "g"; B = "g"; R = "g"
             Done = "Інтерв'ю з 8 менеджерами, документ вимог."; Next = "Демонстрації трьох постачальників."; Issues = "" } ) }
-    @{ Code = "PRJ-005"; Title = "Автоматизація закриття місяця"; Type = "Звичайний"; Priority = "1 — Високий"; Dept = "Фінанси"
+    @{ Code = "PRJ-005"; Country = "Україна"; Title = "Автоматизація закриття місяця"; Type = "Звичайний"; Priority = "1 — Високий"; Dept = "Фінанси"
        PM = 1; Owner = 2; St = @(0); Start = D -180; GoLive = D 10; PlanEnd = D 30; Budget = 540000
        Desc = "Регламентні операції закриття місяця, звірка з банком і контрагентами, чек-лист закриття."
        Reports = @(
@@ -110,18 +110,18 @@ $projects = @(
             Done = "Звірка банківських виписок виконується автоматично."; Next = "Звірка з контрагентами."; Issues = "" }
          @{ Days = -25; Title = "Звірка з контрагентами: затримка через формати актів"; Status = "Реалізація"; Progress = 60; Cost = 330000; S = "y"; B = "g"; R = "g"
             Done = "Узгоджено формат актів звірки з двома найбільшими контрагентами."; Next = "Решта контрагентів."; Issues = "Контрагенти надсилають акти в різних форматах." } ) }
-    @{ Code = "PRJ-006"; Title = "Електронний документообіг з клієнтами"; Type = "Звичайний"; Priority = "2 — Середній"; Dept = "Юридичний"
+    @{ Code = "PRJ-006"; Country = "Чехія"; Title = "Електронний документообіг з клієнтами"; Type = "Звичайний"; Priority = "2 — Середній"; Dept = "Юридичний"
        PM = 2; Owner = 1; St = @(0); Start = D -200; GoLive = D 60; PlanEnd = D 90; Budget = 380000
        Desc = "Обмін договорами та актами з клієнтами через сервіс ЕДО з підписом КЕП."
        Reports = @(
          @{ Days = -35; Title = "Проєкт призупинено до вибору нового постачальника ЕДО"; Status = "Призупинено"; Progress = 40; Cost = 150000; S = "y"; B = "g"; R = "y"
             Reason = "Постачальник ЕДО припиняє роботу в Україні."
             Done = "Підключено 15 клієнтів до пілоту."; Next = "Тендер на нового постачальника."; Issues = "Потрібна повторна інтеграція." } ) }
-    @{ Code = "PRJ-007"; Title = "Навчальна платформа для нових співробітників"; Type = "Звичайний"; Priority = "3 — Низький"; Dept = "HR та кадрове адміністрування"
+    @{ Code = "PRJ-007"; Country = "Україна"; Title = "Навчальна платформа для нових співробітників"; Type = "Звичайний"; Priority = "3 — Низький"; Dept = "HR та кадрове адміністрування"
        PM = 1; Owner = 0; St = @(); Start = D 14; GoLive = D 120; PlanEnd = D 150; Budget = 250000
        Desc = "Онбординг-курси, тести та трекінг проходження навчання новими співробітниками."
        Reports = @() }
-    @{ Code = "PRJ-008"; Title = "Оновлення мережевої інфраструктури офісу"; Type = "Звичайний"; Priority = "3 — Низький"; Dept = "ІТ"
+    @{ Code = "PRJ-008"; Country = "Україна"; Title = "Оновлення мережевої інфраструктури офісу"; Type = "Звичайний"; Priority = "3 — Низький"; Dept = "ІТ"
        PM = 2; Owner = 0; St = @(); Start = D -160; GoLive = D -40; PlanEnd = D -30; Budget = 420000
        Desc = "Заміна комутаторів і точок доступу Wi-Fi, сегментація мережі."
        Reports = @(
@@ -129,7 +129,7 @@ $projects = @(
             Done = "Встановлено комутатори та точки доступу."; Next = "Сегментація, документація."; Issues = "" }
          @{ Days = -27; Title = "Проєкт завершено, мережу передано в експлуатацію"; Status = "Завершено"; Progress = 100; Cost = 405000; S = "g"; B = "g"; R = "g"
             Done = "Сегментацію виконано, документацію передано службі підтримки."; Next = ""; Issues = "" } ) }
-    @{ Code = "PRJ-009"; Title = "Звітність для клієнтів у Power BI"; Type = "Стратегічний"; Priority = "2 — Середній"; Dept = "Операції"
+    @{ Code = "PRJ-009"; Country = "Нідерланди"; Title = "Звітність для клієнтів у Power BI"; Type = "Стратегічний"; Priority = "2 — Середній"; Dept = "Операції"
        PM = 0; Owner = 1; St = @(1, 2); Start = D -100; GoLive = D 30; PlanEnd = D 60; Budget = 700000
        Desc = "Панелі для клієнтів: чисельність, фонд оплати праці, плинність кадрів, відпустки."
        Reports = @(
@@ -137,7 +137,7 @@ $projects = @(
             Done = "Панелі «Чисельність» і «ФОП» у пілотних клієнтів."; Next = "Панель плинності кадрів."; Issues = "" }
          @{ Days = -4;  Title = "Готова панель плинності кадрів"; Status = "Реалізація"; Progress = 70; Cost = 450000; S = "g"; B = "g"; R = "g"
             Done = "Панель плинності, налаштовано RLS за клієнтом."; Next = "Панель відпусток, навчання клієнтів."; Issues = "" } ) }
-    @{ Code = "PRJ-010"; Title = "Інтеграція з банками для виплат зарплати"; Type = "Звичайний"; Priority = "1 — Високий"; Dept = "Розрахунок зарплати"
+    @{ Code = "PRJ-010"; Country = "Велика Британія"; Title = "Інтеграція з банками для виплат зарплати"; Type = "Звичайний"; Priority = "1 — Високий"; Dept = "Розрахунок зарплати"
        PM = 1; Owner = 0; St = @(2); Start = D -90; GoLive = D 5; PlanEnd = D 25; Budget = 480000
        Desc = "Пряма передача зарплатних відомостей у банки через API замість файлів."
        Reports = @(
@@ -193,13 +193,23 @@ function Add-Change($pid_, [string]$title, [string]$field, [string]$from, [strin
 }
 
 foreach ($p in $projects) {
-    if ($existing.ContainsKey($p.Code)) { $ids[$p.Code] = $existing[$p.Code]; Write-Host "  = $($p.Code) уже есть"; continue }
+    if ($existing.ContainsKey($p.Code)) {
+        $ids[$p.Code] = $existing[$p.Code]; Write-Host "  = $($p.Code) уже есть"
+        # страна демо-проекта, созданного до поля «Країна» (только пустую): карточка и эталон вместе — иначе синхронизация откатит
+        $cur = Get-PnPListItem -List "Lists/Projects" -Id $existing[$p.Code] -Fields "pmCountry"
+        if (-not [string]$cur["pmCountry"]) {
+            Set-PnPListItem -List "Lists/Projects" -Identity $existing[$p.Code] -Values @{ pmCountry = $p.Country } -UpdateType SystemUpdate | Out-Null
+            Sync-ProjectStateFromCard $existing[$p.Code]
+            Write-Host "    країна: $($p.Country)"
+        }
+        continue
+    }
     $first = $p.Reports | Select-Object -First 1
     $last  = $p.Reports | Select-Object -Last 1
     $createdOn = if ($first) { D ($first.Days - 7) } else { D -3 }
     $pm = Person $p.PM
     # карточка при создании: начальный статус, даты — как ввёл PM
-    $v = @{ Title = $p.Title; pmCode = $p.Code; pmType = $p.Type; pmPriority = $p.Priority; pmDepartment = $p.Dept
+    $v = @{ Title = $p.Title; pmCode = $p.Code; pmType = $p.Type; pmPriority = $p.Priority; pmDepartment = $p.Dept; pmCountry = $p.Country
             pmManager = $pm; pmOwner = (Person $p.Owner); pmStatus = $(if ($first) { "Планування" } else { "Ініціація" })
             pmProgress = 0; pmStart = (SpDate $p.Start); pmGoLive = (SpDate $p.GoLive); pmPlanEnd = (SpDate $p.PlanEnd)
             pmBudget = $p.Budget; pmDescription = $p.Desc; pmoAcl = "seed"; pmMigrated = "team,links" }

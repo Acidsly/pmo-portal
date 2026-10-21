@@ -66,12 +66,19 @@ Write-Host "Сайт: группы — $(if ($inGroups.Count) { $inGroups -join 
 # проекты: роли человека и его подчинённых, «Доступ до картки»
 $projects = @(Get-PnPListItem -List "Lists/Projects" -PageSize 500)
 $team = @(Get-PnPListItem -List "Lists/ProjectTeam" -PageSize 500 | Where-Object { [string]$_.FileSystemObjectType -ne "Folder" })
+# CEO країни — по списку «Країни» (только у владельцев сайта; приложение синхронизации читает)
+$ceoOf = @{}
+if (Get-PnPList -Identity "Lists/Countries" -ErrorAction SilentlyContinue) {
+    foreach ($x in (Get-PnPListItem -List "Lists/Countries" -PageSize 100 -Fields "Title","coCeo")) {
+        foreach ($u in @($x["coCeo"] | Where-Object { $_ -and $_.Email })) { $ceoOf[([string]$u.Email).ToLowerInvariant()] += @([string]$x["Title"]) } }
+}
 function RolesOf([string]$e) {
     $out = @()
     foreach ($p in $projects) {
         $code = [string]$p["pmCode"]
         if ($p["pmManager"] -and ([string]$p["pmManager"].Email).ToLowerInvariant() -eq $e) { $out += "$code PM" }
         if ($p["pmOwner"] -and ([string]$p["pmOwner"].Email).ToLowerInvariant() -eq $e) { $out += "$code власник" }
+        if ($ceoOf[$e] -and $ceoOf[$e] -contains [string]$p["pmCountry"]) { $out += "$code CEO країни ($($p["pmCountry"]))" }
         foreach ($t in @($team | Where-Object { $_["tmProject"] -and $_["tmProject"].LookupId -eq $p.Id -and $_["tmUser"] -and ([string]$_["tmUser"].Email).ToLowerInvariant() -eq $e })) { $out += "$code команда/$($t["tmRole"])" }
     }
     return $out

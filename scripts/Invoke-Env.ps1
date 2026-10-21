@@ -130,6 +130,9 @@ if ($Action -eq "feedback") {
     $a = Get-Auth $cfg.Deploy
     $a.TenantName = $cfg.TenantName; $a.SiteAlias = $cfg.SiteAlias; $a.Owner = $cfg.Owner
     $a.Feedback = $true   # «Відгуки» — на тесте и на проде (решение 20.10.2026: на проде тоже)
+    # CEO по странам — файл вне git: config/countries-<env>.json (e-mail сотрудников); нет файла — CEO не меняются
+    $cf = Join-Path $root "config/countries-$Env.json"
+    if (Test-Path $cf) { $a.CeoFile = $cf }
     & (Join-Path $PSScriptRoot "Deploy-PMO.ps1") @a
 } else {
     $a = Get-Auth $cfg.Sync
