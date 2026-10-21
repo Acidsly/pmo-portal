@@ -30,6 +30,9 @@ $DG_T = @{
         budgetPf = "Бюджет портфеля"; spentPct = "витрачено {0} з {1} · {2}%"; decisionsH = "Потрібні рішення"; risksH = "Головні ризики"; waits = "чекає з {0}"
         ownerP = "власник"; colBudget = "бюджет"; aRed = "червоний стан"; aSlip = "прогноз +{0} дн."; aOverdue = "прострочений ризик"; aStale = "немає свіжого звіту"
         aPaused = "призупинено"; aBurn = "освоєно {0}% бюджету при виконанні {1}%"; ask = "До кого"
+        gantt = "Терміни"; legDone = "виконано"; legLeft = "залишилось за планом"; legSlip = "зсув прогнозу"; legEarly = "раніше плану"; legToday = "сьогодні"
+        wasF = "було {0}"; fcost = "прогноз витрат {0}"; over = "+{0} ({1}%) до бюджету"; under = "−{0} до бюджету"; budgetFc = "Прогноз витрат портфеля"
+        months = "січ,лют,бер,кві,тра,чер,лип,сер,вер,жов,лис,гру"; aOver = "прогноз перевитрат +{0}%"
         footer = "PPM — Управління портфелем проєктів · Eclectic Group"
     }
     en = @{
@@ -51,6 +54,9 @@ $DG_T = @{
         budgetPf = "Portfolio budget"; spentPct = "spent {0} of {1} · {2}%"; decisionsH = "Decisions needed"; risksH = "Top risks"; waits = "waiting since {0}"
         ownerP = "owner"; colBudget = "budget"; aRed = "red status"; aSlip = "forecast +{0} d"; aOverdue = "overdue risk"; aStale = "no fresh report"
         aPaused = "on hold"; aBurn = "{0}% of budget spent at {1}% progress"; ask = "Contact"
+        gantt = "Timeline"; legDone = "done"; legLeft = "remaining to plan"; legSlip = "forecast slip"; legEarly = "ahead of plan"; legToday = "today"
+        wasF = "was {0}"; fcost = "cost forecast {0}"; over = "+{0} ({1}%) over budget"; under = "−{0} under budget"; budgetFc = "Portfolio cost forecast"
+        months = "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec"; aOver = "forecast overrun +{0}%"
         footer = "PPM — Project Portfolio Management · Eclectic Group"
     }
     ru = @{
@@ -72,6 +78,9 @@ $DG_T = @{
         budgetPf = "Бюджет портфеля"; spentPct = "потрачено {0} из {1} · {2}%"; decisionsH = "Нужные решения"; risksH = "Главные риски"; waits = "ждёт с {0}"
         ownerP = "владелец"; colBudget = "бюджет"; aRed = "красное состояние"; aSlip = "прогноз +{0} дн."; aOverdue = "просроченный риск"; aStale = "нет свежего отчёта"
         aPaused = "приостановлен"; aBurn = "освоено {0}% бюджета при выполнении {1}%"; ask = "К кому"
+        gantt = "Сроки"; legDone = "выполнено"; legLeft = "осталось по плану"; legSlip = "сдвиг прогноза"; legEarly = "раньше плана"; legToday = "сегодня"
+        wasF = "было {0}"; fcost = "прогноз затрат {0}"; over = "+{0} ({1}%) к бюджету"; under = "−{0} к бюджету"; budgetFc = "Прогноз затрат портфеля"
+        months = "янв,фев,мар,апр,май,июн,июл,авг,сен,окт,ноя,дек"; aOver = "прогноз перерасхода +{0}%"
         footer = "PPM — Управление портфелем проектов · Eclectic Group"
     }
 }
@@ -159,7 +168,8 @@ function DgProjectCard($p, $T, $M) {
     <tr><td colspan="2">$(DgPct $p.progress $DG.violet)</td></tr></table>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px"><tr>
     <td style="font-size:12px;color:$($DG.muted);padding-bottom:4px">$($T.budget)</td><td align="right" style="font-size:12px;color:$($DG.text);padding-bottom:4px">$(DgE ($T.spent -f (DgMoney $p.cost), (DgMoney $p.budget)))</td></tr>
-    <tr><td colspan="2">$(DgPct $burn $burnC)</td></tr></table>
+    <tr><td colspan="2">$(DgBudgetBar $p)</td></tr>
+    $(if ($p.forecastCost) { "<tr><td colspan=`"2`" style=`"font-size:12px;color:$($DG.muted);padding-top:4px`">$(DgE ($T.fcost -f (DgMoney $p.forecastCost))) $(DgBudgetNote $p $T)</td></tr>" })</table>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px;background:$($DG.soft);border-radius:8px"><tr>
     <td width="33%" style="padding:8px 10px;font-size:11px;color:$($DG.muted)">$($T.start)<br><b style="font-size:13px;color:$($DG.ink)">$(DgDate $p.start)</b></td>
     <td width="33%" style="padding:8px 10px;font-size:11px;color:$($DG.muted)">$($T.plan)<br><b style="font-size:13px;color:$($DG.ink)">$(DgDate $p.planEnd)</b></td>
@@ -174,15 +184,82 @@ function DgProjectCard($p, $T, $M) {
 "@
 }
 
+# полоса бюджета: витрачено, остаток до прогноза, перерасход (прогноз выше бюджета) или экономия (ниже)
+function DgBudgetBar($p, [int]$h = 8) {
+    $b = [double]$p.budget; $c = [double]$p.cost; $f = if ($p.forecastCost) { [double]$p.forecastCost } else { $b }
+    if (-not $b) { return DgBar @() $h }
+    $scale = [math]::Max($b, $f)
+    $burn = $c / $b * 100
+    $cc = if ($burn -gt [double]$p.progress + 20) { $DG.coral } else { $DG.violet }
+    $segs = @(@{ w = $c / $scale * 100; c = $cc }, @{ w = ([math]::Min($f, $b) - $c) / $scale * 100; c = $DG.line })
+    if ($f -gt $b) { $segs += @{ w = ($f - $b) / $scale * 100; c = $DG.r } } else { $segs += @{ w = ($b - $f) / $scale * 100; c = "#BFE8CB" } }
+    DgBar $segs $h
+}
+function DgBudgetNote($p, $T) {
+    $b = [double]$p.budget; $f = [double]$p.forecastCost
+    if (-not $b -or -not $f -or $f -eq $b) { return "" }
+    $d = $f - $b; $pct = [math]::Round([math]::Abs($d) / $b * 100)
+    if ($d -gt 0) { "<span style=`"color:$($DG.r);font-weight:700`">$(DgE ($T.over -f (DgMoney $d), $pct))</span>" } else { "<span style=`"color:$($DG.g);font-weight:700`">$(DgE ($T.under -f (DgMoney (-$d))))</span>" }
+}
+
+# «Терміни»: диаграмма Ганта из ячеек — от старта до плана и прогноза, выполнено, «сьогодні», прежний прогноз
+function DgGantt($M, $T) {
+    $ps = @($M.projects | Where-Object { $_.start -and ($_.planEnd -or $_.forecastEnd) })
+    if (-not $ps.Count) { return "" }
+    $today = [datetime]$M.asOf
+    $ends = @($ps | ForEach-Object { [datetime]($_.forecastEnd ?? $_.planEnd); [datetime]($_.planEnd ?? $_.forecastEnd) })
+    $w0 = @($ps | ForEach-Object { [datetime]$_.start }) + $today | Sort-Object | Select-Object -First 1
+    $w0 = [datetime]::new($w0.Year, $w0.Month, 1)
+    $w1 = @($ends + $today | Sort-Object)[-1]; $w1 = [datetime]::new($w1.Year, $w1.Month, 1).AddMonths(1)
+    $span = ($w1 - $w0).TotalDays
+    $pos = { param([datetime]$d) [math]::Max(0, [math]::Min(100, ($d - $w0).TotalDays / $span * 100)) }
+    $tp = & $pos $today; $tw = 0.7
+    # шкала месяцев: подпись — каждый месяц (до 8 месяцев) или каждый квартал
+    $mon = $T.months -split ","
+    $months = @(); $mo = $w0; while ($mo -lt $w1) { $months += $mo; $mo = $mo.AddMonths(1) }
+    $every = if ($months.Count -le 8) { 1 } else { 3 }
+    $scaleCells = ($months | ForEach-Object {
+        $wd = ($_.AddMonths(1) - $_).TotalDays / $span * 100
+        $lbl = if (($_.Month - 1) % $every -eq 0) { $mon[$_.Month - 1] + $(if ($_.Month -eq 1 -or $_ -eq $w0) { " " + $_.ToString("yy") } else { "" }) } else { "&nbsp;" }
+        "<td width=`"$([math]::Round($wd, 2))%`" style=`"border-left:1px solid $($DG.line);padding:0 0 2px 3px;font-family:$($DG.font);font-size:10px;line-height:12px;color:$($DG.muted);white-space:nowrap;overflow:hidden`">$lbl</td>" }) -join ""
+    $rows = ($ps | ForEach-Object {
+        $s = [datetime]$_.start; $pl = [datetime]($_.planEnd ?? $_.forecastEnd); $fc = [datetime]($_.forecastEnd ?? $_.planEnd)
+        $done = $s.AddDays(($fc - $s).TotalDays * [double]$_.progress / 100)
+        $P0 = & $pos $s; $Pd = & $pos $done; $Pp = & $pos $pl; $Pf = & $pos $fc
+        $pts = @(0, 100, $P0, $Pd, $Pp, $Pf, $tp, [math]::Min(100, $tp + $tw)) | Sort-Object -Unique
+        $cells = for ($i = 0; $i -lt $pts.Count - 1; $i++) {
+            $a = $pts[$i]; $b = $pts[$i + 1]; if ($b - $a -lt 0.05) { continue }
+            $mid = ($a + $b) / 2
+            $col = if ($mid -ge $tp -and $mid -le $tp + $tw) { $DG.black }
+                elseif ($mid -lt $P0) { $DG.soft }
+                elseif ($mid -lt $Pd) { $DG.violet }
+                elseif ($Pf -ge $Pp) { if ($mid -lt $Pp) { $DG.line } elseif ($mid -lt $Pf) { $DG.r } else { $DG.soft } }
+                else { if ($mid -lt $Pf) { $DG.line } elseif ($mid -lt $Pp) { "#BFE8CB" } else { $DG.soft } }
+            "<td width=`"$([math]::Round($b - $a, 2))%`" style=`"background:$col;height:10px;line-height:10px;font-size:1px;mso-line-height-rule:exactly`">&nbsp;</td>"
+        }
+        $slip = if ($_.slipDays -gt 0) { DgPill ($T.slip -f $_.slipDays) $DG.r } elseif ($_.slipDays -lt 0) { DgPill ($T.ahead -f (-$_.slipDays)) $DG.g } else { "" }
+        $was = if ($_.prevForecastEnd -and $_.prevForecastEnd -ne $_.forecastEnd) { " · " + (DgE ($T.wasF -f (DgDate $_.prevForecastEnd))) } else { "" }
+        "<tr><td style=`"padding:10px 0 3px 0;font-family:$($DG.font)`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`"><tr>" +
+        "<td style=`"font-size:12px;line-height:16px;color:$($DG.ink)`"><b>$(DgE $_.code)</b> $(DgE $_.title)<br><span style=`"font-size:11px;color:$($DG.muted)`">$(DgDate $_.start) → $($T.plan.ToLower()) $(DgDate $_.planEnd) · $($T.forecast.ToLower()) $(DgDate $_.forecastEnd)$was</span></td>" +
+        "<td align=`"right`" valign=`"top`" style=`"white-space:nowrap;padding-left:6px`">$slip</td></tr></table></td></tr>" +
+        "<tr><td><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`" style=`"border-collapse:collapse`"><tr>$($cells -join '')</tr></table></td></tr>" }) -join ""
+    $leg = @(@($DG.violet, $T.legDone), @($DG.line, $T.legLeft), @($DG.r, $T.legSlip), @("#BFE8CB", $T.legEarly), @($DG.black, $T.legToday)) |
+        ForEach-Object { "<span style=`"white-space:nowrap;padding-right:10px`"><span style=`"display:inline-block;width:10px;height:10px;background:$($_[0]);vertical-align:middle`">&nbsp;</span> $(DgE $_[1])</span>" }
+    (DgH $T.gantt $DG.violet) +
+    "<tr><td style=`"padding:0 24px`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`">" +
+    "<tr><td><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`" style=`"border-collapse:collapse`"><tr>$scaleCells</tr></table></td></tr>" + $rows +
+    "<tr><td style=`"padding-top:10px;font-family:$($DG.font);font-size:11px;line-height:18px;color:$($DG.text)`">$($leg -join ' ')</td></tr></table></td></tr>"
+}
+
 # сводные данные письма из проектов: показатели, «Потребує уваги», решения, ризики, изменения, страны
 function Complete-DigestModel($M) {
     $T = $DG_T[$M.lang]; if (-not $T) { $T = $DG_T.uk }
     $ps = @($M.projects)
-    $k = @{ total = $ps.Count; g = 0; y = 0; r = 0; n = 0; decisions = 0; stale = 0; budget = 0.0; cost = 0.0 }
+    $k = @{ total = $ps.Count; g = 0; y = 0; r = 0; n = 0; decisions = 0; stale = 0; budget = 0.0; cost = 0.0; forecast = 0.0 }
     $att = @(); $dec = @(); $risks = @(); $chg = @()
     foreach ($p in $ps) {
         $rk = DgRag $p.rag; $k[$rk]++
-        $k.budget += [double]$p.budget; $k.cost += [double]$p.cost
+        $k.budget += [double]$p.budget; $k.cost += [double]$p.cost; $k.forecast += [double]($p.forecastCost ?? $p.budget)
         $stale = $p.stale -or -not $p.report
         if ($stale) { $k.stale++ }
         $burn = if ($p.budget) { [math]::Round([double]$p.cost / [double]$p.budget * 100) } else { 0 }
@@ -191,6 +268,7 @@ function Complete-DigestModel($M) {
         if ($p.status -eq "Призупинено") { $why += $T.aPaused }
         if ($p.slipDays -gt 30) { $why += ($T.aSlip -f $p.slipDays) }
         if ($burn -gt [double]$p.progress + 20) { $why += ($T.aBurn -f $burn, $p.progress) }
+        if ($p.budget -and $p.forecastCost -and [double]$p.forecastCost -gt [double]$p.budget * 1.1) { $why += ($T.aOver -f [math]::Round(([double]$p.forecastCost / [double]$p.budget - 1) * 100)) }
         if (@($p.risks | Where-Object { $_ -and $_.overdue }).Count) { $why += $T.aOverdue }
         if ($stale) { $why += $T.aStale }
         if ($why.Count) { $att += @{ code = $p.code; title = $p.title; url = $p.url; rag = $p.rag; pm = $p.pm; owner = $p.owner; reason = ($why -join " · ") } }
@@ -229,7 +307,8 @@ function DgPortfolio($M, $T) {
     $burn = if ($k.budget) { [math]::Round($k.cost / $k.budget * 100) } else { 0 }
     $budgetRow = "<tr><td style=`"padding:16px 24px 0 24px;font-family:$($DG.font)`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`"><tr>" +
         "<td style=`"font-size:12px;color:$($DG.muted);padding-bottom:4px`">$($T.budgetPf)</td><td align=`"right`" style=`"font-size:13px;color:$($DG.ink);padding-bottom:4px`"><b>$(DgE ($T.spentPct -f (DgMoney $k.cost), (DgMoney $k.budget), $burn))</b></td></tr>" +
-        "<tr><td colspan=`"2`">$(DgPct $burn $DG.violet)</td></tr></table></td></tr>"
+        "<tr><td colspan=`"2`">$(DgBudgetBar @{ budget = $k.budget; cost = $k.cost; forecastCost = $k.forecast; progress = 100 } 10)</td></tr>" +
+        "<tr><td colspan=`"2`" style=`"font-size:12px;color:$($DG.muted);padding-top:4px`">$(DgE ($T.fcost -f (DgMoney $k.forecast))) $(DgBudgetNote @{ budget = $k.budget; forecastCost = $k.forecast } $T)</td></tr></table></td></tr>"
     $att = if (@($M.attention | Where-Object { $_ }).Count) {
         (DgH $T.attention $DG.coral) + "<tr><td style=`"padding:0 24px`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`">" +
         (($M.attention | ForEach-Object {
@@ -252,10 +331,10 @@ function DgPortfolio($M, $T) {
         $pbC = if ($pb -gt [double]$_.progress + 20) { $DG.coral } else { $DG.n }
         "<tr><td valign=`"top`" style=`"padding:11px 6px 9px 0;border-bottom:1px solid $($DG.line);width:14px`">$(DgDot (DgRag $_.rag) 10)</td>" +
         "<td style=`"padding:8px 6px;border-bottom:1px solid $($DG.line);font-family:$($DG.font);font-size:13px;line-height:17px`"><a href=`"$($_.url)`" style=`"color:$($DG.ink);font-weight:700;text-decoration:none`">$(DgE $_.title)</a><br><span style=`"font-size:11px;color:$($DG.muted)`">$(DgE $_.code)$(if ($_.country) { ' · ' + (DgE $_.country) }) · $(DgPeople $_ $T)</span></td>" +
-        "<td valign=`"top`" style=`"padding:8px 6px;border-bottom:1px solid $($DG.line);width:92px;font-family:$($DG.font);font-size:11px;color:$($DG.muted)`"><b style=`"color:$($DG.ink);font-size:12px`">$($_.progress)%</b><div style=`"padding:3px 0 5px`">$(DgPct $_.progress $DG.violet)</div>$($T.colBudget) <b style=`"color:$($DG.ink)`">$pb%</b><div style=`"padding-top:3px`">$(DgPct $pb $pbC)</div><div style=`"padding-top:3px;white-space:nowrap`">$(DgMoney $_.cost) / $(DgMoney $_.budget)</div></td>" +
+        "<td valign=`"top`" style=`"padding:8px 6px;border-bottom:1px solid $($DG.line);width:92px;font-family:$($DG.font);font-size:11px;color:$($DG.muted)`"><b style=`"color:$($DG.ink);font-size:12px`">$($_.progress)%</b><div style=`"padding:3px 0 5px`">$(DgPct $_.progress $DG.violet)</div>$($T.colBudget) <b style=`"color:$($DG.ink)`">$pb%</b><div style=`"padding-top:3px`">$(DgBudgetBar $_ 6)</div><div style=`"padding-top:3px;white-space:nowrap`">$(DgMoney $_.cost) / $(DgMoney $_.budget)</div><div style=`"white-space:nowrap`">$(DgBudgetNote $_ $T)</div></td>" +
         "<td valign=`"top`" align=`"right`" style=`"padding:8px 0 8px 6px;border-bottom:1px solid $($DG.line);width:52px;font-family:$($DG.font);font-size:12px;white-space:nowrap`">$slip</td></tr>" }) -join ""
     $table = (DgH $T.projects $DG.violet) + "<tr><td style=`"padding:0 24px`"><table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" border=`"0`" style=`"border-collapse:collapse`">$rows</table></td></tr>"
-    $tiles + $distRow + $budgetRow + $att + $countries + $table
+    $tiles + $distRow + $budgetRow + $att + $countries + (DgGantt $M $T) + $table
 }
 
 # «Потрібні рішення»: что, по какому проекту, к кому обращаться, с какой даты ждёт
