@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.7.1",
+   "date": "21.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення без змін у роботі порталу.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.7.0",
    "date": "21.10.2026",
    "html": "<p><b>Нове</b></p>\n<ul>\n<li><b>Бюджет — як терміни.</b> У статус-звіті: <b>Бюджет (план)</b> і <b>Прогноз витрат на завершення</b> (підказка «за темпом витрат»); зміна — з причиною, у картку — після погодження PMO; у картці — прогноз і відхилення від бюджету. <b>План і факт:</b> «Планувалось» з останнього погодженого звіту і поле <b>Не зроблено з плану і чому</b> (обов'язкове, якщо план був); помічник ШІ враховує його під час перевірки.</li>\n</ul>"
@@ -220,6 +225,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.7.1",
+   "date": "21.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update with no changes to how the portal works.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.7.0",
    "date": "21.10.2026",
    "html": "<p><b>New</b></p>\n<ul>\n<li><b>Budget works like the schedule.</b> In the status report: <b>Budget (plan)</b> and <b>Cost at completion forecast</b> (\"at the current spending rate\" hint); a change needs a reason and reaches the card after PMO approval; the card shows the forecast and the deviation from the budget. <b>Plan vs actual:</b> \"Planned\" from the last approved report and <b>Not done from the plan and why</b> (required if there was a plan); the AI assistant takes it into account when checking.</li>\n</ul>"
@@ -436,6 +446,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.7.1",
+   "date": "21.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Техническое обновление без изменений в работе портала.</li>\n</ul>"
+  },
   {
    "ver": "1.7.7.0",
    "date": "21.10.2026",

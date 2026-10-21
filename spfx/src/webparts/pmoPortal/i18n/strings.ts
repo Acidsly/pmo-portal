@@ -1272,9 +1272,9 @@ export const T: Record<string, L3> = {
   "по темпу затрат: ~{v}"
  ],
  "plannedFrom": [
-  "звіт від {date}",
-  "report of {date}",
-  "отчёт от {date}"
+  "(звіт від {date})",
+  "(report of {date})",
+  "(отчёт от {date})"
  ],
  "notDoneHint": [
   "Що з цього плану не зроблено і чому; усе виконано — так і напишіть.",
