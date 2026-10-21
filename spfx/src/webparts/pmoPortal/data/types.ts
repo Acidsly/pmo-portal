@@ -35,6 +35,8 @@ export interface Project {
   parent?: { id: number; title: string; code?: string } | null;
   /** «Країна» (pmCountry): ставит PMO при создании, потом — только «Призначення»; CEO країни — просмотр. Нет — пусто. */
   country?: string;
+  /** 1.7.7: «Прогноз витрат на завершення» (pmForecastCost) — ключевой показатель из погодженого отчёта; не задан — null / нет. */
+  forecastCost?: number | null;
 }
 
 /** «Призначення» (#43): решение PMO о смене PM / власника / країни; пусто — без изменений. Переносит синхронизация (paApplied). */
@@ -52,6 +54,8 @@ export interface StatusReport {
   id: number; projectId: number; date: string; period: string; periodFrom: string; schedule: Rag; budget: Rag; resources: Rag;
   status: string; type: string; progress: number | null; start: string; goLive: string; planEnd: string; forecastEnd: string;
   actualCost: number | null; keyReason: string; title: string; done: string; next: string; issues: string;
+  /** 1.7.7: «Бюджет (план)» и «Прогноз витрат на завершення» отчёта (null — не менялись / поля ещё не было); «Не зроблено з плану». */
+  budgetPlan?: number | null; forecastCost?: number | null; notDone?: string;
   /** #54: фактическая дата завершения / отмены (только «Завершено» / «Скасовано»). */
   actualEnd?: string;
   decision: boolean; decisionText: string; applied: boolean; author: Person | null;

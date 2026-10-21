@@ -35,7 +35,7 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/parent.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/assignments.json", "tests/cases/history.json", "tests/cases/notify-state.json", "tests/cases/archive.json", "tests/cases/feedback-decided.json", "tests/cases/archive-migration.json", "config/focus-group.example.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/parent.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/money.json", "tests/cases/assignments.json", "tests/cases/history.json", "tests/cases/notify-state.json", "tests/cases/archive.json", "tests/cases/feedback-decided.json", "tests/cases/archive-migration.json", "config/focus-group.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
@@ -324,10 +324,20 @@ foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/apply.json") | Co
     $exp = ($c.out.PSObject.Properties | Sort-Object Name | ForEach-Object { "$($_.Name)=$($_.Value)" }) -join "; "
     if ($got -eq $exp) { Ok "перенос в карточку: $($c.name)" } else { Bad "перенос в карточку: $($c.name): [$got], ожидалось [$exp]" }
 }
+# 1.7.7: суммы в журнале — как на экране приложения (tests/cases/money.json, те же — moneyText приложения)
+$fnh = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq "Human" }, $true) | Select-Object -First 1
+if ($fnh) { Invoke-Expression $fnh.Extent.Text } else { Bad "нет функции Human" }
+foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/money.json") | ConvertFrom-Json).cases) {
+    foreach ($f in @("pmBudget", "pmForecastCost", "pmActualCost")) {
+        $got = Human $f $(if ($null -eq $c[0]) { "" } else { [string]$c[0] })
+        if ($got -ne $c[1]) { Bad "сумма $f $($c[0]): «$got», ожидалось «$($c[1])»" }
+    }
+}
+Ok "суммы в журнале — формат приложения (money.json)"
 # переходный режим (на сайте ещё нет «Завершено» в выборе): итоговый отчёт пишет прежнее «Архівний»
 $tl = Get-ReportTarget @{ status = "Скасовано"; date = "2026-10-01"; schedule = ""; budget = ""; resources = ""; title = "" } "" $true
 if ($tl["status"] -eq "Архівний" -and $tl["archivedAt"] -eq "2026-10-01") { Ok "перенос в карточку: переходный режим — «Архівний»" } else { Bad "перенос в карточку: переходный режим — $($tl["status"])" }
-if ($syncSrc -match 'Get-ReportTarget \(\[ordered\][^\n]*\n[^\n]*\n[^\n]*\$p\.Values\.pmLastUpdate \$LEGACY_ARCHIVE') { Ok "раздел 1 передаёт переходный режим архива" } else { Bad "раздел 1: Get-ReportTarget без `$LEGACY_ARCHIVE" }
+if ($syncSrc -match 'Get-ReportTarget \(\[ordered\](?:[^\n]*\n){1,5}[^\n]*\$p\.Values\.pmLastUpdate \$LEGACY_ARCHIVE') { Ok "раздел 1 передаёт переходный режим архива" } else { Bad "раздел 1: Get-ReportTarget без `$LEGACY_ARCHIVE" }
 if ($syncSrc -match '\$plan = Get-StatePlan \$card') { Ok "раздел 0a решает по эталону общим правилом Get-StatePlan" } else { Bad "Invoke-PMOSync.ps1: раздел 0a не использует Get-StatePlan" }
 # #77: фаза и тип пишутся в каждый отчёт — раздел 1 меняет карточку и пишет журнал только по отличающимся полям ($changed)
 if ($syncSrc -match 'foreach \(\$k in \$target\.Keys\) \{ if \(\$p\.Values\[\$k\] -ne \$target\[\$k\]\) \{ \$changed\[\$k\] = \$target\[\$k\] \} \}' -and $syncSrc -match 'foreach \(\$k in \$changed\.Keys\) \{\s*\n\s*if \(\$DISPLAY\.Contains\(\$k\)\) \{ Add-Change') { Ok "раздел 1: журнал и запись — только по отличающимся от карточки полям" } else { Bad "раздел 1: журнал не по `$changed" }

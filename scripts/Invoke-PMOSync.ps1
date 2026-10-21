@@ -253,6 +253,11 @@ function Human([string]$field, [string]$v) {
     if (-not $v) { return "—" }
     if ($v -match '^\d{4}-\d{2}-\d{2}$') { return ([datetime]$v).ToString("dd.MM.yyyy") }
     if ($field -in @("pmProgress")) { return "$v%" }
+    # суммы — как на экране приложения (tests/cases/money.json): целое, разряды — неразрывный пробел, «$» после числа
+    if ($field -in @("pmBudget", "pmForecastCost", "pmActualCost")) {
+        $n = [math]::Round([double]$v, 0, [MidpointRounding]::AwayFromZero)
+        return ($n.ToString("#,0", [Globalization.CultureInfo]::InvariantCulture) -replace ",", [string][char]0xA0) + " $"
+    }
     return $v
 }
 function Email($u) { if ($u) { return ([string]$u.Email).ToLowerInvariant() } return "" }
@@ -304,14 +309,16 @@ function Get-EffectiveApproval($rep, $aps) {
 # Что погоджений отчёт переносит в карточку (векторы tests/cases/apply.json, те же — reportTarget приложения):
 # заполненные показатели (% и затраты — целые, x,5 — вверх); «Завершено» / «Скасовано» -> тот же статус (архив), дата архивации и
 # фактическая дата завершения (#54; при другом статусе не переносится); отчёт не старше последнего (по дате) задаёт ещё стан (худшая из трёх оценок), дату и резюме. Пустые поля карточку не трогают.
-# $rep: status, type, progress, start, goLive, planEnd, forecastEnd, actualCost, actualEnd, date, schedule, budget, resources, title.
+# $rep: status, type, progress, start, goLive, planEnd, forecastEnd, actualCost, budgetPlan, forecastCost, actualEnd, date, schedule, budget, resources, title.
+# 1.7.7: «Бюджет (план)» и «Прогноз витрат на завершення» — целые; прогноз 0 — «не задан» (не переносится).
 # $legacy — на сайте ещё нет «Завершено» в выборе статуса проекта (до миграции архива): пишется прежнее «Архівний».
 function Get-ReportTarget($rep, [string]$lastUpdate, [bool]$legacy = $false) {
     $t = [ordered]@{}
-    foreach ($k in @("status", "type", "progress", "start", "goLive", "planEnd", "forecastEnd", "actualCost", "actualEnd")) {
+    foreach ($k in @("status", "type", "progress", "start", "goLive", "planEnd", "forecastEnd", "actualCost", "budgetPlan", "forecastCost", "actualEnd")) {
         $v = $rep.$k
         if ($null -eq $v -or [string]$v -eq "") { continue }
-        $t[$k] = if ($k -in @("progress", "actualCost")) { [string][math]::Round([double]$v, 0, [MidpointRounding]::AwayFromZero) } else { [string]$v }
+        if ($k -eq "forecastCost" -and [double]$v -eq 0) { continue }
+        $t[$k] = if ($k -in @("progress", "actualCost", "budgetPlan", "forecastCost")) { [string][math]::Round([double]$v, 0, [MidpointRounding]::AwayFromZero) } else { [string]$v }
     }
     if ($t["status"] -in @("Завершено", "Скасовано")) { if ($legacy) { $t["status"] = "Архівний" }; $t["archivedAt"] = [string]$rep.date }
     elseif ($t.Contains("actualEnd")) { $t.Remove("actualEnd") }
@@ -324,7 +331,7 @@ function Get-ReportTarget($rep, [string]$lastUpdate, [bool]$legacy = $false) {
 }
 # поле цели переноса -> поле карточки
 $TARGET_FIELD = [ordered]@{ status = "pmStatus"; type = "pmType"; progress = "pmProgress"; start = "pmStart"; goLive = "pmGoLive"; planEnd = "pmPlanEnd"
-    forecastEnd = "pmForecastEnd"; actualCost = "pmActualCost"; actualEnd = "pmActualEnd"; archivedAt = "pmArchivedAt"; rag = "pmRAG"; lastUpdate = "pmLastUpdate"; lastReport = "pmLastReport" }
+    forecastEnd = "pmForecastEnd"; actualCost = "pmActualCost"; budgetPlan = "pmBudget"; forecastCost = "pmForecastCost"; actualEnd = "pmActualEnd"; archivedAt = "pmArchivedAt"; rag = "pmRAG"; lastUpdate = "pmLastUpdate"; lastReport = "pmLastReport" }
 # Решение по эталону (векторы tests/cases/state.json -> plan): $state — эталон или $null (нет / повреждён), $hasRecord — строка
 # эталона есть. new — эталона нет: из карточки; rebuild — повреждён: заново из карточки (не откат к пустым значениям);
 # none — совпадает; accept — правил владелец сайта или приложение (скрипт): эталон = карточка; rollback — правка в обход отчёта.
@@ -461,6 +468,8 @@ $DISPLAY = [ordered]@{
     pmStatus = "Фаза проєкту"; pmRAG = "Загальний стан"; pmType = "Тип проєкту"; pmProgress = "% виконання"
     pmStart = "Дата старту"; pmGoLive = "Дата запуску (продакшн)"; pmPlanEnd = "Дата завершення (план)"; pmForecastEnd = "Прогноз завершення"
     pmActualEnd = "Дата завершення (факт)"
+    # 1.7.7: бюджет — через статус-отчёт (с причиной), в журнал «Статус-звіт»
+    pmBudget = "Бюджет (план)"; pmForecastCost = "Прогноз витрат на завершення"
 }
 $DATE_FIELDS = @("pmStart","pmGoLive","pmPlanEnd","pmForecastEnd","pmLastUpdate","pmArchivedAt","pmActualEnd")
 
@@ -952,6 +961,8 @@ foreach ($r in $pending) {
     # что переносится — общим правилом Get-ReportTarget (векторы tests/cases/apply.json, те же — у приложения)
     $tg = Get-ReportTarget ([ordered]@{ status = (Norm $r["srStatus"]); type = (Norm $r["srType"]); progress = $r["srProgress"]; start = (Norm $r["srStart"])
         goLive = (Norm $r["srGoLive"]); planEnd = (Norm $r["srPlanEnd"]); forecastEnd = (Norm $r["srForecastEnd"]); actualCost = $r["srActualCost"]; actualEnd = (Norm $r["srActualEnd"])
+        # 1.7.7: полей может ещё не быть (до Deploy-PMO.ps1) — тогда не переносятся
+        budgetPlan = $(if ($r.FieldValues.ContainsKey("srBudgetPlan")) { $r["srBudgetPlan"] }); forecastCost = $(if ($r.FieldValues.ContainsKey("srForecastCost")) { $r["srForecastCost"] })
         date = $repDate; schedule = (Norm $r["srSchedule"]); budget = (Norm $r["srBudget"]); resources = (Norm $r["srResources"]); title = $title }) $p.Values.pmLastUpdate $LEGACY_ARCHIVE
     $target = [ordered]@{}; foreach ($k in $tg.Keys) { $target[$TARGET_FIELD[$k]] = $tg[$k] }
 

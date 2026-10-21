@@ -130,7 +130,7 @@ function Get-ArchiveOutcome([string]$lastAppliedStatus, $finals, [bool]$cancelle
 }
 function Get-StateKeys { return @("pmStatus", "pmRAG", "pmType", "pmProgress", "pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd",
                                   "pmActualCost", "pmArchivedAt", "pmLastUpdate", "pmLastReport", "pmCode", "pmActualEnd",
-                                  "pmManager", "pmOwner", "pmCountry") }
+                                  "pmManager", "pmOwner", "pmCountry", "pmBudget", "pmForecastCost") }
 # PM и владелец в эталоне — e-mail в нижнем регистре (#43: меняет только PMO через «Призначення»); страна — значение выбора
 $STATE_PEOPLE = @("pmManager", "pmOwner")
 function Get-StateValue([string]$k, $v) {

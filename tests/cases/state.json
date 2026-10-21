@@ -756,7 +756,9 @@
     "pmActualEnd",
     "pmManager",
     "pmOwner",
-    "pmCountry"
+    "pmCountry",
+    "pmBudget",
+    "pmForecastCost"
    ]
   },
   {
@@ -793,7 +795,9 @@
     "pmActualEnd",
     "pmManager",
     "pmOwner",
-    "pmCountry"
+    "pmCountry",
+    "pmBudget",
+    "pmForecastCost"
    ]
   },
   {
@@ -827,7 +831,9 @@
     "pmManager"
    ],
    "extended": [
-    "pmCountry"
+    "pmCountry",
+    "pmBudget",
+    "pmForecastCost"
    ]
   },
   {
@@ -861,7 +867,9 @@
     "pmOwner"
    ],
    "extended": [
-    "pmCountry"
+    "pmCountry",
+    "pmBudget",
+    "pmForecastCost"
    ]
   },
   {
@@ -894,7 +902,9 @@
    "out": "none",
    "fields": [],
    "extended": [
-    "pmCountry"
+    "pmCountry",
+    "pmBudget",
+    "pmForecastCost"
    ]
   },
   {
@@ -928,7 +938,10 @@
    "fields": [
     "pmCountry"
    ],
-   "extended": []
+   "extended": [
+    "pmBudget",
+    "pmForecastCost"
+   ]
   }
  ]
 }

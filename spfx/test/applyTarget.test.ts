@@ -22,3 +22,13 @@ test('запись из приложения: затраты и бюджет —
   expect(reportBody({ ...reportFromProject(p, '2026-10-04'), actualCost: 12.5 }, p).srActualCost).toBe(13);
   if (projectBody) expect(projectBody({ title: 'П', code: '', department: '', links: [], type: 'Звичайний', priority: '', manager: null, owner: null, team: [], start: '', goLive: '', planEnd: '', status: 'Ініціація', budget: 2.5, description: '' }, 'PRJ-001').pmBudget).toBe(3);
 });
+// 1.7.7: суммы в истории — как Human синхронизации и экран (общие векторы money.json)
+import money from '../../tests/cases/money.json';
+import { moneyText } from '../src/webparts/pmoPortal/logic/overlay';
+import { money as screenMoney } from '../src/webparts/pmoPortal/components/Bits';
+test('сумма: формат журнала = формат экрана (money.json)', () => {
+  for (const [v, s] of (money as any).cases) {
+    expect(moneyText(v)).toBe(s);
+    if (v !== null) expect(screenMoney(v).replace(/ /g, ' ')).toBe(s);
+  }
+});
