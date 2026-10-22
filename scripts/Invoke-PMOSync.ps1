@@ -81,7 +81,7 @@ $stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments 
 $IN_AUTOMATION = [bool](Get-Command Get-AutomationVariable -ErrorAction SilentlyContinue)
 # подробный журнал runbook включает Verbose для всех команд — служебные сообщения PnP в журнал не нужны
 if ($IN_AUTOMATION) { $VerbosePreference = "SilentlyContinue" }
-# журнал: в Azure Automation (PowerShell 7.4) Write-Host не сохраняется — поток Verbose (у runbook включён подробный журнал);
+# журнал: в Azure Automation (PowerShell 7.x) Write-Host не сохраняется — поток Verbose (у runbook включён подробный журнал);
 # Write-Output нельзя: он попал бы в возвращаемые значения функций
 function Log([string]$m, [string]$c = "Gray") {
     $line = "{0:HH:mm:ss} {1}" -f $(if ($IN_AUTOMATION) { ConvertTo-Kyiv (Get-Date).ToUniversalTime() } else { Get-Date }), $m
