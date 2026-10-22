@@ -329,7 +329,7 @@ stateDiagram-v2
 
 - **Помилки запису.** Збій видачі прав, створення папки, перенесення запису, запису стейкхолдерів, додавання учасника, відправки нагадування — «ПОМИЛКА» в журналі (`Fail`, лічильник `errors`); запуск доробляє решту й наприкінці кидає виняток. В Azure Automation завдання отримує «Failed», правило `pmo-sync-job-failed` надсилає лист. Попередження правил (не PM, правка в обхід) помилками не є. Якщо права не видано, `pmoAcl` не ставиться — наступний запуск повторює. HTTP 429 і збої CSOM — повтор (`Invoke-PnPQuery -RetryCount 10`; REST блокування — до 4 спроб).
 - **Час за Києвом.** Дати для людей (`pmLastComment`, межа нагадувань) — `ConvertTo-Kyiv` (`Europe/Kyiv` → `Europe/Kiev` → `FLE Standard Time`), незалежно від поясу машини; пісочниця Azure — в UTC.
-- **Журнал запуску.** На Mac — `Write-Host`; в Azure Automation (PowerShell 7.4) `Write-Host` у журнал завдання не потрапляє, тому рядки йдуть у потік Verbose (у runbook увімкнено докладний журнал), службовий Verbose PnP вимкнено.
+- **Журнал запуску.** На Mac — `Write-Host`; в Azure Automation (PowerShell 7.x) `Write-Host` у журнал завдання не потрапляє, тому рядки йдуть у потік Verbose (у runbook увімкнено докладний журнал), службовий Verbose PnP вимкнено.
 - **Кеш оргструктури.** Керівники, імена й посади з Entra ID між запусками: на Mac — файл `~/.pmo-sync/managers-<env>.json` (`-ManagerCache`), в Azure Automation — зашифрована змінна `pmo-managers-<env>` (`-ManagerCacheVariable`). Перечитується не частіше ніж раз на `-ManagerCacheHours` (24). Збої Graph (крім «немає керівника») у кеш не пишуться. `-RebuildPermissions` кеш не читає, але оновлює.
 - **`-DryRun`.** Лише читає й показує, що буде зроблено; блокування не бере.
 - **`-RebuildPermissions`.** Перераховує права всіх проєктів і папок, зокрема архівних. Звичайний запуск архівний проєкт, права якого вже видано проєкту й усім папкам, пропускає (`Test-ArchiveFrozen`). За розкладом — щонеділі о 3:00.
@@ -491,7 +491,7 @@ SDK агентів (@microsoft/agents-copilotstudio-client) ──► агент
 flowchart LR
     subgraph RG["rg-pmo-automation, Germany West Central"]
         AA["Automation account aa-pmo-sync<br/>системна керована ідентичність"]
-        RT["Runtime PowerShell-7.4-PnP<br/>PowerShell 7.4 + PnP.PowerShell 3.4.1"]
+        RT["Runtime PowerShell-7.6-PnP<br/>PowerShell 7.6 + PnP.PowerShell 3.4.1"]
         RB["Runbook PMO-Sync<br/>runbooks/Invoke-PMOSync.ps1"]
         WH["Runbook PMO-WhoAmI<br/>перевірка прав"]
         VAR["Зашифрована змінна<br/>pmo-managers-test"]
@@ -508,7 +508,7 @@ flowchart LR
 
 | Крок | Скрипт | Що робить |
 |---|---|---|
-| Ресурси | `scripts/New-PMOAutomation.ps1` | група ресурсів, обліковий запис з керованою ідентичністю (ролей Azure їй не видається), runtime PowerShell 7.4 з PnP.PowerShell 3.4.1 з PowerShell Gallery, зашифрована змінна кешу |
+| Ресурси | `scripts/New-PMOAutomation.ps1` | група ресурсів, обліковий запис з керованою ідентичністю (ролей Azure їй не видається), runtime PowerShell 7.6 (`-PsVersion`; прод-runbook — у PowerShell 7.4 до випуску з `main`, підтримка 7.4 закінчується 10.11.2026) з PnP.PowerShell 3.4.1 з PowerShell Gallery, зашифрована змінна кешу |
 | Права | `scripts/Grant-PMOAutomation.ps1` (виконує адміністратор тенанта) | ролі програми Sites.Selected і Graph User.Read.All сервісному суб'єкту ідентичності; FullControl лише на сайт порталу (вхід програмою PMO Deploy) |
 | Збірка | `scripts/Build-Runbook.ps1` | `Invoke-PMOSync.ps1` + вміст `PMO.Common.ps1` замість рядка підключення → `runbooks/Invoke-PMOSync.ps1`; перший рядок — відбиток вихідників `sha256:<12 символів>`; без `$PSScriptRoot` |
 | Публікація | `scripts/Publish-Runbook.ps1` | звіряє зібраний файл з вихідниками, створює чи оновлює runbook у runtime, вмикає докладний журнал, публікує і звіряє опублікований текст |
