@@ -508,7 +508,7 @@ flowchart LR
 
 | Крок | Скрипт | Що робить |
 |---|---|---|
-| Ресурси | `scripts/New-PMOAutomation.ps1` | група ресурсів, обліковий запис з керованою ідентичністю (ролей Azure їй не видається), runtime PowerShell 7.6 (`-PsVersion`; прод-runbook — у PowerShell 7.4 до випуску з `main`, підтримка 7.4 закінчується 10.11.2026) з PnP.PowerShell 3.4.1 з PowerShell Gallery, зашифрована змінна кешу |
+| Ресурси | `scripts/New-PMOAutomation.ps1` | група ресурсів, обліковий запис з керованою ідентичністю (ролей Azure їй не видається), runtime PowerShell 7.6 (`-PsVersion`; з 22.10.2026 — усі runbook, тест і прод; підтримка 7.4 закінчується 10.11.2026) з PnP.PowerShell 3.4.1 з PowerShell Gallery, зашифрована змінна кешу |
 | Права | `scripts/Grant-PMOAutomation.ps1` (виконує адміністратор тенанта) | ролі програми Sites.Selected і Graph User.Read.All сервісному суб'єкту ідентичності; FullControl лише на сайт порталу (вхід програмою PMO Deploy) |
 | Збірка | `scripts/Build-Runbook.ps1` | `Invoke-PMOSync.ps1` + вміст `PMO.Common.ps1` замість рядка підключення → `runbooks/Invoke-PMOSync.ps1`; перший рядок — відбиток вихідників `sha256:<12 символів>`; без `$PSScriptRoot` |
 | Публікація | `scripts/Publish-Runbook.ps1` | звіряє зібраний файл з вихідниками, створює чи оновлює runbook у runtime, вмикає докладний журнал, публікує і звіряє опублікований текст |

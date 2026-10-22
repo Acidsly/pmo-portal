@@ -152,7 +152,7 @@ Install-Module Az.Accounts, Az.Resources, Az.Automation -Scope CurrentUser   # �
 
 Где запускать:
 - **Azure Automation** (рабочий режим; вход `Connect-AzAccount … -UseDeviceAuthentication`, модули Az.Accounts, Az.Resources, Az.Automation):
-  1. `scripts/New-PMOAutomation.ps1 [-Wait]` — группа `rg-pmo-automation`, учётная запись `aa-pmo-sync` (Germany West Central) с системной управляемой учётной записью, среда PowerShell 7.6 `PowerShell-7.6-PnP` с PnP.PowerShell 3.4.1 (`-PsVersion`; прежняя `PowerShell-7.4-PnP` не удаляется — в ней прод-runbook до выпуска из `main`, после него её можно удалить в портале), зашифрованная переменная кэша `pmo-managers-<env>` (`-CacheEnvs`, по умолчанию `test`);
+  1. `scripts/New-PMOAutomation.ps1 [-Wait]` — группа `rg-pmo-automation`, учётная запись `aa-pmo-sync` (Germany West Central) с системной управляемой учётной записью, среда PowerShell 7.6 `PowerShell-7.6-PnP` с PnP.PowerShell 3.4.1 (`-PsVersion`; с 22.10.2026 в ней все runbook — `PMO-Sync`, `PMO-Sync-Test`, `PMO-WhoAmI`; прежняя `PowerShell-7.4-PnP` больше не используется, её можно удалить в портале; в Azure среда 7.6 пока выполняет PowerShell 7.6.0-preview.5), зашифрованная переменная кэша `pmo-managers-<env>` (`-CacheEnvs`, по умолчанию `test`);
   2. `scripts/Grant-PMOAutomation.ps1 -SiteUrl <сайт> -DeployClientId <PMO Deploy>` (глобальный администратор) — Sites.Selected, User.Read.All и FullControl только на сайт портала (для второго сайта — с `-SkipAppRoles`);
   3. `scripts/Build-Runbook.ps1` → коммит → `scripts/Publish-Runbook.ps1`;
   4. `scripts/Set-AzureSchedule.ps1` (см. выше).
