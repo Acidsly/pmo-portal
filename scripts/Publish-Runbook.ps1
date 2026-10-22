@@ -2,14 +2,14 @@
 #Requires -Modules Az.Accounts
 <#
 .SYNOPSIS
-    Публикация runbook в Azure Automation (среда выполнения PowerShell 7.4 + PnP.PowerShell из New-PMOAutomation.ps1).
+    Публикация runbook в Azure Automation (среда выполнения PowerShell 7.6 + PnP.PowerShell из New-PMOAutomation.ps1).
 
 .DESCRIPTION
     PMO-Sync — runbooks/Invoke-PMOSync.ps1 (собирается scripts/Build-Runbook.ps1; перед публикацией сверяется с исходниками).
     Тот же файл публикуется под двумя именами: -Env test -> PMO-Sync-Test (расписания тестового сайта; можно из ветки),
     -Env prod -> PMO-Sync (расписания прода; только из ветки main без незакоммиченных изменений, совпадающей с origin/main).
     PMO-WhoAmI — runbooks/PMO-WhoAmI.ps1 (проверка прав управляемой учётной записи, этап 3).
-    Подробный журнал (поток Verbose) включён: в среде PowerShell 7.4 Write-Host в журнал задания не попадает, журнал
+    Подробный журнал (поток Verbose) включён: в средах PowerShell 7.x Write-Host в журнал задания не попадает, журнал
     синхронизации в Azure пишется в Verbose. Создаёт или обновляет runbook, загружает черновик, публикует и сверяет опубликованный текст с локальным файлом.
     Вход в Azure выполняет человек заранее (Connect-AzAccount ... -UseDeviceAuthentication).
 #>
@@ -18,7 +18,7 @@ param(
     [ValidateSet("test", "prod")][string]$Env,
     [string]$ResourceGroup = "rg-pmo-automation",
     [string]$Account = "aa-pmo-sync",
-    [string]$RuntimeName = "PowerShell-7.4-PnP"
+    [string]$RuntimeName = "PowerShell-7.6-PnP"
 )
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot

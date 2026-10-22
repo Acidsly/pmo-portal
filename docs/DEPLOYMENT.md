@@ -11,7 +11,7 @@
 | `scripts/Invoke-Env.ps1` | Запуск всего перечисленного с параметрами окружения из `config/environments.json` |
 | `scripts/Seed-TestData.ps1` | Демонстрационные данные для тестового сайта |
 | `scripts/Build-Runbook.ps1`, `scripts/Publish-Runbook.ps1` | Сборка runbook `runbooks/Invoke-PMOSync.ps1` (`Invoke-PMOSync.ps1` + `PMO.Common.ps1`) и публикация (`-Env test` → `PMO-Sync-Test`, `-Env prod` → `PMO-Sync`, только из `main`) в Azure Automation |
-| `scripts/New-PMOAutomation.ps1`, `scripts/Grant-PMOAutomation.ps1` | Ресурсы Azure Automation (учётная запись `aa-pmo-sync`, среда PowerShell 7.4 с PnP.PowerShell, переменная кэша) и права её управляемой учётной записи |
+| `scripts/New-PMOAutomation.ps1`, `scripts/Grant-PMOAutomation.ps1` | Ресурсы Azure Automation (учётная запись `aa-pmo-sync`, среда PowerShell 7.6 с PnP.PowerShell, переменная кэша) и права её управляемой учётной записи |
 | `scripts/Set-AzureSchedule.ps1` | Расписания Azure Automation и письмо при сбое задания |
 | `scripts/Set-MacSchedule.ps1` | Запасное расписание на Mac (launchd) |
 | `scripts/Export-Feedback.ps1`, `scripts/Set-FeedbackAnswers.ps1` | Выгрузка отзывов фокус-группы (`-Action feedback`) и статусы / ответы на них (`-Action feedback-answers`) |
@@ -58,7 +58,7 @@
 
 ## Установка
 
-Нужны PowerShell 7.4+ (рекомендуется; скрипты проверяют 7.2, но PnP.PowerShell 3.x требует 7.4), модуль PnP.PowerShell 3.x, Node 22 (`brew install node@22`, для приложения SPFx), для Azure Automation — модули Az.Accounts, Az.Resources, Az.Automation, для PDF планов тестирования (`docs/testing/build.mjs`) — Google Chrome. Права глобального администратора или администратора SharePoint.
+Нужны PowerShell 7.4+ (рекомендуется 7.6: поддержка 7.4 заканчивается 10.11.2026; скрипты проверяют 7.2, но PnP.PowerShell 3.x требует 7.4), модуль PnP.PowerShell 3.x, Node 22 (`brew install node@22`, для приложения SPFx), для Azure Automation — модули Az.Accounts, Az.Resources, Az.Automation, для PDF планов тестирования (`docs/testing/build.mjs`) — Google Chrome. Права глобального администратора или администратора SharePoint.
 
 ```powershell
 Install-Module PnP.PowerShell -Scope CurrentUser
@@ -152,7 +152,7 @@ Install-Module Az.Accounts, Az.Resources, Az.Automation -Scope CurrentUser   # �
 
 Где запускать:
 - **Azure Automation** (рабочий режим; вход `Connect-AzAccount … -UseDeviceAuthentication`, модули Az.Accounts, Az.Resources, Az.Automation):
-  1. `scripts/New-PMOAutomation.ps1 [-Wait]` — группа `rg-pmo-automation`, учётная запись `aa-pmo-sync` (Germany West Central) с системной управляемой учётной записью, среда PowerShell 7.4 с PnP.PowerShell 3.4.1, зашифрованная переменная кэша `pmo-managers-<env>` (`-CacheEnvs`, по умолчанию `test`);
+  1. `scripts/New-PMOAutomation.ps1 [-Wait]` — группа `rg-pmo-automation`, учётная запись `aa-pmo-sync` (Germany West Central) с системной управляемой учётной записью, среда PowerShell 7.6 `PowerShell-7.6-PnP` с PnP.PowerShell 3.4.1 (`-PsVersion`; прежняя `PowerShell-7.4-PnP` не удаляется — в ней прод-runbook до выпуска из `main`, после него её можно удалить в портале), зашифрованная переменная кэша `pmo-managers-<env>` (`-CacheEnvs`, по умолчанию `test`);
   2. `scripts/Grant-PMOAutomation.ps1 -SiteUrl <сайт> -DeployClientId <PMO Deploy>` (глобальный администратор) — Sites.Selected, User.Read.All и FullControl только на сайт портала (для второго сайта — с `-SkipAppRoles`);
   3. `scripts/Build-Runbook.ps1` → коммит → `scripts/Publish-Runbook.ps1 -Env test|prod`;
   4. `scripts/Set-AzureSchedule.ps1` (см. выше).

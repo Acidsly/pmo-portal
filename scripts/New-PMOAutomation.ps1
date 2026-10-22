@@ -7,7 +7,9 @@
 .DESCRIPTION
     Идемпотентно: повторный запуск ничего не дублирует.
       1. Группа ресурсов и учётная запись Automation с системной управляемой учётной записью (ролей Azure ей не выдаётся).
-      2. Среда выполнения PowerShell 7.4 с пакетом PnP.PowerShell (из PowerShell Gallery; импорт 10–30 мин).
+      2. Среда выполнения PowerShell 7.6 с пакетом PnP.PowerShell (из PowerShell Gallery; импорт 10–30 мин).
+         Прежняя среда PowerShell-7.4-PnP не удаляется: прод-runbook PMO-Sync работает в ней до выпуска из main
+         (поддержка PowerShell 7.4 заканчивается 10.11.2026).
       3. Зашифрованная переменная кэша оргструктуры pmo-managers-<env>.
     Вход в Azure выполняет человек заранее: Connect-AzAccount -Tenant <tenant> -Subscription <sub> -UseDeviceAuthentication.
     Выводит Object ID и App ID управляемой учётной записи — они нужны для прав (этап 3).
@@ -18,7 +20,8 @@ param(
     [string]$ResourceGroup = "rg-pmo-automation",
     [string]$Account = "aa-pmo-sync",
     [string]$Location = "germanywestcentral",
-    [string]$RuntimeName = "PowerShell-7.4-PnP",
+    [string]$PsVersion = "7.6",
+    [string]$RuntimeName = "PowerShell-$PsVersion-PnP",
     [string]$PnPVersion = "3.4.1",
     [string[]]$CacheEnvs = @("test"),
     [switch]$Wait
@@ -56,11 +59,11 @@ function Rest([string]$method, [string]$path, $body) {
     if ($r.Content) { return $r.Content | ConvertFrom-Json } return $null
 }
 
-# 2. Среда выполнения PowerShell 7.4 + PnP.PowerShell
+# 2. Среда выполнения PowerShell + PnP.PowerShell
 $rt = try { Rest GET "/runtimeEnvironments/$RuntimeName" $null } catch { $null }
 if (-not $rt) {
-    Rest PUT "/runtimeEnvironments/$RuntimeName" @{ location = $Location; properties = @{ runtime = @{ language = "PowerShell"; version = "7.4" }; description = "Синхронизация портала PMO" } } | Out-Null
-    Write-Host "+ среда выполнения $RuntimeName (PowerShell 7.4)" -ForegroundColor Green
+    Rest PUT "/runtimeEnvironments/$RuntimeName" @{ location = $Location; properties = @{ runtime = @{ language = "PowerShell"; version = $PsVersion }; description = "Синхронизация портала PMO" } } | Out-Null
+    Write-Host "+ среда выполнения $RuntimeName (PowerShell $PsVersion)" -ForegroundColor Green
 }
 # пакет — из списка: запрос по имени с точкой (PnP.PowerShell) отвечает 404
 function Get-PnPPackage { return @((Rest GET "/runtimeEnvironments/$RuntimeName/packages" $null).value | Where-Object name -eq "PnP.PowerShell")[0] }
