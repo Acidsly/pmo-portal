@@ -24,6 +24,8 @@
 .PARAMETER CertificatePath / CertificatePassword — вход по файлу .pfx
 .PARAMETER SiteAlias    адрес сайта /sites/<SiteAlias>
 .PARAMETER Owner        e-mail владельца сайта
+.PARAMETER SiteScoped   приложение с правами только на сайт (PMO Dev, Sites.Selected): центр администрирования не открывается,
+                        сайт должен уже существовать
 
 .EXAMPLE
     ./Deploy-PMO.ps1 -TenantName contoso -ClientId <guid> -Owner yurii@contoso.com
@@ -38,6 +40,7 @@ param(
     [string]$Thumbprint,
     [string]$CertificatePath,
     [SecureString]$CertificatePassword,
+    [switch]$SiteScoped,
     # список «Відгуки» и кнопка «Відгук» в приложении — для теста с фокус-группой (Invoke-Env передаёт только для test)
     [switch]$Feedback,
     # «Країни»: CEO по странам — JSON { "Країна": ["e-mail", …] } вне git (config/countries-<env>.json; Invoke-Env передаёт, если файл есть).
@@ -164,8 +167,15 @@ function Set-BaseView($List, [string]$Title, [string[]]$Fields, [string]$Query) 
 # 1. Сайт, языки, группа PMO
 # ===========================================================================
 Write-Host "1. Сайт $siteUrl" -ForegroundColor Cyan
-Connect-Target $adminUrl
-try { $exists = Get-PnPTenantSite -Identity $siteUrl -ErrorAction Stop } catch { $exists = $null }
+if ($SiteScoped) {
+    # PMO Dev: прав на центр администрирования нет — сайт создаёт владелец, здесь только проверка доступа
+    Connect-Target $siteUrl
+    try { Get-PnPWeb -ErrorAction Stop | Out-Null } catch { throw "Нет доступа к $siteUrl приложением сайта: $($_.Exception.Message)" }
+    $exists = $true
+} else {
+    Connect-Target $adminUrl
+    try { $exists = Get-PnPTenantSite -Identity $siteUrl -ErrorAction Stop } catch { $exists = $null }
+}
 if (-not $exists) {
     $a = @{ Type = "CommunicationSite"; Title = $SiteTitle; Url = $siteUrl; Lcid = 1058; Wait = $true }
     if ($Owner) { $a.Owner = $Owner }

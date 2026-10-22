@@ -40,7 +40,7 @@ flowchart LR
         L["Списки порталу<br/>Projects, StatusReports, RisksIssues,<br/>KeyChanges, ProjectComments, ProjectTeam,<br/>ReportApprovals, ProjectAssignments, NotifyState, ProjectState"]
     end
     subgraph Sched["Розклад"]
-        AA["Azure Automation aa-pmo-sync<br/>runbook PMO-Sync, робочі запуски з 04.10.2026"]
+        AA["Azure Automation aa-pmo-sync<br/>runbook PMO-Sync (прод) і PMO-Sync-Test (тест), робочі запуски з 04.10.2026"]
         MAC["Mac: launchd<br/>запасний варіант"]
     end
     SYNC["Invoke-PMOSync.ps1<br/>+ PMO.Common.ps1"]
@@ -511,7 +511,7 @@ flowchart LR
 | Ресурси | `scripts/New-PMOAutomation.ps1` | група ресурсів, обліковий запис з керованою ідентичністю (ролей Azure їй не видається), runtime PowerShell 7.4 з PnP.PowerShell 3.4.1 з PowerShell Gallery, зашифрована змінна кешу |
 | Права | `scripts/Grant-PMOAutomation.ps1` (виконує адміністратор тенанта) | ролі програми Sites.Selected і Graph User.Read.All сервісному суб'єкту ідентичності; FullControl лише на сайт порталу (вхід програмою PMO Deploy) |
 | Збірка | `scripts/Build-Runbook.ps1` | `Invoke-PMOSync.ps1` + вміст `PMO.Common.ps1` замість рядка підключення → `runbooks/Invoke-PMOSync.ps1`; перший рядок — відбиток вихідників `sha256:<12 символів>`; без `$PSScriptRoot` |
-| Публікація | `scripts/Publish-Runbook.ps1` | звіряє зібраний файл з вихідниками, створює чи оновлює runbook у runtime, вмикає докладний журнал, публікує і звіряє опублікований текст |
+| Публікація | `scripts/Publish-Runbook.ps1 -Env test\|prod` | `test` → `PMO-Sync-Test` (можна з гілки), `prod` → `PMO-Sync` (лише з `main`, що збігається з `origin/main`); звіряє зібраний файл з вихідниками, створює чи оновлює runbook у runtime, вмикає докладний журнал, публікує і звіряє опублікований текст |
 | Розклад | `scripts/Set-AzureSchedule.ps1` | Azure запускає розклад не частіше разу на годину, тож «кожні 15 хвилин» — 4 щогодинні розклади зі зсувом :00 / :15 / :30 / :45; неділя 3:00 — `-RebuildPermissions`; без `-Live` — `-DryRun`; `-Disable` — вимкнути (відкат на Mac); `-AlertEmail` — група дій і правило за метрикою `TotalJob` зі `Status = Failed` |
 
 Поточний стан (з 04.10.2026): робочі запуски тестового сайту — в Azure Automation (`Set-AzureSchedule.ps1 -Live`); розклад на Mac знято (`Set-MacSchedule.ps1 -Remove`), лишається запасним варіантом (відкат: `-Disable` в Azure, `Set-MacSchedule.ps1 -AllDay`). Паралельний період 01–04.10: 301 завдання, 299 успішних (2 збої — ручні запуски під час налаштування), медіана 29 с (план — `docs/superpowers/plans/2026-10-01-azure-automation.md`). Спільне блокування в SharePoint не дає Mac і Azure писати одночасно.

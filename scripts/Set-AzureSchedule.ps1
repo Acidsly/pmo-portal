@@ -2,7 +2,7 @@
 #Requires -Modules Az.Accounts, Az.Resources, Az.Automation
 <#
 .SYNOPSIS
-    Расписания runbook PMO-Sync в Azure Automation и письмо при сбое задания (этапы 5–6 плана
+    Расписания runbook синхронизации в Azure Automation и письмо при сбое задания (этапы 5–6 плана
     docs/superpowers/plans/2026-10-01-azure-automation.md).
 
 .DESCRIPTION
@@ -11,6 +11,8 @@
     Время — по Киеву (переход на летнее время учитывается). Идемпотентно: привязки пересоздаются с текущими параметрами.
     Без -Live — пробный режим (-DryRun: только чтение; рабочие запуски — с Mac). -Live — рабочий режим (Mac-расписание
     перед этим снять: Set-MacSchedule.ps1 -Env <env> -Remove). -Disable — выключить расписания (откат на Mac).
+    Runbook по окружению: test -> PMO-Sync-Test, prod -> PMO-Sync (Publish-Runbook.ps1 -Env). Перед привязкой с расписания
+    снимаются все прежние привязки (в том числе к PMO-Sync у тестовых расписаний — до разделения runbook их было по одному).
     Оповещение: группа действий с письмом на -AlertEmail и правило по метрике TotalJob (Status = Failed), без Log Analytics.
 #>
 param(
@@ -21,9 +23,14 @@ param(
     [switch]$Disable,
     [string]$ResourceGroup = "rg-pmo-automation",
     [string]$Account = "aa-pmo-sync",
-    [string]$Runbook = "PMO-Sync"
+    [string]$Runbook
 )
 $ErrorActionPreference = "Stop"
+if (-not $Runbook) { $Runbook = if ($Env -eq "test") { "PMO-Sync-Test" } else { "PMO-Sync" } }
+# защита от смешения: код прода на расписаниях теста и наоборот
+$isTestSite = $SiteUrl -match '/sites/[^/]+-(test|dev)[^/]*/?$'
+if (($Env -eq "test") -ne $isTestSite) { throw "-Env $Env не соответствует сайту $SiteUrl" }
+if (($Env -eq "test" -and $Runbook -eq "PMO-Sync") -or ($Env -eq "prod" -and $Runbook -eq "PMO-Sync-Test")) { throw "Runbook $Runbook не для окружения $Env" }
 $a = @{ ResourceGroupName = $ResourceGroup; AutomationAccountName = $Account }
 $TZ = "Europe/Kiev"
 $kyiv = [TimeZoneInfo]::FindSystemTimeZoneById("Europe/Kyiv")
@@ -53,7 +60,7 @@ foreach ($s in $plan) {
     }
     Set-AzAutomationSchedule @a -Name $s.name -IsEnabled (-not $Disable) | Out-Null
     # привязка с параметрами: пересоздаём, чтобы параметры (пробный / рабочий режим) были текущими
-    Get-AzAutomationScheduledRunbook @a -RunbookName $Runbook -ScheduleName $s.name -ErrorAction SilentlyContinue |
+    Get-AzAutomationScheduledRunbook @a -ScheduleName $s.name -ErrorAction SilentlyContinue |
         ForEach-Object { Unregister-AzAutomationScheduledRunbook @a -JobScheduleId $_.JobScheduleId -Force }
     Register-AzAutomationScheduledRunbook @a -RunbookName $Runbook -ScheduleName $s.name -Parameters $s.params | Out-Null
 }
@@ -80,7 +87,8 @@ if ($AlertEmail) {
         criteria = @{ "odata.type" = "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"; allOf = @(@{
             criterionType = "StaticThresholdCriterion"; name = "failed"; metricName = "TotalJob"; metricNamespace = "Microsoft.Automation/automationAccounts"
             operator = "GreaterThan"; threshold = 0; timeAggregation = "Total"
-            dimensions = @(@{ name = "Status"; operator = "Include"; values = @("Failed") }, @{ name = "Runbook"; operator = "Include"; values = @($Runbook) }) }) }
+            dimensions = @(@{ name = "Status"; operator = "Include"; values = @("Failed") }, @{ name = "Runbook"; operator = "Include"; values = @("PMO-Sync", "PMO-Sync-Test") }) }) }
         autoMitigate = $true; actions = @(@{ actionGroupId = $ag }) } }
-    Write-Host "Оповещение: задание $Runbook «Failed» -> письмо на $AlertEmail (проверка раз в 15 мин)" -ForegroundColor Cyan
+    # правило одно на учётную запись: следит за обоими runbook, иначе запуск для одного окружения снял бы оповещение другого
+    Write-Host "Оповещение: задание PMO-Sync / PMO-Sync-Test «Failed» -> письмо на $AlertEmail (проверка раз в 15 мин)" -ForegroundColor Cyan
 }

@@ -1,0 +1,20 @@
+{
+  "test": {
+    "TenantName": "smarthrua",
+    "Tenant": "smarthrua.onmicrosoft.com",
+    "SiteAlias": "pmo-test",
+    "Owner": "j.pochobut@eclectic.group",
+    "ReminderFrom": "",
+    "SiteScoped": true,
+    "Deploy": {
+      "ClientId": "<PMO Dev ClientId — от владельца>",
+      "CertificatePath": "certs/PMO Dev.pfx",
+      "CertificatePasswordEnv": "PMO_DEV_CERT_PASSWORD"
+    },
+    "Sync": {
+      "ClientId": "<PMO Dev ClientId — от владельца>",
+      "CertificatePath": "certs/PMO Dev.pfx",
+      "CertificatePasswordEnv": "PMO_DEV_CERT_PASSWORD"
+    }
+  }
+}

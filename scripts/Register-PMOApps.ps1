@@ -2,7 +2,7 @@
 #Requires -Modules PnP.PowerShell
 <#
 .SYNOPSIS
-    Регистрирует в Entra ID два приложения для портала «Портфель проєктів».
+    Регистрирует в Entra ID приложения для портала «Портфель проєктів».
 
 .DESCRIPTION
     Этап Deploy — приложение «PMO Deploy» для интерактивного входа администратора.
@@ -14,6 +14,11 @@
                   Запускайте после развёртывания сайта: при режиме Sites.Selected права
                   выдаются только на сайт портала.
 
+    Этап Dev    — приложение «PMO Dev» (app-only, сертификат) для разработчика: развёртывание и синхронизация ТОЛЬКО
+                  тестового сайта. SharePoint Sites.Selected + FullControl на -SiteUrl, Graph User.Read.All (оргструктура
+                  для прав по иерархии), без Mail.Send. Прод и другие сайты недоступны. Каталог приложений тестового сайта
+                  должен уже существовать; в конфиге разработчика — "SiteScoped": true (развёртывание без центра администрирования).
+
     Права приложения PMO Sync:
       SharePoint  Sites.Selected + FullControl на сайт портала (по умолчанию)
                   или Sites.FullControl.All (ключ -AllSites)
@@ -23,10 +28,12 @@
 .EXAMPLE
     ./Register-PMOApps.ps1 -Stage Deploy -Tenant contoso.onmicrosoft.com
 .EXAMPLE
+    ./Register-PMOApps.ps1 -Stage Dev -Tenant contoso.onmicrosoft.com -SiteUrl https://contoso.sharepoint.com/sites/pmo-test -DeployClientId <guid> -OutPath certs/dev
+.EXAMPLE
     ./Register-PMOApps.ps1 -Stage Sync -Tenant contoso.onmicrosoft.com -SiteUrl https://contoso.sharepoint.com/sites/ppm -DeployClientId <guid>
 #>
 param(
-    [Parameter(Mandatory)][ValidateSet("Deploy", "Automation", "Sync")][string]$Stage,
+    [Parameter(Mandatory)][ValidateSet("Deploy", "Automation", "Sync", "Dev")][string]$Stage,
     [Parameter(Mandatory)][string]$Tenant,
     [string]$SiteUrl,
     [string]$DeployClientId,
@@ -57,6 +64,25 @@ if ($Stage -eq "Automation") {
     Write-Host "`nPMO Automation ClientId: $($app.'AzureAppId/ClientId')" -ForegroundColor Green
     Write-Host   "Отпечаток сертификата:   $($app.'Certificate Thumbprint')" -ForegroundColor Green
     Write-Host   "Внесите их в config/environments.json (секция test)."
+    return
+}
+
+if ($Stage -eq "Dev") {
+    if (-not $SiteUrl) { throw "Укажите -SiteUrl тестового сайта." }
+    if ($SiteUrl -notmatch '/sites/[^/]+-(test|dev)[^/]*/?$') { throw "PMO Dev выдаётся только на тестовый сайт (в адресе — test или dev): $SiteUrl" }
+    if (-not $DeployClientId) { throw "Укажите -DeployClientId (приложение PMO Deploy) — им выдаются права на сайт." }
+    New-Item -ItemType Directory -Force -Path $OutPath | Out-Null
+    $pfxPassword = Read-Host "Пароль для файла сертификата .pfx (передайте разработчику отдельно от файла)" -AsSecureString
+    $app = Register-PnPEntraIDApp -ApplicationName "PMO Dev" -Tenant $Tenant -OutPath $OutPath -CertificatePassword $pfxPassword `
+        -SharePointApplicationPermissions "Sites.Selected" -GraphApplicationPermissions "User.Read.All" @login
+    $devId = $app.'AzureAppId/ClientId'
+    $connect = if ($DeviceLogin) { @{ DeviceLogin = $true; Tenant = $Tenant } } else { @{ Interactive = $true } }
+    Connect-PnPOnline -Url $SiteUrl -ClientId $DeployClientId @connect
+    $grant = Grant-PnPEntraIDAppSitePermission -AppId $devId -DisplayName "PMO Dev" -Site $SiteUrl -Permissions Write
+    Set-PnPEntraIDAppSitePermission -Site $SiteUrl -PermissionId $grant.Id -Permissions FullControl | Out-Null
+    Write-Host "`nPMO Dev ClientId: $devId — FullControl только на $SiteUrl" -ForegroundColor Green
+    Write-Host   "Сертификат (.pfx): $OutPath — передайте разработчику; пароль — отдельным каналом."
+    Write-Host   "Конфиг разработчика: config/environments.dev.example.json. Отозвать доступ: удалить приложение PMO Dev в Entra ID."
     return
 }
 

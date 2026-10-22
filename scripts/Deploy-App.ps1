@@ -22,7 +22,9 @@ param(
     [string]$CertificatePath,
     [SecureString]$CertificatePassword,
     [switch]$SkipBuild,
-    [switch]$Production
+    [switch]$Production,
+    # приложение с правами только на сайт (PMO Dev): каталог приложений сайта не создаётся, только проверяется
+    [switch]$SiteScoped
 )
 $ErrorActionPreference = "Stop"
 if ($SiteUrl -notmatch '-test/?$' -and -not $Production) { throw "Не тестовый сайт ($SiteUrl): установка только с -Production (Invoke-Env.ps1 -Env prod -Action app -ConfirmProduction)" }
@@ -44,9 +46,15 @@ function Connect-To([string]$Url) {
 
 # 2. Каталог приложений сайта — один раз; нужны права администратора SharePoint
 Write-Host "2. Каталог приложений сайта" -ForegroundColor Cyan
-Connect-To "https://$TenantName-admin.sharepoint.com"
-$has = @(Get-PnPSiteCollectionAppCatalog -CurrentSite:$false | Where-Object { $_.AbsoluteUrl.TrimEnd('/') -eq $SiteUrl.TrimEnd('/') })
-if (-not $has) { Add-PnPSiteCollectionAppCatalog -Site $SiteUrl; Write-Host "  + каталог приложений сайта" -ForegroundColor Green }
+if ($SiteScoped) {
+    Connect-To $SiteUrl
+    # каталог приложений сайта — список по адресу <сайт>/AppCatalog (название зависит от языка)
+    if (-not @(Get-PnPList | Where-Object { $_.DefaultViewUrl -match '/AppCatalog/' })) { throw "На $SiteUrl нет каталога приложений сайта — его создаёт владелец (Invoke-Env -Action app со своим входом)" }
+} else {
+    Connect-To "https://$TenantName-admin.sharepoint.com"
+    $has = @(Get-PnPSiteCollectionAppCatalog -CurrentSite:$false | Where-Object { $_.AbsoluteUrl.TrimEnd('/') -eq $SiteUrl.TrimEnd('/') })
+    if (-not $has) { Add-PnPSiteCollectionAppCatalog -Site $SiteUrl; Write-Host "  + каталог приложений сайта" -ForegroundColor Green }
+}
 
 # 3. Приложение: загрузить (перезаписать), опубликовать, установить или обновить
 Write-Host "3. Приложение" -ForegroundColor Cyan

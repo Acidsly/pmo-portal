@@ -59,7 +59,7 @@ flowchart LR
 | | Az.Accounts, Az.Resources, Az.Automation | лише для налаштування Azure Automation з Mac |
 | Оргструктура | Microsoft Graph v1.0: `users/{id}/manager`, `users/{id}`; `sendMail` для нагадувань | — |
 | Ідентичність | Entra ID: застосунки PMO Deploy, PMO Automation, PMO Sync; системна керована ідентичність `aa-pmo-sync` | `scripts/Register-PMOApps.ps1`, `scripts/New-PMOAutomation.ps1` |
-| Розклад | Azure Automation (runtime PowerShell 7.4, runbook `PMO-Sync`, Germany West Central) | робочі запуски з 04.10.2026 |
+| Розклад | Azure Automation (runtime PowerShell 7.4, runbook `PMO-Sync` — прод, `PMO-Sync-Test` — тест, Germany West Central) | робочі запуски з 04.10.2026 |
 | | launchd на macOS (`scripts/Set-MacSchedule.ps1`) | запасний варіант (робочі запуски — в Azure Automation з 04.10.2026) |
 | Моніторинг | Azure Monitor: метрика `TotalJob` (Status = Failed) → група дій `ag-pmo-sync` → лист | `scripts/Set-AzureSchedule.ps1` |
 | Документи PDF | Google Chrome без вікна (`--headless=new --print-to-pdf`) | `docs/testing/build.mjs` |
@@ -80,7 +80,7 @@ flowchart LR
 | `scripts/New-PMOAutomation.ps1` | Ресурси Azure Automation: обліковий запис, керована ідентичність, runtime з PnP.PowerShell, змінна кешу |
 | `scripts/Grant-PMOAutomation.ps1` | Права керованої ідентичності: Sites.Selected, User.Read.All, FullControl на сайт порталу |
 | `scripts/Build-Runbook.ps1` | Збирає `Invoke-PMOSync.ps1` + `PMO.Common.ps1` в один runbook |
-| `scripts/Publish-Runbook.ps1` | Публікує runbook `PMO-Sync` або `PMO-WhoAmI` і звіряє опубліковане з файлом |
+| `scripts/Publish-Runbook.ps1` | Публікує runbook синхронізації (`-Env test` → `PMO-Sync-Test`, `-Env prod` → `PMO-Sync`, лише з `main`) або `PMO-WhoAmI` і звіряє опубліковане з файлом |
 | `scripts/Set-AzureSchedule.ps1` | Розклади Azure Automation і оповіщення про збій |
 | `scripts/Set-MacSchedule.ps1` | Розклад на Mac (launchd) |
 | `runbooks/` | Зібраний runbook `Invoke-PMOSync.ps1` (не правити вручну) і перевірочний `PMO-WhoAmI.ps1` |
@@ -136,6 +136,8 @@ pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action sync-dryrun   # пр
 ## Порядок змін
 
 Гілка `change/<коротко>` → прототип, скрипти, додаток і документація змінюються разом → `tests/Test-Scripts.ps1` і `scripts/spfx.sh npm run test:unit` → тест-сайт (`deploy`, `sync-dryrun`, `sync`) → коміт і `CHANGELOG.md` → рев'ю людиною → `git push` → прод лише після окремого «так» (спочатку `-Env prod -Action sync-dryrun`). Зміна синхронізації — ще `scripts/Build-Runbook.ps1` (перевіряє `Test-Scripts.ps1`). Докладно — [CLAUDE.md](CLAUDE.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#8-якість-тести-процес-змін).
+
+Робота в команді (власник і розробник, PR, захист `main`, тестовий сайт, конфлікти) — [CONTRIBUTING.md](CONTRIBUTING.md); що далі — [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Стан
 

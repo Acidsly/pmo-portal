@@ -34,6 +34,9 @@ if ($Env -eq "prod" -and $Action -ne "sync-dryrun" -and -not $ConfirmProduction)
     throw "Действие «$Action» на проде требует явного -ConfirmProduction (после подтверждения человеком)."
 }
 
+# конфиг разработчика (PMO Dev) — только тестовые сайты, даже если в конфиге по ошибке указан другой адрес
+if ($cfg.SiteScoped -and $cfg.SiteAlias -notmatch '-(test|dev)') { throw "SiteScoped: «$($cfg.SiteAlias)» — не тестовый сайт" }
+
 function Get-Auth($section) {
     $a = @{ ClientId = $section.ClientId }
     if ($section.Thumbprint) { $a.Tenant = $cfg.Tenant; $a.Thumbprint = $section.Thumbprint }
@@ -124,6 +127,7 @@ if ($Action -eq "feedback") {
     $a = Get-Auth $cfg.Deploy
     $a.SiteUrl = $siteUrl; $a.TenantName = $cfg.TenantName
     if ($Env -eq "prod") { $a.Production = $true }
+    if ($cfg.SiteScoped) { $a.SiteScoped = $true }
     & (Join-Path $PSScriptRoot "Deploy-App.ps1") @a
 } elseif ($Action -eq "deploy") {
     # без сертификата Deploy-PMO.ps1 откроет браузер для входа (рекомендуется для прода)
@@ -133,6 +137,8 @@ if ($Action -eq "feedback") {
     # CEO по странам — файл вне git: config/countries-<env>.json (e-mail сотрудников); нет файла — CEO не меняются
     $cf = Join-Path $root "config/countries-$Env.json"
     if (Test-Path $cf) { $a.CeoFile = $cf }
+    # конфиг разработчика (PMO Dev, права только на тестовый сайт): без центра администрирования
+    if ($cfg.SiteScoped) { $a.SiteScoped = $true }
     & (Join-Path $PSScriptRoot "Deploy-PMO.ps1") @a
 } else {
     $a = Get-Auth $cfg.Sync
