@@ -54,16 +54,16 @@ flowchart LR
 | Тести додатку | Jest + ts-jest | 29.7.0 / 29.2.5 |
 | Лінтер | ESLint + `@microsoft/eslint-config-spfx` | 9.37.0 / 1.23.2 |
 | Середовище збірки | Node.js | 22 (`>=22.14.0 <23`; `scripts/spfx.sh`, `brew install node@22`) |
-| Скрипти | PowerShell | 7.2+ локально (`#Requires -Version 7.2`); 7.4 в Azure Automation |
+| Скрипти | PowerShell | 7.2+ локально (`#Requires -Version 7.2`, рекомендовано 7.6); 7.6 в Azure Automation (з 22.10.2026) |
 | | PnP.PowerShell (CSOM, REST, Graph через `Invoke-PnPGraphMethod`) | 3.x; в Azure — 3.4.1 |
 | | Az.Accounts, Az.Resources, Az.Automation | лише для налаштування Azure Automation з Mac |
 | Оргструктура | Microsoft Graph v1.0: `users/{id}/manager`, `users/{id}`; `sendMail` для нагадувань | — |
 | Ідентичність | Entra ID: застосунки PMO Deploy, PMO Automation, PMO Sync; системна керована ідентичність `aa-pmo-sync` | `scripts/Register-PMOApps.ps1`, `scripts/New-PMOAutomation.ps1` |
-| Розклад | Azure Automation (runtime PowerShell 7.4, runbook `PMO-Sync`, Germany West Central) | робочі запуски з 04.10.2026 |
+| Розклад | Azure Automation (runtime `PowerShell-7.6-PnP`, runbook `PMO-Sync`, Germany West Central) | робочі запуски з 04.10.2026 |
 | | launchd на macOS (`scripts/Set-MacSchedule.ps1`) | запасний варіант (робочі запуски — в Azure Automation з 04.10.2026) |
 | Моніторинг | Azure Monitor: метрика `TotalJob` (Status = Failed) → група дій `ag-pmo-sync` → лист | `scripts/Set-AzureSchedule.ps1` |
 | Документи PDF | Google Chrome без вікна (`--headless=new --print-to-pdf`) | `docs/testing/build.mjs` |
-| CI | GitHub Actions: `Test-Scripts.ps1`, Jest, збірка `.sppkg` | `.github/workflows/validate.yml` |
+| CI | GitHub Actions (Node 22, `actions/checkout@v7`, `actions/setup-node@v7`): `Test-Scripts.ps1`, Jest, збірка `.sppkg` | `.github/workflows/validate.yml` |
 
 ## Структура репозиторію
 
