@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.5.3",
+   "date": "26.10.2026",
+   "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>Зовнішнього учасника (гостя організації) тепер можна додати до команди проєкту, призначити PM, власником чи відповідальним за ризик. Якщо людини ще немає в організації, портал пояснює, що її спершу має запросити адміністратор Microsoft 365.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.5.2",
    "date": "20.10.2026",
    "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення без змін у роботі порталу.</li>\n</ul>"
@@ -210,6 +215,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.5.3",
+   "date": "26.10.2026",
+   "html": "<p><b>Fixed</b></p>\n<ul>\n<li>An external participant (a guest of the organization) can now be added to the project team or assigned as PM, owner or risk owner. If the person is not yet in the organization, the portal explains that the Microsoft 365 administrator must invite them first.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.5.2",
    "date": "20.10.2026",
    "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update with no changes to how the portal works.</li>\n</ul>"
@@ -416,6 +426,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.5.3",
+   "date": "26.10.2026",
+   "html": "<p><b>Исправлено</b></p>\n<ul>\n<li>Внешнего участника (гостя организации) теперь можно добавить в команду проекта, назначить PM, владельцем или ответственным за риск. Если человека ещё нет в организации, портал объясняет, что его сначала должен пригласить администратор Microsoft 365.</li>\n</ul>"
+  },
   {
    "ver": "1.7.5.2",
    "date": "20.10.2026",

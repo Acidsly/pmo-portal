@@ -2515,6 +2515,11 @@ export const EXTRA: Record<string, L3> = {
   "New projects are created by PMO. Contact the “PMO — administrators” group.",
   "Новые проекты создаёт PMO. Обратитесь к группе «PMO — администраторы»."
  ],
+ "errUserNotFound": [
+  "Цієї людини немає в організації. Зовнішнього учасника спершу має запросити адміністратор Microsoft 365 (гостьовий доступ), після цього оберіть його ще раз.",
+  "This person is not in the organization. An external participant must first be invited by the Microsoft 365 administrator (guest access), then select them again.",
+  "Этого человека нет в организации. Внешнего участника сначала должен пригласить администратор Microsoft 365 (гостевой доступ), после этого выберите его ещё раз."
+ ],
  "errCode": [
   "Такий код уже є в іншого проєкту. Вкажіть інший або залиште поле порожнім — код призначиться автоматично.",
   "This code is already used by another project. Enter another one or leave the field empty to assign it automatically.",

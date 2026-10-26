@@ -66,8 +66,8 @@ export const DateIn: React.FC<{ id: string; value: string; onChange(v: string): 
 /** Сообщение об ошибке формы (p.err прототипа). */
 export const Err: React.FC<{ msg: string }> = ({ msg }) => (msg ? <p className="err" role="alert">{msg}</p> : null);
 
-/** Текст ошибки записи для человека: известные ошибки — переводом (папки нет, нет прав, конфликт правок), остальные — как есть. */
-const KNOWN_ERR: Record<string, string> = { notReady: 'errNotReady', noRights: 'errNoRights', conflict: 'errConflict' };
+/** Текст ошибки записи для человека: известные ошибки — переводом (папки нет, нет прав, конфликт правок, человека нет в организации), остальные — как есть. */
+const KNOWN_ERR: Record<string, string> = { notReady: 'errNotReady', noRights: 'errNoRights', conflict: 'errConflict', userNotFound: 'errUserNotFound' };
 /** Отказ проверки перед записью (logic/guard.ts) — текст с подстановками {date} {pm} {state}. */
 export const guardText = (t: (k: string) => string, key: string, args: Record<string, string> = {}): string =>
   Object.keys(args).reduce((m, k) => m.split('{' + k + '}').join(k === 'state' ? tv(args[k]) : args[k]), t(key));

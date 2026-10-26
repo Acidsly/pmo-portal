@@ -11,6 +11,7 @@ import { NOTIFY_DAYS, ReadMarks, mergeMarks } from '../logic/notify';
 import { teamPeople, teamVisible } from '../logic/team';
 import { applyPending } from '../logic/overlay';
 import { Regional, regionalFrom, toFormValues } from './formValues';
+import { isUserNotFound, loginOf, pickerPeople } from './people';
 import { applyState, parseState, StateJson } from '../logic/state';
 import { Fresh } from '../logic/guard';
 
@@ -209,7 +210,7 @@ export class SpRepo {
     return this.regional;
   }
 
-  /** Новый элемент сразу в папке проекта P<ID> (права папки: в чужой проект и в корень записать нельзя). users — e-mail полей «Користувач».
+  /** Новый элемент сразу в папке проекта P<ID> (права папки: в чужой проект и в корень записать нельзя). users — логин или e-mail полей «Користувач».
    *  Ошибки: notReady — папки ещё нет (новый проект, синхронизация не прошла); noRights — нет права добавлять. */
   /** Все статус-отчёты с полями помощника ИИ; полей ещё нет на сайте (приложение раньше Deploy-PMO.ps1) — без них, отчёты не пропадают. */
   reportRows(): Promise<any[]> {
@@ -320,10 +321,15 @@ export class SpRepo {
   }
 
   /** Id пользователя на сайте (добавляет его на сайт при первом выборе) — для полей «Користувач». */
-  async ensureUser(email: string): Promise<number> {
+  async ensureUser(p: { email: string; login?: string }): Promise<number> {
     const res = await this.http.post(`${this.webUrl}/_api/web/ensureuser`, SPHttpClient.configurations.v1,
-      { headers: SpRepo.JSON_HEADERS, body: JSON.stringify({ logonName: `i:0#.f|membership|${email}` }) });
-    return (await (await this.check(res, 'ensureuser')).json()).Id;
+      { headers: SpRepo.JSON_HEADERS, body: JSON.stringify({ logonName: loginOf(p) }) });
+    if (!res.ok) {
+      const body = await res.text();
+      // нет в организации (внешний e-mail не приглашён); остальные ошибки — как есть
+      throw new Error(isUserNotFound(res.status, body) ? 'userNotFound' : `ensureuser: ${res.status} ${body}`);
+    }
+    return (await res.json()).Id;
   }
 
   /** Поиск людей тенанта (как поле «Користувач» SharePoint), до 8 человек; id = 0 до ensureUser. */
@@ -331,8 +337,7 @@ export class SpRepo {
     if (q.trim().length < 2) return [];
     const res = await this.http.post(`${this.webUrl}/_api/SP.UI.ApplicationPages.ClientPeoplePickerWebServiceInterface.clientPeoplePickerSearchUser`,
       SPHttpClient.configurations.v1, { headers: SpRepo.JSON_HEADERS, body: JSON.stringify({ queryParams: {
-        QueryString: q, MaximumEntitySuggestions: 8, PrincipalType: 1, PrincipalSource: 15, AllowEmailAddresses: true, AllowMultipleEntities: false } }) });
-    const raw = JSON.parse((await (await this.check(res, 'people')).json()).value || '[]') as any[];
-    return raw.map(x => ({ id: 0, name: String(x.DisplayText || ''), email: String((x.EntityData && x.EntityData.Email) || '') })).filter(x => x.email);
+        QueryString: q, MaximumEntitySuggestions: 8, PrincipalType: 1, PrincipalSource: 15, AllowEmailAddresses: false, AllowMultipleEntities: false } }) });
+    return pickerPeople(JSON.parse((await (await this.check(res, 'people')).json()).value || '[]') as any[]);
   }
 }

@@ -36,9 +36,10 @@ export function formNumber(v: unknown, r: Regional): string {
   if (!isFinite(n)) return '';
   return String(n).replace('.', r.dec);
 }
-export const formUser = (email: string): string => (email ? JSON.stringify([{ Key: `i:0#.f|membership|${email}` }]) : '');
+/** Значение поля «Користувач»: логин (claims, у гостя — из поиска) или e-mail человека организации. */
+export const formUser = (user: string): string => (user ? JSON.stringify([{ Key: user.indexOf('|') >= 0 ? user : `i:0#.f|membership|${user}` }]) : '');
 
-/** Тело JSON (как для create/update) → значения формы. users — e-mail для полей «Користувач» (ключ — как в теле, например riOwnerId). */
+/** Тело JSON (как для create/update) → значения формы. users — логин или e-mail для полей «Користувач» (ключ — как в теле, например riOwnerId). */
 export function toFormValues(list: string, body: Record<string, unknown>, r: Regional, users: Record<string, string> = {}): FormValue[] {
   const kinds = SCHEMA[list] || {};
   const out: FormValue[] = [];

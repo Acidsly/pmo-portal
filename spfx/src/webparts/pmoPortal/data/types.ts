@@ -1,6 +1,6 @@
 import { Rag } from '../logic/rag';
 
-export interface Person { id: number; name: string; email: string; }
+export interface Person { id: number; name: string; email: string; /** логин (claims) из поиска — у гостя не совпадает с почтой */ login?: string; }
 
 export interface Project {
   id: number; code: string; title: string; type: string; priority: string;

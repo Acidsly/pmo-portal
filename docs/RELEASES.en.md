@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.5.3 · 26.10.2026
+
+**Fixed**
+- An external participant (a guest of the organization) can now be added to the project team or assigned as PM, owner or risk owner. If the person is not yet in the organization, the portal explains that the Microsoft 365 administrator must invite them first.
+
 ## 1.7.5.2 · 20.10.2026
 
 **Changed**
