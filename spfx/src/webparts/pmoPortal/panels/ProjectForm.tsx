@@ -5,6 +5,7 @@ import { createWithCode } from '../logic/ui';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
 import { Project, Person } from '../data/types';
+import { loginOf } from '../data/people';
 import { ProjectDraft, validateProject, nextCode, cardDiff } from '../logic/forms';
 import { parentChoices, parentLabel } from '../logic/projects';
 import { projectBody, projectEditBody, teamBody, teamRows } from '../data/write';
@@ -43,7 +44,7 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
   const setLink = (i: number, x: Partial<ProjectDraft['links'][0]>): void => set({ links: d.links.map((l, j) => (j === i ? { ...l, ...x } : l)) });
   const search = (q: string): Promise<Person[]> => c.repo.searchPeople(q);
   const withIds = async (x: ProjectDraft): Promise<ProjectDraft> => {
-    const fix = async (p: Person | null): Promise<Person | null> => (p && !p.id ? { ...p, id: await c.repo.ensureUser(p.email) } : p);
+    const fix = async (p: Person | null): Promise<Person | null> => (p && !p.id ? { ...p, id: await c.repo.ensureUser(p) } : p);
     return { ...x, manager: await fix(x.manager), owner: await fix(x.owner), team: await Promise.all(x.team.map(async r => ({ ...r, user: await fix(r.user) }))) };
   };
 
@@ -63,7 +64,7 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
         const plan = teamPlan(before, x.team);
         for (const r of plan.create) {
           if (root) await c.repo.create('ProjectTeam', teamBody(projectId, r));
-          else await c.repo.createIn('ProjectTeam', projectId, teamBody(projectId, r), { tmUserId: r.user ? r.user.email : '' });
+          else await c.repo.createIn('ProjectTeam', projectId, teamBody(projectId, r), { tmUserId: r.user ? loginOf(r.user) : '' });
         }
         for (const r of plan.update) await c.repo.update('ProjectTeam', r.id!, teamBody(projectId, r));
         for (const id of plan.remove) await c.repo.recycle('ProjectTeam', id);

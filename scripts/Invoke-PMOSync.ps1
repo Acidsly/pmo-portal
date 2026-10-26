@@ -1265,12 +1265,18 @@ if ($frozen) { Log "  архів: пропущено $frozen (права вже 
 $MEMBERS = Get-PnPGroup -AssociatedMemberGroup
 $inMembers = @{}
 foreach ($x in @(Get-PnPGroupMember -Group $MEMBERS)) { foreach ($k in @([string]$x.Email, ([string]$x.LoginName -replace '^.*\|', ''))) { if ($k) { $inMembers[$k.ToLowerInvariant()] = 1 } } }
+# логины людей сайта по почте: у гостя логин не membership|e-mail, а имя_домен#ext#@тенант (приложение добавило его на сайт при выборе)
+$siteLogin = @{}
+foreach ($x in @(Get-PnPUser)) { if ($x.Email) { $siteLogin[([string]$x.Email).ToLowerInvariant()] = [string]$x.LoginName } }
 $needed = @($ACLS.Values | ForEach-Object { $_.Keys } | ForEach-Object { ([string]$_).ToLowerInvariant() } | Sort-Object -Unique)
 foreach ($e in $needed) {
     if ($inMembers.ContainsKey($e)) { continue }
     $stats.members++
     if ($DryRun) { Log "  учасник сайту: + $e"; continue }
-    try { Add-PnPGroupMember -Group $MEMBERS -LoginName "i:0#.f|membership|$e" | Out-Null; Log "  учасник сайту: + $e" }
+    $login = $siteLogin[$e]
+    if (-not $login) { $u = Get-Principal $e $false; if ($u) { $login = $u.LoginName } }   # как права записей (EnsureUser)
+    if (-not $login) { Fail "Не удалось добавить $e в участники сайта: нет на сайте и в организации"; continue }
+    try { Add-PnPGroupMember -Group $MEMBERS -LoginName $login | Out-Null; Log "  учасник сайту: + $e" }
     catch { Fail "Не удалось добавить $e в участники сайта: $($_.Exception.Message)" }
 }
 

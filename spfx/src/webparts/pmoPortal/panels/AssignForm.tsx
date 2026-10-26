@@ -37,7 +37,7 @@ export const AssignForm: React.FC<{ data: PortalData; projectId: number; onCance
       const g = guard('assign', c.me, f);
       if (!g.ok) { setErr(guardText(t, g.key, g.args)); setBusy(false); await c.reload(); return; }
       await c.repo.createIn('ProjectAssignments', p.id, { Title: '', paProjectId: p.id, paManagerId: null, paOwnerId: null, paNote: note.trim(), paApplied: false },
-        { paManagerId: plan.changes.some(x => x.f === 'pmManager') ? low(pm) : '', paOwnerId: plan.changes.some(x => x.f === 'pmOwner') ? low(owner) : '' });
+        { paManagerId: plan.changes.some(x => x.f === 'pmManager') ? (pm && pm.login) || low(pm) : '', paOwnerId: plan.changes.some(x => x.f === 'pmOwner') ? (owner && owner.login) || low(owner) : '' });
       await c.reload();
       c.toast(t('savedAssign'));
       c.openProject(p.id);

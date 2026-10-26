@@ -26,6 +26,12 @@ else                      { Connect-PnPOnline -Url $SiteUrl -ClientId $ClientId 
 function G([string]$url) { try { return Invoke-PnPGraphMethod -Url $url -Method Get } catch { return $null } }
 $enc = [uri]::EscapeDataString($Email)
 $u = G "v1.0/users/$enc`?`$select=displayName,mail,userPrincipalName,jobTitle,accountEnabled,proxyAddresses"
+# гость (внешний e-mail): UPN вида имя_домен#EXT#@тенант — ищем по почте
+if (-not $u) {
+    $q = $Email.Replace("'", "''")
+    $u = @((G "v1.0/users?`$filter=mail eq '$q' or otherMails/any(x:x eq '$q')&`$select=displayName,mail,userPrincipalName,jobTitle,accountEnabled,proxyAddresses,userType").value)[0]
+    if ($u) { $enc = [uri]::EscapeDataString($u.userPrincipalName); Write-Host "Entra ID: найден по почте — $($u.userType) · UPN $($u.userPrincipalName)" }
+}
 if (-not $u) { Write-Host "Entra ID: пользователь $Email не найден (ни по UPN, ни по почте)." -ForegroundColor Red; return }
 $mail = ([string]($u.mail ?? $u.userPrincipalName)).ToLowerInvariant()
 Write-Host "Entra ID: $($u.displayName) · $($u.jobTitle) · UPN $($u.userPrincipalName) · почта $($u.mail) · вход разрешён: $($u.accountEnabled)"

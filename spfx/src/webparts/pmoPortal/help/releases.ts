@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.5.3",
+   "date": "26.10.2026",
+   "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>Зовнішнього учасника (гостя організації) тепер можна додати до команди проєкту, призначити PM, власником чи відповідальним за ризик. Пошук людей пише «Не знайдено», якщо нікого не знайдено, а учасника команди, якого не вибрано зі списку, портал не плутає з порожньою роллю. Для гостей адміністратор має запросити людину до організації й дозволити гостей на сайті.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.5.2",
    "date": "20.10.2026",
    "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення без змін у роботі порталу.</li>\n</ul>"
@@ -210,6 +215,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.5.3",
+   "date": "26.10.2026",
+   "html": "<p><b>Fixed</b></p>\n<ul>\n<li>An external participant (a guest of the organization) can now be added to the project team or assigned as PM, owner or risk owner. The people search shows «Not found» when nobody matches, and a team member not selected from the list is no longer reported as a missing role. For guests, the administrator must invite the person to the organization and allow guests on the site.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.5.2",
    "date": "20.10.2026",
    "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update with no changes to how the portal works.</li>\n</ul>"
@@ -416,6 +426,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.5.3",
+   "date": "26.10.2026",
+   "html": "<p><b>Исправлено</b></p>\n<ul>\n<li>Внешнего участника (гостя организации) теперь можно добавить в команду проекта, назначить PM, владельцем или ответственным за риск. Поиск людей пишет «Не найдено», если никого не нашлось, а участника команды, не выбранного из списка, портал не путает с пустой ролью. Для гостей администратор должен пригласить человека в организацию и разрешить гостей на сайте.</li>\n</ul>"
+  },
   {
    "ver": "1.7.5.2",
    "date": "20.10.2026",
