@@ -82,10 +82,13 @@ export const PeoplePicker: React.FC<{ id: string; value: Person[]; multi: boolea
   const [q, setQ] = React.useState('');
   const [found, setFound] = React.useState<Person[]>([]);
   const [hi, setHi] = React.useState(0);
+  const [none, setNone] = React.useState('');   // запрос, по которому поиск ничего не нашёл
+  const { t } = React.useContext(AppCtx);
   React.useEffect(() => {
     let live = true;
+    setNone('');
     if (q.trim().length < 2) { setFound([]); return; }
-    const h = window.setTimeout(() => p.search(q).then(r => { if (live) { setFound(r.filter(x => !p.value.some(v => v.email.toLowerCase() === x.email.toLowerCase()))); setHi(0); } }, () => undefined), 250);
+    const h = window.setTimeout(() => p.search(q).then(r => { if (live) { setFound(r.filter(x => !p.value.some(v => v.email.toLowerCase() === x.email.toLowerCase()))); setHi(0); setNone(r.length ? '' : q); } }, () => undefined), 250);
     return () => { live = false; window.clearTimeout(h); };
   }, [q]);
   const add = (x: Person): void => { p.onChange(p.multi ? p.value.concat(x) : [x]); setQ(''); setFound([]); };
@@ -105,6 +108,7 @@ export const PeoplePicker: React.FC<{ id: string; value: Person[]; multi: boolea
     {found.length ? <div className="pop-list picker-list" role="listbox">{found.map((x, i) =>
       <button type="button" key={x.email} className={'pop-row' + (i === hi ? ' on' : '')} role="option" aria-selected={i === hi} onMouseDown={e => { e.preventDefault(); add(x); }}>
         <span className="person"><Avatar name={x.name} /><span className="pn"><b>{x.name}</b><small>{x.email}</small></span></span></button>)}</div> : null}
+    {none && none === q && canAdd && !p.disabled ? <div className="pop-list picker-list picker-none" role="status">{t('pickerNone')}</div> : null}
   </div>;
 };
 

@@ -3,7 +3,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { act, Simulate } from 'react-dom/test-utils';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
-import { MoneyIn } from '../src/webparts/pmoPortal/components/fields';
+import { MoneyIn, PeoplePicker } from '../src/webparts/pmoPortal/components/fields';
 import { DataTable } from '../src/webparts/pmoPortal/components/DataTable';
 import { reportCard, riskCard, TableDefs } from '../src/webparts/pmoPortal/components/defs';
 import { makeT } from '../src/webparts/pmoPortal/i18n/i18n';
@@ -602,4 +602,24 @@ test('#102: «Відгуки» — карточки: №, дата, статус
   const m = root.querySelector('.mcards .mcard') as HTMLElement;
   ['#12', 'Прийнято', 'Марина', 'Статус-звіти', 'Не видно кнопки'].forEach(x => expect(m.textContent).toContain(x));
   act(() => { m.click(); }); expect(opened).toEqual(['fb:12']);
+});
+
+describe('пошук людей: зовнішній e-mail поза організацією (відгук 26.10)', () => {
+  beforeEach(() => { jest.useFakeTimers(); });
+  afterEach(() => { jest.useRealTimers(); });
+  const type = async (q: string, found: any[]): Promise<HTMLInputElement> => {   // eslint-disable-line @typescript-eslint/no-explicit-any
+    mount(<PeoplePicker id="pp" multi={false} value={[]} onChange={() => undefined} search={async () => found} />);
+    const i = root.querySelector('#pp') as HTMLInputElement;
+    act(() => { Simulate.change(i, { target: { value: q } } as any); });   // eslint-disable-line @typescript-eslint/no-explicit-any
+    await act(async () => { jest.advanceTimersByTime(300); await Promise.resolve(); });
+    return i;
+  };
+  test('нічого не знайдено — підказка «Не знайдено в організації»; знайдено — список без підказки', async () => {
+    await type('evgeniyk@gmail.com', []);
+    expect(root.querySelector('.picker-none')!.textContent).toBe(tt.t('pickerNone'));
+    ReactDOM.unmountComponentAtNode(root);
+    await type('Dovh', [{ id: 0, name: 'Denys Dovhobrod', email: 'd@x', login: 'i:0#.f|membership|d@x' }]);
+    expect(root.querySelector('.picker-none')).toBeNull();
+    expect(root.querySelectorAll('.picker-list .pop-row').length).toBe(1);
+  });
 });

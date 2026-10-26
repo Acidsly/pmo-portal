@@ -2515,10 +2515,20 @@ export const EXTRA: Record<string, L3> = {
   "New projects are created by PMO. Contact the “PMO — administrators” group.",
   "Новые проекты создаёт PMO. Обратитесь к группе «PMO — администраторы»."
  ],
+ "errTeamUser": [
+  "Оберіть людину зі списку пошуку для кожного учасника команди. Немає в пошуку — зверніться до адміністратора Microsoft 365: зовнішнього учасника треба запросити до організації, а на сайті — дозволити гостей.",
+  "Select a person from the search list for every team member. Not in the search — contact the Microsoft 365 administrator: an external participant must be invited to the organization and guests allowed on the site.",
+  "Выберите человека из списка поиска для каждого участника команды. Нет в поиске — обратитесь к администратору Microsoft 365: внешнего участника нужно пригласить в организацию, а на сайте — разрешить гостей."
+ ],
+ "pickerNone": [
+  "Не знайдено. Зовнішній учасник має бути запрошений до організації, а на сайті — дозволено гостей: зверніться до адміністратора Microsoft 365.",
+  "Not found. An external participant must be invited to the organization and guests allowed on the site: contact the Microsoft 365 administrator.",
+  "Не найдено. Внешний участник должен быть приглашён в организацию, а на сайте — разрешены гости: обратитесь к администратору Microsoft 365."
+ ],
  "errUserNotFound": [
-  "Цієї людини немає в організації. Зовнішнього учасника спершу має запросити адміністратор Microsoft 365 (гостьовий доступ), після цього оберіть його ще раз.",
-  "This person is not in the organization. An external participant must first be invited by the Microsoft 365 administrator (guest access), then select them again.",
-  "Этого человека нет в организации. Внешнего участника сначала должен пригласить администратор Microsoft 365 (гостевой доступ), после этого выберите его ещё раз."
+  "SharePoint не знайшов цю людину. Зовнішній учасник має бути запрошений до організації, а на сайті — дозволено гостей: зверніться до адміністратора Microsoft 365, потім оберіть людину ще раз.",
+  "SharePoint could not find this person. An external participant must be invited to the organization and guests allowed on the site: contact the Microsoft 365 administrator, then select the person again.",
+  "SharePoint не нашёл этого человека. Внешний участник должен быть приглашён в организацию, а на сайте — разрешены гости: обратитесь к администратору Microsoft 365, затем выберите человека ещё раз."
  ],
  "errCode": [
   "Такий код уже є в іншого проєкту. Вкажіть інший або залиште поле порожнім — код призначиться автоматично.",

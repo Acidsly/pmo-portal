@@ -3,7 +3,7 @@
 ## 1.7.5.3 · 26.10.2026
 
 **Fixed**
-- An external participant (a guest of the organization) can now be added to the project team or assigned as PM, owner or risk owner. If the person is not yet in the organization, the portal explains that the Microsoft 365 administrator must invite them first.
+- An external participant (a guest of the organization) can now be added to the project team or assigned as PM, owner or risk owner. The people search shows «Not found» when nobody matches, and a team member not selected from the list is no longer reported as a missing role. For guests, the administrator must invite the person to the organization and allow guests on the site.
 
 ## 1.7.5.2 · 20.10.2026
 
