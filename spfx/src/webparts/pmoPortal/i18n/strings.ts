@@ -2580,6 +2580,16 @@ export const EXTRA: Record<string, L3> = {
   "New projects are created by PMO. Contact the “PMO — administrators” group.",
   "Новые проекты создаёт PMO. Обратитесь к группе «PMO — администраторы»."
  ],
+ "errTeamUser": [
+  "Оберіть людину зі списку пошуку для кожного учасника команди. Немає в пошуку — людини немає в організації: зовнішнього учасника спершу запрошує адміністратор Microsoft 365.",
+  "Select a person from the search list for every team member. Not in the search — the person is not in the organization: an external participant must first be invited by the Microsoft 365 administrator.",
+  "Выберите человека из списка поиска для каждого участника команды. Нет в поиске — человека нет в организации: внешнего участника сначала приглашает администратор Microsoft 365."
+ ],
+ "pickerNone": [
+  "Не знайдено в організації. Зовнішнього учасника спершу запрошує адміністратор Microsoft 365.",
+  "Not found in the organization. An external participant must first be invited by the Microsoft 365 administrator.",
+  "Не найдено в организации. Внешнего участника сначала приглашает администратор Microsoft 365."
+ ],
  "errUserNotFound": [
   "Цієї людини немає в організації. Зовнішнього учасника спершу має запросити адміністратор Microsoft 365 (гостьовий доступ), після цього оберіть його ще раз.",
   "This person is not in the organization. An external participant must first be invited by the Microsoft 365 administrator (guest access), then select them again.",

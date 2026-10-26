@@ -17,7 +17,8 @@ test('cleanTeam: пустые строки и повторы человека у
 });
 test('validateTeamLinks: роль обязательна, ссылки https', () => {
   expect(validateTeamLinks([{ user: A, role: '', topics: '' }], [])).toBe('errRole');
-  expect(validateTeamLinks([{ user: null, role: 'Роль', topics: '' }], [])).toBe('errRole');
+  // людину не обрано (у полі лише набраний текст, напр. e-mail поза організацією) — окреме повідомлення, не «роль»
+  expect(validateTeamLinks([{ user: null, role: 'Роль', topics: '' }], [])).toBe('errTeamUser');
   expect(validateTeamLinks([{ user: A, role: 'Роль', topics: '' }], [{ t: 'x', u: 'http://a' }])).toBe('errUrl');
   expect(validateTeamLinks([{ user: A, role: 'Роль', topics: '' }], [{ t: 'x', u: 'https://a/b' }])).toBe('');
   expect(cleanLinks([{ t: '', u: ' https://a ' }, { t: 'x', u: '' }])).toEqual([{ t: 'Посилання', u: 'https://a' }]);

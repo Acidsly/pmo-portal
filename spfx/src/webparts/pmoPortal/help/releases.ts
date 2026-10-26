@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.7.7",
+   "date": "26.10.2026",
+   "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>Пошук людей пише «Не знайдено в організації», якщо нікого не знайдено. Учасника команди, якого не вибрано зі списку, портал не плутає з порожньою роллю — пояснює, що людину треба вибрати з пошуку або спершу запросити до організації.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.7.6",
    "date": "26.10.2026",
    "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>Зовнішнього учасника (гостя організації) тепер можна додати до команди проєкту, призначити PM, власником чи відповідальним за ризик. Якщо людини ще немає в організації, портал пояснює, що її спершу має запросити адміністратор Microsoft 365.</li>\n</ul>"
@@ -250,6 +255,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.7.7",
+   "date": "26.10.2026",
+   "html": "<p><b>Fixed</b></p>\n<ul>\n<li>The people search shows «Not found in the organization» when nobody matches. A team member not selected from the list is no longer reported as a missing role — the portal explains that the person must be selected from the search or first invited to the organization.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.7.6",
    "date": "26.10.2026",
    "html": "<p><b>Fixed</b></p>\n<ul>\n<li>An external participant (a guest of the organization) can now be added to the project team or assigned as PM, owner or risk owner. If the person is not yet in the organization, the portal explains that the Microsoft 365 administrator must invite them first.</li>\n</ul>"
@@ -496,6 +506,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.7.7",
+   "date": "26.10.2026",
+   "html": "<p><b>Исправлено</b></p>\n<ul>\n<li>Поиск людей пишет «Не найдено в организации», если никого не нашлось. Участника команды, не выбранного из списка, портал не путает с пустой ролью — объясняет, что человека нужно выбрать из поиска или сначала пригласить в организацию.</li>\n</ul>"
+  },
   {
    "ver": "1.7.7.6",
    "date": "26.10.2026",

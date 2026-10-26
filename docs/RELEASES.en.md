@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.7.7 · 26.10.2026
+
+**Fixed**
+- The people search shows «Not found in the organization» when nobody matches. A team member not selected from the list is no longer reported as a missing role — the portal explains that the person must be selected from the search or first invited to the organization.
+
 ## 1.7.7.6 · 26.10.2026
 
 **Fixed**

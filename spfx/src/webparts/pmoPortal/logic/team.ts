@@ -27,9 +27,10 @@ export function cleanTeam(rows: TeamRow[]): TeamRow[] {
 export const cleanLinks = (links: Link[]): Link[] =>
   links.filter(l => l.u.trim()).map(l => ({ t: l.t.trim() || 'Посилання', u: l.u.trim() }));
 
-/** Ключ ошибки или '': у каждого участника роль и человек, каждая ссылка — https://. */
+/** Ключ ошибки или '': у каждого участника человек (выбран из поиска) и роль, каждая ссылка — https://. */
 export function validateTeamLinks(team: TeamRow[], links: Link[]): string {
-  if (team.some(r => !r.user || !r.role.trim())) return 'errRole';
+  if (team.some(r => !r.user)) return 'errTeamUser';
+  if (team.some(r => !r.role.trim())) return 'errRole';
   if (links.some(l => l.u.trim() && !/^https:\/\/\S+$/i.test(l.u.trim()))) return 'errUrl';
   return '';
 }
