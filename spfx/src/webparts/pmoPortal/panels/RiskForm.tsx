@@ -3,6 +3,7 @@ import { EntTag } from '../components/EntTag';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
 import { Person, Risk } from '../data/types';
+import { loginOf } from '../data/people';
 import { isActive, isArch, byOrder, riskScore } from '../logic/status';
 import { scoreBucket } from '../logic/views';
 import { RiskDraft, riskDueMin, riskErrors, riskEditable, riskCopy, riskRequired, RISK_ERR, RiskField } from '../logic/forms';
@@ -61,7 +62,7 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
     if (dueErr) { setErr(dueErr); const el = document.getElementById('k-due'); if (el) el.focus(); return; }
     setBusy(true); setErr('');
     try {
-      const owner: Person | null = d.owner && !d.owner.id ? { ...d.owner, id: await c.repo.ensureUser(d.owner.email) } : d.owner;
+      const owner: Person | null = d.owner && !d.owner.id ? { ...d.owner, id: await c.repo.ensureUser(d.owner) } : d.owner;
       const body = riskBody({ ...d, projectId: pid, owner });
       const f = await c.repo.fresh(pid);
       const g = guard('risk', c.me, f);
@@ -73,7 +74,7 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
           status: x.status, due: x.due, mitigation: x.mitigation, strategy: x.strategy, contingency: x.contingency });
         if (changedFields(snap(k), snap(fr.risk)).length) { setErr(t('errConflict')); setBusy(false); await c.reload(); return; }
         await c.repo.update('RisksIssues', k.id, body, fr.etag);
-      } else await c.repo.createIn('RisksIssues', pid, body, { riOwnerId: owner ? owner.email : '' });
+      } else await c.repo.createIn('RisksIssues', pid, body, { riOwnerId: owner ? loginOf(owner) : '' });
       await c.reload(); c.toast(t('savedRisk'));
       if (fixedId) c.openProject(pid); else onCancel();
     } catch (x) { setErr(errText(t, x)); setBusy(false); }

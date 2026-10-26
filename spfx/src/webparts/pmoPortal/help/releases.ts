@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.7.6",
+   "date": "26.10.2026",
+   "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>Зовнішнього учасника (гостя організації) тепер можна додати до команди проєкту, призначити PM, власником чи відповідальним за ризик. Якщо людини ще немає в організації, портал пояснює, що її спершу має запросити адміністратор Microsoft 365.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.7.5",
    "date": "21.10.2026",
    "html": "<p><b>Змінено</b></p>\n<ul>\n<li>«Довідка» і «Детальний огляд системи» — про країну, бюджет і прогноз витрат, план і факт; помічник ШІ — чим більше звітів, тим корисніший.</li>\n</ul>"
@@ -245,6 +250,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.7.6",
+   "date": "26.10.2026",
+   "html": "<p><b>Fixed</b></p>\n<ul>\n<li>An external participant (a guest of the organization) can now be added to the project team or assigned as PM, owner or risk owner. If the person is not yet in the organization, the portal explains that the Microsoft 365 administrator must invite them first.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.7.5",
    "date": "21.10.2026",
    "html": "<p><b>Changed</b></p>\n<ul>\n<li>\"Help\" and \"Detailed system overview\" — country, budget and cost forecast, plan vs actual; the AI assistant — the more reports, the more useful.</li>\n</ul>"
@@ -486,6 +496,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.7.6",
+   "date": "26.10.2026",
+   "html": "<p><b>Исправлено</b></p>\n<ul>\n<li>Внешнего участника (гостя организации) теперь можно добавить в команду проекта, назначить PM, владельцем или ответственным за риск. Если человека ещё нет в организации, портал объясняет, что его сначала должен пригласить администратор Microsoft 365.</li>\n</ul>"
+  },
   {
    "ver": "1.7.7.5",
    "date": "21.10.2026",
