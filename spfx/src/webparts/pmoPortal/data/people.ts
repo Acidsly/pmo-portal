@@ -18,3 +18,10 @@ export const isUserNotFound = (status: number, body: string): boolean => {
   try { const j = JSON.parse(body); m = String((j.error && (j.error.message && j.error.message.value !== undefined ? j.error.message.value : j.error.message)) || body); } catch { /* не JSON */ }
   return /не удалось найти пользователя|не вдалося знайти користувача|user cannot be found|could not be found|не найден/i.test(m);
 };
+
+/** Набран полный адрес почты (поиск по части имени гостей не находит — подсказки гостей на сайте выключены). */
+export const isEmailQuery = (q: string): boolean => /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(q.trim());
+
+/** Ответ ensureuser → человек для выбора (гость: логин …#ext#@тенант, почта — из ответа или набранная). */
+export const fromSiteUser = (u: any, q: string): Person =>   // eslint-disable-line @typescript-eslint/no-explicit-any
+  ({ id: Number(u.Id), name: String(u.Title || q.trim()), email: String(u.Email || q.trim()), login: String(u.LoginName) });

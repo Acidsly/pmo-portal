@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.5.4",
+   "date": "28.10.2026",
+   "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>Зовнішнього учасника (гостя), якого ще немає на сайті, тепер можна знайти за повною адресою пошти — раніше пошук писав «Не знайдено».</li>\n</ul>"
+  },
+  {
    "ver": "1.7.5.3",
    "date": "26.10.2026",
    "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>Зовнішнього учасника (гостя організації) тепер можна додати до команди проєкту, призначити PM, власником чи відповідальним за ризик. Пошук людей пише «Не знайдено», якщо нікого не знайдено, а учасника команди, якого не вибрано зі списку, портал не плутає з порожньою роллю. Для гостей адміністратор має запросити людину до організації й дозволити гостей на сайті.</li>\n</ul>"
@@ -215,6 +220,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.5.4",
+   "date": "28.10.2026",
+   "html": "<p><b>Fixed</b></p>\n<ul>\n<li>An external participant (guest) who is not yet on the site can now be found by their full e-mail address — the search used to show «Not found».</li>\n</ul>"
+  },
+  {
    "ver": "1.7.5.3",
    "date": "26.10.2026",
    "html": "<p><b>Fixed</b></p>\n<ul>\n<li>An external participant (a guest of the organization) can now be added to the project team or assigned as PM, owner or risk owner. The people search shows «Not found» when nobody matches, and a team member not selected from the list is no longer reported as a missing role. For guests, the administrator must invite the person to the organization and allow guests on the site.</li>\n</ul>"
@@ -426,6 +436,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.5.4",
+   "date": "28.10.2026",
+   "html": "<p><b>Исправлено</b></p>\n<ul>\n<li>Внешнего участника (гостя), которого ещё нет на сайте, теперь можно найти по полному адресу почты — раньше поиск писал «Не найдено».</li>\n</ul>"
+  },
   {
    "ver": "1.7.5.3",
    "date": "26.10.2026",
