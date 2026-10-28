@@ -1,4 +1,4 @@
-import { isUserNotFound, loginOf, pickerPeople } from '../src/webparts/pmoPortal/data/people';
+import { fromSiteUser, isEmailQuery, isUserNotFound, loginOf, pickerPeople } from '../src/webparts/pmoPortal/data/people';
 import { formUser } from '../src/webparts/pmoPortal/data/formValues';
 
 const GUEST = 'i:0#.f|membership|evgeniyk_gmail.com#ext#@smarthrua.onmicrosoft.com';
@@ -35,4 +35,15 @@ test('«нет в организации» — только по тексту Sh
   expect(isUserNotFound(400, '{"error":{"message":"The user cannot be found."}}')).toBe(true);
   expect(isUserNotFound(400, '{"error":{"message":"Invalid request."}}')).toBe(false);
   expect(isUserNotFound(500, real)).toBe(false);
+});
+
+test('гость не среди пользователей сайта: полный адрес → ensureuser, ответ → человек с логином гостя', () => {
+  expect(isEmailQuery('yevhen.katkov@outlook.com')).toBe(true);
+  expect(isEmailQuery(' Y.K@outlook.com ')).toBe(true);
+  expect(isEmailQuery('evhen')).toBe(false);
+  expect(isEmailQuery('yevhen.katkov@outlook')).toBe(false);
+  expect(isEmailQuery('a b@x.com')).toBe(false);
+  expect(fromSiteUser({ Id: 25, Title: 'yevhen.katkov', Email: 'yevhen.katkov@outlook.com', LoginName: 'i:0#.f|membership|yevhen.katkov_outlook.com#ext#@smarthrua.onmicrosoft.com' }, 'yevhen.katkov@outlook.com'))
+    .toEqual({ id: 25, name: 'yevhen.katkov', email: 'yevhen.katkov@outlook.com', login: 'i:0#.f|membership|yevhen.katkov_outlook.com#ext#@smarthrua.onmicrosoft.com' });
+  expect(fromSiteUser({ Id: 7, Title: '', Email: '', LoginName: 'x|y' }, ' g@x.com ')).toEqual({ id: 7, name: 'g@x.com', email: 'g@x.com', login: 'x|y' });
 });

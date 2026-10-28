@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.7.8",
+   "date": "28.10.2026",
+   "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>Зовнішнього учасника (гостя), якого ще немає на сайті, тепер можна знайти за повною адресою пошти — раніше пошук писав «Не знайдено».</li>\n</ul>"
+  },
+  {
    "ver": "1.7.7.7",
    "date": "26.10.2026",
    "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>Пошук людей пише «Не знайдено в організації», якщо нікого не знайдено. Учасника команди, якого не вибрано зі списку, портал не плутає з порожньою роллю — пояснює, що людину треба вибрати з пошуку або спершу запросити до організації.</li>\n</ul>"
@@ -255,6 +260,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.7.8",
+   "date": "28.10.2026",
+   "html": "<p><b>Fixed</b></p>\n<ul>\n<li>An external participant (guest) who is not yet on the site can now be found by their full e-mail address — the search used to show «Not found».</li>\n</ul>"
+  },
+  {
    "ver": "1.7.7.7",
    "date": "26.10.2026",
    "html": "<p><b>Fixed</b></p>\n<ul>\n<li>The people search shows «Not found in the organization» when nobody matches. A team member not selected from the list is no longer reported as a missing role — the portal explains that the person must be selected from the search or first invited to the organization.</li>\n</ul>"
@@ -506,6 +516,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.7.8",
+   "date": "28.10.2026",
+   "html": "<p><b>Исправлено</b></p>\n<ul>\n<li>Внешнего участника (гостя), которого ещё нет на сайте, теперь можно найти по полному адресу почты — раньше поиск писал «Не найдено».</li>\n</ul>"
+  },
   {
    "ver": "1.7.7.7",
    "date": "26.10.2026",
