@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.7.9 · 28.10.2026
+
+**Changed**
+- Help: new section «External project participant» — how to add a person from outside the company (a helpdesk request, then search by the full e-mail address). The people search hints say the same.
+
 ## 1.7.7.8 · 28.10.2026
 
 **Fixed**

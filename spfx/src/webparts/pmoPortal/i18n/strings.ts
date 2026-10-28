@@ -2581,19 +2581,19 @@ export const EXTRA: Record<string, L3> = {
   "Новые проекты создаёт PMO. Обратитесь к группе «PMO — администраторы»."
  ],
  "errTeamUser": [
-  "Оберіть людину зі списку пошуку для кожного учасника команди. Немає в пошуку — людини немає в організації: зовнішнього учасника спершу запрошує адміністратор Microsoft 365.",
-  "Select a person from the search list for every team member. Not in the search — the person is not in the organization: an external participant must first be invited by the Microsoft 365 administrator.",
-  "Выберите человека из списка поиска для каждого участника команды. Нет в поиске — человека нет в организации: внешнего участника сначала приглашает администратор Microsoft 365."
+  "Оберіть людину зі списку пошуку для кожного учасника команди. Зовнішню людину спершу додають у гості через запит у хелпдеск, після закриття тікета — шукайте її за повною адресою пошти.",
+  "Select a person from the search list for every team member. A person from outside the company is first added as a guest through a helpdesk request; after the ticket is closed, search for them by their full e-mail address.",
+  "Выберите человека из списка поиска для каждого участника команды. Внешнего человека сначала добавляют в гости через запрос в хелпдеск, после закрытия тикета — ищите его по полному адресу почты."
  ],
  "pickerNone": [
-  "Не знайдено в організації. Зовнішнього учасника спершу запрошує адміністратор Microsoft 365.",
-  "Not found in the organization. An external participant must first be invited by the Microsoft 365 administrator.",
-  "Не найдено в организации. Внешнего участника сначала приглашает администратор Microsoft 365."
+  "Не знайдено. Зовнішню людину спершу додають у гості через запит у хелпдеск; після закриття тікета наберіть її повну адресу пошти.",
+  "Not found. A person from outside the company is first added as a guest through a helpdesk request; after the ticket is closed, type their full e-mail address.",
+  "Не найдено. Внешнего человека сначала добавляют в гости через запрос в хелпдеск; после закрытия тикета наберите его полный адрес почты."
  ],
  "errUserNotFound": [
-  "Цієї людини немає в організації. Зовнішнього учасника спершу має запросити адміністратор Microsoft 365 (гостьовий доступ), після цього оберіть його ще раз.",
-  "This person is not in the organization. An external participant must first be invited by the Microsoft 365 administrator (guest access), then select them again.",
-  "Этого человека нет в организации. Внешнего участника сначала должен пригласить администратор Microsoft 365 (гостевой доступ), после этого выберите его ещё раз."
+  "SharePoint не знайшов цю людину. Зовнішню людину спершу додають у гості через запит у хелпдеск; після закриття тікета оберіть її ще раз.",
+  "SharePoint could not find this person. A person from outside the company is first added as a guest through a helpdesk request; after the ticket is closed, select them again.",
+  "SharePoint не нашёл этого человека. Внешнего человека сначала добавляют в гости через запрос в хелпдеск; после закрытия тикета выберите его ещё раз."
  ],
  "errCode": [
   "Такий код уже є в іншого проєкту. Вкажіть інший або залиште поле порожнім — код призначиться автоматично.",

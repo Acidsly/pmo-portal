@@ -163,7 +163,7 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
 - A **New project** is created by the PMO: the name (unique — no two projects share a name) and the PM are required (the PM is not prefilled — choose one); the project number is assigned by the system in order (PRJ-001, PRJ-002…) — it is unique and cannot be changed by hand.
 - For ~15 minutes after creation the project is **being prepared** (the card says "The project is being prepared"): after that the PM can add reports, risks and team members.
 - Only the PM can **Edit project**: name, department, priority, description, **parent project** (any project except itself and its own children; the PMO also sets it when creating), and also:
-  - **Project team** — "+ Add member": a person, their **role** (required) and what to contact them about; × removes the member;
+  - **Project team** — "+ Add member": a person, their **role** (required) and what to contact them about; × removes the member. Select the person from the search list; for a person from outside the company see «External project participant»;
   - **Links** — "+ Add link": a name and an address (starting with `https://`); × removes it.
 - **«Goal and description»** is required when the PM saves the card (including projects created earlier — at the next save): briefly, the project goal and the expected result. The PMO can create a new project without a description — the PM adds it.
 - **Type and priority are different things.** **Type** («Strategic» / «Regular») is the project's importance to the company; it is set at creation and then changes only through a status report. **Priority** («1 — High» … «3 — Low») is the current order of resource allocation; the PM changes it in the card (the field next to the department). A strategic project may temporarily have a low priority — this is not an error.
@@ -172,6 +172,17 @@ Anyone who sees the project can comment: in the card — "Comments" → "Add com
 - The PMO chooses the project **country** when creating it (required; a project of several countries is created separately for each country). The country CEO sees the projects of their countries and can comment.
 - After the project is created, only the PMO changes the **PM, the owner and the country**: in the card — **"Change PM / owner / country"** (new PM, new owner, new country — an empty field means no change, the reason is required). The change shows in the card and in the "Change history" ("Assignment") right away and is finally applied by synchronization within ~15 minutes; until then a new change cannot be submitted. A report of the former PM that is pending approval is returned automatically.
 - After a **PM change** the former PM can no longer change the project right away; the new PM sees "You are assigned as PM of this project: edit access appears within 15 minutes" — the page refreshes by itself.
+
+## External project participant
+
+A person from outside the company (a contractor, a consultant) can be added to a project only once they are a **guest of our organization** in Microsoft 365.
+
+1. **Helpdesk request** — add the person as a guest: name, **e-mail address**, company and project.
+2. The person receives an invitation e-mail from Microsoft and must **accept** it.
+3. **After the ticket is closed** — «Edit» the project → «Project team» → «+ Add member»: type the **full e-mail address** (a guest cannot be found by part of the name), select the person from the list, enter the role and save.
+4. Within ~15 minutes the person gets access to the project according to their role. Send them the portal link yourself.
+
+«Not found» for the full address — the ticket is not done yet or the invitation was not accepted: check with the helpdesk.
 
 ## Archive
 

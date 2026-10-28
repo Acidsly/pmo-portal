@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.7.9",
+   "date": "28.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>«Довідка»: новий розділ «Зовнішній учасник проєкту» — як додати людину не з компанії (запит у хелпдеск, потім пошук за повною адресою). Підказки пошуку людей кажуть те саме.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.7.8",
    "date": "28.10.2026",
    "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>Зовнішнього учасника (гостя), якого ще немає на сайті, тепер можна знайти за повною адресою пошти — раніше пошук писав «Не знайдено».</li>\n</ul>"
@@ -260,6 +265,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.7.9",
+   "date": "28.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>Help: new section «External project participant» — how to add a person from outside the company (a helpdesk request, then search by the full e-mail address). The people search hints say the same.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.7.8",
    "date": "28.10.2026",
    "html": "<p><b>Fixed</b></p>\n<ul>\n<li>An external participant (guest) who is not yet on the site can now be found by their full e-mail address — the search used to show «Not found».</li>\n</ul>"
@@ -516,6 +526,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.7.9",
+   "date": "28.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>«Довідка»: новый раздел «Внешний участник проекта» — как добавить человека не из компании (запрос в хелпдеск, затем поиск по полному адресу). Подсказки поиска людей говорят то же.</li>\n</ul>"
+  },
   {
    "ver": "1.7.7.8",
    "date": "28.10.2026",
