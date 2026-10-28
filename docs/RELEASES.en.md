@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.5.4 · 28.10.2026
+
+**Fixed**
+- An external participant (guest) who is not yet on the site can now be found by their full e-mail address — the search used to show «Not found».
+
 ## 1.7.5.3 · 26.10.2026
 
 **Fixed**

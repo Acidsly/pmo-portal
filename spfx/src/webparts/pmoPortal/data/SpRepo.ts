@@ -11,7 +11,7 @@ import { NOTIFY_DAYS, ReadMarks, mergeMarks } from '../logic/notify';
 import { teamPeople, teamVisible } from '../logic/team';
 import { applyPending } from '../logic/overlay';
 import { Regional, regionalFrom, toFormValues } from './formValues';
-import { isUserNotFound, loginOf, pickerPeople } from './people';
+import { fromSiteUser, isEmailQuery, isUserNotFound, loginOf, pickerPeople } from './people';
 import { applyState, parseState, StateJson } from '../logic/state';
 import { Fresh } from '../logic/guard';
 
@@ -338,6 +338,12 @@ export class SpRepo {
     const res = await this.http.post(`${this.webUrl}/_api/SP.UI.ApplicationPages.ClientPeoplePickerWebServiceInterface.clientPeoplePickerSearchUser`,
       SPHttpClient.configurations.v1, { headers: SpRepo.JSON_HEADERS, body: JSON.stringify({ queryParams: {
         QueryString: q, MaximumEntitySuggestions: 8, PrincipalType: 1, PrincipalSource: 15, AllowEmailAddresses: false, AllowMultipleEntities: false } }) });
-    return pickerPeople(JSON.parse((await (await this.check(res, 'people')).json()).value || '[]') as any[]);
+    const found = pickerPeople(JSON.parse((await (await this.check(res, 'people')).json()).value || '[]') as any[]);
+    if (found.length || !isEmailQuery(q)) return found;
+    // гость, которого ещё нет среди пользователей сайта: подсказки гостей выключены, поиск его не находит —
+    // SharePoint находит его по полному адресу (на сайте «Existing guests») и добавляет в пользователи сайта
+    const add = await this.http.post(`${this.webUrl}/_api/web/ensureuser`, SPHttpClient.configurations.v1,
+      { headers: SpRepo.JSON_HEADERS, body: JSON.stringify({ logonName: q.trim() }) });
+    return add.ok ? [fromSiteUser(await add.json(), q)] : [];
   }
 }
