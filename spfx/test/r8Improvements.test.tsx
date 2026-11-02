@@ -161,6 +161,9 @@ describe('форма звіту', () => {
     act(() => { Simulate.change(sel, { target: { value: '3' } } as any); });
     expect(($('#f-pdone') as HTMLInputElement).checked).toBe(false);
   });
+  test('#120: підказка під «Не зроблено…» веде до позначки «План виконано повністю», а не просить писати «усе виконано» вручну (uk / en / ru)', () => {
+    [0, 1, 2].forEach(l => { const m = makeT(l as 0 | 1 | 2); expect(m.t('notDoneHint')).toContain(m.t('planAllDone')); expect(m.t('notDoneHint')).not.toMatch(/так і напишіть|say so|так и напишите/); });
+  });
   test('#120: без плану в попередньому звіті позначки немає', () => {
     mount(<ReportForm data={data([pj()])} projectId={1} onCancel={() => undefined} />);
     expect($('#f-pdone')).toBeNull();

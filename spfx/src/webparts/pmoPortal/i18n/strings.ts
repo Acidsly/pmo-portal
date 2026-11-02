@@ -1347,9 +1347,9 @@ export const T: Record<string, L3> = {
   "(отчёт от {date})"
  ],
  "notDoneHint": [
-  "Що з цього плану не зроблено і чому; усе виконано — так і напишіть.",
-  "What of this plan was not done and why; if everything is done, say so.",
-  "Что из этого плана не сделано и почему; всё выполнено — так и напишите."
+  "Що з цього плану не зроблено і чому. Усе виконано — позначте «План виконано повністю».",
+  "What of this plan was not done and why. Everything done — tick «The plan is fully done».",
+  "Что из этого плана не сделано и почему. Всё выполнено — отметьте «План выполнен полностью»."
  ],
  "budgetViaReport": [
   "Бюджет (план) змінюється статус-звітом — з причиною, після погодження PMO.",
