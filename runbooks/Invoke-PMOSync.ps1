@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:2e12815e3a52 — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:29422d258195 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -574,7 +574,7 @@ function Get-AssignmentPlan($a, [string]$curPm, [string]$curOwner, [bool]$archiv
 # Снимок — psHistory эталона: { v = 1; r = [id учтённых отчётов]; k = { id риска: снимок полей } }. Нет снимка или повреждён —
 # снимок из текущих данных без событий (первый запуск не заливает журнал прошлым). Отчёт: «Подання звіту» один раз; «на основі
 # повернутого» — только если srBasedOn указывает на повернутый отчёт этого же проекта (иначе — как обычная подача).
-# Риск: «Додано», изменения полей «було → стало» (оценка — если менялись вероятность или влияние), «Закрито». Удалённый — из снимка.
+# Риск: «Додано» (уже закрытый к первому запуску — и «Закрито», #115), изменения полей «було → стало» (оценка — если менялись вероятность или влияние), «Закрито». Удалённый — из снимка.
 # $reps: id, date, title, author, created, basedOn, approval; $risks: id, t, ty, p, i, st, sg, o, on, d, author, editor, created, modified.
 $RISK_LOG = [ordered]@{ t = "riTitle"; ty = "riType"; p = "riProbability"; i = "riImpact"; st = "riStatus"; sg = "riStrategy"; o = "riOwner"; d = "riDue" }
 function Get-HistoryPlan([string]$json, $reps, $risks) {
@@ -603,6 +603,8 @@ function Get-HistoryPlan([string]$json, $reps, $risks) {
         if ($init) { continue }
         if (-not $was) {
             $rows.Add([ordered]@{ kind = "Ризик"; field = "riCreated"; from = ""; to = $cur.ty; who = [string]$k.author; when = [string]$k.created; item = [int]$k.id; reason = "Додано: $($cur.t)" })
+            # #115: создан и закрыт между двумя запусками — закрытие тоже в историю
+            if ($cur.st -eq "Закрито") { $rows.Add([ordered]@{ kind = "Ризик"; field = "riStatus"; from = "Відкрито"; to = "Закрито"; who = [string]$k.editor; when = [string]$k.modified; item = [int]$k.id; reason = "Закрито: $($cur.t)" }) }
             continue
         }
         $closed = $cur.st -eq "Закрито" -and [string]$was["st"] -ne "Закрито"

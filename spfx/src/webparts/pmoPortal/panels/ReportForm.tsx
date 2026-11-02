@@ -10,7 +10,7 @@ import { ReportDraft, reportPeriodFrom, reportFromProject, reportFromReturned, k
 import { paceForecast } from '../logic/status';
 import { money } from '../components/Bits';
 import { reportBody } from '../data/write';
-import { Frow, RagPick, SegPick, DateIn, Err, Opts, errText, guardText, FieldErrText, MoneyIn } from '../components/fields';
+import { Frow, RagPick, SegPick, DateIn, Err, Opts, errText, guardText, FieldErrText, MoneyIn, badDateIn } from '../components/fields';
 import { fmtDate, periodText } from '../components/Bits';
 import { todayIso } from '../logic/dates';
 import { guard } from '../logic/guard';
@@ -67,6 +67,7 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
 
   const save = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+    if (badDateIn(e.currentTarget as Element)) { setErr(t('errDateBad')); return; }   // #119
     // #40: все ошибки сразу — общее сообщение и подсветка полей
     // #62 / #69: дата подання — день сохранения, период — от последнего погодженого отчёта (считаются сейчас, а не при открытии)
     const today = todayIso();
@@ -143,14 +144,15 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
         {archiveStatus(d.status) ? <><p className="note" style={{ margin: '-4px 0 14px' }}>{t('completeHint')}</p>
           {/* #54: когда проект фактически завершён или отменён — обязательно, не раньше старта, не позже даты подання (#64) */}
           <div className="frow" id="f-ae-wrap"><label className="t" htmlFor="f-ae">{fl('ae')} *</label>
-            <DateIn id="f-ae" value={d.actualEnd} invalid={bad('actualEnd') || !!aeLive} onChange={v => set({ actualEnd: v })} /><FieldErrText msg={fErr('actualEnd') || (aeLive ? errMsg(aeLive) : '')} />
+            <DateIn key={'f-ae' + d.projectId} id="f-ae" value={d.actualEnd} invalid={bad('actualEnd') || !!aeLive} onChange={v => set({ actualEnd: v })} /><FieldErrText msg={fErr('actualEnd') || (aeLive ? errMsg(aeLive) : '')} />
             <p className="hint">{t('aeHint')}</p></div></> : null}
         <fieldset className="ragpick"><legend>{fl('type')}</legend><SegPick name="f-type" options={TYPES} value={d.type} onChange={v => set({ type: v })} /></fieldset>
         <div className="fgrid2 frow">
-          <div><label className="t" htmlFor="f-start">{fl('start')}</label><DateIn id="f-start" value={d.start} onChange={v => set({ start: v })} /></div>
-          <div><label className="t" htmlFor="f-golive">{fl('golive')}</label><DateIn id="f-golive" value={d.goLive} invalid={bad('goLive')} onChange={v => set({ goLive: v })} /><FieldErrText msg={fErr('goLive')} /></div>
-          <div><label className="t" htmlFor="f-plan">{fl('plan')}</label><DateIn id="f-plan" value={d.planEnd} invalid={bad('planEnd')} onChange={v => set({ planEnd: v })} /><FieldErrText msg={fErr('planEnd')} /></div>
-          <div><label className="t" htmlFor="f-fc">{fl('fc')}</label><DateIn id="f-fc" value={d.forecastEnd} invalid={bad('forecastEnd')} onChange={v => set({ forecastEnd: v })} /><FieldErrText msg={fErr('forecastEnd')} /></div>
+          {/* #119: поля дат — заново при смене проекта: некорректный текст прежнего проекта не остаётся и не блокирует сохранение */}
+          <div><label className="t" htmlFor="f-start">{fl('start')}</label><DateIn key={'f-start' + d.projectId} id="f-start" value={d.start} onChange={v => set({ start: v })} /></div>
+          <div><label className="t" htmlFor="f-golive">{fl('golive')}</label><DateIn key={'f-golive' + d.projectId} id="f-golive" value={d.goLive} invalid={bad('goLive')} onChange={v => set({ goLive: v })} /><FieldErrText msg={fErr('goLive')} /></div>
+          <div><label className="t" htmlFor="f-plan">{fl('plan')}</label><DateIn key={'f-plan' + d.projectId} id="f-plan" value={d.planEnd} invalid={bad('planEnd')} onChange={v => set({ planEnd: v })} /><FieldErrText msg={fErr('planEnd')} /></div>
+          <div><label className="t" htmlFor="f-fc">{fl('fc')}</label><DateIn key={'f-fc' + d.projectId} id="f-fc" value={d.forecastEnd} invalid={bad('forecastEnd')} onChange={v => set({ forecastEnd: v })} /><FieldErrText msg={fErr('forecastEnd')} /></div>
         </div>
         {keyCh ? <Frow label={t('keyReason')} htmlFor="f-kr" req={true}>
           <textarea id="f-kr" placeholder={t('reasonPh')} aria-invalid={bad('keyReason') || undefined} value={d.keyReason} onChange={e => set({ keyReason: e.target.value })} /></Frow> : null}

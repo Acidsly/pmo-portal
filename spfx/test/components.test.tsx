@@ -3,7 +3,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { act, Simulate } from 'react-dom/test-utils';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
-import { MoneyIn, PeoplePicker } from '../src/webparts/pmoPortal/components/fields';
+import { MoneyIn, PeoplePicker, DateIn, badDateIn } from '../src/webparts/pmoPortal/components/fields';
 import { DataTable } from '../src/webparts/pmoPortal/components/DataTable';
 import { reportCard, riskCard, TableDefs } from '../src/webparts/pmoPortal/components/defs';
 import { makeT } from '../src/webparts/pmoPortal/i18n/i18n';
@@ -49,6 +49,54 @@ describe('#41 / #45 поле суммы MoneyIn', () => {
     act(() => { Simulate.focus(i); }); expect(i.value).toBe('');
     act(() => { Simulate.change(i, { target: { value: '1450.50' } } as any); }); expect(seen[seen.length - 1]).toBe(1451);
     act(() => { Simulate.blur(i); }); expect(i.value).toBe('1 451');
+  });
+  // #131: ручной ввод по символу — запятая / точка не теряются (было «1450,50» → 145 050)
+  test.each([['1450,50', 1451, '1 451'], ['500.50', 501, '501'], ['600,5', 601, '601'], ['1 450,49', 1450, '1 450'], ['2,400,000', 2400000, '2 400 000']])(
+    '#131 ввод «%s» по символу → %d', (typed, n, shown) => {
+      const seen: number[] = []; mount(<Host init={0} seen={seen} />);
+      const i = root.querySelector('#m') as HTMLInputElement;
+      act(() => { Simulate.focus(i); });
+      for (const ch of typed) act(() => { Simulate.change(i, { target: { value: i.value + ch } } as any); });
+      expect(i.value).toBe(typed.replace(/\s/g, ''));
+      act(() => { Simulate.blur(i); });
+      expect([seen[seen.length - 1], i.value]).toEqual([n, shown]);
+    });
+});
+
+// #119: некоректна дата (31.11) не стирається мовчки — текст лишається, помилка під полем, форма не зберігається
+describe('#119 DateIn: некоректна дата', () => {
+  const Host: React.FC<{ seen: string[] }> = ({ seen }) => {
+    const [v, setV] = React.useState('2026-10-30');
+    return <form><DateIn id="dd" value={v} onChange={x => { seen.push(x); setV(x); }} /></form>;
+  };
+  const inp = (): HTMLInputElement => root.querySelector('#dd') as HTMLInputElement;
+  test('31.11.2026 — текст лишається, помилка під полем, значення порожнє; виправили — помилки немає', () => {
+    const seen: string[] = []; mount(<Host seen={seen} />);
+    act(() => { Simulate.change(inp(), { target: { value: '31112026' } } as any); });
+    act(() => { Simulate.blur(inp()); });
+    expect(inp().value).toBe('31.11.2026');
+    expect(root.querySelector('.ferr')!.textContent).toBe(tt.t('errDateBad'));
+    expect(seen[seen.length - 1]).toBe('');
+    expect(badDateIn(root.querySelector('form'))).toBe(inp());
+    act(() => { Simulate.change(inp(), { target: { value: '30112026' } } as any); });
+    expect(root.querySelector('.ferr')).toBeNull(); expect(seen[seen.length - 1]).toBe('2026-11-30');
+    expect(badDateIn(root.querySelector('form'))).toBeNull();
+  });
+  test('#116 сенсорний екран: поле календаря лежить поверх кнопки (iPhone не відкриває showPicker прихованого поля)', () => {
+    const css = require('fs').readFileSync(require('path').join(__dirname, '../src/webparts/pmoPortal/theme/prototype.scss'), 'utf8');
+    expect(css).toMatch(/@media \(pointer:coarse\)\{\.date-native\{[^}]*width:32px;height:32px;pointer-events:auto/);
+    mount(<DateIn id="dd" value="" onChange={() => undefined} />);
+    const kids = Array.from(root.querySelector('.date-in')!.children).map(x => x.className || (x as HTMLInputElement).type);
+    expect(kids.indexOf('date-native')).toBeGreaterThan(kids.indexOf('date-btn'));   // позже в разметке — поверх кнопки
+  });
+  test('неповна дата при виході з поля — теж помилка, а не мовчазне очищення; стерли — помилки немає', () => {
+    const seen: string[] = []; mount(<Host seen={seen} />);
+    act(() => { Simulate.change(inp(), { target: { value: '3011' } } as any); });
+    act(() => { Simulate.blur(inp()); });
+    expect(inp().value).toBe('30.11'); expect(root.querySelector('.ferr')).not.toBeNull();
+    act(() => { Simulate.change(inp(), { target: { value: '' } } as any); });
+    act(() => { Simulate.blur(inp()); });
+    expect(root.querySelector('.ferr')).toBeNull(); expect(seen[seen.length - 1]).toBe('');
   });
 });
 
@@ -128,6 +176,12 @@ describe('#58 карточки отчёта и риска', () => {
     ['Ризик Р', '15', 'Проєкт П', 'Відкрито', '20.10.2026'].forEach(s => expect(t).toContain(s));
     act(() => { (root.querySelector('.mcard') as HTMLElement).click(); }); expect(opened).toContain('risk 3/5');
   });
+  test('#114 риск: прострочений термін відкритого — червоним, як у таблиці; закритий і майбутній — без виділення', () => {
+    const k = { id: 3, projectId: 5, title: 'Ризик Р', probability: 3, impact: 5, status: 'Відкрито', due: '2026-10-01' } as any;
+    mount(<>{riskCard(x)(k)}</>); expect((root.querySelector('.mc-m .late') as HTMLElement).textContent).toBe('01.10.2026');
+    mount(<>{riskCard(x)({ ...k, status: 'Закрито' })}</>); expect(root.querySelector('.late')).toBeNull();
+    mount(<>{riskCard(x)({ ...k, due: '2026-10-20' })}</>); expect(root.querySelector('.late')).toBeNull();
+  });
 });
 
 test('#42: кнопка карточки — «Редагувати проєкт»', () => { expect(T.editProject).toEqual(['Редагувати проєкт', 'Edit project', 'Редактировать проект']); });
@@ -186,6 +240,22 @@ describe('#54 форма отчёта: дата завершення (факт)'
     act(() => { Simulate.change(st, { target: { value: 'Завершено' } } as any); });
     expect(root.querySelector('#f-ae')).not.toBeNull();
   });
+});
+
+// кросс-ревью #119: некорректная дата и смена проекта на проект с той же пустой датой — старый текст не должен блокировать сохранение
+test('#119 форма звіту: некоректна дата, потім інший проєкт — поле порожнє, помилки немає', () => {
+  const pr = (id: number, title: string): any => ({ id, title, status: 'Реалізація', type: 'Звичайний', progress: 40, actualCost: 0, start: '', goLive: '', planEnd: '', forecastEnd: '',
+    canEdit: true, manager: { email: 'pm@x', name: 'PM' } });
+  const data = { projects: [pr(5, 'Проєкт П'), pr(6, 'Проєкт Q')], risks: [], reports: [], comments: [], team: [] } as any;
+  mount(<ReportForm data={data} projectId={0} onCancel={() => undefined} />);
+  const gl = (): HTMLInputElement => root.querySelector('#f-golive') as HTMLInputElement;
+  act(() => { Simulate.change(gl(), { target: { value: '31112026' } } as any); });
+  act(() => { Simulate.blur(gl()); });
+  expect(root.querySelector('.date-bad')).not.toBeNull();
+  const sel = root.querySelector('#f-p') as HTMLSelectElement;
+  const other = sel.value === '5' ? '6' : '5';
+  act(() => { Simulate.change(sel, { target: { value: other } } as any); });
+  expect(gl().value).toBe(''); expect(root.querySelector('.date-bad')).toBeNull();
 });
 
 describe('1.7.7 форма отчёта: бюджет, прогноз витрат, план / факт', () => {
@@ -531,6 +601,28 @@ describe('раунд 5: отзывы 81–88', () => {
     expect(root.querySelector('.err')!.textContent).toMatch(/^Термін не може бути раніше/);
     const t0 = today().split('-').reverse().join('.');
     typeDate('k-due', t0); expect(root.querySelector('.ferr')).toBeNull();
+  });
+  test('#119 новий ризик: термін «31.11.2099» — ризик не зберігається, загальна помилка про дату', () => {
+    const data = { projects: [{ id: 5, title: 'Проєкт П', status: 'Реалізація', canEdit: true, manager: { email: 'pm@x', name: 'PM' } }], risks: [], reports: [], comments: [], team: [] } as any;
+    mount(<RiskForm data={data} projectId={5} riskId={0} onCancel={() => undefined} />);
+    act(() => { Simulate.change(root.querySelector('#k-title') as HTMLTextAreaElement, { target: { value: 'Ризик' } } as any); });
+    act(() => { Simulate.change(root.querySelector('input[name="k-str"][value="Прийняття"]') as HTMLInputElement); });
+    act(() => { Simulate.change(root.querySelector('#k-mit') as HTMLTextAreaElement, { target: { value: 'Заходи' } } as any); });
+    act(() => { Simulate.change(root.querySelector('#k-cont') as HTMLTextAreaElement, { target: { value: 'План' } } as any); });
+    typeDate('k-due', '31.11.2099'); act(() => { Simulate.blur(root.querySelector('#k-due') as HTMLInputElement); });
+    act(() => { Simulate.submit(root.querySelector('form') as HTMLFormElement); });
+    expect(root.querySelector('.err')!.textContent).toBe(tt.t('errDateBad'));
+  });
+  test('#130 новий запис: «Ризик → Проблема → Ризик» — повертається опис ризику, «Проблема» — свій', () => {
+    const data = { projects: [{ id: 5, title: 'Проєкт П', status: 'Реалізація', canEdit: true, manager: { email: 'pm@x', name: 'PM' } }], risks: [], reports: [], comments: [], team: [] } as any;
+    mount(<RiskForm data={data} projectId={5} riskId={0} onCancel={() => undefined} />);
+    const title = (): HTMLTextAreaElement => root.querySelector('#k-title') as HTMLTextAreaElement;
+    const ty = (v: string): void => { act(() => { Simulate.change(root.querySelector(`input[name="k-type"][value="${v}"]`) as HTMLInputElement); }); };
+    act(() => { Simulate.change(title(), { target: { value: 'Опис ризику' } } as any); });
+    ty('Проблема'); expect(title().value).toBe('Опис ризику');
+    act(() => { Simulate.change(title(), { target: { value: 'Опис проблеми' } } as any); });
+    ty('Ризик'); expect(title().value).toBe('Опис ризику');
+    ty('Проблема'); expect(title().value).toBe('Опис проблеми');
   });
   test('#88 / #92 существующий риск: просроченный срок — пометка «Термін минув», срок не меняется (только статус); закрытый — без пометки', () => {
     const k = { id: 9, projectId: 5, title: 'Р', type: 'Ризик', probability: 3, impact: 3, owner: null, status: 'Відкрито', due: '2026-01-10', mitigation: '', strategy: '', contingency: '', created: '2026-01-05T09:00:00Z' };

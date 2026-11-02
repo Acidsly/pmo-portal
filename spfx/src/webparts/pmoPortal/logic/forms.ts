@@ -232,3 +232,11 @@ export function cardDiff(b: Project, d: ProjectDraft): { f: string; from: string
   const rows = (t: { user: Person | null; role: string }[]): { email: string; role: string }[] => t.filter(r => r.user).map(r => ({ email: r.user!.email, role: r.role }));
   return pairs.filter(x => x[1] !== x[2]).map(([f, from, to]) => ({ f, from, to })).concat(parent, teamMarks(rows(b.team), rows(d.team)));
 }
+
+/** #130: опис нової записи — окремо для «Ризик» і «Проблема». Тип, у якого ще немає свого опису, отримує поточний текст
+ *  (тип обрали помилково); далі кожен тип повертає свій. memo — опис кожного типу, який уже був обраний. */
+export interface RiskTypeState { type: string; title: string; memo: Record<string, string> }
+export function riskTypeSwitch(st: RiskTypeState, to: string): RiskTypeState {
+  if (to === st.type) return st;
+  return { type: to, title: Object.prototype.hasOwnProperty.call(st.memo, to) ? st.memo[to] : st.title, memo: { ...st.memo, [st.type]: st.title } };
+}

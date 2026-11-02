@@ -646,6 +646,8 @@ form .fsec:first-child{margin-top:0}
 .date-btn:hover:not(:disabled){background:var(--bg-hover);color:var(--text)}
 .date-btn:disabled{opacity:.4;cursor:default}
 .date-native{position:absolute;right:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
+/* #116: на сенсорном экране (iPhone) showPicker у скрытого поля не срабатывает — прозрачное поле даты лежит поверх кнопки календаря, касание открывает системный выбор даты */
+@media (pointer:coarse){.date-native{right:6px;top:50%;bottom:auto;transform:translateY(-50%);width:32px;height:32px;pointer-events:auto;font-size:16px;-webkit-appearance:none;appearance:none;background:none}.date-native:disabled{pointer-events:none}}
 /* помощник ИИ в форме отчёта (план этапа 4): свой цвет --nv-ai, значок Lucide sparkles */
 .btn.ai{background:transparent;box-shadow:inset 0 0 0 1.5px var(--nv-ai);color:var(--nv-ai)}
 .btn.ai svg,.ai-label svg{width:16px;height:16px;flex:none}

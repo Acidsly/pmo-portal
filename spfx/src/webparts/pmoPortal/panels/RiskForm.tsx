@@ -6,11 +6,11 @@ import { Person, Risk } from '../data/types';
 import { loginOf } from '../data/people';
 import { isActive, isArch, byOrder, riskScore } from '../logic/status';
 import { scoreBucket } from '../logic/views';
-import { RiskDraft, riskDueMin, riskErrors, riskEditable, riskCopy, riskRequired, RISK_ERR, RiskField } from '../logic/forms';
+import { RiskDraft, riskDueMin, riskErrors, riskEditable, riskCopy, riskRequired, riskTypeSwitch, RISK_ERR, RiskField } from '../logic/forms';
 import { todayIso } from '../logic/dates';
 import { fmtDate, Score } from '../components/Bits';
 import { riskBody } from '../data/write';
-import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts, errText, guardText, FieldErrText } from '../components/fields';
+import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts, errText, guardText, FieldErrText, badDateIn } from '../components/fields';
 import { guard, changedFields } from '../logic/guard';
 
 const TYPES = ['Ризик', 'Проблема'];
@@ -41,13 +41,15 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
   const [err, setErr] = React.useState('');
   const [miss, setMiss] = React.useState<RiskField[]>([]);
   const [busy, setBusy] = React.useState(false);
+  // #130: опис кожного типу новой записи (riskTypeSwitch)
+  const [memo, setMemo] = React.useState<Record<string, string>>({});
   const set = (x: Partial<RiskDraft>): void => { setD({ ...d, ...x }); if (miss.length) setMiss([]); };
   // #92: в сохранённой записи — только «Статус»; #91: обязательные поля новой записи — по типу
   const off = (f: string): boolean => !edit || !riskEditable(f, !k);
   const req = k ? [] : riskRequired(d.type);
   const star = (f: RiskField): string => (req.indexOf(f) >= 0 ? ' *' : '');
   const fe = (f: RiskField): string => (miss.indexOf(f) >= 0 ? t(RISK_ERR[f]) : '');
-  const copy = (): void => { if (!found) return; setD(riskCopy(found, todayIso())); setCopied(found); setErr(''); setMiss([]); };
+  const copy = (): void => { if (!found) return; setD(riskCopy(found, todayIso())); setMemo({}); setCopied(found); setErr(''); setMiss([]); };
   const sc = riskScore(d.probability, d.impact);
   // #88: срок не раньше сегодняшнего дня (новый) / даты регистрации (существующий); прежний срок — без проверки, просроченный открытый — пометка
   const today = todayIso();
@@ -57,6 +59,7 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
 
   const save = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault(); if (!edit) return;
+    if (badDateIn(e.currentTarget as Element)) { setErr(t('errDateBad')); return; }   // #119
     const m = riskErrors(d, !k);
     if (m.length) { setMiss(m); setErr(m.length > 1 ? t('errRiskReq') : t(RISK_ERR[m[0]])); return; }
     if (dueErr) { setErr(dueErr); const el = document.getElementById('k-due'); if (el) el.focus(); return; }
@@ -94,7 +97,7 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
           : <select id="k-p" value={pid} onChange={e => { const np = Number(e.target.value); setPid(np); const pr = data.projects.filter(x => x.id === np)[0]; set({ projectId: np, owner: pr ? pr.manager : null }); }}>
             {pool.map(x => <option key={x.id} value={x.id}>{x.title}</option>)}</select>}</Frow>
       {/* #47 / #55: сначала тип, потом «Опис»; заголовок новой записи — по типу */}
-      <fieldset className="ragpick"><legend>{fl('kType')}</legend><SegPick name="k-type" options={TYPES} value={d.type} disabled={off('type')} onChange={v => set({ type: v })} /></fieldset>
+      <fieldset className="ragpick"><legend>{fl('kType')}</legend><SegPick name="k-type" options={TYPES} value={d.type} disabled={off('type')} onChange={v => { const r = riskTypeSwitch({ type: d.type, title: d.title, memo }, v); setMemo(r.memo); set({ type: v, title: r.title }); }} /></fieldset>
       <Frow label={fl('kDesc')} htmlFor="k-title" req={true}><textarea id="k-title" disabled={off('title')} aria-invalid={!!fe('title') || undefined} value={d.title} onChange={e => set({ title: e.target.value })} />
         <FieldErrText msg={fe('title')} /></Frow>
       <div className="scorecalc">

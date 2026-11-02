@@ -72,7 +72,7 @@ describe('кольцо и динамика — как в прототипе', ()
   });
   test('snapshots: 7 точек через 14 дней, последний отчёт на дату среза, архив — до даты архивации', () => {
     const today = '2026-09-24';
-    const ps = [P({ id: 1 }), P({ id: 2, status: 'Завершено', archivedAt: '2026-09-01' })];
+    const ps = [P({ id: 1, rag: 'Зелений' }), P({ id: 2, status: 'Завершено', archivedAt: '2026-09-01' })];   // карточка — состояние применённого отчёта
     const rs = [R({ projectId: 1, date: '2026-08-01', budget: 'Жовтий' }), R({ id: 2, projectId: 1, date: '2026-09-20', budget: 'Зелений' }),
                 R({ id: 3, projectId: 2, date: '2026-08-20', budget: 'Червоний' })];
     const s = snapshots(ps, rs, today);
@@ -85,7 +85,7 @@ describe('кольцо и динамика — как в прототипе', ()
   });
   test('snapshots: проект без погодженого отчёта — серый; до даты создания — не считается', () => {
     const today = '2026-09-24';
-    const ps = [P({ id: 1, created: '2026-06-01T10:00:00Z' }), P({ id: 2, created: '2026-09-20T10:00:00Z' }), P({ id: 3, status: 'Скасовано', created: '2026-06-01T10:00:00Z' })];
+    const ps = [P({ id: 1, rag: 'Жовтий', created: '2026-06-01T10:00:00Z' }), P({ id: 2, created: '2026-09-20T10:00:00Z' }), P({ id: 3, status: 'Скасовано', created: '2026-06-01T10:00:00Z' })];
     const rs = [R({ projectId: 1, date: '2026-09-01', budget: 'Жовтий' })];
     const s = snapshots(ps, rs, today);
     expect(s[0]).toEqual({ date: '2026-07-02', g: 0, y: 0, r: 0, na: 1 });      // проект 1 есть, отчёта ещё нет; 2 ещё не создан
@@ -101,6 +101,14 @@ describe('кольцо и динамика — как в прототипе', ()
     const last = snapshots(ps, rs, today)[6]; const d = donutCounts(ps);
     expect({ g: last.g, y: last.y, r: last.r, na: last.na }).toEqual({ g: d.g, y: d.y, r: d.r, na: d.none });
     expect(last.g + last.y + last.r + last.na).toBe(d.total);
+  });
+  test('#117 погоджений, але не застосований звіт (старше застосованого / не від PM) — срез «сьогодні» за карткою, як кольцо', () => {
+    const today = '2026-10-30';
+    const ps = [P({ id: 18, rag: '', created: '2026-06-01T10:00:00Z' }), P({ id: 2, rag: 'Зелений', created: '2026-06-01T10:00:00Z' })];
+    const rs = [R({ projectId: 18, date: '2026-10-16', budget: 'Зелений' }), R({ id: 2, projectId: 2, date: '2026-10-20' })];
+    const last = snapshots(ps, rs, today)[6]; const d = donutCounts(ps);
+    expect(last).toEqual({ date: today, g: 1, y: 0, r: 0, na: 1 });
+    expect({ g: last.g, y: last.y, r: last.r, na: last.na }).toEqual({ g: d.g, y: d.y, r: d.r, na: d.none });
   });
   test('проект, ушедший в архив сегодня (завершён или отменён), в сегодняшний срез не входит', () => {
     const today = '2026-09-24';

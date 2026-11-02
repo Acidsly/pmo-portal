@@ -10,7 +10,7 @@ import { ProjectDraft, validateProject, nextCode, cardDiff } from '../logic/form
 import { parentChoices, parentLabel, COUNTRIES } from '../logic/projects';
 import { projectBody, projectEditBody, teamBody, teamRows } from '../data/write';
 import { TeamRow, cleanTeam, cleanLinks, teamPlan } from '../logic/team';
-import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts, errText, guardText, MoneyIn } from '../components/fields';
+import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts, errText, guardText, MoneyIn, badDateIn } from '../components/fields';
 import { guard, cardFields, changedFields } from '../logic/guard';
 import { tv } from '../i18n/values';
 import { money } from '../components/Bits';
@@ -52,6 +52,7 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
 
   const save = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+    if (badDateIn(e.currentTarget as Element)) { setErr(t('errDateBad')); return; }   // #119
     const othersP = data.projects.filter(x => !project || x.id !== project.id);
     const others = othersP.map(x => x.code);
     const clean = { ...d, team: cleanTeam(d.team), links: cleanLinks(d.links) };

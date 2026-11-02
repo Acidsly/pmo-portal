@@ -446,6 +446,14 @@ describe('реєстр ризиків (#91, #92): прототип', () => {
     // сохранено — запись в списке; нет — сообщение об ошибке в форме
     if (x.out.length) expect(err(f)).not.toBe(''); else expect(q('#main').textContent).toContain(x.draft.title);
   }));
+  (RF.typeSwitch as any[]).forEach(x => test('#130 ' + x.name, () => {
+    const f = openNew(); const t = f.querySelector('#k-title');
+    for (const s of x.steps) {
+      if (s.type) { const ty = f.querySelector(`input[name="k-type"][value="${s.type}"]`); ty.checked = true; ev(ty, 'change'); }
+      else { t.value = s.set; ev(t, 'input'); }
+    }
+    expect(t.value).toBe(x.title);
+  }));
   test('звёздочки — по типу: «Проблема» без стратегії й плану дій', () => {
     const f = openNew();
     expect(q('#k-noap').textContent).toContain('не погоджуються');
@@ -536,4 +544,12 @@ describe('1.7.7 прототип: бюджет, прогноз витрат, п�
     q('[data-act="togglech"]') && q('[data-act="togglech"]').click();
     expect(txt()).toContain('Прогноз витрат на завершення');
   });
+});
+
+// #114: мобильная карточка риска — просроченный срок открытого риска красным, как в таблице
+test('прототип #114: карточка риска — просроченный срок открытого .late', () => {
+  q('[data-act="nav"][data-page="risks"]').click();
+  const late = Array.from(w.document.querySelectorAll('#main tbody tr')).filter((tr: W) => tr.querySelector('.late')).length;
+  const cards = Array.from(w.document.querySelectorAll('#main .mcards .mcard .mc-m .late')).length;
+  expect(late).toBeGreaterThan(0); expect(cards).toBe(late);
 });

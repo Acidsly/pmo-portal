@@ -5,10 +5,10 @@ import { Avatar, ragColor } from './Bits';
 import { tv } from '../i18n/values';
 import { AppCtx } from './ctx';
 import { pickerKey } from '../logic/ui';
-import { groupDigits, parseMoney } from '../logic/money';
+import { groupDigits, maskMoney, parseMoney } from '../logic/money';
 import { maskDmy, parseDmy, formatDmy } from '../logic/dates';
 
-/** Поле суммы (#41, #45): вне фокуса — «1 450 000», в фокусе — цифры без пробелов; значение наружу — целое число. */
+/** Поле суммы (#41, #45): вне фокуса — «1 450 000», в фокусе — цифры без пробелов (и набранная «,» / «.», #131); значение наружу — целое число. */
 export const MoneyIn: React.FC<{ id: string; value: number; onChange(v: number): void; disabled?: boolean; invalid?: boolean }> = p => {
   const [focus, setFocus] = React.useState(false);
   const [txt, setTxt] = React.useState(String(Math.max(0, Math.round(p.value || 0))));
@@ -17,7 +17,7 @@ export const MoneyIn: React.FC<{ id: string; value: number; onChange(v: number):
     value={focus ? txt : groupDigits(parseMoney(txt))}
     onFocus={() => { setFocus(true); const n = parseMoney(txt); setTxt(n ? String(n) : ''); }}
     onBlur={() => { setFocus(false); p.onChange(parseMoney(txt)); }}
-    onChange={e => { const v = String(parseMoney(e.target.value) || ''); setTxt(v === '0' ? '' : v); p.onChange(parseMoney(v)); }} />;
+    onChange={e => { const v = maskMoney(e.target.value); setTxt(v); p.onChange(parseMoney(v)); }} />;
 };
 /** Ошибка у конкретного поля (#40, #54). */
 export const FieldErrText: React.FC<{ msg?: string }> = ({ msg }) => (msg ? <p className="ferr">{msg}</p> : null);
@@ -44,24 +44,34 @@ export const RagPick: React.FC<{ name: string; label: string; req?: boolean; val
 export const DateIn: React.FC<{ id: string; value: string; onChange(v: string): void; disabled?: boolean; invalid?: boolean }> = p => {
   const { t } = React.useContext(AppCtx);
   const [txt, setTxt] = React.useState(formatDmy(p.value));
+  // #119: некорректная дата (31.11) — текст остаётся, под полем ошибка (полная дата — сразу, неполная — при уходе), форма не сохраняется (badDateIn)
+  const [bad, setBad] = React.useState(false);
   const native = React.useRef<HTMLInputElement>(null);
+  const own = React.useRef<string | null>(null);   // значение, которое отдало само поле (пусто при некорректной дате — текст не трогать)
   // значение сменили снаружи (календарь, новый проект в форме отчёта) — показать его
-  React.useEffect(() => { if (parseDmy(txt) !== p.value) setTxt(formatDmy(p.value)); }, [p.value]);
+  React.useEffect(() => { if (p.value === own.current) return; own.current = null; if (parseDmy(txt) !== p.value) { setTxt(formatDmy(p.value)); setBad(false); } }, [p.value]);
   const pick = (): void => {
     const el = native.current as (HTMLInputElement & { showPicker?: () => void }) | null; if (!el) return;
     try { if (el.showPicker) el.showPicker(); else el.click(); } catch { el.click(); }
   };
-  return <span className="date-in">
-    <input type="text" id={p.id} inputMode="numeric" autoComplete="off" placeholder={t('datePh')} value={txt} disabled={p.disabled} aria-invalid={p.invalid || undefined}
-      onChange={e => { const m = maskDmy(e.target.value); setTxt(m); const v = parseDmy(m); const nv = v === null ? '' : v; if (nv !== p.value) p.onChange(nv); }}
-      onBlur={() => { if (parseDmy(txt) === null) setTxt(''); }} />   {/* неполная дата — значения нет (а не прежняя дата) */}
+  return <><span className="date-in">
+    <input type="text" id={p.id} inputMode="numeric" autoComplete="off" placeholder={t('datePh')} value={txt} disabled={p.disabled} aria-invalid={p.invalid || bad || undefined}
+      data-bad={bad ? '1' : undefined}
+      onChange={e => { const m = maskDmy(e.target.value); setTxt(m); const v = parseDmy(m); const nv = v === null ? '' : v; setBad(v === null && m.length === 10); if (nv !== p.value) { own.current = nv; p.onChange(nv); } }}
+      onBlur={() => setBad(parseDmy(txt) === null)} />
     <button type="button" className="date-btn" aria-label={t('pickDate')} title={t('pickDate')} disabled={p.disabled} onClick={pick}>
       <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
         d="M7 3v3M17 3v3M4 9h16M5.5 5h13A1.5 1.5 0 0 1 20 6.5v12a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-12A1.5 1.5 0 0 1 5.5 5z" /></svg></button>
     <input ref={native} type="date" className="date-native" tabIndex={-1} aria-hidden="true" value={p.value} disabled={p.disabled}
-      onChange={e => { p.onChange(e.target.value); setTxt(formatDmy(e.target.value)); }} />
-  </span>;
+      onChange={e => { p.onChange(e.target.value); setTxt(formatDmy(e.target.value)); setBad(false); }} />
+  </span>{bad ? <p className="ferr date-bad">{t('errDateBad')}</p> : null}</>;
 };
+/** #119: поле с некорректной датой в форме (фокус на нём) — форма не сохраняется; нет — null. */
+export function badDateIn(form: Element | null): HTMLInputElement | null {
+  const x = form ? form.querySelector('.date-in input[data-bad]') as HTMLInputElement | null : null;
+  if (x) x.focus();
+  return x;
+}
 
 /** Сообщение об ошибке формы (p.err прототипа). */
 export const Err: React.FC<{ msg: string }> = ({ msg }) => (msg ? <p className="err" role="alert">{msg}</p> : null);

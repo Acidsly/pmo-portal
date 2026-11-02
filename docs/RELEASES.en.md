@@ -1,5 +1,20 @@
 # What's new
 
+## 1.7.8.0 · 02.11.2026
+
+**Fixed** (R8 testing feedback)
+- Amounts with cents: «1450,50» in the budget, cost and forecast now rounds to $1,451 instead of becoming $145,050 (#131).
+- Risk or issue: when switching the type, each type keeps its own description — back on «Risk», you see the risk description (#130).
+- An invalid date (e.g. 31.11.2026) no longer disappears silently: it stays in the field with an explanation, and the form is not saved until the date is fixed (#119).
+- On iPhone the calendar button next to a date opens the date picker (#116).
+- On a phone an overdue due date of an open risk is red, as in the table (#114).
+- «Portfolio health over time»: the «today» column matches the «Portfolio by health» ring — the card state counts, not an approved report that was not applied to the card (#117).
+- «Change history»: a risk created and closed within a few minutes now shows both «Added» and «Closed» (#115).
+- AI assistant («Check with AI»): a plan item explained in «Not done from the plan and why» is no longer reported as missing (#112).
+
+**Please re-check**
+- Typing amounts with cents; switching «Risk ↔ Issue»; the date 31.11; the calendar on iPhone; red risk due dates on a phone; «Portfolio health over time» and the ring on the home page.
+
 ## 1.7.7.9 · 28.10.2026
 
 **Changed**

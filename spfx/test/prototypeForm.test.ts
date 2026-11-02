@@ -158,3 +158,22 @@ test('прототип: вставка «1450.50» в затраты — 1451; �
   expect(c.value).toBe('1 451');
   c.focus(); c.value = '0'; c.blur(); c.focus(); expect(c.value).toBe('');
 });
+// #131: ручной ввод по символу во всех трёх суммах отчёта — «1450,50» → 1 451, а не 145 050
+test.each(['f-c', 'f-bp', 'f-fcost'])('прототип #131: ввод «1450,50» по символу в %s → «1 451»', id => {
+  const { g } = openForm();
+  const c = g(id); c.focus(); c.value = '';
+  for (const ch of '1450,50') { c.value += ch; c.dispatchEvent(new w.Event('input', { bubbles: true })); }
+  expect(c.value).toBe('1450,50');
+  c.blur(); expect(c.value).toBe('1 451');
+});
+// #119: некоректна дата (31.11) не стирається мовчки — текст лишається, помилка під полем, звіт не зберігається
+test('прототип #119: «31.11.2026» у «Дата завершення (план)» — текст лишається, помилка, звіт не зберігається', () => {
+  const { form, g } = openForm();
+  const tx = g('f-plan-t'); tx.focus(); tx.value = '31112026'; ev(tx, 'input'); tx.blur();
+  expect(tx.value).toBe('31.11.2026');
+  const fe = tx.parentNode.nextElementSibling; expect(fe.classList.contains('date-bad') && !fe.hidden && fe.textContent).toBe(T.errDateBad[0]);
+  form.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+  expect(q('#repform')).toBeTruthy(); expect(form.querySelector('p.err').textContent).toBe(T.errDateBad[0]);
+  tx.value = '30112026'; ev(tx, 'input'); tx.blur();
+  expect(fe.hidden).toBe(true); expect(g('f-plan').value).toBe('2026-11-30');
+});

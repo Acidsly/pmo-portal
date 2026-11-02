@@ -881,6 +881,11 @@ export const T: Record<string, L3> = {
   "Pick a date in the calendar",
   "Выбрать дату в календаре"
  ],
+ "errDateBad": [
+  "Некоректна дата — введіть дд.мм.рррр, наприклад 30.11.2026.",
+  "Invalid date — enter dd.mm.yyyy, e.g. 30.11.2026.",
+  "Некорректная дата — введите дд.мм.гггг, например 30.11.2026."
+ ],
  "repPending": [
   "на погодженні · {date}",
   "awaiting approval · {date}",
