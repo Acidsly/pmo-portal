@@ -59,7 +59,13 @@ td:first-child{font-weight:700;color:var(--ink)}
 .faq dt:first-child{margin-top:0}
 .faq dd{margin:4px 0 0;max-width:68ch}
 ul{margin:4px 0 0;padding-left:20px} li{margin:4px 0}
-@media print{ .step,.ex,.rule,.stat,tr,.stats{break-inside:avoid} h2,h3{break-after:avoid} .card{break-inside:auto} }
+.shot{margin:12px 0 4px;display:grid;gap:8px}
+.shot img{display:block;width:auto;max-width:min(100%,520px);height:auto;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.legend{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:13.5px}
+.legend li{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;align-items:baseline;margin:0}
+.legend b{display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--coral);color:#fff;font:700 12px/22px var(--font);text-align:center}
+.ceo{display:grid;gap:8px}
+@media print{ .shot{break-inside:avoid} .ex,.rule,.stat,tr,.stats{break-inside:avoid} h2,h3{break-after:avoid} .card{break-inside:auto} }
 @media (max-width:600px){ .ex,.rule{grid-template-columns:1fr} .step{grid-template-columns:30px minmax(0,1fr);gap:10px} }
 </style>
 
@@ -95,6 +101,9 @@ ul{margin:4px 0 0;padding-left:20px} li{margin:4px 0}
       <h3>Вкажіть країну кожного проєкту</h3>
       <p>Картка проєкту → <span class="path">Змінити PM / власника / країну</span> → поле «Нова країна» → коментар (наприклад, «Початкове внесення країни») → «Зберегти». PM і власника не змінюйте — лиште поля порожніми.</p>
       <p>Протягом ~15 хвилин синхронізація запише країну в картку, і CEO цієї країни отримає перегляд і коментарі проєкту. На головній у блоці «Портфель за країнами» проєкти без країни зібрані в рядку «—»: коли він зникне, країну вказано всім.</p>
+      <figure class="shot"><img src="img/data-update/02-card-buttons.png" alt="Картка проєкту: кнопки дій" loading="lazy"><figcaption><ol class="legend"><li><b>1</b> «Змінити PM / власника / країну» — для PMO: країна, PM, власник.</li><li><b>2</b> «Додати статус-звіт» — для PM: бюджет, витрати, прогноз, дати, оцінки.</li><li><b>3</b> «Редагувати проєкт» — для PM: команда, посилання, опис, пріоритет.</li></ol></figcaption></figure>
+      <figure class="shot"><img src="img/data-update/03-assign-country.png" alt="Форма «Зміна PM / власника / країни»" loading="lazy"><figcaption><ol class="legend"><li><b>1</b> «Нова країна» — оберіть країну зі списку.</li><li><b>2</b> «Коментар (причина)» — обов'язково, наприклад «Початкове внесення країни».</li><li><b>3</b> «Зберегти». Поля «Новий PM» і «Новий власник» лиште порожніми — вони не зміняться.</li></ol></figcaption></figure>
+      <figure class="shot"><img src="img/data-update/01-countries.png" alt="Головна: Портфель за країнами" loading="lazy"><figcaption><ol class="legend"><li><b>1</b> «Портфель за країнами»: проєкти без країни — у рядку «—». Коли рядок зникне, країну вказано всім.</li></ol></figcaption></figure>
     </div></div>
 
     <div class="step"><div class="n">2</div><div>
@@ -119,6 +128,7 @@ ul{margin:4px 0 0;padding-left:20px} li{margin:4px 0}
     <div class="step"><div class="n">1</div><div>
       <h3>Перевірте команду проєкту</h3>
       <p>Картка → <span class="path">Редагувати проєкт</span> → «Команда проєкту». Учасники команди тепер бачать проєкт і коментують — приберіть зайвих, додайте тих, кого бракує, вкажіть роль. Зовнішню людину спершу додають у гості через запит у хелпдеск, потім шукайте її за повною адресою пошти.</p>
+      <figure class="shot"><img src="img/data-update/07-team.png" alt="Редагування проєкту: Команда проєкту" loading="lazy"><figcaption><ol class="legend"><li><b>1</b> Рядок учасника: людина (оберіть зі списку пошуку), роль — обов'язково, з яких питань звертатися. × — прибрати.</li><li><b>2</b> «+ Додати учасника» — новий рядок. Потім «Зберегти» внизу форми.</li></ol></figcaption></figure>
     </div></div>
 
     <div class="step"><div class="n">2</div><div>
@@ -133,6 +143,7 @@ ul{margin:4px 0 0;padding-left:20px} li{margin:4px 0}
       <p>Зміна показників вимагає поля <b>«Причина зміни показників»</b>. Для першого внесення достатньо однієї фрази.</p>
       <div class="ex"><div class="yes"><b>Так</b>Початкове внесення бюджету, прогнозу витрат і дат у портал за погодженим планом проєкту.</div>
         <div class="no"><b>Не так</b>«Оновлено» — без пояснення, звідки цифри.</div></div>
+      <figure class="shot"><img src="img/data-update/05-report-key.png" alt="Статус-звіт: Ключові показники" loading="lazy"><figcaption><ol class="legend"><li><b>1</b> «Витрати на дату» — усі витрати проєкту разом, з початку проєкту. Невідомо — порожньо.</li><li><b>2</b> «Бюджет (план)» — погоджений бюджет проєкту.</li><li><b>3</b> «Прогноз витрат на завершення» — ваша оцінка; під полем — підказка «за темпом витрат».</li><li><b>4</b> «Дата завершення (план)» і «Прогноз завершення», якщо порожні.</li><li><b>5</b> «Причина зміни показників» — з'являється, коли змінено бюджет, прогноз, фазу, тип чи дати; обов'язкова.</li></ol></figcaption></figure>
     </div></div>
 
     <div class="step"><div class="n">3</div><div>
@@ -144,22 +155,43 @@ ul{margin:4px 0 0;padding-left:20px} li{margin:4px 0}
         <div><b><span class="dot" style="background:var(--bad)"></span>Червоний</b>перевищення від 10%</div>
       </div>
       <p class="note">У фазах «Ініціація» і «Планування», поки бюджет ще не визначено, можна обрати «Не оцінено» — тоді загальний стан рахується з двох інших оцінок. З фази «Реалізація» оцінка обов'язкова.</p>
+      <figure class="shot"><img src="img/data-update/04-report-ratings.png" alt="Статус-звіт: оцінки" loading="lazy"><figcaption><ol class="legend"><li><b>1</b> «Не оцінено» — є лише у фазах «Ініціація» і «Планування».</li><li><b>2</b> Підказка за правилом PMO: на скільки прогноз перевищує бюджет і яка оцінка за правилом. Обрано зеленішу — з'явиться попередження.</li></ol></figcaption></figure>
     </div></div>
 
     <div class="step"><div class="n">4</div><div>
       <h3>Зроблено і не зроблено з плану</h3>
       <p>Якщо в попередньому погодженому звіті був план, поле <b>«Не зроблено з плану і чому»</b> обов'язкове. Усе виконали — позначте <span class="path">План виконано повністю</span>, писати «Усе виконано» вручну не треба.</p>
+      <figure class="shot"><img src="img/data-update/06-report-plan-risks.png" alt="Статус-звіт: план і ризики" loading="lazy"><figcaption><ol class="legend"><li><b>1</b> «Планувалось» — план із попереднього погодженого звіту, тільки для читання.</li><li><b>2</b> «План виконано повністю» — позначте, якщо все з плану зроблено.</li><li><b>3</b> «Не зроблено з плану і чому» — обов'язково, якщо позначки немає.</li><li><b>4</b> «Відкриті ризики та проблеми» — список ризиків проєкту прямо у формі; розгорніть, щоб переглянути.</li></ol></figcaption></figure>
     </div></div>
 
     <div class="step"><div class="n">5</div><div>
       <h3>Перевірте ризики й проблеми</h3>
       <p>Відкриті ризики проєкту видно прямо у формі звіту, під «Проблеми та ризики за період». Прострочені терміни (зараз 3) — закрийте запис або зробіть <span class="path">Копіювати ризик</span> з новим терміном і закрийте старий. У нових записах власник обов'язковий; якщо відповідального ще немає — лишайте PM.</p>
+      <figure class="shot"><img src="img/data-update/08-risk-owner.png" alt="Новий ризик: власник" loading="lazy"><figcaption><ol class="legend"><li><b>1</b> «Власник ризику *» — обов'язково; за замовчуванням підставлено PM.</li></ol></figcaption></figure>
     </div></div>
 
     <div class="step"><div class="n">6</div><div>
       <h3>Завершені проєкти — в архів</h3>
       <p>Фаза <span class="path">Завершено — перенести в архів</span> (або «Скасовано…») і «Дата завершення (факт)». У «Витрати на дату» вкажіть фактичну суму на момент завершення — вона може бути меншою за план; прогноз дорівнюватиме факту.</p>
     </div></div>
+
+    <div class="step"><div class="n">7</div><div>
+      <h3>Перевірте погоджений звіт</h3>
+      <p>Після погодження PMO відкрийте звіт: у ньому видно суми на дату звіту і план, з яким порівнювали результат. Ці ж значення потрапляють у картку.</p>
+      <figure class="shot"><img src="img/data-update/09-report-view.png" alt="Перегляд погодженого звіту" loading="lazy"><figcaption><ol class="legend"><li><b>1</b> «Витрати на дату» на дату звіту.</li><li><b>2</b> «Бюджет (план)».</li><li><b>3</b> «Прогноз витрат на завершення». Якщо звіт суму не змінював, показано попереднє значення.</li><li><b>4</b> «Планувалось (звіт від …)» — план попереднього звіту.</li></ol></figcaption></figure>
+    </div></div>
+  </section>
+
+  <section class="card ceo">
+    <h2>Країна (бізнес-юніт) і CEO країни</h2>
+    <p>Бізнес-юніт у порталі — це <b>«Країна»</b> проєкту. Значення: Україна, Польща, Чехія, Нідерланди, Велика Британія, Казахстан, Узбекистан, Киргизстан, Грузія, Азербайджан.</p>
+    <ul>
+      <li><b>Країну проєкту</b> задає PMO: при створенні проєкту, а для поточних — через «Змінити PM / власника / країну» (див. розділ PMO).</li>
+      <li><b>CEO країни</b> бачить усі проєкти своєї країни і може їх коментувати. Сповіщень не отримує; проєкти в архіві — лише перегляд. Доступ з'являється протягом ~15 хвилин після того, як проєкту вказано країну.</li>
+      <li><b>Хто CEO кожної країни</b>, налаштовано в службовому списку «Країни», поле «CEO країни». Список бачать лише власники сайту. На проді CEO вказано для всіх 10 країн.</li>
+      <li><b>Змінити CEO</b> — запит власнику порталу. CEO задається у файлі налаштувань і встановлюється розгортанням; правка напряму в списку буде перезаписана наступним розгортанням.</li>
+    </ul>
+      <figure class="shot"><img src="img/data-update/10-countries-ceo.png" alt="Список «Країни»: CEO країни" loading="lazy"><figcaption><ol class="legend"><li><b>1</b> «CEO країни» (Country CEO) — одна чи кілька людей для країни. Список бачать лише власники сайту.</li></ol></figcaption></figure>
   </section>
 
   <section class="card">
