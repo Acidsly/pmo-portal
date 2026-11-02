@@ -61,3 +61,6 @@ describe('savePrefs', () => {
     expect(sels.length).toBe(2); expect(sels[1]).not.toContain('nsPrefs'); expect(writes.length).toBe(1);
   });
 });
+
+// модуль, а не общий скрипт: без export TypeScript в ts-jest видит const этого файла и соседнего с тем же именем (SpRepo, repoWith) как одну область — в CI падало
+export {};
