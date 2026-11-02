@@ -34,6 +34,15 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
     if ($bad) { $bad | ForEach-Object { Bad "$($f.Name):$($_.Extent.StartLineNumber) висящий $($_.GetCommandName())" } } else { Ok $f.Name }
 }
 
+Write-Host "1c. Функция с именем внешней команды, которую сама вызывает (имена без регистра: function Git { & git … } вызывает себя — бесконечная рекурсия)"
+foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "tests"), (Join-Path $root "runbooks") -Filter *.ps1) {
+    $ast = [System.Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$null, [ref]$null)
+    $self = $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true) | Where-Object {
+        $fn = $_.Name
+        @($_.Body.FindAll({ $args[0] -is [System.Management.Automation.Language.CommandAst] -and $args[0].GetCommandName() -and $args[0].GetCommandName() -ieq $fn -and $args[0].GetCommandName() -cne $fn }, $true)).Count }
+    if ($self) { $self | ForEach-Object { Bad "$($f.Name):$($_.Extent.StartLineNumber) function $($_.Name) вызывает внешнюю команду с тем же именем в другом регистре — это вызов самой функции" } } else { Ok $f.Name }
+}
+
 Write-Host "2. JSON-файлы"
 foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/parent.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/money.json", "tests/cases/last-plan.json", "tests/cases/assignments.json", "tests/cases/history.json", "tests/cases/notify-state.json", "tests/cases/archive.json", "tests/cases/feedback-decided.json", "tests/cases/archive-migration.json", "config/focus-group.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
