@@ -32,12 +32,13 @@ if ($Name -eq "PMO-Sync") {
     else {
         # прод: опубликованный код = код main, который прошёл ревью
         # git — внешняя команда: $ErrorActionPreference её не останавливает, проверяем код возврата каждой
-        function Git([string[]]$a) { $o = & git -C $root @a; if ($LASTEXITCODE) { throw "PMO-Sync (прод): git $($a -join ' ') — ошибка $LASTEXITCODE" }; return "$o".Trim() }
-        $branch = Git rev-parse, --abbrev-ref, HEAD
+        # имя функции не «Git»: имена PowerShell без регистра — function Git, вызывающая git, вызывала саму себя (переполнение стека)
+        function Invoke-Git([string[]]$a) { $o = & git -C $root @a; if ($LASTEXITCODE) { throw "PMO-Sync (прод): git $($a -join ' ') — ошибка $LASTEXITCODE" }; return "$o".Trim() }
+        $branch = Invoke-Git rev-parse, --abbrev-ref, HEAD
         if ($branch -ne "main") { throw "PMO-Sync (прод) публикуется только из ветки main, сейчас: $branch" }
-        if (Git status, --porcelain, --untracked-files=no) { throw "PMO-Sync (прод): есть незакоммиченные изменения" }
-        Git fetch, -q, origin, main | Out-Null
-        if ((Git rev-parse, HEAD) -ne (Git rev-parse, origin/main)) { throw "PMO-Sync (прод): локальный main не совпадает с origin/main — сначала git pull / git push" }
+        if (Invoke-Git status, --porcelain, --untracked-files=no) { throw "PMO-Sync (прод): есть незакоммиченные изменения" }
+        Invoke-Git fetch, -q, origin, main | Out-Null
+        if ((Invoke-Git rev-parse, HEAD) -ne (Invoke-Git rev-parse, origin/main)) { throw "PMO-Sync (прод): локальный main не совпадает с origin/main — сначала git pull / git push" }
     }
 }
 if ($Name -eq "PMO-Sync" -and $text -ne (& (Join-Path $PSScriptRoot "Build-Runbook.ps1") -PassThru)) {
