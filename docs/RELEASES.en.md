@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.11.1 · 02.11.2026
+
+**Changed**
+- "Countries and CEOs": name and order fields now look like in the other portal forms.
+
 ## 1.7.11.0 · 02.11.2026
 
 **New**

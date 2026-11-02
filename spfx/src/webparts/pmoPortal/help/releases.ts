@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.11.1",
+   "date": "02.11.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>«Країни і CEO»: поля назв і порядку — у стилі інших форм порталу.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.11.0",
    "date": "02.11.2026",
    "html": "<p><b>Нове</b></p>\n<ul>\n<li><b>«Країни і CEO»</b> (для PMO, меню під аватаром): довідник країн проєктів — додати країну з назвами трьома мовами, призначити або змінити CEO країни, порядок, вимкнути країну. Нові країни одразу з'являються у виборі «Країна»; доступ нового CEO — протягом ~15 хвилин.</li>\n</ul>"
@@ -320,6 +325,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.11.1",
+   "date": "02.11.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>\"Countries and CEOs\": name and order fields now look like in the other portal forms.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.11.0",
    "date": "02.11.2026",
    "html": "<p><b>New</b></p>\n<ul>\n<li><b>\"Countries and CEOs\"</b> (for the PMO, menu under the avatar): the directory of project countries: add a country with names in three languages, assign or change the country CEO, set the order, deactivate a country. New countries appear in the \"Country\" choice right away; a new CEO gets access within ~15 minutes.</li>\n</ul>"
@@ -636,6 +646,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.11.1",
+   "date": "02.11.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>«Страны и CEO»: поля названий и порядка — в стиле других форм портала.</li>\n</ul>"
+  },
   {
    "ver": "1.7.11.0",
    "date": "02.11.2026",

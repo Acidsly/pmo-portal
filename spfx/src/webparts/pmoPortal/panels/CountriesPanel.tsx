@@ -97,11 +97,11 @@ export const CountriesPanel: React.FC<{ data: PortalData; onCancel(): void }> = 
     <button type="button" className="link" id="co-back" onClick={() => { setD(null); setErr(''); }}>← {t('coBack')}</button>
     <form onSubmit={save} noValidate={true} id="co-form">
       <Frow label={t('coNameUk')} htmlFor="co-name" req={true} hint={d.id ? t('coNameLocked') : undefined}>
-        <input id="co-name" value={d.name} disabled={!!d.id} onChange={e => set({ name: e.target.value })} /></Frow>
-      <Frow label={t('coNameEn')} htmlFor="co-en"><input id="co-en" value={d.en} placeholder={d.name} onChange={e => set({ en: e.target.value })} /></Frow>
-      <Frow label={t('coNameRu')} htmlFor="co-ru"><input id="co-ru" value={d.ru} placeholder={d.name} onChange={e => set({ ru: e.target.value })} /></Frow>
+        <input type="text" id="co-name" value={d.name} disabled={!!d.id} onChange={e => set({ name: e.target.value })} /></Frow>
+      <Frow label={t('coNameEn')} htmlFor="co-en"><input type="text" id="co-en" value={d.en} placeholder={d.name} onChange={e => set({ en: e.target.value })} /></Frow>
+      <Frow label={t('coNameRu')} htmlFor="co-ru"><input type="text" id="co-ru" value={d.ru} placeholder={d.name} onChange={e => set({ ru: e.target.value })} /></Frow>
       <Frow label={t('coCeo')} htmlFor="co-ceo"><PeoplePicker id="co-ceo" multi={true} value={d.ceo} search={search} onChange={v => set({ ceo: v })} /></Frow>
-      <Frow label={t('coOrder')} htmlFor="co-order"><input id="co-order" inputMode="numeric" value={d.order} onChange={e => set({ order: e.target.value.replace(/[^\d]/g, '') })} /></Frow>
+      <Frow label={t('coOrder')} htmlFor="co-order"><input type="text" id="co-order" inputMode="numeric" value={d.order} onChange={e => set({ order: e.target.value.replace(/[^\d]/g, '') })} /></Frow>
       <div className="frow"><label className="check"><input type="checkbox" id="co-active" checked={d.active} onChange={e => set({ active: e.target.checked })} /> {t('coActive')}</label></div>
       {warns.map(([k, n]) => <p key={k} className="fwarn" id={'co-' + k}>{t(k).replace('{n}', String(n))}</p>)}
       <Err msg={err} />

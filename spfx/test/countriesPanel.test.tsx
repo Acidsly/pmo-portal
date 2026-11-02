@@ -89,6 +89,8 @@ test('наявна країна: назва заблокована, вимкну
   await mount(<CountriesPanel data={data()} onCancel={() => undefined} />);
   act(() => { Simulate.click(root.querySelector('.co-row[data-name="Польща"]') as Element); });
   expect($('#co-name').disabled).toBe(true);
+  // поля — как во всех формах портала (стиль form input[type=text])
+  expect(['co-name', 'co-en', 'co-ru', 'co-order'].map(i => $('#' + i).getAttribute('type'))).toEqual(['text', 'text', 'text', 'text']);
   act(() => { Simulate.change($('#co-active'), { target: { checked: false } } as any); });
   await submit();
   expect(calls).toEqual([['update', 'CountryNames', 2, { cnEn: 'Poland', cnRu: 'Польша', cnOrder: 20, cnActive: false }], ['update', 'Countries', 12, { coCeoId: [] }]]);
