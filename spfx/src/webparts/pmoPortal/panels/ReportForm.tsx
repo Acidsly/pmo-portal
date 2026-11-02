@@ -6,10 +6,16 @@ import { Project } from '../data/types';
 import { isActive, byOrder } from '../logic/status';
 import { calcRag, Rag } from '../logic/rag';
 import { ReportDraft, reportPeriodFrom, reportFromProject, reportFromReturned, keyChanged, reportErrors, formErrorText, parseProgress, progressLocked, FieldErr,
-  initialReport, switchStatus, switchProject, reportToSave, reportProjectChoice, archiveStatus } from '../logic/forms';
+  initialReport, switchStatus, switchProject, reportToSave, reportProjectChoice, archiveStatus, lastPlan, withPlan, reportWarnings, ReportWarn,
+  reportHasText, clearReportText, reportDirty, PLAN_ALL_DONE, budgetNaAllowed } from '../logic/forms';
+import { paceForecast } from '../logic/status';
+import { money } from '../components/Bits';
 import { reportBody } from '../data/write';
-import { Frow, RagPick, SegPick, DateIn, Err, Opts, errText, guardText, FieldErrText, MoneyIn } from '../components/fields';
-import { fmtDate, periodText } from '../components/Bits';
+import { Frow, RagPick, SegPick, DateIn, Err, Opts, errText, guardText, FieldErrText, MoneyIn, badDateIn } from '../components/fields';
+import { fmtDate, periodText, Score } from '../components/Bits';
+import { riskDue } from '../components/defs';
+import { riskScore } from '../logic/status';
+import { tv } from '../i18n/values';
 import { todayIso } from '../logic/dates';
 import { guard } from '../logic/guard';
 import { ofProject } from '../logic/views';
@@ -30,13 +36,22 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
   // «Новий звіт на основі повернутого» — черновик из повернутого PMO отчёта этого проекта
   const from = fromId ? data.reports.filter(r => r.id === fromId && r.projectId === (first && first.id))[0] : undefined;
   // «Завершено» в повернутом звіті — 100 % сразу (#52)
-  const [d, setD] = React.useState<ReportDraft | undefined>(first ? initialReport(from ? reportFromReturned(from, first, c.today) : reportFromProject(first, c.today)) : undefined);
+  // 1.7.7: «Планувалось» — план последнего погодженого отчёта проекта (возвращённый — без себя)
+  const [d, setD] = React.useState<ReportDraft | undefined>(first ? initialReport(withPlan(from ? reportFromReturned(from, first, c.today) : reportFromProject(first, c.today),
+    lastPlan(data.reports, first.id, from ? from.id : 0))) : undefined);
+  // #134: форма при открытии — закрыть изменённую без сохранения можно только после вопроса
+  const init = React.useRef(d);
   const [err, setErr] = React.useState('');
   const [errs, setErrs] = React.useState<FieldErr[]>([]);
   // «% виконання» — текст поля (#53: ошибка вне 0–100 вместо молчаливой замены); prevPr — значение до «Завершено» (#52)
   const [prTxt, setPrTxt] = React.useState(d ? String(d.progress) : '0');
   const [prevPr, setPrevPr] = React.useState<number | null>(null);
   const [busy, setBusy] = React.useState(false);
+  const dirty = !!d && !!init.current && reportDirty(d, init.current);
+  const askClose = (): boolean => !dirty || window.confirm(t('confirmClose'));
+  // Esc, фон и × панели — через тот же вопрос (App: setCloseGuard)
+  React.useEffect(() => { if (c.setCloseGuard) c.setCloseGuard(busy ? null : askClose); return () => { if (c.setCloseGuard) c.setCloseGuard(null); }; });
+  const cancel = (): void => { if (askClose()) onCancel(); };
   if (!first || !d) return <><div className="ph"><div><h2>{t('newReport')}</h2></div><button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
     <p className="note lock">🔒 {t('noEdit')}</p></>;
   const p: Project = act.filter(x => x.id === d.projectId)[0] || first;
@@ -60,9 +75,16 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
   const ai = useReportAi({ data, project: p, d, setD: nd => { setD(nd); if (errs.length) setErrs([]); }, blocked: !!pendingBlock });
   const rag = calcRag(d.schedule, d.budget, d.resources);
   const keyCh = keyChanged(d, p);
+  // #124 / #134: открытые риски и проблемы проекта — в форме (сначала самые высокие); #125 / #127 / #124 — предупреждения, не блокируют
+  const openRisks = ofProject(data.risks, p.id).filter(k => k.status !== 'Закрито').sort((a, b) => riskScore(b.probability, b.impact) - riskScore(a.probability, a.impact));
+  const warns = reportWarnings(d, p, openRisks.length, c.today);
+  const warn = (f: ReportWarn['f']): React.ReactNode => warns.filter(x => x.f === f).map(x => <p key={x.k} className="fwarn" id={'w-' + f}>
+    {t(x.k).replace('{v}', money(x.n || 0)).replace('{n}', String(x.n || 0)).replace('{rag}', tv(x.rag || '').toLowerCase())}</p>);
+  const planDone = d.notDone === PLAN_ALL_DONE;
 
   const save = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+    if (badDateIn(e.currentTarget as Element)) { setErr(t('errDateBad')); return; }   // #119
     // #40: все ошибки сразу — общее сообщение и подсветка полей
     // #62 / #69: дата подання — день сохранения, период — от последнего погодженого отчёта (считаются сейчас, а не при открытии)
     const today = todayIso();
@@ -89,12 +111,16 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
 
   return <>
     <div className="ph"><div><div className="k"><EntTag kind="report" /><span>{t('listLabel')} «{t('navReports')}»</span></div><h2>{t('newReport')}</h2></div>
-      <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
+      <button className="x" aria-label={t('close')} onClick={cancel}>×</button></div>
     <form onSubmit={save} noValidate={true}>
       {ai.top}
       {fixed ? <Frow label={fl('rProj')}><div className="fixedval">{fixed.title}</div></Frow>
         : <Frow label={fl('rProj')} htmlFor="f-p" req={true}>
-          <select id="f-p" value={d.projectId} onChange={e => { const np = act.filter(x => x.id === Number(e.target.value))[0]; if (np) { const nd = switchProject(d, np); setD(nd); setPrTxt(String(nd.progress)); setPrevPr(null); setErrs([]); setErr(''); } }}>
+          <select id="f-p" value={d.projectId} onChange={e => { const np = act.filter(x => x.id === Number(e.target.value))[0]; if (!np) return;
+            // #133: текст прежнего проекта не переходит в отчёт другого — смена только после вопроса, с очисткой текста
+            const txt = reportHasText(d); if (txt && !window.confirm(t('confirmSwitch'))) return;
+            const sw = switchProject(d, np, lastPlan(data.reports, np.id)); const nd = txt ? clearReportText(sw) : sw;
+            setD(nd); setPrTxt(String(nd.progress)); setPrevPr(null); setErrs([]); setErr(''); }}>
             {act.map(x => <option key={x.id} value={x.id} disabled={!!x.pendingDate && x.id !== d.projectId}>{x.title}{x.pendingDate ? ' — ' + t('repPendingOpt').replace('{date}', fmtDate(x.pendingDate)) : ''}</option>)}</select></Frow>}
       {pendingBlock ? <p className="note lock">🔒 {pendingBlock}</p> : null}
       {/* #62 / #69: дата подання и период не вводятся — показываются, как будут записаны */}
@@ -103,7 +129,9 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
         <span className="muted">{t('subHint')}</span></div>
       <div className="dims">
         <RagPick name="sched" label={fl('rSched')} req={true} invalid={bad('sched')} value={d.schedule} onChange={v => set({ schedule: v })} />
-        <RagPick name="budget" label={fl('rBudget')} req={true} invalid={bad('budget')} value={d.budget} onChange={v => set({ budget: v })} />
+        {/* #121: «Не оцінено» — только на ранних фазах; #137 — подсказка по правилу PMO (перевищення прогнозу над бюджетом) */}
+        <RagPick name="budget" label={fl('rBudget')} req={true} invalid={bad('budget')} value={d.budget} onChange={v => set({ budget: v })} na={budgetNaAllowed(d.status)}>
+          <FieldErrText msg={fErr('budget')} />{warn('budget')}</RagPick>
         <RagPick name="res" label={fl('rRes')} req={true} invalid={bad('res')} value={d.resources} onChange={v => set({ resources: v })} />
       </div>
       <div className="ragcalc"><span className="k">{t('ragCalc')}</span>
@@ -116,7 +144,7 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
         <div className="fgrid-k frow">
           <div><label className="t" htmlFor="f-st">{fl('status')}</label>
             <select id="f-st" value={d.status} onChange={e => setStatus(e.target.value)}>
-              <Opts values={REPORT_STATUSES} /><option value="Завершено">{t('completeArch')}</option><option value="Скасовано">{t('cancelArch')}</option></select></div>
+              <Opts values={REPORT_STATUSES} /><option value="Завершено">{t('completeArch')}</option><option value="Скасовано">{t('cancelArch')}</option></select>{warn('status')}</div>
           <div><label className="t" htmlFor="f-pr">{fl('progress')}</label>
             {/* #28, #53: только цифры, 0–100; вне диапазона — ошибка у поля; ведущие нули убираются при выходе из поля; #52: «Завершено» — 100 и закрыто */}
             <input type="text" inputMode="numeric" id="f-pr" value={prTxt} disabled={progressLocked(d.status)} aria-invalid={bad('progress') || undefined}
@@ -124,30 +152,51 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
               onBlur={() => { const n = parseProgress(prTxt); if (n !== null) setPrTxt(String(n)); }} />
             <FieldErrText msg={fErr('progress')} />{progressLocked(d.status) ? <p className="hint">{t('progressDone')}</p> : null}</div>
           <div className="k-cost"><label className="t" htmlFor="f-c">{fl('rCost')}, $</label>
-            <MoneyIn id="f-c" value={d.actualCost} onChange={v => set({ actualCost: v })} /></div>
+            <MoneyIn id="f-c" value={d.actualCost} onChange={v => set({ actualCost: v })} />{warn('actualCost')}<p className="hint">{t('costHint')}</p></div>
+        </div>
+        {/* 1.7.7: бюджет (план) и прогноз витрат — как сроки: изменение — с причиной, в карточку — после погодження; «Завершено» /
+            «Скасовано» — прогноз = витрати на дату (поле закрыто); подсказка — по темпу витрат */}
+        <div className="fgrid2 frow">
+          <div><label className="t" htmlFor="f-bp">{fl('budget')}, $</label><MoneyIn id="f-bp" value={d.budgetPlan} onChange={v => set({ budgetPlan: v })} /></div>
+          <div><label className="t" htmlFor="f-fcost">{fl('fcost')}, $</label>
+            <MoneyIn id="f-fcost" value={archiveStatus(d.status) ? d.actualCost : d.forecastCost} disabled={archiveStatus(d.status)} invalid={bad('forecastCost')}
+              onChange={v => set({ forecastCost: v })} />
+            <FieldErrText msg={fErr('forecastCost')} />
+            {paceForecast(d.actualCost, d.progress) ? <p className="hint" id="f-pace">{t('paceHint').replace('{v}', money(paceForecast(d.actualCost, d.progress) as number))}</p> : null}</div>
         </div>
         {archiveStatus(d.status) ? <><p className="note" style={{ margin: '-4px 0 14px' }}>{t('completeHint')}</p>
           {/* #54: когда проект фактически завершён или отменён — обязательно, не раньше старта, не позже даты подання (#64) */}
           <div className="frow" id="f-ae-wrap"><label className="t" htmlFor="f-ae">{fl('ae')} *</label>
-            <DateIn id="f-ae" value={d.actualEnd} invalid={bad('actualEnd') || !!aeLive} onChange={v => set({ actualEnd: v })} /><FieldErrText msg={fErr('actualEnd') || (aeLive ? errMsg(aeLive) : '')} />
+            <DateIn key={'f-ae' + d.projectId} id="f-ae" value={d.actualEnd} invalid={bad('actualEnd') || !!aeLive} onChange={v => set({ actualEnd: v })} /><FieldErrText msg={fErr('actualEnd') || (aeLive ? errMsg(aeLive) : '')} />
             <p className="hint">{t('aeHint')}</p></div></> : null}
         <fieldset className="ragpick"><legend>{fl('type')}</legend><SegPick name="f-type" options={TYPES} value={d.type} onChange={v => set({ type: v })} /></fieldset>
         <div className="fgrid2 frow">
-          <div><label className="t" htmlFor="f-start">{fl('start')}</label><DateIn id="f-start" value={d.start} onChange={v => set({ start: v })} /></div>
-          <div><label className="t" htmlFor="f-golive">{fl('golive')}</label><DateIn id="f-golive" value={d.goLive} invalid={bad('goLive')} onChange={v => set({ goLive: v })} /><FieldErrText msg={fErr('goLive')} /></div>
-          <div><label className="t" htmlFor="f-plan">{fl('plan')}</label><DateIn id="f-plan" value={d.planEnd} invalid={bad('planEnd')} onChange={v => set({ planEnd: v })} /><FieldErrText msg={fErr('planEnd')} /></div>
-          <div><label className="t" htmlFor="f-fc">{fl('fc')}</label><DateIn id="f-fc" value={d.forecastEnd} invalid={bad('forecastEnd')} onChange={v => set({ forecastEnd: v })} /><FieldErrText msg={fErr('forecastEnd')} /></div>
+          {/* #119: поля дат — заново при смене проекта: некорректный текст прежнего проекта не остаётся и не блокирует сохранение */}
+          <div><label className="t" htmlFor="f-start">{fl('start')}</label><DateIn key={'f-start' + d.projectId} id="f-start" value={d.start} onChange={v => set({ start: v })} /></div>
+          <div><label className="t" htmlFor="f-golive">{fl('golive')}</label><DateIn key={'f-golive' + d.projectId} id="f-golive" value={d.goLive} invalid={bad('goLive')} onChange={v => set({ goLive: v })} /><FieldErrText msg={fErr('goLive')} /></div>
+          <div><label className="t" htmlFor="f-plan">{fl('plan')}</label><DateIn key={'f-plan' + d.projectId} id="f-plan" value={d.planEnd} invalid={bad('planEnd')} onChange={v => set({ planEnd: v })} /><FieldErrText msg={fErr('planEnd')} /></div>
+          <div><label className="t" htmlFor="f-fc">{fl('fc')}</label><DateIn key={'f-fc' + d.projectId} id="f-fc" value={d.forecastEnd} invalid={bad('forecastEnd')} onChange={v => set({ forecastEnd: v })} /><FieldErrText msg={fErr('forecastEnd')} />{fErr('forecastEnd') ? null : warn('forecastEnd')}</div>
         </div>
         {keyCh ? <Frow label={t('keyReason')} htmlFor="f-kr" req={true}>
           <textarea id="f-kr" placeholder={t('reasonPh')} aria-invalid={bad('keyReason') || undefined} value={d.keyReason} onChange={e => set({ keyReason: e.target.value })} /></Frow> : null}
       </div>
 
       <Frow label={fl('rTitle')} htmlFor="f-t" req={true}><input type="text" id="f-t" placeholder={t('summaryPh')} aria-invalid={bad('title') || undefined} value={d.title} onChange={e => set({ title: e.target.value })} /></Frow>
+      {d.planned ? <div className="frow" id="f-pl-wrap"><label className="t">{fl('rPlanned')} <span className="muted">{t('plannedFrom').replace('{date}', fmtDate(d.plannedDate || ''))}</span></label>
+        <div className="fixedval" id="f-pl">{d.planned}</div></div> : null}
       <Frow label={fl('rDone')} htmlFor="f-done"><textarea id="f-done" value={d.done} onChange={e => set({ done: e.target.value })} /></Frow>
+      {/* 1.7.7: план / факт — обязательно, если в прошлом погодженом отчёте был план */}
+      {/* #120: «План виконано повністю» — без ручного «Усе виконано»; поле не нужно */}
+      {d.planned ? <div className="frow"><label className="check"><input type="checkbox" id="f-pdone" checked={planDone} onChange={e => set({ notDone: e.target.checked ? PLAN_ALL_DONE : '' })} /> {t('planAllDone')}</label></div> : null}
+      <Frow label={fl('rNotDone')} htmlFor="f-nd" req={!!d.planned && !planDone} hint={d.planned && !planDone ? t('notDoneHint') : undefined}>
+        <textarea id="f-nd" aria-invalid={bad('notDone') || undefined} disabled={planDone} value={planDone ? tv(PLAN_ALL_DONE) : d.notDone} onChange={e => set({ notDone: e.target.value })} /></Frow>
       <Frow label={fl('rNext')} htmlFor="f-next"><textarea id="f-next" value={d.next} onChange={e => set({ next: e.target.value })} /></Frow>
       <Frow label={fl('rIssues')} htmlFor="f-iss"><textarea id="f-iss" value={d.issues} onChange={e => set({ issues: e.target.value })} />
         {/* #81: поле отчёта — не реестр рисков; сколько открытых рисков и проблем у проекта */}
-        <p className="hint">{t('issuesHint').replace('{n}', String(ofProject(data.risks, p.id).filter(k => k.status !== 'Закрито').length))}</p></Frow>
+        <p className="hint">{t('issuesHint').replace('{n}', String(openRisks.length))}</p>
+        {/* #134: открытые риски — прямо в форме, без закрытия отчёта */}
+        {openRisks.length ? <details className="open-risks" id="f-risks" open={archiveStatus(d.status) || undefined}><summary>{t('openRisksT').replace('{n}', String(openRisks.length))}</summary>
+          <ul>{openRisks.map(k => <li key={k.id}><Score s={riskScore(k.probability, k.impact)} /> <b>{k.title}</b> <span className="muted">· {tv(k.type)} · {tv(k.status)}{k.due ? <> · {riskDue(k, c.today)}</> : null}</span></li>)}</ul></details> : null}</Frow>
       <div className="frow"><label className="check"><input type="checkbox" checked={d.decision} onChange={e => set({ decision: e.target.checked })} /> {fl('rDec')}</label></div>
       {/* #68: при галочке — опис обязателен; ошибка — при уходе с поля и при отправке */}
       {d.decision ? <Frow label={fl('rDecText')} htmlFor="f-dect" req={true} err={fErr('decisionText') || (decTouched && !d.decisionText.trim() ? t('errDecision') : '')}>
@@ -160,7 +209,7 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
         <button type="submit" className={ai.button === 'check' || ai.button === 'busy' ? 'btn ai' : 'btn primary'} id="f-submit" disabled={busy || !!pendingBlock || ai.button === 'busy'}>
           {ai.button === 'check' ? <><Lucide k="ai" />{t('aiCheckBtn')}</> : ai.button === 'busy' ? <><Lucide k="ai" />{t('aiCheckBusy')}</>
             : ai.button === 'saveWithout' ? t('aiSaveWithout') : t('save')}</button>
-        <button type="button" className="btn" onClick={onCancel}>{t('cancel')}</button>
+        <button type="button" className="btn" onClick={cancel}>{t('cancel')}</button>
       </div>
     </form>
   </>;

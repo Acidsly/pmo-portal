@@ -727,9 +727,9 @@ export const T: Record<string, L3> = {
   "{n} из {m}"
  ],
  "kpiHigh": [
-  "Високі ризики",
-  "High risks",
-  "Высокие риски"
+  "Високі ризики та проблеми",
+  "High risks and issues",
+  "Высокие риски и проблемы"
  ],
  "kpiLate": [
   "Прострочені",
@@ -880,6 +880,76 @@ export const T: Record<string, L3> = {
   "Обрати дату в календарі",
   "Pick a date in the calendar",
   "Выбрать дату в календаре"
+ ],
+ "errDateBad": [
+  "Некоректна дата — введіть дд.мм.рррр, наприклад 30.11.2026.",
+  "Invalid date — enter dd.mm.yyyy, e.g. 30.11.2026.",
+  "Некорректная дата — введите дд.мм.гггг, например 30.11.2026."
+ ],
+ "warnForecastPast": [
+  "Прогноз завершення вже минув — перевірте дату.",
+  "The forecast completion date has already passed — check the date.",
+  "Прогноз завершения уже прошёл — проверьте дату."
+ ],
+ "warnCostDown": [
+  "Менше за погоджені витрати ({v}) — перевірте суму.",
+  "Less than the approved cost ({v}) — check the amount.",
+  "Меньше согласованных затрат ({v}) — проверьте сумму."
+ ],
+ "costHint": [
+  "Усі витрати проєкту разом, з початку проєкту (наростаючим підсумком).",
+  "All project costs together, since the project start (cumulative).",
+  "Все затраты проекта вместе, с начала проекта (нарастающим итогом)."
+ ],
+ "errBudgetNA": [
+  "«Не оцінено» для бюджету — лише у фазах «Ініціація» і «Планування». Оберіть оцінку.",
+  "«Not rated» for the budget is allowed only in the «Initiation» and «Planning» phases. Choose a rating.",
+  "«Не оценено» для бюджета — только в фазах «Инициация» и «Планирование». Выберите оценку."
+ ],
+ "hintBudgetRule": [
+  "Прогноз витрат перевищує бюджет на {n}% — за правилом PMO: {rag} (до 9% — жовтий, від 10% — червоний).",
+  "The cost forecast exceeds the budget by {n}% — by the PMO rule: {rag} (up to 9% — yellow, 10% and more — red).",
+  "Прогноз затрат превышает бюджет на {n}% — по правилу PMO: {rag} (до 9% — жёлтый, от 10% — красный)."
+ ],
+ "warnBudgetRule": [
+  "Прогноз витрат перевищує бюджет на {n}% — за правилом PMO це {rag} (до 9% — жовтий, від 10% — червоний). Перевірте оцінку «Бюджет».",
+  "The cost forecast exceeds the budget by {n}% — by the PMO rule this is {rag} (up to 9% — yellow, 10% and more — red). Check the «Budget» rating.",
+  "Прогноз затрат превышает бюджет на {n}% — по правилу PMO это {rag} (до 9% — жёлтый, от 10% — красный). Проверьте оценку «Бюджет»."
+ ],
+ "errRiskOwner": [
+  "Вкажіть власника. Якщо відповідального ще немає — PM проєкту.",
+  "Set the owner. If no one is responsible yet — the project PM.",
+  "Укажите владельца. Если ответственного ещё нет — PM проекта."
+ ],
+ "warnArchRisks": [
+  "Відкритих ризиків і проблем: {n}. Після погодження проєкт перейде в архів, і змінити їх буде неможливо — перегляньте їх нижче.",
+  "Open risks and issues: {n}. After approval the project goes to the archive and they can no longer be changed — review them below.",
+  "Открытых рисков и проблем: {n}. После согласования проект уйдёт в архив, и изменить их будет нельзя — просмотрите их ниже."
+ ],
+ "openRisksT": [
+  "Відкриті ризики та проблеми ({n})",
+  "Open risks and issues ({n})",
+  "Открытые риски и проблемы ({n})"
+ ],
+ "riskArchived": [
+  "Проєкт в архіві — ризик лише для перегляду.",
+  "The project is archived — the risk is view-only.",
+  "Проект в архиве — риск только для просмотра."
+ ],
+ "confirmSwitch": [
+  "У звіті вже є введений текст. Змінити проєкт і очистити текст?",
+  "The report already has text. Change the project and clear the text?",
+  "В отчёте уже есть введённый текст. Сменить проект и очистить текст?"
+ ],
+ "confirmClose": [
+  "Звіт не збережено. Закрити без збереження?",
+  "The report is not saved. Close without saving?",
+  "Отчёт не сохранён. Закрыть без сохранения?"
+ ],
+ "planAllDone": [
+  "План виконано повністю",
+  "The plan is fully done",
+  "План выполнен полностью"
  ],
  "repPending": [
   "на погодженні · {date}",
@@ -1222,19 +1292,19 @@ export const T: Record<string, L3> = {
   "Открыть риск"
  ],
  "assignBtn": [
-  "Змінити PM / власника",
-  "Change PM / owner",
-  "Сменить PM / владельца"
+  "Змінити PM / власника / країну",
+  "Change PM / owner / country",
+  "Сменить PM / владельца / страну"
  ],
  "assignTitle": [
-  "Зміна PM / власника",
-  "Change of PM / owner",
-  "Смена PM / владельца"
+  "Зміна PM / власника / країни",
+  "Change of PM / owner / country",
+  "Смена PM / владельца / страны"
  ],
  "assignHint": [
-  "Після створення проєкту PM і власника змінює лише PMO. Порожнє поле — без змін.",
-  "After the project is created, only the PMO changes the PM and the owner. An empty field means no change.",
-  "После создания проекта PM и владельца меняет только PMO. Пустое поле — без изменений."
+  "Після створення проєкту PM, власника і країну змінює лише PMO. Порожнє поле — без змін.",
+  "After the project is created, only the PMO changes the PM, the owner and the country. An empty field means no change.",
+  "После создания проекта PM, владельца и страну меняет только PMO. Пустое поле — без изменений."
  ],
  "assignNewPm": [
   "Новий PM",
@@ -1246,15 +1316,60 @@ export const T: Record<string, L3> = {
   "New owner",
   "Новый владелец"
  ],
+ "assignNewCountry": [
+  "Нова країна",
+  "New country",
+  "Новая страна"
+ ],
  "assignNote": [
   "Коментар (причина)",
   "Comment (reason)",
   "Комментарий (причина)"
  ],
  "errAssignSame": [
-  "Оберіть нового PM або нового власника.",
-  "Choose a new PM or a new owner.",
-  "Выберите нового PM или нового владельца."
+  "Оберіть нового PM, нового власника або нову країну.",
+  "Choose a new PM, a new owner or a new country.",
+  "Выберите нового PM, нового владельца или новую страну."
+ ],
+ "errForecastLow": [
+  "Прогноз менший за витрати на дату — оновіть прогноз.",
+  "The forecast is below the cost to date — update the forecast.",
+  "Прогноз меньше затрат на дату — обновите прогноз."
+ ],
+ "paceHint": [
+  "за темпом витрат: ~{v}",
+  "at the current spending rate: ~{v}",
+  "по темпу затрат: ~{v}"
+ ],
+ "plannedFrom": [
+  "(звіт від {date})",
+  "(report of {date})",
+  "(отчёт от {date})"
+ ],
+ "notDoneHint": [
+  "Що з цього плану не зроблено і чому; усе виконано — так і напишіть.",
+  "What of this plan was not done and why; if everything is done, say so.",
+  "Что из этого плана не сделано и почему; всё выполнено — так и напишите."
+ ],
+ "budgetViaReport": [
+  "Бюджет (план) змінюється статус-звітом — з причиною, після погодження PMO.",
+  "The budget (plan) is changed by a status report — with a reason, after PMO approval.",
+  "Бюджет (план) меняется статус-отчётом — с причиной, после согласования PMO."
+ ],
+ "errCountry": [
+  "Оберіть країну проєкту.",
+  "Choose the project country.",
+  "Выберите страну проекта."
+ ],
+ "wpCountry": [
+  "Портфель за країнами",
+  "Portfolio by country",
+  "Портфель по странам"
+ ],
+ "ceoRole": [
+  "CEO країни",
+  "Country CEO",
+  "CEO страны"
  ],
  "errAssignNote": [
   "Вкажіть причину зміни.",
@@ -1267,19 +1382,19 @@ export const T: Record<string, L3> = {
   "Изменение сохранено — карточка обновится после синхронизации."
  ],
  "assignPendingNote": [
-  "Зміна PM / власника очікує обробки синхронізацією.",
-  "The PM / owner change is waiting for synchronization.",
-  "Смена PM / владельца ожидает обработки синхронизацией."
+  "Зміна PM / власника / країни очікує обробки синхронізацією.",
+  "The PM / owner / country change is waiting for synchronization.",
+  "Смена PM / владельца / страны ожидает обработки синхронизацией."
  ],
  "gAssignPending": [
-  "Зміна PM / власника вже очікує обробки — дочекайтеся синхронізації.",
-  "A PM / owner change is already waiting — wait for synchronization.",
-  "Смена PM / владельца уже ожидает обработки — дождитесь синхронизации."
+  "Зміна PM / власника / країни вже очікує обробки — дочекайтеся синхронізації.",
+  "A PM / owner / country change is already waiting — wait for synchronization.",
+  "Смена PM / владельца / страны уже ожидает обработки — дождитесь синхронизации."
  ],
  "pmOnlyPmo": [
-  "PM і власника змінює лише PMO.",
-  "Only the PMO changes the PM and the owner.",
-  "PM и владельца меняет только PMO."
+  "PM, власника і країну змінює лише PMO.",
+  "Only the PMO changes the PM, the owner and the country.",
+  "PM, владельца и страну меняет только PMO."
  ],
  "kReport": [
   "Оновлено статус-звітом",
@@ -2253,6 +2368,11 @@ export const FLD: Record<string, L3> = {
   "Area",
   "Направление"
  ],
+ "country": [
+  "Країна",
+  "Country",
+  "Страна"
+ ],
  "parent": [
   "Батьківський проєкт",
   "Parent project",
@@ -2307,6 +2427,21 @@ export const FLD: Record<string, L3> = {
   "Бюджет (план)",
   "Budget (plan)",
   "Бюджет (план)"
+ ],
+ "fcost": [
+  "Прогноз витрат на завершення",
+  "Cost at completion forecast",
+  "Прогноз затрат на завершение"
+ ],
+ "rPlanned": [
+  "Планувалось",
+  "Planned",
+  "Планировалось"
+ ],
+ "rNotDone": [
+  "Не зроблено з плану і чому",
+  "Not done from the plan and why",
+  "Не сделано из плана и почему"
  ],
  "actual": [
   "Витрати (факт)",
@@ -2516,19 +2651,19 @@ export const EXTRA: Record<string, L3> = {
   "Новые проекты создаёт PMO. Обратитесь к группе «PMO — администраторы»."
  ],
  "errTeamUser": [
-  "Оберіть людину зі списку пошуку для кожного учасника команди. Немає в пошуку — зверніться до адміністратора Microsoft 365: зовнішнього учасника треба запросити до організації, а на сайті — дозволити гостей.",
-  "Select a person from the search list for every team member. Not in the search — contact the Microsoft 365 administrator: an external participant must be invited to the organization and guests allowed on the site.",
-  "Выберите человека из списка поиска для каждого участника команды. Нет в поиске — обратитесь к администратору Microsoft 365: внешнего участника нужно пригласить в организацию, а на сайте — разрешить гостей."
+  "Оберіть людину зі списку пошуку для кожного учасника команди. Зовнішню людину спершу додають у гості через запит у хелпдеск, після закриття тікета — шукайте її за повною адресою пошти.",
+  "Select a person from the search list for every team member. A person from outside the company is first added as a guest through a helpdesk request; after the ticket is closed, search for them by their full e-mail address.",
+  "Выберите человека из списка поиска для каждого участника команды. Внешнего человека сначала добавляют в гости через запрос в хелпдеск, после закрытия тикета — ищите его по полному адресу почты."
  ],
  "pickerNone": [
-  "Не знайдено. Зовнішній учасник має бути запрошений до організації, а на сайті — дозволено гостей: зверніться до адміністратора Microsoft 365.",
-  "Not found. An external participant must be invited to the organization and guests allowed on the site: contact the Microsoft 365 administrator.",
-  "Не найдено. Внешний участник должен быть приглашён в организацию, а на сайте — разрешены гости: обратитесь к администратору Microsoft 365."
+  "Не знайдено. Зовнішню людину спершу додають у гості через запит у хелпдеск; після закриття тікета наберіть її повну адресу пошти.",
+  "Not found. A person from outside the company is first added as a guest through a helpdesk request; after the ticket is closed, type their full e-mail address.",
+  "Не найдено. Внешнего человека сначала добавляют в гости через запрос в хелпдеск; после закрытия тикета наберите его полный адрес почты."
  ],
  "errUserNotFound": [
-  "SharePoint не знайшов цю людину. Зовнішній учасник має бути запрошений до організації, а на сайті — дозволено гостей: зверніться до адміністратора Microsoft 365, потім оберіть людину ще раз.",
-  "SharePoint could not find this person. An external participant must be invited to the organization and guests allowed on the site: contact the Microsoft 365 administrator, then select the person again.",
-  "SharePoint не нашёл этого человека. Внешний участник должен быть приглашён в организацию, а на сайте — разрешены гости: обратитесь к администратору Microsoft 365, затем выберите человека ещё раз."
+  "SharePoint не знайшов цю людину. Зовнішню людину спершу додають у гості через запит у хелпдеск; після закриття тікета оберіть її ще раз.",
+  "SharePoint could not find this person. A person from outside the company is first added as a guest through a helpdesk request; after the ticket is closed, select them again.",
+  "SharePoint не нашёл этого человека. Внешнего человека сначала добавляют в гости через запрос в хелпдеск; после закрытия тикета выберите его ещё раз."
  ],
  "errCode": [
   "Такий код уже є в іншого проєкту. Вкажіть інший або залиште поле порожнім — код призначиться автоматично.",

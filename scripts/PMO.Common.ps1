@@ -130,8 +130,8 @@ function Get-ArchiveOutcome([string]$lastAppliedStatus, $finals, [bool]$cancelle
 }
 function Get-StateKeys { return @("pmStatus", "pmRAG", "pmType", "pmProgress", "pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd",
                                   "pmActualCost", "pmArchivedAt", "pmLastUpdate", "pmLastReport", "pmCode", "pmActualEnd",
-                                  "pmManager", "pmOwner") }
-# PM и владелец в эталоне — e-mail в нижнем регистре (#43: меняет только PMO через «Призначення»)
+                                  "pmManager", "pmOwner", "pmCountry", "pmBudget", "pmForecastCost") }
+# PM и владелец в эталоне — e-mail в нижнем регистре (#43: меняет только PMO через «Призначення»); страна — значение выбора
 $STATE_PEOPLE = @("pmManager", "pmOwner")
 function Get-StateValue([string]$k, $v) {
     if ($k -in $STATE_PEOPLE) { if ($v -and $v.Email) { return ([string]$v.Email).ToLowerInvariant() } return "" }
@@ -140,7 +140,7 @@ function Get-StateValue([string]$k, $v) {
 # значения ключевых полей записи проекта (как их видит синхронизация: Norm)
 function Get-CardState($item) {
     $st = [ordered]@{}
-    foreach ($k in Get-StateKeys) { $st[$k] = Get-StateValue $k $item[$k] }
+    foreach ($k in Get-StateKeys) { $st[$k] = if ($item.FieldValues.ContainsKey($k)) { Get-StateValue $k $item[$k] } else { "" } }
     return $st
 }
 # расхождения карточки с эталоном: @{ f; card; state } по каждому отличающемуся полю

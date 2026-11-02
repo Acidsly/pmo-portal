@@ -94,13 +94,15 @@ export const App: React.FC<AppProps> = p => {
   const nav = (r: Route): void => { const h = format(r); if (window.location.hash !== h) window.location.hash = h; setRoute(r); };
   const tt = makeT(lang);
   setValueLang(lang);   // значения выбора — на языке интерфейса (i18n/values.ts)
+  // #134: форма с несохранёнными данными (отчёт) — вопрос перед закрытием панели
+  const closeGuard = React.useRef<(() => boolean) | null>(null);
   const ctx: Ctx = { ...tt, lang, today: todayIso(), me: p.userEmail, ai: !!aiSw && aiSw.on, webUrl: p.webUrl, views: route.views, canCreate: !!data && data.canCreate,
     // без вида (вкладка в шапке) — вид страницы по умолчанию, а не запомненный (#23, #24); показатели главной передают вид
     go: (page, view) => { nav(goRoute(route, page, view)); window.scrollTo(0, 0); },
     setView: (page, view) => nav({ ...route, views: { ...route.views, [page]: view } }),
     openProject: id => nav({ ...route, projectId: id, form: '' }),
     openForm: (form, id) => nav({ ...route, projectId: id || 0, form }),
-    repo: p.repo, reload: load, toast: showToast };
+    repo: p.repo, reload: load, toast: showToast, setCloseGuard: g => { closeGuard.current = g; } };
   const project = data && route.projectId ? data.projects.filter(x => x.id === route.projectId)[0] : undefined;
   formRef.current = route.form;
   const close = (): void => nav({ ...route, projectId: 0, form: '' });
@@ -143,7 +145,7 @@ export const App: React.FC<AppProps> = p => {
       <main className="pmo-main">
         {err ? <p className="empty">{tt.t('loadErr')}: {err}</p> : !data ? <p className="empty">…</p> : pageEl}
       </main>
-      <Panel open={panelOpen} view={`${route.projectId}/${route.form}`} label={project ? project.title : tt.t('siteTitle')} onClose={route.form && project ? back : close}>
+      <Panel open={panelOpen} view={`${route.projectId}/${route.form}`} label={project ? project.title : tt.t('siteTitle')} onClose={() => { if (closeGuard.current && !closeGuard.current()) return; (route.form && project ? back : close)(); }}>
         {ntfRet && data && route.form !== 'notifications' ? <button className="link ntf-back" onClick={() => ctx.openForm('notifications', 0)}>← {tt.t('notifTitle')}</button> : null}{panelEl}</Panel>
       <Toast msg={toastMsg} />
     </div>

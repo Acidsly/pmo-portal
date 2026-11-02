@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:643758905d9d — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:dd29ff22b066 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -17,7 +17,8 @@
          и строка «Створення» для новых проектов.
       3. «Останній коментар» в карточке — из списка «Коментарі».
       4. «Стратегічний» и «Пріоритет» в статус-отчётах и рисках — копия из проекта.
-      5. Права: PM — редактирование; его руководители, Собственник, команда и их руководители — просмотр и комментарии;
+      5. Права: PM — редактирование; его руководители, Собственник, команда и их руководители, CEO країни проекта
+         («Країни») — просмотр и комментарии;
          группа PMO — просмотр, владельцы сайта — полный доступ. Цепочка руководителей берётся из Entra ID.
          Права выдаются записи проекта и папке проекта P<ID> в каждом дочернем списке; записи наследуют права папки
          (синхронизация переносит в папку записи, созданные в корне списка). Отчёты, комментарии, журнал и погодження —
@@ -200,8 +201,8 @@ function Get-ArchiveOutcome([string]$lastAppliedStatus, $finals, [bool]$cancelle
 }
 function Get-StateKeys { return @("pmStatus", "pmRAG", "pmType", "pmProgress", "pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd",
                                   "pmActualCost", "pmArchivedAt", "pmLastUpdate", "pmLastReport", "pmCode", "pmActualEnd",
-                                  "pmManager", "pmOwner") }
-# PM и владелец в эталоне — e-mail в нижнем регистре (#43: меняет только PMO через «Призначення»)
+                                  "pmManager", "pmOwner", "pmCountry", "pmBudget", "pmForecastCost") }
+# PM и владелец в эталоне — e-mail в нижнем регистре (#43: меняет только PMO через «Призначення»); страна — значение выбора
 $STATE_PEOPLE = @("pmManager", "pmOwner")
 function Get-StateValue([string]$k, $v) {
     if ($k -in $STATE_PEOPLE) { if ($v -and $v.Email) { return ([string]$v.Email).ToLowerInvariant() } return "" }
@@ -210,7 +211,7 @@ function Get-StateValue([string]$k, $v) {
 # значения ключевых полей записи проекта (как их видит синхронизация: Norm)
 function Get-CardState($item) {
     $st = [ordered]@{}
-    foreach ($k in Get-StateKeys) { $st[$k] = Get-StateValue $k $item[$k] }
+    foreach ($k in Get-StateKeys) { $st[$k] = if ($item.FieldValues.ContainsKey($k)) { Get-StateValue $k $item[$k] } else { "" } }
     return $st
 }
 # расхождения карточки с эталоном: @{ f; card; state } по каждому отличающемуся полю
@@ -281,6 +282,7 @@ $ROLE_UPDATE_NAME = "Оновлення (портал)"
 $L_PROJ = "Lists/Projects"; $L_REP = "Lists/StatusReports"; $L_RISK = "Lists/RisksIssues"
 $L_CHG  = "Lists/KeyChanges"; $L_CMT = "Lists/ProjectComments"; $L_TEAM = "Lists/ProjectTeam"; $L_AP = "Lists/ReportApprovals"
 $L_PA   = "Lists/ProjectAssignments"
+$L_CO   = "Lists/Countries"
 $L_NS   = "Lists/NotifyState"
 $stats = [ordered]@{ edits = 0; reports = 0; changes = 0; created = 0; comments = 0; types = 0; acl = 0; folders = 0; moved = 0; reset = 0; access = 0; feedback = 0; approvals = 0; assigns = 0; notifyRows = 0; members = 0; reminders = 0; stateNew = 0; stateFixed = 0; returned = 0; warnings = 0; errors = 0 }
 
@@ -458,6 +460,11 @@ function Human([string]$field, [string]$v) {
     if (-not $v) { return "—" }
     if ($v -match '^\d{4}-\d{2}-\d{2}$') { return ([datetime]$v).ToString("dd.MM.yyyy") }
     if ($field -in @("pmProgress")) { return "$v%" }
+    # суммы — как на экране приложения (tests/cases/money.json): целое, разряды — неразрывный пробел, «$» после числа
+    if ($field -in @("pmBudget", "pmForecastCost", "pmActualCost")) {
+        $n = [math]::Round([double]$v, 0, [MidpointRounding]::AwayFromZero)
+        return ($n.ToString("#,0", [Globalization.CultureInfo]::InvariantCulture) -replace ",", [string][char]0xA0) + " $"
+    }
     return $v
 }
 function Email($u) { if ($u) { return ([string]$u.Email).ToLowerInvariant() } return "" }
@@ -509,14 +516,16 @@ function Get-EffectiveApproval($rep, $aps) {
 # Что погоджений отчёт переносит в карточку (векторы tests/cases/apply.json, те же — reportTarget приложения):
 # заполненные показатели (% и затраты — целые, x,5 — вверх); «Завершено» / «Скасовано» -> тот же статус (архив), дата архивации и
 # фактическая дата завершения (#54; при другом статусе не переносится); отчёт не старше последнего (по дате) задаёт ещё стан (худшая из трёх оценок), дату и резюме. Пустые поля карточку не трогают.
-# $rep: status, type, progress, start, goLive, planEnd, forecastEnd, actualCost, actualEnd, date, schedule, budget, resources, title.
+# $rep: status, type, progress, start, goLive, planEnd, forecastEnd, actualCost, budgetPlan, forecastCost, actualEnd, date, schedule, budget, resources, title.
+# 1.7.7: «Бюджет (план)» и «Прогноз витрат на завершення» — целые; прогноз 0 — «не задан» (не переносится).
 # $legacy — на сайте ещё нет «Завершено» в выборе статуса проекта (до миграции архива): пишется прежнее «Архівний».
 function Get-ReportTarget($rep, [string]$lastUpdate, [bool]$legacy = $false) {
     $t = [ordered]@{}
-    foreach ($k in @("status", "type", "progress", "start", "goLive", "planEnd", "forecastEnd", "actualCost", "actualEnd")) {
+    foreach ($k in @("status", "type", "progress", "start", "goLive", "planEnd", "forecastEnd", "actualCost", "budgetPlan", "forecastCost", "actualEnd")) {
         $v = $rep.$k
         if ($null -eq $v -or [string]$v -eq "") { continue }
-        $t[$k] = if ($k -in @("progress", "actualCost")) { [string][math]::Round([double]$v, 0, [MidpointRounding]::AwayFromZero) } else { [string]$v }
+        if ($k -eq "forecastCost" -and [double]$v -eq 0) { continue }
+        $t[$k] = if ($k -in @("progress", "actualCost", "budgetPlan", "forecastCost")) { [string][math]::Round([double]$v, 0, [MidpointRounding]::AwayFromZero) } else { [string]$v }
     }
     if ($t["status"] -in @("Завершено", "Скасовано")) { if ($legacy) { $t["status"] = "Архівний" }; $t["archivedAt"] = [string]$rep.date }
     elseif ($t.Contains("actualEnd")) { $t.Remove("actualEnd") }
@@ -529,7 +538,7 @@ function Get-ReportTarget($rep, [string]$lastUpdate, [bool]$legacy = $false) {
 }
 # поле цели переноса -> поле карточки
 $TARGET_FIELD = [ordered]@{ status = "pmStatus"; type = "pmType"; progress = "pmProgress"; start = "pmStart"; goLive = "pmGoLive"; planEnd = "pmPlanEnd"
-    forecastEnd = "pmForecastEnd"; actualCost = "pmActualCost"; actualEnd = "pmActualEnd"; archivedAt = "pmArchivedAt"; rag = "pmRAG"; lastUpdate = "pmLastUpdate"; lastReport = "pmLastReport" }
+    forecastEnd = "pmForecastEnd"; actualCost = "pmActualCost"; budgetPlan = "pmBudget"; forecastCost = "pmForecastCost"; actualEnd = "pmActualEnd"; archivedAt = "pmArchivedAt"; rag = "pmRAG"; lastUpdate = "pmLastUpdate"; lastReport = "pmLastReport" }
 # Решение по эталону (векторы tests/cases/state.json -> plan): $state — эталон или $null (нет / повреждён), $hasRecord — строка
 # эталона есть. new — эталона нет: из карточки; rebuild — повреждён: заново из карточки (не откат к пустым значениям);
 # none — совпадает; accept — правил владелец сайта или приложение (скрипт): эталон = карточка; rollback — правка в обход отчёта.
@@ -544,10 +553,11 @@ function Get-StatePlan($card, $state, [bool]$hasRecord, [string]$editorT, [strin
     if (-not $diff.Count) { return @{ action = "none"; diff = @(); extended = $ext; state = $state } }
     return @{ action = $(if (Test-Trusted $editorT $ownerList) { "accept" } else { "rollback" }); diff = $diff; extended = $ext; state = $state }
 }
-# Решение PMO о смене PM / власника («Призначення», #43; векторы tests/cases/assignments.json, те же — assignmentPlan приложения).
+# Решение PMO о смене PM / власника / країни («Призначення», #43; векторы tests/cases/assignments.json, те же — assignmentPlan приложения).
 # Действует запись PMO, владельца сайта или приложения; проект не в архиве; комментарий обязателен; хотя бы одно поле меняется
-# (пустое — без изменений). $a: author (Who), manager, owner (e-mail), note. Возвращает valid, reason, changes (@{ f; from; to }).
-function Get-AssignmentPlan($a, [string]$curPm, [string]$curOwner, [bool]$archived, [string[]]$pmoList, [string[]]$ownerList) {
+# (пустое — без изменений). $a: author (Who), manager, owner (e-mail), country (значение выбора), note.
+# Возвращает valid, reason, changes (@{ f; from; to }).
+function Get-AssignmentPlan($a, [string]$curPm, [string]$curOwner, [bool]$archived, [string[]]$pmoList, [string[]]$ownerList, [string]$curCountry = "") {
     $author = [string]$a.author
     $bad = { param($why) return @{ valid = $false; reason = $why; changes = @() } }
     if (-not ((Test-Trusted $author $ownerList) -or ([bool]$author -and @($pmoList) -contains $author))) { return & $bad "author" }
@@ -556,6 +566,7 @@ function Get-AssignmentPlan($a, [string]$curPm, [string]$curOwner, [bool]$archiv
     $ch = @()
     if ($a.manager -and [string]$a.manager -ne $curPm) { $ch += , @{ f = "pmManager"; from = $curPm; to = [string]$a.manager } }
     if ($a.owner -and [string]$a.owner -ne $curOwner) { $ch += , @{ f = "pmOwner"; from = $curOwner; to = [string]$a.owner } }
+    if ($a.country -and [string]$a.country -ne $curCountry) { $ch += , @{ f = "pmCountry"; from = $curCountry; to = [string]$a.country } }
     if (-not $ch.Count) { return & $bad "same" }
     return @{ valid = $true; reason = ""; changes = $ch }
 }
@@ -563,7 +574,7 @@ function Get-AssignmentPlan($a, [string]$curPm, [string]$curOwner, [bool]$archiv
 # Снимок — psHistory эталона: { v = 1; r = [id учтённых отчётов]; k = { id риска: снимок полей } }. Нет снимка или повреждён —
 # снимок из текущих данных без событий (первый запуск не заливает журнал прошлым). Отчёт: «Подання звіту» один раз; «на основі
 # повернутого» — только если srBasedOn указывает на повернутый отчёт этого же проекта (иначе — как обычная подача).
-# Риск: «Додано», изменения полей «було → стало» (оценка — если менялись вероятность или влияние), «Закрито». Удалённый — из снимка.
+# Риск: «Додано» (уже закрытый к первому запуску — и «Закрито», #115), изменения полей «було → стало» (оценка — если менялись вероятность или влияние), «Закрито». Удалённый — из снимка.
 # $reps: id, date, title, author, created, basedOn, approval; $risks: id, t, ty, p, i, st, sg, o, on, d, author, editor, created, modified.
 $RISK_LOG = [ordered]@{ t = "riTitle"; ty = "riType"; p = "riProbability"; i = "riImpact"; st = "riStatus"; sg = "riStrategy"; o = "riOwner"; d = "riDue" }
 function Get-HistoryPlan([string]$json, $reps, $risks) {
@@ -592,6 +603,8 @@ function Get-HistoryPlan([string]$json, $reps, $risks) {
         if ($init) { continue }
         if (-not $was) {
             $rows.Add([ordered]@{ kind = "Ризик"; field = "riCreated"; from = ""; to = $cur.ty; who = [string]$k.author; when = [string]$k.created; item = [int]$k.id; reason = "Додано: $($cur.t)" })
+            # #115: создан и закрыт между двумя запусками — закрытие тоже в историю
+            if ($cur.st -eq "Закрито") { $rows.Add([ordered]@{ kind = "Ризик"; field = "riStatus"; from = "Відкрито"; to = "Закрито"; who = [string]$k.editor; when = [string]$k.modified; item = [int]$k.id; reason = "Закрито: $($cur.t)" }) }
             continue
         }
         $closed = $cur.st -eq "Закрито" -and [string]$was["st"] -ne "Закрито"
@@ -664,13 +677,15 @@ $DISPLAY = [ordered]@{
     pmStatus = "Фаза проєкту"; pmRAG = "Загальний стан"; pmType = "Тип проєкту"; pmProgress = "% виконання"
     pmStart = "Дата старту"; pmGoLive = "Дата запуску (продакшн)"; pmPlanEnd = "Дата завершення (план)"; pmForecastEnd = "Прогноз завершення"
     pmActualEnd = "Дата завершення (факт)"
+    # 1.7.7: бюджет — через статус-отчёт (с причиной), в журнал «Статус-звіт»
+    pmBudget = "Бюджет (план)"; pmForecastCost = "Прогноз витрат на завершення"
 }
 $DATE_FIELDS = @("pmStart","pmGoLive","pmPlanEnd","pmForecastEnd","pmLastUpdate","pmArchivedAt","pmActualEnd")
 
 # Правки карточки из приложения SPFx (поле pmEditLog): ключ прототипа -> внутреннее имя, подпись строки журнала
 $EDIT_DISPLAY = @{ Title = "Назва проєкту"; pmCode = "Код проєкту"; pmDepartment = "Напрям"; pmLoop = "Посилання на картку в Loop"; pmPriority = "Пріоритет"
                    pmManager = "PM"; pmOwner = "Власник"; pmStakeholders = "Стейкхолдери"; pmBudget = "Бюджет (план)"
-                   pmTeam = "Команда проєкту"; pmLinks = "Посилання"; pmParent = "Батьківський проєкт"
+                   pmTeam = "Команда проєкту"; pmLinks = "Посилання"; pmParent = "Батьківський проєкт"; pmCountry = "Країна"
                    # #84: служебные отметки правки команды (e-mail): кого добавили, у кого сменилась роль — сповіщення этому человеку
                    teamIn = "Команда: додано учасників"; teamRole = "Команда: змінено роль"
                    srSchedule = "Терміни"; srBudget = "Бюджет"; srResources = "Ресурси"; srApproval = "Погодження звіту"
@@ -823,6 +838,16 @@ $comments = Get-ListRows $L_CMT
 $HAS_TEAM = [bool](Get-PnPList -Identity $L_TEAM -ErrorAction SilentlyContinue)
 $HAS_AP   = [bool](Get-PnPList -Identity $L_AP -ErrorAction SilentlyContinue)
 $HAS_PA   = [bool](Get-PnPList -Identity $L_PA -ErrorAction SilentlyContinue)
+# «Країни» (CEO по странам) — с Deploy-PMO.ps1; нет списка — права без CEO країни
+$HAS_CO   = [bool](Get-PnPList -Identity $L_CO -ErrorAction SilentlyContinue)
+$CEO = @{}
+if ($HAS_CO) {
+    foreach ($x in (Get-ListRows $L_CO)) {
+        $CEO[[string]$x["Title"]] = @($x["coCeo"] | Where-Object { $_ -and $_.Email } | ForEach-Object { ([string]$_.Email).ToLowerInvariant() })
+        # CEO без e-mail в SharePoint прав не получит — видно в журнале запуска, а не молча
+        foreach ($u in @($x["coCeo"] | Where-Object { $_ -and -not $_.Email })) { Warn "Країни «$($x["Title"])»: у CEO «$($u.LookupValue)» немає e-mail — права не видано" }
+    }
+}
 # поле kcItem журнала и psHistory эталона появляются с Deploy-PMO.ps1 (#46 / #48); до развёртывания — без ссылок и без истории
 $HAS_ITEM = [bool](Get-PnPField -List $L_CHG -Identity "kcItem" -ErrorAction SilentlyContinue)
 function Get-ItemsIfExists([string]$list, [bool]$has) { if ($has) { return , (Get-ListRows $list) } return @() }
@@ -874,8 +899,9 @@ function Get-Stakeholders($item) {
 $PROJ = @{}
 foreach ($it in $projects) {
     $PROJ[$it.Id] = [pscustomobject]@{ Item = $it; Values = @{} }
-    foreach ($f in @($DISPLAY.Keys) + @("pmActualCost","pmLastUpdate","pmLastReport","pmLastComment","pmArchivedAt","pmoAcl","pmCode")) {
-        $PROJ[$it.Id].Values[$f] = Norm $it[$f]
+    foreach ($f in @($DISPLAY.Keys) + @("pmActualCost","pmLastUpdate","pmLastReport","pmLastComment","pmArchivedAt","pmoAcl","pmCode","pmCountry")) {
+        # поля, которых на сайте ещё нет (до Deploy-PMO.ps1, например pmCountry), — пусто, а не ошибка
+        $PROJ[$it.Id].Values[$f] = if ($it.FieldValues.ContainsKey($f)) { Norm $it[$f] } else { "" }
     }
     # PM и владелец — e-mail (как в эталоне); все правила читают их отсюда: «Призначення» меняет их в этом же запуске
     foreach ($f in $STATE_PEOPLE) { $PROJ[$it.Id].Values[$f] = Get-StateValue $f $it[$f] }
@@ -964,7 +990,7 @@ if ($HAS_PS) {
 #     Сначала эталон, потом карточка: иначе следующий запуск откатил бы запись как правку в обход.
 # ---------------------------------------------------------------------------
 $PMO_EMAILS = @(Get-PnPGroupMember -Group $PMO_GROUP | ForEach-Object { ([string]$_.Email).ToLowerInvariant() } | Where-Object { $_ })
-$ASSIGN_WHY = @{ author = "автор — не PMO"; arch = "проєкт в архіві"; note = "немає коментаря"; same = "PM і власник не змінюються" }
+$ASSIGN_WHY = @{ author = "автор — не PMO"; arch = "проєкт в архіві"; note = "немає коментаря"; same = "PM, власник і країна не змінюються" }
 if ($HAS_PA) {
     $assigns = Select-Placed (Get-ItemsIfExists $L_PA $HAS_PA) $L_PA "paProject"
     foreach ($a in (@($assigns) | Where-Object { $_ } | Where-Object { $_["paApplied"] -ne $true } | Sort-Object Id)) {
@@ -973,15 +999,15 @@ if ($HAS_PA) {
         if (-not $p) { Warn "Призначення #$($a.Id): проєкт не знайдено" }
         else {
             # решение — общим правилом Get-AssignmentPlan (векторы tests/cases/assignments.json, те же — assignmentPlan приложения)
-            $plan = Get-AssignmentPlan @{ author = $whoT; manager = (Email $a["paManager"]); owner = (Email $a["paOwner"]); note = [string]$a["paNote"] } `
-                $p.Values.pmManager $p.Values.pmOwner (Test-ArchivedStatus $p.Values.pmStatus) $PMO_EMAILS $OWNER_EMAILS
+            $plan = Get-AssignmentPlan @{ author = $whoT; manager = (Email $a["paManager"]); owner = (Email $a["paOwner"]); country = (Norm $a["paCountry"]); note = [string]$a["paNote"] } `
+                $p.Values.pmManager $p.Values.pmOwner (Test-ArchivedStatus $p.Values.pmStatus) $PMO_EMAILS $OWNER_EMAILS $p.Values.pmCountry
             if (-not $plan.valid) { Warn "Призначення #$($a.Id) «$($p.Item["Title"])» не застосовано: $($ASSIGN_WHY[$plan.reason])" }
             else {
                 $stats.assigns++
                 $when = $a["Created"].ToUniversalTime().ToString("o"); $note = ([string]$a["paNote"]).Trim()
                 $src = @{ pmManager = $a["paManager"]; pmOwner = $a["paOwner"] }
-                # пользователь — по LookupId записи «Призначення» (человек уже есть на сайте), а не по e-mail
-                $write = @{}; foreach ($c in $plan.changes) { $write[$c.f] = [int]$src[$c.f].LookupId }
+                # пользователь — по LookupId записи «Призначення» (человек уже есть на сайте), а не по e-mail; страна — значение выбора
+                $write = @{}; foreach ($c in $plan.changes) { if ($c.f -eq "pmCountry") { $write.pmCountry = $c.to } else { $write[$c.f] = [int]$src[$c.f].LookupId } }
                 Log "  призначення #$($a.Id) «$($p.Item["Title"])»: $(@($plan.changes | ForEach-Object { "$($_.f) $($_.from) -> $($_.to)" }) -join '; ')"
                 $prevState = if ($HAS_PS -and $STATES[$p.Item.Id]) { $STATES[$p.Item.Id].state } else { $null }
                 $next = [ordered]@{}; foreach ($k in Get-StateKeys) { $next[$k] = [string]$p.Values[$k] }
@@ -1001,8 +1027,8 @@ if ($HAS_PA) {
                 if ($ok) {
                     # журнал — после успешной записи карточки: повтор не задваивает строки
                     foreach ($c in $plan.changes) {
-                        $nm = [string]$src[$c.f].LookupValue
-                        $from = if ($p.Names[$c.f]) { $p.Names[$c.f] } else { Human $c.f $c.from }
+                        $nm = if ($c.f -eq "pmCountry") { $c.to } else { [string]$src[$c.f].LookupValue }
+                        $from = if ($c.f -ne "pmCountry" -and $p.Names[$c.f]) { $p.Names[$c.f] } else { Human $c.f $c.from }
                         Add-Change $p.Item.Id $c.f $from $(if ($nm) { $nm } else { $c.to }) "Призначення" $who $note $when
                         $p.Values[$c.f] = $c.to; $p.Names[$c.f] = $nm
                     }
@@ -1144,6 +1170,8 @@ foreach ($r in $pending) {
     # что переносится — общим правилом Get-ReportTarget (векторы tests/cases/apply.json, те же — у приложения)
     $tg = Get-ReportTarget ([ordered]@{ status = (Norm $r["srStatus"]); type = (Norm $r["srType"]); progress = $r["srProgress"]; start = (Norm $r["srStart"])
         goLive = (Norm $r["srGoLive"]); planEnd = (Norm $r["srPlanEnd"]); forecastEnd = (Norm $r["srForecastEnd"]); actualCost = $r["srActualCost"]; actualEnd = (Norm $r["srActualEnd"])
+        # 1.7.7: полей может ещё не быть (до Deploy-PMO.ps1) — тогда не переносятся
+        budgetPlan = $(if ($r.FieldValues.ContainsKey("srBudgetPlan")) { $r["srBudgetPlan"] }); forecastCost = $(if ($r.FieldValues.ContainsKey("srForecastCost")) { $r["srForecastCost"] })
         date = $repDate; schedule = (Norm $r["srSchedule"]); budget = (Norm $r["srBudget"]); resources = (Norm $r["srResources"]); title = $title }) $p.Values.pmLastUpdate $LEGACY_ARCHIVE
     $target = [ordered]@{}; foreach ($k in $tg.Keys) { $target[$TARGET_FIELD[$k]] = $tg[$k] }
 
@@ -1346,9 +1374,10 @@ function Get-Chain([string]$email) {
     return $chain
 }
 # Кто видит проект и что может (общие векторы tests/cases/acl.json). Править — только PM;
-# его руководители, собственник, стейкхолдеры и их руководители — просмотр и комментарии.
-# Порядок — как «Доступ до картки» в прототипе; первое вхождение человека побеждает. Архив — всем просмотр.
-function Get-Access([string]$pm, [string]$owner, [string[]]$st, [scriptblock]$chain, [bool]$archived) {
+# его руководители, собственник, стейкхолдеры и их руководители, CEO країни проекта — просмотр и комментарии.
+# Порядок — как «Доступ до картки» в прототипе; первое вхождение человека побеждает (CEO — в конце: уже руководитель PM
+# или собственник — остаётся с этой ролью). Архив — всем просмотр.
+function Get-Access([string]$pm, [string]$owner, [string[]]$st, [scriptblock]$chain, [bool]$archived, [string[]]$ceos = @()) {
     $list = [System.Collections.Generic.List[object]]::new(); $seen = @{}
     $add = { param($e, $l, $r) if (-not $e -or $seen.ContainsKey($e)) { return }; $seen[$e] = 1; $list.Add([ordered]@{ e = $e; l = $l; r = $r }) }
     & $add $pm "edit" "pm"
@@ -1356,6 +1385,7 @@ function Get-Access([string]$pm, [string]$owner, [string[]]$st, [scriptblock]$ch
     & $add $owner "read" "owner"
     foreach ($x in $st) { & $add $x "read" "stake" }
     foreach ($x in @($owner) + @($st)) { if ($x) { foreach ($m in (& $chain $x)) { & $add $m "read" "mgr" } } }
+    foreach ($x in $ceos) { & $add $x "read" "ceo" }
     if ($archived) { foreach ($a in $list) { $a.l = "read" } }
     return , $list
 }
@@ -1433,7 +1463,7 @@ foreach ($p in $PROJ.Values) {
     $ready = -not @($CHILD.Keys | Where-Object { -not $FOLDERS[$_].ContainsKey($name) -or $FOLDERS[$_][$name].mark -ne $p.Values.pmoAcl }).Count
     # архив, права которого уже выданы проекту и папкам: без Entra ID, без «Доступ до картки», без прав (пересчёт — воскресный rebuild)
     if (Test-ArchiveFrozen $p.Values.pmStatus $p.Values.pmoAcl $ready ([bool]$RebuildPermissions) (Get-ArchPrefix $PERM_V2)) { $frozen++; $MARK[$p.Item.Id] = $p.Values.pmoAcl; continue }
-    $access = Get-Access $p.Values.pmManager $p.Values.pmOwner $st $chainOf $archived
+    $access = Get-Access $p.Values.pmManager $p.Values.pmOwner $st $chainOf $archived @($CEO[[string]$p.Values.pmCountry] | Where-Object { $_ })
     $acl = Get-Acl $access
     $h = Get-AclMark (Get-Hash $acl) $archived $PERM_V2
     # «Доступ до картки» в приложении: имя и должность из Entra ID, пишется только при изменении

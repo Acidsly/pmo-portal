@@ -54,7 +54,7 @@ function openFromCard(): W {
 }
 const setVal = (el: W, v: string): void => { el.value = v; ev(el, 'input'); ev(el, 'change'); };
 const setStatus = (g: (id: string) => W, st: string): void => { const s = g('f-st'); s.value = st; ev(s, 'change'); };
-const FIELD: Record<string, string> = { 'f-ae': 'actualEnd', 'f-dect': 'decisionText', 'f-kr': 'keyReason', 'f-t': 'title', 'f-pr': 'progress', 'f-golive': 'goLive', 'f-plan': 'planEnd', 'f-fc': 'forecastEnd' };
+const FIELD: Record<string, string> = { 'f-ae': 'actualEnd', 'f-dect': 'decisionText', 'f-kr': 'keyReason', 'f-t': 'title', 'f-pr': 'progress', 'f-golive': 'goLive', 'f-plan': 'planEnd', 'f-fc': 'forecastEnd', 'f-nd': 'notDone', 'f-fcost': 'forecastCost' };
 
 test('прототип: #37 из карточки проект зафиксирован; #51 проекты с отчётом на погодженні недоступны', () => {
   const form = openFromCard();
@@ -99,6 +99,10 @@ describe('прототип: проверка формы (#40, #53, #54, #64, #67
     setVal(g('f-t'), d.title); setVal(g('f-kr'), d.keyReason);
     if (d.decision !== undefined) { const cb = g('f-dec'); cb.checked = !!d.decision; ev(cb, 'change'); setVal(g('f-dect'), d.decisionText || ''); }
     if (d.actualEnd !== undefined) setVal(g('f-ae'), d.actualEnd);
+    // 1.7.7: у демо-проекта прототипа есть план прошлого погодженого отчёта — «Не зроблено» заполняется, если вектор не задаёт иначе
+    setVal(g('f-nd'), d.notDone !== undefined ? d.notDone : 'Усе виконано');
+    if (d.actualCost !== undefined) setVal(g('f-c'), String(d.actualCost));
+    if (d.forecastCost !== undefined) setVal(g('f-fcost'), d.forecastCost ? String(d.forecastCost) : '');
     form.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
     const got = Array.from(form.querySelectorAll('[aria-invalid="true"]')).map((el: W) => {
       if (el.tagName === 'FIELDSET') return (el.querySelector('input[type=radio]') || {}).name;
@@ -153,4 +157,27 @@ test('прототип: вставка «1450.50» в затраты — 1451; �
   const c = g('f-c'); c.focus(); c.value = '1450.50'; c.dispatchEvent(new w.Event('input', { bubbles: true })); c.blur();
   expect(c.value).toBe('1 451');
   c.focus(); c.value = '0'; c.blur(); c.focus(); expect(c.value).toBe('');
+});
+// #131: ручной ввод по символу во всех трёх суммах отчёта — «1450,50» → 1 451, а не 145 050
+test.each(['f-c', 'f-bp', 'f-fcost'])('прототип #131: ввод «1450,50» по символу в %s → «1 451»', id => {
+  const { g } = openForm();
+  const c = g(id); c.focus(); c.value = '';
+  for (const ch of '1450,50') { c.value += ch; c.dispatchEvent(new w.Event('input', { bubbles: true })); }
+  expect(c.value).toBe('1450,50');
+  c.blur(); expect(c.value).toBe('1 451');
+});
+// #119: некоректна дата (31.11) не стирається мовчки — текст лишається, помилка під полем, звіт не зберігається
+test('прототип #119: «31.11.2026» у «Дата завершення (план)» — текст лишається, помилка, звіт не зберігається', () => {
+  const { form, g } = openForm();
+  const tx = g('f-plan-t'); tx.focus(); tx.value = '31112026'; ev(tx, 'input'); tx.blur();
+  expect(tx.value).toBe('31.11.2026');
+  const fe = tx.parentNode.nextElementSibling; expect(fe.classList.contains('date-bad') && !fe.hidden && fe.textContent).toBe(T.errDateBad[0]);
+  form.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+  expect(q('#repform')).toBeTruthy(); expect(form.querySelector('p.err').textContent).toBe(T.errDateBad[0]);
+  tx.value = '30112026'; ev(tx, 'input'); tx.blur();
+  expect(fe.hidden).toBe(true); expect(g('f-plan').value).toBe('2026-11-30');
+});
+test('прототип #131: суми звіту — клавіатура з комою (inputmode «decimal»)', () => {
+  const { g } = openForm();
+  expect(['f-c', 'f-bp', 'f-fcost'].map(id => g(id).getAttribute('inputmode'))).toEqual(['decimal', 'decimal', 'decimal']);
 });

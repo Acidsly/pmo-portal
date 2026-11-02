@@ -7,11 +7,13 @@ import { PortalData } from '../data/SpRepo';
 import { Project, Person } from '../data/types';
 import { loginOf } from '../data/people';
 import { ProjectDraft, validateProject, nextCode, cardDiff } from '../logic/forms';
-import { parentChoices, parentLabel } from '../logic/projects';
+import { parentChoices, parentLabel, COUNTRIES } from '../logic/projects';
 import { projectBody, projectEditBody, teamBody, teamRows } from '../data/write';
 import { TeamRow, cleanTeam, cleanLinks, teamPlan } from '../logic/team';
-import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts, errText, guardText, MoneyIn } from '../components/fields';
+import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts, errText, guardText, MoneyIn, badDateIn } from '../components/fields';
 import { guard, cardFields, changedFields } from '../logic/guard';
+import { tv } from '../i18n/values';
+import { money } from '../components/Bits';
 
 const TYPES = ['Стратегічний', 'Звичайний'];
 const PRIOS = ['1 — Високий', '2 — Середній', '3 — Низький'];
@@ -27,7 +29,7 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
         manager: project.manager, owner: project.owner, team: project.team.length ? teamRows(project.team) : [{ user: null, role: '', topics: '' }], start: project.start, goLive: project.goLive,
         planEnd: project.planEnd, status: project.status, budget: project.budget, description: project.description, parent: project.parent || null }
     : { title: '', code: '', department: 'ІТ', links: [], type: 'Звичайний', priority: '2 — Середній', manager: null, owner: null, team: [{ user: null, role: '', topics: '' }],
-        start: c.today, goLive: '', planEnd: '', status: 'Ініціація', budget: 0, description: '', parent: null });
+        start: c.today, goLive: '', planEnd: '', status: 'Ініціація', budget: 0, description: '', parent: null, country: '' });
   // варианты родителя — видимые проекты без себя и своих дочерних; прежний родитель, которого человек не видит, — остаётся в списке
   const parents = React.useMemo(() => {
     const list = parentChoices(data.projects.map(x => ({ id: x.id, parentId: x.parent ? x.parent.id : 0, title: x.title, code: x.code })), project ? project.id : 0)
@@ -50,6 +52,7 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
 
   const save = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+    if (badDateIn(e.currentTarget as Element)) { setErr(t('errDateBad')); return; }   // #119
     const othersP = data.projects.filter(x => !project || x.id !== project.id);
     const others = othersP.map(x => x.code);
     const clean = { ...d, team: cleanTeam(d.team), links: cleanLinks(d.links) };
@@ -114,6 +117,10 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
         <div><label className="t" htmlFor="f-dept">{fl('dept')}</label>
           <select id="f-dept" value={d.department} onChange={e => set({ department: e.target.value })}><Opts values={DEPTS} /></select></div>
       </div>
+      {/* «Країна»: у нового проекта обязательна (PMO), потом — только «Призначення» */}
+      {isNew ? <Frow label={fl('country')} htmlFor="f-country" req={true}>
+          <select id="f-country" value={d.country || ''} onChange={e => set({ country: e.target.value })}><option value="">{t('notSet')}</option><Opts values={COUNTRIES} /></select></Frow>
+        : <Frow label={fl('country')}><div className="fixedval" id="f-country-fixed">{project!.country ? tv(project!.country) : '—'}</div></Frow>}
       {isNew ? <fieldset className="ragpick"><legend>{fl('type')}</legend><SegPick name="f-type" options={TYPES} value={d.type} onChange={v => set({ type: v })} /></fieldset> : null}
       {/* #105: пріоритет — рядом с типом, с подсказкой, чем они различаются */}
       <Frow label={fl('prio')} htmlFor="f-prio" hint={t('prioHint')}>
@@ -160,8 +167,10 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
 
       <h3 className="fsec">{t('secMoney')}</h3>
       <div className="fgrid2 frow">
-        <div><label className="t" htmlFor="f-bud">{fl('budget')}, $</label>
+        {/* 1.7.7: бюджет задаёт PMO при создании; дальше — статус-отчётом (с причиной, после погодження) */}
+        {isNew ? <div><label className="t" htmlFor="f-bud">{fl('budget')}, $</label>
           <MoneyIn id="f-bud" value={d.budget} onChange={v => set({ budget: v })} /></div>
+          : <div><label className="t">{fl('budget')}, $</label><div className="fixedval" id="f-bud-fixed">{money(project!.budget || 0)}</div><p className="hint">{t('budgetViaReport')}</p></div>}
       </div>
       {/* #96: при правке карточки описание обязательно — звёздочка, подсказка, ошибка у поля; остальное введённое остаётся */}
       <Frow label={fl('desc')} htmlFor="f-desc" req={!isNew} hint={isNew ? undefined : t('descHint')} err={descErr ? t('errDesc') : ''}>

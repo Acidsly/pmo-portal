@@ -4,7 +4,7 @@ import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
 import { StatusReport, Project } from '../data/types';
 import { tv } from '../i18n/values';
-import { calcRag, Rag } from '../logic/rag';
+import { calcRag, Rag, BUDGET_NA } from '../logic/rag';
 import { isArch } from '../logic/status';
 import { AP_OK, AP_PENDING, AP_RETURNED, approvalResult } from '../logic/approval';
 import { RagPick, Err, Frow, errText, guardText } from '../components/fields';
@@ -13,10 +13,14 @@ import { RagPill, RagDot, ApBadge, fmtDate, fmtDT, money, PersonCell, periodText
 import { Plus } from '../components/Icons';
 import { Lucide } from '../components/LucideIcons';
 import { aiView } from '../logic/aiFlow';
+import { lastPlan, reportMoneyAt } from '../logic/forms';
 
-type Ind = 'status' | 'type' | 'progress' | 'start' | 'goLive' | 'planEnd' | 'forecastEnd' | 'actualEnd' | 'actualCost';
+type Ind = 'status' | 'type' | 'progress' | 'start' | 'goLive' | 'planEnd' | 'forecastEnd' | 'actualEnd' | 'actualCost' | 'budgetPlan' | 'forecastCost';
 const IND: [Ind, string][] = [['status', 'status'], ['type', 'type'], ['progress', 'progress'], ['start', 'start'], ['goLive', 'golive'],
-  ['planEnd', 'plan'], ['forecastEnd', 'fc'], ['actualEnd', 'ae'], ['actualCost', 'rCost']];
+  ['planEnd', 'plan'], ['forecastEnd', 'fc'], ['actualEnd', 'ae'], ['actualCost', 'rCost'], ['budgetPlan', 'budget'], ['forecastCost', 'fcost']];
+const MONEY_IND: Ind[] = ['actualCost', 'budgetPlan', 'forecastCost'];
+/** поле карточки для сравнения «було → стало»: «Бюджет (план)» отчёта — budget карточки */
+const cardOf = (k: Ind): keyof Project => (k === 'budgetPlan' ? 'budget' : k);
 const DATES: Ind[] = ['start', 'goLive', 'planEnd', 'forecastEnd', 'actualEnd'];
 
 /** Статус-отчёт (reportView прототипа): содержание, погодження; PMO — погодити (меняет только оценки) или повернути на доопрацювання. */
@@ -56,12 +60,17 @@ export const ReportView: React.FC<{ data: PortalData; report: StatusReport | und
 
   // ключевые показатели, которые отчёт меняет; до погодження — «було → стало» относительно карточки
   const show = (k: Ind, v: string | number | null | undefined): React.ReactNode => (v === '' || v === null || v === undefined ? <span className="muted">—</span>
-    : k === 'progress' ? v + '%' : k === 'actualCost' ? money(Number(v)) : DATES.indexOf(k) >= 0 ? fmtDate(String(v)) : tv(String(v)));
-  const ind = IND.filter(([k]) => { const v = r[k]; return v !== '' && v !== null && v !== undefined; }).map(([k, l]) => {
-    const cur = p[k] as string | number; const nv = r[k];
-    const ch = state !== AP_OK && String(cur === undefined || cur === null ? '' : cur) !== String(nv === null ? '' : nv);
-    return <div key={k} className="kv"><span className="k">{fl(l)}</span><span className="v">{ch ? <span className="dv"><s>{show(k, cur)}</s><span className="arr">→</span>{show(k, r[k])}</span> : show(k, r[k])}</span></div>;
+    : k === 'progress' ? v + '%' : MONEY_IND.indexOf(k) >= 0 ? money(Number(v)) : DATES.indexOf(k) >= 0 ? fmtDate(String(v)) : tv(String(v)));
+  // #135: бюджет, витрати и прогноз витрат — всегда, на дату отчёта (не менялись в отчёте — из прежних отчётов или карточки, reportMoneyAt)
+  const at = reportMoneyAt(data.reports, p, r);
+  const has = (v: unknown): boolean => v !== '' && v !== null && v !== undefined;
+  const ind = IND.filter(([k]) => MONEY_IND.indexOf(k) >= 0 || has(r[k])).map(([k, l]) => {
+    const cur = p[cardOf(k)] as string | number; const own = has(r[k]); const nv = own ? r[k] : at[k as 'budgetPlan' | 'actualCost' | 'forecastCost'];
+    const ch = own && state !== AP_OK && String(cur === undefined || cur === null ? '' : cur) !== String(nv === null ? '' : nv);
+    return <div key={k} className="kv" id={MONEY_IND.indexOf(k) >= 0 ? 'rv-' + k : undefined}><span className="k">{fl(l)}</span><span className="v">{ch ? <span className="dv"><s>{show(k, cur)}</s><span className="arr">→</span>{show(k, nv)}</span> : show(k, nv)}</span></div>;
   });
+  // #136: «Планувалось» — план последнего погодженого отчёта, поданного раньше этого (с его датой)
+  const plan = lastPlan(data.reports, r.projectId, 0, { date: r.date, id: r.id });
   const txt = (l: string, v: string): React.ReactNode => (v && v !== '—' ? <p><span className="lbl">{l}:</span> {v}</p> : null);
   const dims: [string, Rag][] = [['rSched', r.schedule], ['rBudget', r.budget], ['rRes', r.resources]];
 
@@ -76,7 +85,8 @@ export const ReportView: React.FC<{ data: PortalData; report: StatusReport | und
       <p className="note" style={{ margin: '0 0 12px' }}>{t('apHint')}</p>
       <div className="dims">
         <RagPick name="ap-s" label={fl('rSched')} req={true} value={s} onChange={setS} />
-        <RagPick name="ap-b" label={fl('rBudget')} req={true} value={b} onChange={setB} />
+        {/* #121: у отчёта «Не оцінено» — PMO видит её выбранной и может вернуть */}
+        <RagPick name="ap-b" label={fl('rBudget')} req={true} value={b} onChange={setB} na={r.budget === BUDGET_NA} />
         <RagPick name="ap-r" label={fl('rRes')} req={true} value={res} onChange={setRes} />
       </div>
       <div className="ragcalc"><span className="k">{t('ragCalc')}</span>
@@ -96,7 +106,8 @@ export const ReportView: React.FC<{ data: PortalData; report: StatusReport | und
       {r.keyReason ? <div className="kv"><span className="k">{t('keyReason')}</span><span className="v">{r.keyReason}</span></div> : null}</div></div> : null}
     <div className="sec"><div className="rep rv-text">
       <div className="rep-h"><PersonCell p={r.author} />{r.decision ? <span className="flag">{t('needDecision')}</span> : null}</div>
-      {txt(fl('rDone'), r.done)}{txt(fl('rNext'), r.next)}{txt(fl('rIssues'), r.issues)}{r.decision ? txt(fl('rDecText'), r.decisionText || '—') : null}
+      {plan.text ? <p id="rv-plan"><span className="lbl">{fl('rPlanned')} <span className="muted">{t('plannedFrom').replace('{date}', fmtDate(plan.date))}</span>:</span> {plan.text}</p> : null}
+      {txt(fl('rDone'), r.done)}{txt(fl('rNotDone'), tv(r.notDone || ''))}{txt(fl('rNext'), r.next)}{txt(fl('rIssues'), r.issues)}{r.decision ? txt(fl('rDecText'), r.decisionText || '—') : null}
     </div></div>
     {/* помощник ИИ (план этапа 4, задача 5): поле видят все, кто видит отчёт; на погодження не влияет — подсказка */}
     {aiView(r.aiCheck, r.aiCheckedAt) !== 'none' ? <div className="sec ai-field" id="rv-ai"><div className="ai-panel">

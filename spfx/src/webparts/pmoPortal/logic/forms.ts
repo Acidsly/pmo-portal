@@ -1,10 +1,14 @@
 import { Project, Person, Link, StatusReport } from '../data/types';
 import { parentLabel } from './projects';
 import { TeamRow, teamText, linksText, validateTeamLinks, teamMarks } from './team';
-import { Rag } from './rag';
+import { Rag, BUDGET_NA } from './rag';
 import { todayIso } from './dates';
 
 /** Черновик статус-отчёта (форма reportForm прототипа). */
+/** #120: «План виконано повністю» — текст «Не зроблено з плану і чому» (значение хранится по-украински, на экране — перевод). */
+export const PLAN_ALL_DONE = 'Усе виконано';
+/** #121: «Не оцінено» в оценке «Бюджет» — только в фазах «Ініціація» и «Планування». */
+export const budgetNaAllowed = (status: string): boolean => status === 'Ініціація' || status === 'Планування';
 export interface ReportDraft {
   /** date — дата подання (#62): сегодня, пишется в момент сохранения; periodFrom — начало периода (#69), считается при сохранении. */
   projectId: number; date: string; periodFrom?: string; schedule: Rag; budget: Rag; resources: Rag;
@@ -14,12 +18,17 @@ export interface ReportDraft {
   /** #46: новый отчёт на основе повернутого — его номер (srBasedOn). */
   basedOn?: number;
   title: string; done: string; next: string; issues: string; decision: boolean; decisionText: string; keyReason: string;
+  /** 1.7.7: «Бюджет (план)» и «Прогноз витрат на завершення» (0 — не задан) — ключевые показатели (с причиной);
+   *  planned — «Планувалось» (план последнего погодженого отчёта, только чтение), notDone — «Не зроблено з плану і чому». */
+  budgetPlan: number; forecastCost: number; notDone: string; planned?: string; plannedDate?: string;
 }
 /** Черновик проекта (форма projectForm прототипа). */
 export interface ProjectDraft {
   title: string; code: string; department: string; links: Link[]; type: string; priority: string;
   manager: Person | null; owner: Person | null; team: TeamRow[]; start: string; goLive: string; planEnd: string; status: string;
   budget: number; description: string;
+  /** «Країна»: ставит PMO при создании (обязательно), потом — только «Призначення»; правка карточки её не пишет. */
+  country?: string;
   /** «Батьківський проєкт»: только связь; null — нет. */
   parent?: { id: number; title: string; code?: string } | null;
 }
@@ -39,8 +48,22 @@ export function nextCode(codes: string[]): string {
 export function reportFromProject(p: Project, today: string): ReportDraft {
   return { projectId: p.id, date: today, schedule: '', budget: '', resources: '',
     status: p.status, type: p.type, progress: p.progress, start: p.start, goLive: p.goLive, planEnd: p.planEnd, forecastEnd: p.forecastEnd,
-    actualCost: p.actualCost, actualEnd: '', title: '', done: '', next: '', issues: '', decision: false, decisionText: '', keyReason: '' };
+    actualCost: p.actualCost, actualEnd: '', title: '', done: '', next: '', issues: '', decision: false, decisionText: '', keyReason: '',
+    budgetPlan: p.budget || 0, forecastCost: p.forecastCost || 0, notDone: '' };
 }
+
+/** «Планувалось» (1.7.7): «План на наступний період» последнего погодженого отчёта проекта (без погодження — применённого);
+ *  excludeId — сам отчёт (возвращённый, на основе которого новый). Нет — пусто (поле «Не зроблено» необязательно). */
+export function lastPlan(reports: StatusReport[], projectId: number, excludeId = 0, before?: { date: string; id: number }): { text: string; date: string } {
+  // before — просмотр отчёта (#136): план последнего погодженого отчёта, поданного раньше этого (дата, затем номер)
+  const ok = reports.filter(r => r.projectId === projectId && r.id !== excludeId && (r.approval === 'Погоджено' || (!r.approval && r.applied))
+    && (!before || r.date < before.date || (r.date === before.date && r.id < before.id)))
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id));
+  const last = ok[ok.length - 1];
+  const text = last ? (last.next || '').trim() : '';
+  return text && text !== '—' ? { text, date: last.date } : { text: '', date: '' };
+}
+export const withPlan = (d: ReportDraft, plan: { text: string; date: string }): ReportDraft => ({ ...d, planned: plan.text, plannedDate: plan.date });
 
 /** Новый отчёт на основе повернутого PMO: оценки, показатели и тексты повернутого, дата — сегодня. */
 export function reportFromReturned(r: StatusReport, p: Project, today: string): ReportDraft {
@@ -49,12 +72,16 @@ export function reportFromReturned(r: StatusReport, p: Project, today: string): 
     status: r.status || base.status, type: r.type || base.type, progress: r.progress === null ? base.progress : r.progress,
     start: r.start || base.start, goLive: r.goLive || base.goLive, planEnd: r.planEnd || base.planEnd, forecastEnd: r.forecastEnd || base.forecastEnd,
     actualCost: r.actualCost === null ? base.actualCost : r.actualCost, actualEnd: r.actualEnd || '', basedOn: r.id, title: r.title, done: r.done, next: r.next, issues: r.issues,
-    decision: r.decision, decisionText: r.decisionText, keyReason: r.keyReason };
+    decision: r.decision, decisionText: r.decisionText, keyReason: r.keyReason,
+    budgetPlan: r.budgetPlan === null || r.budgetPlan === undefined ? base.budgetPlan : r.budgetPlan,
+    forecastCost: r.forecastCost === null || r.forecastCost === undefined ? base.forecastCost : r.forecastCost, notDone: r.notDone || '' };
 }
 
-// показатели, изменение которых требует причины (keyChanged прототипа): статус, тип, даты — но не % и не затраты
+// показатели, изменение которых требует причины (keyChanged прототипа): статус, тип, даты, бюджет (план) и прогноз витрат (1.7.7) —
+// но не % и не витрати на дату
 const KEYS: ('status' | 'type' | 'start' | 'goLive' | 'planEnd' | 'forecastEnd')[] = ['status', 'type', 'start', 'goLive', 'planEnd', 'forecastEnd'];
-export const keyChanged = (d: ReportDraft, p: Project): boolean => KEYS.some(k => String(d[k] || '') !== String(p[k] || ''));
+export const keyChanged = (d: ReportDraft, p: Project): boolean => KEYS.some(k => String(d[k] || '') !== String(p[k] || ''))
+  || (d.budgetPlan || 0) !== (p.budget || 0) || (!!d.forecastCost && d.forecastCost !== (p.forecastCost || 0));
 
 /** Даты, которые раньше даты старта (#54): запуск, план и прогноз не могут быть раньше старта; пустые не проверяются. */
 export type DateKey = 'goLive' | 'planEnd' | 'forecastEnd';
@@ -78,18 +105,24 @@ export const archiveStatus = (status: string): boolean => status === 'Завер
  *  черновик при открытии — «Завершено» сразу 100 % (#52, «на основе повернутого»). */
 export const initialReport = (d: ReportDraft): ReportDraft => (progressLocked(d.status) ? { ...d, progress: 100 } : d);
 /** Смена статуса (#52): «Завершено» — 100 % и запоминается прежнее значение; уход с «Завершено» — прежнее значение. */
-export function switchStatus(d: ReportDraft, prev: number | null, status: string): { d: ReportDraft; prev: number | null } {
+export function switchStatus(d0: ReportDraft, prev: number | null, status: string): { d: ReportDraft; prev: number | null } {
+  // #121: «Не оцінено» бюджета — только в «Ініціація» / «Планування»: на другой фазе оценку нужно выбрать заново
+  const d = d0.budget === BUDGET_NA && !budgetNaAllowed(status) ? { ...d0, budget: '' as Rag } : d0;
   if (progressLocked(status) && !progressLocked(d.status)) return { d: { ...d, status, progress: 100 }, prev: d.progress };
   if (!progressLocked(status) && progressLocked(d.status)) return { d: { ...d, status, progress: prev === null ? d.progress : prev }, prev: null };
   return { d: { ...d, status }, prev };
 }
 /** Смена проекта в общей форме: показатели — нового проекта (статус, %, даты; поле % снова открыто), оценки и тексты — введённые. */
-export const switchProject = (d: ReportDraft, np: Project): ReportDraft => initialReport({ ...reportFromProject(np, d.date), schedule: d.schedule, budget: d.budget, resources: d.resources,
-  title: d.title, done: d.done, next: d.next, issues: d.issues, decision: d.decision, decisionText: d.decisionText });
+export const switchProject = (d: ReportDraft, np: Project, plan: { text: string; date: string } = { text: '', date: '' }): ReportDraft =>
+  initialReport(withPlan({ ...reportFromProject(np, d.date), schedule: d.schedule, budget: d.budget, resources: d.resources,
+    title: d.title, done: d.done, next: d.next, issues: d.issues, decision: d.decision, decisionText: d.decisionText,
+    // #120: отметка «План виконано повністю» относится к плану прежнего проекта — снимается
+    notDone: d.notDone === PLAN_ALL_DONE ? '' : d.notDone }, plan));
 /** Что записывается: при «Завершено» — всегда 100 %; фактическая дата — только при «Завершено» / «Скасовано» (#54). */
 export const reportToSave = (d: ReportDraft): ReportDraft => {
   const x = progressLocked(d.status) ? { ...d, progress: 100 } : d;
-  return archiveStatus(x.status) ? x : { ...x, actualEnd: '' };
+  // 1.7.7: «Завершено» / «Скасовано» — прогноз витрат = витрати на дату (поле закрыто)
+  return archiveStatus(x.status) ? { ...x, forecastCost: x.actualCost || 0 } : { ...x, actualEnd: '' };
 };
 /** Выбор проекта (#37, #51): из карточки (projectId) — проект зафиксирован; иначе — первый без отчёта на погодженні;
  *  недоступны проекты с отчётом на погодженні (кроме выбранного — для него форма покажет плашку и не даст сохранить). */
@@ -116,6 +149,8 @@ export function reportErrors(d: ReportDraft, p: Project, progressText?: string):
   const out: FieldErr[] = [];
   if (!d.schedule) out.push({ f: 'sched', k: 'errReq' });
   if (!d.budget) out.push({ f: 'budget', k: 'errReq' });
+  // #121: «Не оцінено» — только на ранних фазах
+  else if (d.budget === BUDGET_NA && !budgetNaAllowed(d.status)) out.push({ f: 'budget', k: 'errBudgetNA' });
   if (!d.resources) out.push({ f: 'res', k: 'errReq' });
   if (keyChanged(d, p) && !d.keyReason.trim()) out.push({ f: 'keyReason', k: 'errReq' });
   if (!d.title.trim()) out.push({ f: 'title', k: 'errReq' });
@@ -130,6 +165,9 @@ export function reportErrors(d: ReportDraft, p: Project, progressText?: string):
   }
   // #68: «Потрібне рішення керівництва» — опис обязателен (пробелы — пусто)
   if (d.decision && !d.decisionText.trim()) out.push({ f: 'decisionText', k: 'errDecision' });
+  // 1.7.7: прогноз (если задан) не меньше витрат на дату — «оновіть прогноз»; «Не зроблено» — обязательно, если был план
+  if (!archiveStatus(d.status) && d.forecastCost > 0 && d.forecastCost < (d.actualCost || 0)) out.push({ f: 'forecastCost', k: 'errForecastLow' });
+  if ((d.planned || '').trim() && !(d.notDone || '').trim()) out.push({ f: 'notDone', k: 'errReq' });
   return out;
 }
 /** Общее сообщение формы: есть незаполненные — «Заповніть усі обов'язкові поля, позначені *», иначе — первая ошибка поля. */
@@ -152,7 +190,7 @@ export const titleKey = (s: string): string => (s || '').trim().replace(/\s+/g, 
 /** otherTitles — названия других проектов, которые видит пользователь (PMO — все); prevTitle — прежнее название при правке:
  *  если название не меняли, уже существующий дубль сохранить можно. isNew — новый проект (даты по #54; описание не обязательно). */
 export const validateProject = (d: ProjectDraft, otherCodes: string[] = [], otherTitles: string[] = [], prevTitle = '', isNew = true): string =>
-  (!d.title.trim() ? 'errTitle' : !d.manager ? 'errPM'
+  (!d.title.trim() ? 'errTitle' : !d.manager ? 'errPM' : isNew && !d.country ? 'errCountry'
     // #96: при правке карточки (PM) «Мета та опис» обязательно; новый проект PMO заводит без него — описание дописывает PM
     : !isNew && !(d.description || '').trim() ? 'errDesc'
     : titleKey(d.title) !== titleKey(prevTitle) && otherTitles.some(x => titleKey(x) === titleKey(d.title)) ? 'errTitleTaken'
@@ -162,13 +200,14 @@ export const validateRisk = (d: RiskDraft): string => (!d.title.trim() ? 'errRis
 /** #91: обязательные поля новой записи реестра (и копии) — «Ризик»: опис, стратегія, заходи, план дій у разі настання
  *  (при любой оценке); «Проблема»: опис и заходи (стратегия и план на случай наступления к случившемуся неприменимы).
  *  Пробелы — пусто. Существующая запись меняется только статусом (#92) — поля не проверяются. Векторы tests/cases/risk-form.json. */
-export type RiskField = 'title' | 'strategy' | 'mitigation' | 'contingency';
-export const RISK_REQUIRED: Record<string, RiskField[]> = { 'Ризик': ['title', 'strategy', 'mitigation', 'contingency'], 'Проблема': ['title', 'mitigation'] };
-export const RISK_ERR: Record<RiskField, string> = { title: 'errRiskTitle', strategy: 'errRiskStrategy', mitigation: 'errRiskMit', contingency: 'errRiskCont' };
+export type RiskField = 'title' | 'owner' | 'strategy' | 'mitigation' | 'contingency';
+// #129: власник обязателен (в новой записи по умолчанию — PM)
+export const RISK_REQUIRED: Record<string, RiskField[]> = { 'Ризик': ['title', 'owner', 'strategy', 'mitigation', 'contingency'], 'Проблема': ['title', 'owner', 'mitigation'] };
+export const RISK_ERR: Record<RiskField, string> = { title: 'errRiskTitle', owner: 'errRiskOwner', strategy: 'errRiskStrategy', mitigation: 'errRiskMit', contingency: 'errRiskCont' };
 export const riskRequired = (type: string): RiskField[] => RISK_REQUIRED[type] || RISK_REQUIRED['Ризик'];
 export function riskErrors(d: RiskDraft, isNew: boolean): RiskField[] {
   if (!isNew) return [];
-  return riskRequired(d.type).filter(f => !String(d[f] || '').trim());
+  return riskRequired(d.type).filter(f => (f === 'owner' ? !d.owner : !String(d[f] || '').trim()));
 }
 /** #92: в сохранённой записи меняется только «Статус»; остальное — через «Копіювати ризик» (новая запись). */
 export const riskEditable = (field: string, isNew: boolean): boolean => isNew || field === 'status';
@@ -199,10 +238,76 @@ export function cardDiff(b: Project, d: ProjectDraft): { f: string; from: string
   const pairs: [string, string, string][] = [
     ['title', b.title, d.title], ['code', b.code, d.code], ['dept', b.department, d.department], ['links', linksText(b.links), linksText(d.links)],
     ['prio', b.priority, d.priority], ['pm', b.manager ? b.manager.name : '', d.manager ? d.manager.name : ''],
-    ['owner', b.owner ? b.owner.name : '', d.owner ? d.owner.name : ''], ['team', teamText(b.team), teamText(d.team)],
-    ['budget', String(b.budget || 0), String(d.budget || 0)]];
+    ['owner', b.owner ? b.owner.name : '', d.owner ? d.owner.name : ''], ['team', teamText(b.team), teamText(d.team)]];
+  // 1.7.7: «Бюджет (план)» правка карточки не меняет — только статус-отчёт
   // родитель — по номеру проекта (названия бывают одинаковыми); в журнал — «PRJ-001 · Назва»
   const parent = d.parent !== undefined && (b.parent ? b.parent.id : 0) !== (d.parent ? d.parent.id : 0) ? [{ f: 'parent', from: parentLabel(b.parent), to: parentLabel(d.parent) }] : [];
   const rows = (t: { user: Person | null; role: string }[]): { email: string; role: string }[] => t.filter(r => r.user).map(r => ({ email: r.user!.email, role: r.role }));
   return pairs.filter(x => x[1] !== x[2]).map(([f, from, to]) => ({ f, from, to })).concat(parent, teamMarks(rows(b.team), rows(d.team)));
+}
+
+/** #130: опис нової записи — окремо для «Ризик» і «Проблема». Тип, у якого ще немає свого опису, отримує поточний текст
+ *  (тип обрали помилково); далі кожен тип повертає свій. memo — опис кожного типу, який уже був обраний. */
+export interface RiskTypeState { type: string; title: string; memo: Record<string, string> }
+export function riskTypeSwitch(st: RiskTypeState, to: string): RiskTypeState {
+  if (to === st.type) return st;
+  return { type: to, title: Object.prototype.hasOwnProperty.call(st.memo, to) ? st.memo[to] : st.title, memo: { ...st.memo, [st.type]: st.title } };
+}
+
+
+/** Предупреждения формы отчёта (не блокируют сохранение; векторы tests/cases/report-warn.json, те же — прототип):
+ *  #127 прогноз завершения открытого проекта раньше даты подання; #125 «Витрати на дату» меньше погоджених в карточке;
+ *  #124 архивная фаза при открытых рисках и проблемах (после архивации их не изменить). */
+export interface ReportWarn { f: 'forecastEnd' | 'actualCost' | 'status' | 'budget'; k: string; n?: number; rag?: Rag }
+/** #137: оценка «Бюджет» по правилу PMO — перевищення прогнозу витрат над бюджетом (план): нет — зелёный, до 9% — жёлтый, от 10% — красный. */
+export function budgetRule(budget: number, forecast: number): { n: number; rag: Rag } | null {
+  if (!(budget > 0) || !(forecast > 0) || forecast <= budget) return null;
+  const pct = (forecast - budget) / budget * 100;
+  return { n: Math.max(1, Math.floor(pct + 1e-9)), rag: pct >= 10 - 1e-9 ? 'Червоний' : 'Жовтий' };
+}
+const RAG_ORDER: Record<string, number> = { 'Зелений': 0, 'Жовтий': 1, 'Червоний': 2 };
+export function reportWarnings(d: { status: string; forecastEnd: string; actualCost: number; budgetPlan?: number; forecastCost?: number; budget?: Rag }, p: { actualCost?: number | null },
+  openRisks: number, today: string): ReportWarn[] {
+  const out: ReportWarn[] = [];
+  const arch = archiveStatus(d.status);
+  // #137: «Завершено» / «Скасовано» — прогноз = витрати на дату
+  const br = budgetRule(d.budgetPlan || 0, arch ? d.actualCost || 0 : d.forecastCost || 0);
+  if (br) out.push({ f: 'budget', k: d.budget && RAG_ORDER[d.budget] !== undefined && RAG_ORDER[d.budget] < RAG_ORDER[br.rag] ? 'warnBudgetRule' : 'hintBudgetRule', n: br.n, rag: br.rag });
+  if (!arch && d.forecastEnd && d.forecastEnd < today) out.push({ f: 'forecastEnd', k: 'warnForecastPast' });
+  if ((p.actualCost || 0) > 0 && d.actualCost < (p.actualCost || 0)) out.push({ f: 'actualCost', k: 'warnCostDown', n: p.actualCost || 0 });
+  if (arch && openRisks > 0) out.push({ f: 'status', k: 'warnArchRisks', n: openRisks });
+  return out;
+}
+
+/** #133 / #134: тексты отчёта, которые PM вводит сам (показатели подставляются из карточки и при смене проекта меняются вместе с ним). */
+const REPORT_TEXT: (keyof ReportDraft)[] = ['title', 'done', 'notDone', 'next', 'issues', 'keyReason', 'decisionText'];
+/** Введён ли текст (пробелы и «Усе виконано» от отметки #120 — не текст). */
+export const reportHasText = (d: ReportDraft): boolean => REPORT_TEXT.some(k => { const v = String(d[k] || '').trim(); return !!v && !(k === 'notDone' && v === PLAN_ALL_DONE); });
+/** Смена проекта с очисткой текста (#133): тексты прежнего проекта не переходят в отчёт другого. */
+export const clearReportText = (d: ReportDraft): ReportDraft => ({ ...d, title: '', done: '', notDone: '', next: '', issues: '', keyReason: '', decision: false, decisionText: '' });
+/** Изменена ли форма относительно открытой (#134: закрыть без сохранения — с вопросом). */
+export function reportDirty(d: ReportDraft, init: ReportDraft): boolean {
+  const keys: (keyof ReportDraft)[] = ['projectId', 'schedule', 'budget', 'resources', 'status', 'type', 'progress', 'start', 'goLive', 'planEnd', 'forecastEnd',
+    'actualEnd', 'actualCost', 'budgetPlan', 'forecastCost', 'decision', ...REPORT_TEXT];
+  return keys.some(k => String(d[k] === undefined || d[k] === null ? '' : d[k]) !== String(init[k] === undefined || init[k] === null ? '' : init[k]));
+}
+
+/** #135: бюджет, витрати и прогноз витрат на дату отчёта. В отчёт пишутся только изменённые суммы (запись незменённых откатила бы
+ *  карточку более поздним отчётом), поэтому значение — из самого отчёта, иначе из последнего погодженого раньше него, где сумма была;
+ *  если позже этого отчёта сумму никто не менял — текущая из карточки; иначе неизвестно (null). Векторы tests/cases/report-money.json. */
+export type MoneyKey = 'budgetPlan' | 'actualCost' | 'forecastCost';
+export function reportMoneyAt(reports: StatusReport[], p: { budget?: number | null; actualCost?: number | null; forecastCost?: number | null }, r: StatusReport): Record<MoneyKey, number | null> {
+  const ok = (x: StatusReport): boolean => x.projectId === r.projectId && (x.approval === 'Погоджено' || (!x.approval && x.applied));
+  const cmp = (a: StatusReport, b: StatusReport): number => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id);
+  const has = (v: number | null | undefined): boolean => v !== null && v !== undefined;
+  const card: Record<MoneyKey, number | null | undefined> = { budgetPlan: p.budget, actualCost: p.actualCost, forecastCost: p.forecastCost };
+  const out = {} as Record<MoneyKey, number | null>;
+  (['budgetPlan', 'actualCost', 'forecastCost'] as MoneyKey[]).forEach(k => {
+    if (has(r[k])) { out[k] = r[k] as number; return; }
+    const earlier = reports.filter(x => x.id !== r.id && ok(x) && cmp(x, r) < 0 && has(x[k])).sort(cmp);
+    if (earlier.length) { out[k] = earlier[earlier.length - 1][k] as number; return; }
+    const later = reports.some(x => x.id !== r.id && ok(x) && cmp(x, r) > 0 && has(x[k]));
+    out[k] = !later && has(card[k]) ? card[k] as number : null;
+  });
+  return out;
 }

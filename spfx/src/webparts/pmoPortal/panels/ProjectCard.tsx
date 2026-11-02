@@ -32,7 +32,8 @@ const Who: React.FC<{ p: Person | null; repo: SpRepo; sub?: string }> = ({ p, re
 const Access: React.FC<{ p: Project }> = ({ p }) => {
   const { t, fl } = React.useContext(AppCtx);
   const a = parseAccess(p.access || '', isArch(p.status));
-  const sub = (x: AccessRow): string => (x.r === 'pm' ? t('pmRole') : x.r === 'owner' ? fl('owner') : x.r === 'stake' ? fl('team') : x.j);
+  const sub = (x: AccessRow): string => (x.r === 'pm' ? t('pmRole') : x.r === 'owner' ? fl('owner') : x.r === 'stake' ? fl('team')
+    : x.r === 'ceo' ? t('ceoRole') + (p.country ? ' · ' + tv(p.country) : '') : x.j);
   return <div className="sec"><h3>{t('accessTitle')}</h3><div className="access"><div className="muted" style={{ fontSize: 13 }}>{a ? t('accessDesc') : t('accessPending')}</div>
     <ol>{a ? a.people.map(x => <li key={x.e}><span className="person" title={x.e}><Avatar name={x.n} /><span className="pn"><b>{x.n}</b>{sub(x) ? <small>{sub(x)}</small> : null}</span></span>
       <span className="lvl">{t(x.l === 'edit' ? 'lvlEdit' : 'lvlRead')}</span></li>) : null}
@@ -40,6 +41,12 @@ const Access: React.FC<{ p: Project }> = ({ p }) => {
       <li><span className="pav" style={{ background: 'var(--text-3)' }}>PMO</span><span className="pn"><b>{t('pmoGroup')}</b></span><span className="lvl">{t('lvlPmo')}</span></li></ol></div></div>;
 };
 
+/** Отклонение прогноза витрат от бюджета (как fcostDev прототипа): «+25 000 $ (26%)» — перерасход, «−4 000 $» — экономия. */
+const fcostDev = (p: Project): React.ReactNode => {
+  if (!p.forecastCost || !p.budget || p.forecastCost === p.budget) return null;
+  const d = p.forecastCost - p.budget, pc = Math.round(Math.abs(d) / p.budget * 100);
+  return d > 0 ? <> <span className="late">+{money(d)} ({pc}%)</span></> : <> <span className="muted">−{money(-d)}</span></>;
+};
 const Kv: React.FC<{ k: string; children?: React.ReactNode }> = ({ k, children }) =>
   <div className="kv"><span className="k">{k}</span><span className="v">{children || <span className="muted">—</span>}</span></div>;
 
@@ -185,8 +192,11 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
       <Kv k={fl('progress')}><Progress v={p.progress} /></Kv>
       <Kv k={fl('last')}><span className="rag"><span className="dot sm" style={{ background: freshColor(freshness(p.lastUpdate, today)) }} />{p.lastUpdate ? fmtDate(p.lastUpdate) : <span className="muted">{t('noReports')}</span>}</span></Kv>
       <Kv k={fl('budget')}>{money(p.budget)}</Kv>
+      {/* 1.7.7: прогноз витрат и отклонение от бюджета */}
+      <Kv k={fl('fcost')}>{p.forecastCost ? <>{money(p.forecastCost)}{fcostDev(p)}</> : ''}</Kv>
       <Kv k={fl('actual')}>{money(p.actualCost)} · <span className={budgetLevel(use)}>{use}%</span></Kv>
       <Kv k={fl('dept')}>{tv(p.department)}</Kv>
+      <Kv k={fl('country')}>{p.country ? tv(p.country) : ''}</Kv>
     </div></div>
 
     <div className="sec"><h3>{t('secChanges')}</h3>

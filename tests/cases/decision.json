@@ -1,0 +1,112 @@
+{
+ "_about": "#132 «Потребують рішення»: запит рішення — лише з останнього поданого звіту проєкту (дата, потім номер); новий звіт знімає запит попереднього, навіть повернутого. out — номери звітів у поданні. reportView('decision', r, latestReportIds) приложения и RV.decision прототипа.",
+ "cases": [
+  {
+   "name": "#132: повернутий із запитом, пізніше погоджено інший — не показувати",
+   "reports": [
+    {
+     "id": 1,
+     "projectId": 20,
+     "date": "2026-10-16",
+     "approval": "Повернуто",
+     "decision": true
+    },
+    {
+     "id": 2,
+     "projectId": 20,
+     "date": "2026-10-30",
+     "approval": "Погоджено",
+     "decision": false
+    }
+   ],
+   "out": []
+  },
+  {
+   "name": "останній звіт із запитом — показати",
+   "reports": [
+    {
+     "id": 1,
+     "projectId": 20,
+     "date": "2026-10-16",
+     "approval": "Погоджено",
+     "decision": false
+    },
+    {
+     "id": 2,
+     "projectId": 20,
+     "date": "2026-10-30",
+     "approval": "На погодженні",
+     "decision": true
+    }
+   ],
+   "out": [
+    2
+   ]
+  },
+  {
+   "name": "останній — повернутий із запитом (нового ще немає) — показати",
+   "reports": [
+    {
+     "id": 1,
+     "projectId": 7,
+     "date": "2026-10-10",
+     "approval": "Повернуто",
+     "decision": true
+    }
+   ],
+   "out": [
+    1
+   ]
+  },
+  {
+   "name": "різні проєкти — кожен за своїм останнім",
+   "reports": [
+    {
+     "id": 1,
+     "projectId": 1,
+     "date": "2026-10-01",
+     "approval": "Погоджено",
+     "decision": true
+    },
+    {
+     "id": 2,
+     "projectId": 2,
+     "date": "2026-10-02",
+     "approval": "Погоджено",
+     "decision": true
+    },
+    {
+     "id": 3,
+     "projectId": 1,
+     "date": "2026-10-05",
+     "approval": "Погоджено",
+     "decision": true
+    }
+   ],
+   "out": [
+    2,
+    3
+   ]
+  },
+  {
+   "name": "той самий день — за номером",
+   "reports": [
+    {
+     "id": 8,
+     "projectId": 3,
+     "date": "2026-10-30",
+     "approval": "Повернуто",
+     "decision": true
+    },
+    {
+     "id": 9,
+     "projectId": 3,
+     "date": "2026-10-30",
+     "approval": "На погодженні",
+     "decision": false
+    }
+   ],
+   "out": []
+  }
+ ]
+}

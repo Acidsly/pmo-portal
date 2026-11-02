@@ -16,7 +16,7 @@ export function donutCounts(projects: Project[]): DonutCounts {
 }
 
 /** 7 срезов через 14 дней (последний — сегодня): каждый проект, который уже существовал на дату среза и ещё не был в архиве, —
- *  по последнему (погодженому) отчёту на эту дату; без отчёта — «не оцінено». Последний срез совпадает с кольцом «Портфель за станом». */
+ *  по последнему (погодженому) отчёту на эту дату; без отчёта — «не оцінено». Последний срез (сегодня) — по карточке, как кольцо «Портфель за станом» (#117). */
 export function snapshots(projects: Project[], reports: StatusReport[], today: string): Snapshot[] {
   const out: Snapshot[] = [];
   for (let k = 6; k >= 0; k--) {
@@ -28,6 +28,8 @@ export function snapshots(projects: Project[], reports: StatusReport[], today: s
       const archivedOn = p.archivedAt || p.actualEnd || p.lastUpdate;
       if (isArch(p.status) && (!archivedOn || tt >= archivedOn)) continue;   // в день архивации проект уже в архиве — как в кольце
       if (p.created && p.created.slice(0, 10) > tt) continue;   // проекта на дату среза ещё не было
+      // #117: сегодня — состояние карточки (как кольцо): погоджений, но не применённый отчёт (старше применённого, не от PM) карточку не менял
+      if (k === 0) { if (p.rag === 'Зелений') c.g++; else if (p.rag === 'Жовтий') c.y++; else if (p.rag === 'Червоний') c.r++; else c.na++; continue; }
       const rs = reports.filter(r => r.projectId === p.id && r.date <= tt).sort(byDateThenId);
       if (!rs.length) { c.na++; continue; }
       const last = rs[rs.length - 1];

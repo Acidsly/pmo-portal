@@ -1,0 +1,462 @@
+{
+ "_about": "Предупреждения формы статус-отчёта (не блокируют сохранение): #127 прогноз завершения открытого проекта раньше даты подання (today); #125 «Витрати на дату» меньше погоджених в карточке (n — сумма карточки); #124 архивная фаза («Завершено» / «Скасовано») при открытых рисках и проблемах (n — сколько). reportWarnings приложения (logic/forms.ts) и прототипа (PPM_RULES). #137 оценка «Бюджет» по правилу PMO: перевищення прогнозу витрат над бюджетом (план) до 9% — жовтий, від 10% — червоний (без перевищення — зелений); архивная фаза — прогноз = витрати на дату. hintBudgetRule — подсказка с процентом (n, целые проценты вниз) и цветом (rag); warnBudgetRule — выбранная оценка зеленее правила.",
+ "cases": [
+  {
+   "name": "нічого не порушено",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "2026-12-01",
+    "actualCost": 110
+   },
+   "p": {
+    "actualCost": 110
+   },
+   "open": 2,
+   "today": "2026-10-30",
+   "out": []
+  },
+  {
+   "name": "#127 прогноз минув",
+   "d": {
+    "status": "Планування",
+    "forecastEnd": "2026-10-20",
+    "actualCost": 0
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "forecastEnd",
+     "k": "warnForecastPast"
+    }
+   ]
+  },
+  {
+   "name": "#127 прогноз = сьогодні — не минув",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "2026-10-30",
+    "actualCost": 0
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": []
+  },
+  {
+   "name": "#127 прогноз не задано — нічого",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 0
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": []
+  },
+  {
+   "name": "#127 архівна фаза — прогноз не перевіряється",
+   "d": {
+    "status": "Завершено",
+    "forecastEnd": "2026-10-01",
+    "actualCost": 0
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": []
+  },
+  {
+   "name": "#125 витрати менші за погоджені",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 50
+   },
+   "p": {
+    "actualCost": 110
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "actualCost",
+     "k": "warnCostDown",
+     "n": 110
+    }
+   ]
+  },
+  {
+   "name": "#125 витрати 0 при погоджених 110 — теж",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 0
+   },
+   "p": {
+    "actualCost": 110
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "actualCost",
+     "k": "warnCostDown",
+     "n": 110
+    }
+   ]
+  },
+  {
+   "name": "#125 у картці витрат немає — нічого",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 0
+   },
+   "p": {
+    "actualCost": null
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": []
+  },
+  {
+   "name": "#125 більші — нічого",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 200
+   },
+   "p": {
+    "actualCost": 110
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": []
+  },
+  {
+   "name": "#124 «Завершено» з відкритими ризиками",
+   "d": {
+    "status": "Завершено",
+    "forecastEnd": "",
+    "actualCost": 0
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 2,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "status",
+     "k": "warnArchRisks",
+     "n": 2
+    }
+   ]
+  },
+  {
+   "name": "#124 «Скасовано» з відкритими ризиками",
+   "d": {
+    "status": "Скасовано",
+    "forecastEnd": "",
+    "actualCost": 0
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 1,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "status",
+     "k": "warnArchRisks",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "name": "#124 відкритих немає — нічого",
+   "d": {
+    "status": "Завершено",
+    "forecastEnd": "",
+    "actualCost": 0
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": []
+  },
+  {
+   "name": "усе разом: минув прогноз і менші витрати",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "2026-01-01",
+    "actualCost": 10
+   },
+   "p": {
+    "actualCost": 20
+   },
+   "open": 3,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "forecastEnd",
+     "k": "warnForecastPast"
+    },
+    {
+     "f": "actualCost",
+     "k": "warnCostDown",
+     "n": 20
+    }
+   ]
+  },
+  {
+   "name": "#137 без перевищення — нічого",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 0,
+    "budgetPlan": 500,
+    "forecastCost": 500,
+    "budget": "Зелений"
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": []
+  },
+  {
+   "name": "#137 прогноз менший за бюджет — нічого",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 0,
+    "budgetPlan": 500,
+    "forecastCost": 400,
+    "budget": "Зелений"
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": []
+  },
+  {
+   "name": "#137 перевищення 4% — жовтий; обрано зелений — попередження",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 0,
+    "budgetPlan": 500,
+    "forecastCost": 520,
+    "budget": "Зелений"
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "budget",
+     "k": "warnBudgetRule",
+     "n": 4,
+     "rag": "Жовтий"
+    }
+   ]
+  },
+  {
+   "name": "#137 перевищення 9,8% — ще жовтий (не округлюємо вгору)",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 0,
+    "budgetPlan": 1000,
+    "forecastCost": 1098,
+    "budget": "Жовтий"
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "budget",
+     "k": "hintBudgetRule",
+     "n": 9,
+     "rag": "Жовтий"
+    }
+   ]
+  },
+  {
+   "name": "#137 перевищення рівно 10% — червоний; обрано жовтий — попередження",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 0,
+    "budgetPlan": 1000,
+    "forecastCost": 1100,
+    "budget": "Жовтий"
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "budget",
+     "k": "warnBudgetRule",
+     "n": 10,
+     "rag": "Червоний"
+    }
+   ]
+  },
+  {
+   "name": "#137 перевищення 25% — червоний; обрано червоний — лише підказка",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 0,
+    "budgetPlan": 540000,
+    "forecastCost": 675000,
+    "budget": "Червоний"
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "budget",
+     "k": "hintBudgetRule",
+     "n": 25,
+     "rag": "Червоний"
+    }
+   ]
+  },
+  {
+   "name": "#137 оцінку ще не обрано — підказка",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 0,
+    "budgetPlan": 500,
+    "forecastCost": 600,
+    "budget": ""
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "budget",
+     "k": "hintBudgetRule",
+     "n": 20,
+     "rag": "Червоний"
+    }
+   ]
+  },
+  {
+   "name": "#137 «Не оцінено» — підказка",
+   "d": {
+    "status": "Планування",
+    "forecastEnd": "",
+    "actualCost": 0,
+    "budgetPlan": 500,
+    "forecastCost": 600,
+    "budget": "Не оцінено"
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "budget",
+     "k": "hintBudgetRule",
+     "n": 20,
+     "rag": "Червоний"
+    }
+   ]
+  },
+  {
+   "name": "#137 бюджет не задано — нічого",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 0,
+    "budgetPlan": 0,
+    "forecastCost": 600,
+    "budget": "Зелений"
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": []
+  },
+  {
+   "name": "#137 прогноз не задано — нічого",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 0,
+    "budgetPlan": 500,
+    "forecastCost": 0,
+    "budget": "Зелений"
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": []
+  },
+  {
+   "name": "#137 «Завершено»: прогноз = витрати на дату",
+   "d": {
+    "status": "Завершено",
+    "forecastEnd": "",
+    "actualCost": 550,
+    "budgetPlan": 500,
+    "forecastCost": 0,
+    "budget": "Зелений"
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "budget",
+     "k": "warnBudgetRule",
+     "n": 10,
+     "rag": "Червоний"
+    }
+   ]
+  }
+ ]
+}

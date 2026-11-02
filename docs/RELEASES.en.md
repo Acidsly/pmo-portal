@@ -1,5 +1,118 @@
 # What's new
 
+## 1.7.10.3 · 02.11.2026
+
+**Changed**
+- The AI assistant («Fill with AI») suggests the «Budget» rating by the PMO rule: cost forecast up to 9% over budget — yellow, 10% and more — red (#137).
+
+## 1.7.10.2 · 02.11.2026
+
+**Changed**
+- «Detailed system overview»: the new view name «High risks and issues».
+
+## 1.7.10.1 · 02.11.2026
+
+**Changed**
+- Technical update: test and production versions aligned, no changes in how the portal works.
+
+## 1.7.10.0 · 02.11.2026
+
+**Changed** (PMO decisions on R8 testing feedback)
+- «Budget» rating: in the «Initiation» and «Planning» phases you can choose «Not rated» — overall health is then calculated from the other two ratings (#121, #123).
+- A hint under the «Budget» rating by the PMO rule: cost forecast up to 9% over budget — yellow, 10% and more — red; a greener rating shows a warning (#137).
+- Unknown amounts stay empty instead of «0»; calculations treat an empty amount as 0 (#111).
+- «Cost to date» — all project costs together, since the project start (#122).
+- The risk owner is required; by default — the project PM (#129).
+
+## 1.7.9.0 · 02.11.2026
+
+**New** (R8 testing feedback)
+- Status report: the project's open risks and issues are shown right in the form; hints when the forecast completion date has passed, the cost to date is lower than approved, or the project goes to the archive with open risks (#124, #125, #127, #134).
+- "The plan is fully done" checkbox — no need to type "All done" by hand (#120).
+- Changing the project in a form that already has text, and closing an unsaved report, now ask first, so the text is not lost or moved to another project (#133, #134).
+- A report view shows the budget, cost and cost forecast as of the report date, even if the report did not change them, and "Planned" — the previous report's plan (#135, #136).
+
+**Changed**
+- "High risks and issues" — the new name of the view and the home page indicator: issues with a score of 15+ are there too (#128).
+- "Decision needed" — only the request from the project's latest report: a new report clears the previous request (#132).
+- A risk of an archived project explains: "The project is archived — the risk is view-only" (#118).
+
+## 1.7.8.1 · 02.11.2026
+
+**Fixed** (tests reconciled with all handled feedback)
+- On a phone, amount fields open a keyboard with a comma — cents can be typed (#131).
+- Columns menu: the first column can no longer be moved down — the order «strategic, priority, title» stays (#49).
+
+## 1.7.8.0 · 02.11.2026
+
+**Fixed** (R8 testing feedback)
+- Amounts with cents: «1450,50» in the budget, cost and forecast now rounds to $1,451 instead of becoming $145,050 (#131).
+- Risk or issue: when switching the type, each type keeps its own description — back on «Risk», you see the risk description (#130).
+- An invalid date (e.g. 31.11.2026) no longer disappears silently: it stays in the field with an explanation, and the form is not saved until the date is fixed (#119).
+- On iPhone the calendar button next to a date opens the date picker (#116).
+- On a phone an overdue due date of an open risk is red, as in the table (#114).
+- «Portfolio health over time»: the «today» column matches the «Portfolio by health» ring — the card state counts, not an approved report that was not applied to the card (#117).
+- «Change history»: a risk created and closed within a few minutes now shows both «Added» and «Closed» (#115).
+- AI assistant («Check with AI»): a plan item explained in «Not done from the plan and why» is no longer reported as missing (#112).
+
+**Please re-check**
+- Typing amounts with cents; switching «Risk ↔ Issue»; the date 31.11; the calendar on iPhone; red risk due dates on a phone; «Portfolio health over time» and the ring on the home page.
+
+## 1.7.7.9 · 28.10.2026
+
+**Changed**
+- Help: new section «External project participant» — how to add a person from outside the company (a helpdesk request, then search by the full e-mail address). The people search hints say the same.
+
+## 1.7.7.8 · 28.10.2026
+
+**Fixed**
+- An external participant (guest) who is not yet on the site can now be found by their full e-mail address — the search used to show «Not found».
+
+## 1.7.7.7 · 26.10.2026
+
+**Fixed**
+- The people search shows «Not found in the organization» when nobody matches. A team member not selected from the list is no longer reported as a missing role — the portal explains that the person must be selected from the search or first invited to the organization.
+
+## 1.7.7.6 · 26.10.2026
+
+**Fixed**
+- An external participant (a guest of the organization) can now be added to the project team or assigned as PM, owner or risk owner. If the person is not yet in the organization, the portal explains that the Microsoft 365 administrator must invite them first.
+
+## 1.7.7.5 · 21.10.2026
+
+**Changed**
+- "Help" and "Detailed system overview" — country, budget and cost forecast, plan vs actual; the AI assistant — the more reports, the more useful.
+
+## 1.7.7.4 · 21.10.2026
+
+**Changed**
+- Technical update with no changes to how the portal works.
+
+## 1.7.7.3 · 21.10.2026
+
+**Changed**
+- Technical update with no changes to how the portal works.
+
+## 1.7.7.2 · 21.10.2026
+
+**Changed**
+- Technical update with no changes to how the portal works.
+
+## 1.7.7.1 · 21.10.2026
+
+**Changed**
+- Technical update with no changes to how the portal works.
+
+## 1.7.7.0 · 21.10.2026
+
+**New**
+- **Budget works like the schedule.** In the status report: **Budget (plan)** and **Cost at completion forecast** ("at the current spending rate" hint); a change needs a reason and reaches the card after PMO approval; the card shows the forecast and the deviation from the budget. **Plan vs actual:** "Planned" from the last approved report and **Not done from the plan and why** (required if there was a plan); the AI assistant takes it into account when checking.
+
+## 1.7.6.0 · 21.10.2026
+
+**New**
+- Project **Country**: the PMO chooses it when creating a project and later changes it with "Change PM / owner / country". The **country CEO** sees the projects of their countries and can comment. **Country** column in "Projects" and "Archive"; **Portfolio by country** on the home page.
+
 ## 1.7.5.4 · 28.10.2026
 
 **Fixed**

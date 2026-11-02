@@ -11,3 +11,6 @@ export function parseMoney(txt: string): number {
   const d = t.replace(/[^0-9]/g, '');
   return d ? Number(d) : 0;
 }
+/** Текст поля во время ввода (#131): цифры и разделители «,» / «.» остаются как набраны — дробная часть разбирается при выходе
+ *  (`parseMoney`), иначе «1450,» теряет запятую и «50» дописывается к целому (145 050). */
+export const maskMoney = (txt: string): string => String(txt).replace(/[^0-9.,]/g, '');

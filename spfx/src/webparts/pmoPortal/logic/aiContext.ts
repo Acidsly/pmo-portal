@@ -113,7 +113,9 @@ export function buildReportContext(input: AiContextIn, maxChars: number = 50000)
   const d = input.draft && input.draft.projectId === pid ? input.draft : undefined;
   const draftOut = d ? { schedule: d.schedule, budget: d.budget, resources: d.resources, phase: d.status, type: d.type,
     progress: num(d.progress), start: d.start || '', goLive: d.goLive || '', planEnd: d.planEnd || '', forecastEnd: d.forecastEnd || '',
-    actualEnd: d.actualEnd || '', actualCost: num(d.actualCost), keyReason: d.keyReason, summary: d.title,
+    actualEnd: d.actualEnd || '', actualCost: num(d.actualCost),
+    // #137: бюджет и прогноз витрат — для правила оценки «Бюджет» в «Чернетці»; только заданные (> 0)
+    ...((d.budgetPlan || 0) > 0 ? { budgetPlan: d.budgetPlan } : {}), ...((d.forecastCost || 0) > 0 ? { forecastCost: d.forecastCost } : {}), keyReason: d.keyReason, summary: d.title,
     done: d.done, next: d.next, issues: d.issues, decision: !!d.decision, decisionText: d.decisionText,
     // какие показатели PM изменил в этой форме против карточки (не история: журнал — это уже внесённое раньше)
     changed: draftChanged(p, d) } : undefined;
@@ -123,7 +125,7 @@ export function buildReportContext(input: AiContextIn, maxChars: number = 50000)
       lang: input.lang, today: input.today,
       project: { code: p.code, title: p.title, phase: p.status, type: p.type, progress: num(p.progress),
         start: p.start || '', goLive: p.goLive || '', planEnd: p.planEnd || '', forecastEnd: p.forecastEnd || '', actualEnd: p.actualEnd || '',
-        budget: num(p.budget), actualCost: num(p.actualCost), lastUpdate: since || p.lastUpdate || '' },
+        budget: num(p.budget), actualCost: num(p.actualCost), ...((p.forecastCost || 0) > 0 ? { forecastCost: p.forecastCost } : {}), lastUpdate: since || p.lastUpdate || '' },
       reports: approved.slice(0, 3).map((r, i) => reportOut(r, i === 0 || cut < 1))
     };
     if (latest && latest.approval === AP_RETURNED) o.returned = { date: latest.date, summary: latest.title, note: latest.approvalNote };

@@ -20,7 +20,12 @@
       "Bash(pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod:*)",
       "Bash(git push:*)",
       "Bash(git merge:*)",
-      "Bash(pwsh -NoLogo -File scripts/Register-PMOApps.ps1:*)"
+      "Bash(pwsh -NoLogo -File scripts/Register-PMOApps.ps1:*)",
+      "Bash(pwsh -NoLogo -File scripts/Publish-Runbook.ps1:*)",
+      "Bash(pwsh -NoLogo -File scripts/Set-AzureSchedule.ps1:*)",
+      "Bash(pwsh -NoLogo -File scripts/New-PMOAutomation.ps1:*)",
+      "Bash(pwsh -NoLogo -File scripts/Grant-PMOAutomation.ps1:*)",
+      "Bash(git rebase:*)"
     ],
     "deny": [
       "Read(certs/**)",
@@ -35,5 +40,16 @@
       "Bash(*Remove-PnPList*)",
       "Bash(*Remove-PnPTenantSite*)"
     ]
+  },
+  "enabledPlugins": {
+    "superpowers@superpowers-marketplace": true
+  },
+  "extraKnownMarketplaces": {
+    "superpowers-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "obra/superpowers-marketplace"
+      }
+    }
   }
 }

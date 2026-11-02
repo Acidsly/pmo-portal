@@ -15,6 +15,8 @@ export function freshness(lastUpdate: string, today: string): Fresh {
 export const isPlanLate = (planEnd: string, status: string, today: string): boolean => !!planEnd && planEnd < today && isActive(status);
 export const forecastDelta = (planEnd: string, forecastEnd: string): number | null =>
   planEnd && forecastEnd ? daysBetween(planEnd, forecastEnd) : null;
+/** 1.7.7: подсказка «за темпом витрат» — витрати на дату ÷ % виконання; при 0 % — нет. */
+export const paceForecast = (actual: number, progress: number): number | null => (progress > 0 && actual > 0 ? Math.round(actual / progress * 100) : null);
 export const budgetUse = (budget: number, actual: number): number => (budget ? Math.round((actual || 0) / budget * 100) : 0);
 export const budgetLevel = (use: number): '' | 'warn' | 'over' => (use > 100 ? 'over' : use > 90 ? 'warn' : '');
 export const riskScore = (p: number, i: number): number => (p || 0) * (i || 0);

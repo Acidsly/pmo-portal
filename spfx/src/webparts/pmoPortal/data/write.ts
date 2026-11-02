@@ -20,6 +20,10 @@ export function reportBody(d: ReportDraft, p: Project): Body {
   b.srProgress = Math.max(0, Math.min(100, d.progress));
   // суммы — целые доллары, x,5 — вверх (как синхронизация, ошибка сверки №5)
   if (d.actualCost !== p.actualCost) b.srActualCost = Math.max(0, roundAway(d.actualCost));
+  // 1.7.7: бюджет и прогноз — только изменённые (как даты); прогноз 0 — «не задан»; план / факт — текст
+  if (d.budgetPlan !== p.budget) b.srBudgetPlan = Math.max(0, roundAway(d.budgetPlan));
+  if (d.forecastCost && d.forecastCost !== (p.forecastCost || 0)) b.srForecastCost = Math.max(0, roundAway(d.forecastCost));
+  if ((d.notDone || '').trim()) b.srNotDone = d.notDone.trim();
   const dates: [keyof ReportDraft & keyof Project, string][] = [['start', 'srStart'], ['goLive', 'srGoLive'], ['planEnd', 'srPlanEnd'], ['forecastEnd', 'srForecastEnd']];
   dates.forEach(([k, f]) => { if ((d[k] || '') !== (p[k] || '')) b[f] = spDate(String(d[k] || '')); });
   // #54: фактическая дата — только при «Завершено» / «Скасовано»
@@ -39,14 +43,15 @@ const parentOf = (d: ProjectDraft): Body => (d.parent === undefined ? {} : { pmP
 export function projectBody(d: ProjectDraft, code: string): Body {
   return { Title: d.title.trim(), pmCode: code, pmType: d.type, pmPriority: d.priority, pmDepartment: d.department, ...people(d),
     pmStatus: d.status, pmStart: spDate(d.start), pmGoLive: spDate(d.goLive), pmPlanEnd: spDate(d.planEnd), pmBudget: roundAway(d.budget || 0),
-    pmDescription: d.description, pmLinks: JSON.stringify(d.links), pmProgress: 0, ...parentOf(d) };
+    pmDescription: d.description, pmLinks: JSON.stringify(d.links), pmProgress: 0, ...parentOf(d), ...(d.country ? { pmCountry: d.country } : {}) };
 }
 
-/** Правка карточки: без ключевых показателей и без PM / власника (#43: меняет только PMO через «Призначення»);
+/** Правка карточки: без ключевых показателей и без PM / власника / країни (#43: меняет только PMO через «Призначення»);
  *  изменения дописываются в pmEditLog — синхронизация перенесёт их в журнал. */
 export function projectEditBody(d: ProjectDraft, diffs: { f: string; from: string; to: string }[], who: string, reason: string, prevLog: string): Body {
+  // 1.7.7: «Бюджет (план)» — только статус-отчётом (ключевой показатель), правка карточки его не пишет
   const b: Body = { Title: d.title.trim(), pmCode: d.code, pmPriority: d.priority, pmDepartment: d.department,
-    pmBudget: roundAway(d.budget || 0), pmDescription: d.description, pmLinks: JSON.stringify(d.links), ...parentOf(d) };
+    pmDescription: d.description, pmLinks: JSON.stringify(d.links), ...parentOf(d) };
   if (diffs.length) {
     let entries: unknown[] = [];
     try { const prev = prevLog ? JSON.parse(prevLog) : undefined; if (prev && Array.isArray(prev.entries)) entries = prev.entries; } catch { /* повреждённый журнал — начинаем заново */ }

@@ -2,7 +2,7 @@
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { withParentNames } from '../logic/projects';
 import { Project, StatusReport, Risk, Comment, ChangeEntry, Person, FeedbackRow, Approval } from './types';
-import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, PROJECT_PARENT, REPORT_SELECT, REPORT_EXPAND, REPORT_AI, RISK_SELECT, RISK_EXPAND,
+import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, PROJECT_PARENT, PROJECT_OPTIONAL, ASSIGN_COUNTRY, REPORT_SELECT, REPORT_EXPAND, REPORT_AI, REPORT_BUDGET, RISK_SELECT, RISK_EXPAND,
   COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, TEAM_SELECT, TEAM_EXPAND, mapTeam, APPROVAL_SELECT, APPROVAL_EXPAND, mapApproval, ASSIGN_SELECT, ASSIGN_EXPAND, mapAssign, canAdd, canManage,
   withoutFolders, CHANGES_ON_LOAD, changesOf, changesSince, NOTIFY_SELECT, NOTIFY_SELECT_BASE, mapNotify, NotifyRow } from './map';
 import { withApproval, approvedIds as approvedOf, pendingReports, latestReport } from '../logic/approval';
@@ -67,7 +67,10 @@ export class SpRepo {
   async loadAll(): Promise<PortalData> {
     const since = new Date(Date.now() - NOTIFY_DAYS * 864e5).toISOString();
     const [p, r, k, c, h, tm, ap, ps, perm, fbPerm, pa, rc, ns] = await Promise.all([
-      this.items('Projects', PROJECT_SELECT + PROJECT_PARENT.select, PROJECT_EXPAND + PROJECT_PARENT.expand).catch(() => this.items('Projects', PROJECT_SELECT, PROJECT_EXPAND)),
+      // запасные запросы: на сайте ещё нет «Країна» / «Батьківський проєкт» (приложение раньше Deploy-PMO.ps1) — без них
+      this.items('Projects', PROJECT_SELECT + PROJECT_PARENT.select + PROJECT_OPTIONAL, PROJECT_EXPAND + PROJECT_PARENT.expand)
+        .catch(() => this.items('Projects', PROJECT_SELECT + PROJECT_PARENT.select, PROJECT_EXPAND + PROJECT_PARENT.expand))
+        .catch(() => this.items('Projects', PROJECT_SELECT, PROJECT_EXPAND)),
       this.reportRows(),
       this.items('RisksIssues', RISK_SELECT, RISK_EXPAND),
       this.items('ProjectComments', COMMENT_SELECT, COMMENT_EXPAND),
@@ -80,7 +83,7 @@ export class SpRepo {
       this.listPerms('Projects').catch(() => undefined),
       this.listPerms('Feedback').catch(() => undefined),
       // «Призначення» (#43) — до развёртывания списка нет: пусто
-      this.items('ProjectAssignments', ASSIGN_SELECT, ASSIGN_EXPAND).catch(() => [] as any[]),
+      this.items('ProjectAssignments', ASSIGN_SELECT + ASSIGN_COUNTRY, ASSIGN_EXPAND).catch(() => this.items('ProjectAssignments', ASSIGN_SELECT, ASSIGN_EXPAND)).catch(() => [] as any[]),
       // сповіщення: журнал за 14 дней и своя строка «Прочитане» (до развёртывания — пусто / null)
       this.items('KeyChanges', CHANGE_SELECT, CHANGE_EXPAND, changesSince(since)).catch(() => [] as any[]),
       this.items('NotifyState', NOTIFY_SELECT, '', this.ownRow()).catch(() => this.items('NotifyState', NOTIFY_SELECT_BASE, '', this.ownRow())).catch(() => [] as any[])]);
@@ -214,7 +217,8 @@ export class SpRepo {
    *  Ошибки: notReady — папки ещё нет (новый проект, синхронизация не прошла); noRights — нет права добавлять. */
   /** Все статус-отчёты с полями помощника ИИ; полей ещё нет на сайте (приложение раньше Deploy-PMO.ps1) — без них, отчёты не пропадают. */
   reportRows(): Promise<any[]> {
-    return this.items('StatusReports', REPORT_SELECT + REPORT_AI, REPORT_EXPAND).catch(() => this.items('StatusReports', REPORT_SELECT, REPORT_EXPAND));
+    return this.items('StatusReports', REPORT_SELECT + REPORT_AI + REPORT_BUDGET, REPORT_EXPAND)
+      .catch(() => this.items('StatusReports', REPORT_SELECT + REPORT_AI, REPORT_EXPAND)).catch(() => this.items('StatusReports', REPORT_SELECT, REPORT_EXPAND));
   }
 
   /** Время UTC (ISO) → время по поясу сайта («2026-10-13T11:30:00») — для полей «дата и время» в createIn (formDateTime). */
@@ -269,12 +273,15 @@ export class SpRepo {
    *  отчёты на погодженні, дата последнего погодженого; для погодження — состояние отчёта и решения PMO по нему. */
   async fresh(projectId: number, reportId = 0): Promise<Fresh> {
     const [pj, st, reps, aps, pas] = await Promise.all([
-      this.getJson(this.itemUrl('Projects', projectId, PROJECT_SELECT + PROJECT_PARENT.select, PROJECT_EXPAND + PROJECT_PARENT.expand), true)
+      this.getJson(this.itemUrl('Projects', projectId, PROJECT_SELECT + PROJECT_PARENT.select + PROJECT_OPTIONAL, PROJECT_EXPAND + PROJECT_PARENT.expand), true)
+        .catch(() => this.getJson(this.itemUrl('Projects', projectId, PROJECT_SELECT + PROJECT_PARENT.select, PROJECT_EXPAND + PROJECT_PARENT.expand), true))
         .catch(() => this.getJson(this.itemUrl('Projects', projectId, PROJECT_SELECT, PROJECT_EXPAND), true)),
       this.items('ProjectState', 'Id,psProject,psState,psLastApplied', '', `psProject eq ${projectId}`).catch(() => [] as any[]),
-      this.items('StatusReports', REPORT_SELECT, REPORT_EXPAND, `srProjectId eq ${projectId}`),
+      this.items('StatusReports', REPORT_SELECT + REPORT_BUDGET, REPORT_EXPAND, `srProjectId eq ${projectId}`)
+        .catch(() => this.items('StatusReports', REPORT_SELECT, REPORT_EXPAND, `srProjectId eq ${projectId}`)),
       this.items('ReportApprovals', APPROVAL_SELECT, APPROVAL_EXPAND, `apProjectId eq ${projectId}`).catch(() => null as any[] | null),
-      this.items('ProjectAssignments', ASSIGN_SELECT, ASSIGN_EXPAND, `paProjectId eq ${projectId}`).catch(() => [] as any[])]);
+      this.items('ProjectAssignments', ASSIGN_SELECT + ASSIGN_COUNTRY, ASSIGN_EXPAND, `paProjectId eq ${projectId}`)
+        .catch(() => this.items('ProjectAssignments', ASSIGN_SELECT, ASSIGN_EXPAND, `paProjectId eq ${projectId}`)).catch(() => [] as any[])]);
     const approvals = (aps || []).map(mapApproval);
     const assigns = pas.map(mapAssign);
     const reports = reps.map(mapReport).map(x => withApproval(x, approvals));

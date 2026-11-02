@@ -14,12 +14,16 @@ export const PROJECT_EXPAND = 'pmManager,pmOwner,pmStakeholders';
 /** «Батьківський проєкт» (pmParent, lookup на «Проєкти»): название — из записи, видно и без доступа к родителю. Отдельно:
  *  поля может ещё не быть на сайте (приложение установили раньше Deploy-PMO.ps1) — тогда проекты читаются без него. */
 export const PROJECT_PARENT = { select: ',pmParentId,pmParent/Title', expand: ',pmParent' };
+/** Поля, которых на сайте до Deploy-PMO.ps1 может не быть: без них проекты и «Призначення» всё равно читаются (запасной запрос). */
+export const PROJECT_OPTIONAL = ',pmCountry,pmForecastCost';
 export const REPORT_SELECT = ['Id', 'Title', 'srProjectId', 'srDate', 'srPeriod', 'srPeriodFrom', 'srSchedule', 'srBudget', 'srResources', 'srStatus', 'srType',
   'srProgress', 'srStart', 'srGoLive', 'srPlanEnd', 'srForecastEnd', 'srActualEnd', 'srActualCost', 'srKeyReason', 'srDone', 'srNext', 'srIssues',
   'srDecision', 'srDecisionText', 'srApplied', 'srApproval', 'srApprovedAt', 'srApprovalNote', 'Created', ...people('Author', 'srApprovedBy')].join(',');
 export const REPORT_EXPAND = 'Author,srApprovedBy';
 /** Поля помощника ИИ (этап 4) — отдельно: их может ещё не быть на сайте (тогда отчёты читаются без них). */
 export const REPORT_AI = ',srAiCheck,srAiCheckedAt';
+/** 1.7.7: бюджет и план / факт — до Deploy-PMO.ps1 полей нет (запасной запрос без них). */
+export const REPORT_BUDGET = ',srBudgetPlan,srForecastCost,srNotDone';
 export const RISK_SELECT = ['Id', 'Title', 'riProjectId', 'riType', 'riProbability', 'riImpact', 'riStatus', 'riDue', 'riMitigation', 'riStrategy', 'riContingency', 'Created',
   ...people('riOwner')].join(',');
 export const RISK_EXPAND = 'riOwner';
@@ -50,7 +54,7 @@ export function mapProject(r: any): Project {
   return { id: r.Id, code: s(r.pmCode), title: s(r.Title), type: s(r.pmType), priority: s(r.pmPriority),
     manager: mapPerson(r.pmManager), owner: mapPerson(r.pmOwner),
     stakeholders: (r.pmStakeholders || []).map(mapPerson).filter(Boolean) as Person[],
-    department: s(r.pmDepartment), status: s(r.pmStatus), rag: s(r.pmRAG) as Rag, progress: n(r.pmProgress),
+    department: s(r.pmDepartment), country: s(r.pmCountry), forecastCost: nn(r.pmForecastCost), status: s(r.pmStatus), rag: s(r.pmRAG) as Rag, progress: n(r.pmProgress),
     start: dateOnly(r.pmStart), goLive: dateOnly(r.pmGoLive), planEnd: dateOnly(r.pmPlanEnd), forecastEnd: dateOnly(r.pmForecastEnd), actualEnd: dateOnly(r.pmActualEnd),
     archivedAt: dateOnly(r.pmArchivedAt), budget: n(r.pmBudget), actualCost: n(r.pmActualCost), lastUpdate: dateOnly(r.pmLastUpdate),
     lastReport: s(r.pmLastReport), lastComment: s(r.pmLastComment), links: parseLinks(s(r.pmLinks), r.pmLoop ? s(r.pmLoop.Url) : ''), team: [], description: s(r.pmDescription),
@@ -66,7 +70,7 @@ export function mapReport(r: any): StatusReport {
     title: s(r.Title), done: s(r.srDone), next: s(r.srNext), issues: s(r.srIssues), decision: r.srDecision === true,
     decisionText: s(r.srDecisionText), applied: r.srApplied === true, author: mapPerson(r.Author), created: s(r.Created),
     approval: s(r.srApproval), approvedBy: mapPerson(r.srApprovedBy), approvedAt: s(r.srApprovedAt), approvalNote: s(r.srApprovalNote),
-    aiCheck: s(r.srAiCheck), aiCheckedAt: s(r.srAiCheckedAt) };
+    aiCheck: s(r.srAiCheck), aiCheckedAt: s(r.srAiCheckedAt), budgetPlan: nn(r.srBudgetPlan), forecastCost: nn(r.srForecastCost), notDone: s(r.srNotDone) };
 }
 
 export function mapRisk(r: any): Risk {
@@ -81,8 +85,9 @@ export const mapTeam = (r: any): TeamMember => ({ id: r.Id, projectId: r.tmProje
 
 export const ASSIGN_SELECT = ['Id', 'paProjectId', 'paNote', 'paApplied', 'Created', ...people('paManager', 'paOwner', 'Author')].join(',');
 export const ASSIGN_EXPAND = 'paManager,paOwner,Author';
+export const ASSIGN_COUNTRY = ',paCountry';
 export const mapAssign = (r: any): Assignment => ({ id: r.Id, projectId: r.paProjectId, manager: mapPerson(r.paManager), owner: mapPerson(r.paOwner),
-  note: s(r.paNote), applied: r.paApplied === true, author: mapPerson(r.Author), created: s(r.Created) });
+  note: s(r.paNote), applied: r.paApplied === true, author: mapPerson(r.Author), created: s(r.Created), country: s(r.paCountry) });
 export const APPROVAL_SELECT = ['Id', 'apReportId', 'apProjectId', 'apDecision', 'apSchedule', 'apBudget', 'apResources', 'apNote', 'apApplied', 'Created', ...people('Author')].join(',');
 export const APPROVAL_EXPAND = 'Author';
 export const mapApproval = (r: any): Approval => ({ id: r.Id, reportId: r.apReportId, projectId: r.apProjectId, decision: s(r.apDecision),

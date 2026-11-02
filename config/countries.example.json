@@ -1,0 +1,4 @@
+{
+  "_about": "CEO по странам для Deploy-PMO.ps1 -CeoFile (Invoke-Env берёт config/countries-<env>.json; файлы с e-mail — вне git). Страна — значение выбора «Країна».",
+  "Україна": ["ceo-ua@example.com"], "Польща": ["ceo-eu@example.com"]
+}

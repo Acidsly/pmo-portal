@@ -17,7 +17,7 @@ const LIST_MAX = 3;
 
 const W: Record<AiLang, {
   type: Record<string, string>; due: string;
-  forecast(f: string, p: string): string; overdue(list: string): string; budget(a: string, b: string): string;
+  forecast(f: string, p: string): string; overdue(list: string): string; budget(a: string, b: string): string; fcost(a: string, b: string): string;
   decision: string; progress(from: string, to: string): string; field: Record<string, string>;
 }> = {
   uk: {
@@ -25,6 +25,7 @@ const W: Record<AiLang, {
     forecast: (f, p) => `«Терміни» — зелений, а «Прогноз завершення» ${f} пізніше «Дата завершення (план)» ${p} — змініть оцінку «Терміни» або «Прогноз завершення».`,
     overdue: l => `«Терміни» — зелений, а термін заходів минув: ${l} (реєстр «Ризики та проблеми» в картці) — змініть оцінку «Терміни» або оновіть записи в реєстрі.`,
     budget: (a, b) => `«Бюджет» — зелений, а «Витрати на дату» ${a} більше бюджету проєкту ${b} — змініть оцінку «Бюджет» або «Витрати на дату».`,
+    fcost: (a, b) => `«Бюджет» — зелений, а «Прогноз витрат на завершення» ${a} більше бюджету ${b} — змініть оцінку «Бюджет» або прогноз.`,
     decision: 'Позначено «Потрібне рішення керівництва», але не описано, яке рішення потрібне, — заповніть «Яке рішення потрібне».',
     progress: (from, to) => `«% виконання» зменшено з ${from} до ${to} — перевірте «% виконання» або поясніть зниження в «Проблеми та ризики за період».`,
     field: { phase: 'Фаза проєкту', type: 'Тип проєкту', start: 'Дата старту', goLive: 'Дата запуску (продакшн)', planEnd: 'Дата завершення (план)', forecastEnd: 'Прогноз завершення' }
@@ -34,6 +35,7 @@ const W: Record<AiLang, {
     forecast: (f, p) => `«Schedule» is green, but «Forecast completion» ${f} is later than «Planned completion» ${p} — change the «Schedule» rating or «Forecast completion».`,
     overdue: l => `«Schedule» is green, but actions are overdue: ${l} (the «Risks and issues» register in the card) — change the «Schedule» rating or update the records in the register.`,
     budget: (a, b) => `«Budget» is green, but «Cost to date» ${a} exceeds the project budget ${b} — change the «Budget» rating or «Cost to date».`,
+    fcost: (a, b) => `«Budget» is green, but «Cost at completion forecast» ${a} exceeds the budget ${b} — change the «Budget» rating or the forecast.`,
     decision: '«Management decision needed» is ticked, but the decision is not described — fill in «Decision required».',
     progress: (from, to) => `«% complete» was reduced from ${from} to ${to} — check «% complete» or explain the decrease in «Issues and risks for the period».`,
     field: { phase: 'Project phase', type: 'Project type', start: 'Start date', goLive: 'Go-live date (production)', planEnd: 'Planned completion', forecastEnd: 'Forecast completion' }
@@ -43,6 +45,7 @@ const W: Record<AiLang, {
     forecast: (f, p) => `«Сроки» — зелёный, а «Прогноз завершения» ${f} позже «Дата завершения (план)» ${p} — измените оценку «Сроки» или «Прогноз завершения».`,
     overdue: l => `«Сроки» — зелёный, а срок мер истёк: ${l} (реестр «Риски и проблемы» в карточке) — измените оценку «Сроки» или обновите записи в реестре.`,
     budget: (a, b) => `«Бюджет» — зелёный, а «Затраты на дату» ${a} больше бюджета проекта ${b} — измените оценку «Бюджет» или «Затраты на дату».`,
+    fcost: (a, b) => `«Бюджет» — зелёный, а «Прогноз затрат на завершение» ${a} больше бюджета ${b} — измените оценку «Бюджет» или прогноз.`,
     decision: 'Отмечено «Требуется решение руководства», но не описано, какое решение нужно, — заполните «Какое решение нужно».',
     progress: (from, to) => `«% выполнения» уменьшен с ${from} до ${to} — проверьте «% выполнения» или объясните снижение в «Проблемы и риски за период».`,
     field: { phase: 'Фаза проекта', type: 'Тип проекта', start: 'Дата старта', goLive: 'Дата запуска (продакшн)', planEnd: 'Дата завершения (план)', forecastEnd: 'Прогноз завершения' }
@@ -79,6 +82,9 @@ export function ruleItems(input: AiContextIn): string[] {
     out.push(w.overdue(names.join(', ') + (late.length > LIST_MAX ? ', …' : '')));
   }
   if (d.budget === GREEN && isNum(d.actualCost) && isNum(p.budget) && p.budget > 0 && d.actualCost > p.budget) out.push(w.budget(money(d.actualCost), money(p.budget)));
+  // 1.7.7: прогноз витрат (если задан) выше бюджета этого отчёта при зелёном «Бюджет»
+  const bud = isNum(d.budgetPlan) && d.budgetPlan > 0 ? d.budgetPlan : p.budget;
+  if (d.budget === GREEN && isNum(d.forecastCost) && d.forecastCost > 0 && isNum(bud) && bud > 0 && d.forecastCost > bud) out.push(w.fcost(money(d.forecastCost), money(bud)));
   if (d.decision && !(d.decisionText || '').trim()) out.push(w.decision);
   if (draftChanged(p, d).indexOf('progress') >= 0 && isNum(d.progress) && isNum(p.progress) && d.progress < p.progress) out.push(w.progress(`${p.progress}%`, `${d.progress}%`));
   return out;
@@ -110,7 +116,8 @@ export function buildCheckContext(input: AiContextIn, maxChars: number = 50000):
   if (last) o.plan = last.decision ? { date: last.date, next: last.next, decision: true, decisionText: last.decisionText } : { date: last.date, next: last.next };
   if (latest && latest.approval === AP_RETURNED) o.returned = { date: latest.date, note: latest.approvalNote };
   o.mention = mustMention(input).map(k => ({ type: k.type, title: k.title, score: riskScore(k.probability, k.impact), due: k.due || '', overdue: isOverdue(k, input.today) }));
-  if (d) o.draft = { schedule: d.schedule, budget: d.budget, resources: d.resources, summary: d.title, done: d.done, next: d.next, issues: d.issues,
+  // 1.7.7: «Не зроблено з плану» — пункт плана, названный здесь, не «пропущен»
+  if (d) o.draft = { schedule: d.schedule, budget: d.budget, resources: d.resources, summary: d.title, done: d.done, ...((d.notDone || '').trim() ? { notDone: d.notDone } : {}), next: d.next, issues: d.issues,
     decision: !!d.decision, decisionText: d.decisionText, keyReason: d.keyReason,
     keyChanges: draftChanged(p, d).filter(k => !!KEY_CHANGE[k]).map(k => ({ field: w.field[k], from: shown(k, KEY_CHANGE[k](pr)), to: shown(k, KEY_CHANGE[k](dr)) })) };
   if (input.prevCheck) o.prevCheck = input.prevCheck;

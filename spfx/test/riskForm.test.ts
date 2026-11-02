@@ -1,9 +1,15 @@
 import cases from '../../tests/cases/risk-form.json';
-import { riskErrors, riskEditable, riskCopy, RiskDraft } from '../src/webparts/pmoPortal/logic/forms';
+import { riskErrors, riskEditable, riskCopy, riskTypeSwitch, RiskDraft } from '../src/webparts/pmoPortal/logic/forms';
 
 // Форма записи реестра «Ризики та проблеми» (#91, #92): общие векторы tests/cases/risk-form.json (те же — прототип)
 const c = cases as any;
-const base: RiskDraft = { projectId: 1, title: '', type: 'Ризик', probability: 3, impact: 3, owner: null, status: 'Відкрито', due: '', mitigation: '', strategy: '', contingency: '' };
+// #129: власник обязателен — в векторах без поля owner он задан (как PM по умолчанию в форме)
+const base: RiskDraft = { projectId: 1, title: '', type: 'Ризик', probability: 3, impact: 3, owner: { id: 1, email: 'pm@x', name: 'PM' }, status: 'Відкрито', due: '', mitigation: '', strategy: '', contingency: '' };
 describe('обязательные поля', () => { (c.errors as any[]).forEach(x => test(x.name, () => { expect(riskErrors({ ...base, ...x.draft }, x.isNew)).toEqual(x.out); })); });
 describe('что можно менять', () => { (c.editable as any[]).forEach(x => test(x.name, () => { expect(x.fields.map((f: string) => riskEditable(f, x.isNew))).toEqual(x.out); })); });
 describe('«Копіювати ризик»', () => { (c.copy as any[]).forEach(x => test(x.name, () => { expect(riskCopy(x.risk, x.today)).toEqual(x.out); })); });
+describe('#130 опис при перемиканні «Ризик ↔ Проблема»', () => { (c.typeSwitch as any[]).forEach(x => test(x.name, () => {
+  let st = { type: 'Ризик', title: '', memo: {} as Record<string, string> };
+  for (const s of x.steps) st = s.type ? { ...st, ...riskTypeSwitch(st, s.type) } : { ...st, title: s.set };
+  expect(st.title).toBe(x.title);
+})); });

@@ -1,13 +1,13 @@
 import { Project, Assignment, ChangeEvent } from '../data/types';
 import { isArch } from './status';
 
-/** Решение PMO о смене PM / власника («Призначення», #43) — как Get-AssignmentPlan синхронизации (общие векторы tests/cases/assignments.json).
+/** Решение PMO о смене PM / власника / країни («Призначення», #43) — как Get-AssignmentPlan синхронизации (общие векторы tests/cases/assignments.json).
  *  Действует запись PMO, владельца сайта или приложения («app»); проект не в архиве; комментарий обязателен; хотя бы одно поле меняется
  *  (пустое — без изменений). E-mail — в нижнем регистре. */
 export type AssignReason = '' | 'author' | 'arch' | 'note' | 'same';
-export interface AssignIn { author: string; manager: string; owner: string; note: string; }
-export interface AssignPlan { valid: boolean; reason: AssignReason; changes: { f: 'pmManager' | 'pmOwner'; from: string; to: string }[]; }
-export function assignmentPlan(a: AssignIn, curPm: string, curOwner: string, archived: boolean, pmo: string[], owners: string[]): AssignPlan {
+export interface AssignIn { author: string; manager: string; owner: string; note: string; country?: string; }
+export interface AssignPlan { valid: boolean; reason: AssignReason; changes: { f: 'pmManager' | 'pmOwner' | 'pmCountry'; from: string; to: string }[]; }
+export function assignmentPlan(a: AssignIn, curPm: string, curOwner: string, archived: boolean, pmo: string[], owners: string[], curCountry = ''): AssignPlan {
   const bad = (reason: AssignReason): AssignPlan => ({ valid: false, reason, changes: [] });
   const author = a.author || '';
   if (!(author === 'app' || (!!author && owners.indexOf(author) >= 0) || (!!author && pmo.indexOf(author) >= 0))) return bad('author');
@@ -16,6 +16,7 @@ export function assignmentPlan(a: AssignIn, curPm: string, curOwner: string, arc
   const changes: AssignPlan['changes'] = [];
   if (a.manager && a.manager !== curPm) changes.push({ f: 'pmManager', from: curPm, to: a.manager });
   if (a.owner && a.owner !== curOwner) changes.push({ f: 'pmOwner', from: curOwner, to: a.owner });
+  if (a.country && a.country !== curCountry) changes.push({ f: 'pmCountry', from: curCountry, to: a.country });
   return changes.length ? { valid: true, reason: '', changes } : bad('same');
 }
 
@@ -31,11 +32,12 @@ export function applyAssignments(project: Project, rows: Assignment[]): Project 
   const events: ChangeEvent[] = [];
   for (const a of own) {
     const author = mail(a.author);
-    const plan = assignmentPlan({ author, manager: mail(a.manager), owner: mail(a.owner), note: a.note }, mail(p.manager), mail(p.owner), isArch(p.status), [author], []);
+    const plan = assignmentPlan({ author, manager: mail(a.manager), owner: mail(a.owner), country: a.country || '', note: a.note }, mail(p.manager), mail(p.owner), isArch(p.status), [author], [], p.country || '');
     if (!plan.valid) continue;
     const diffs: ChangeEvent['diffs'] = [];
     for (const c of plan.changes) {
       if (c.f === 'pmManager') { diffs.push({ f: 'pm', from: p.manager ? p.manager.name : '—', to: a.manager ? a.manager.name : c.to }); p.manager = a.manager; }
+      else if (c.f === 'pmCountry') { diffs.push({ f: 'country', from: c.from || '—', to: c.to }); p.country = c.to; }
       else { diffs.push({ f: 'owner', from: p.owner ? p.owner.name : '—', to: a.owner ? a.owner.name : c.to }); p.owner = a.owner; }
     }
     p.pending = true;

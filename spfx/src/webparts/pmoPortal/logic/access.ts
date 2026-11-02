@@ -1,5 +1,5 @@
 /** «Доступ до картки»: список, который пишет синхронизация в скрытое поле pmAccess (JSON). */
-export type AccessRole = 'pm' | 'pmMgr' | 'owner' | 'stake' | 'mgr';
+export type AccessRole = 'pm' | 'pmMgr' | 'owner' | 'stake' | 'mgr' | 'ceo';
 export interface AccessRow { e: string; n: string; j: string; l: 'edit' | 'read'; r: AccessRole; }
 export interface AccessList { people: AccessRow[]; more: number; }
 

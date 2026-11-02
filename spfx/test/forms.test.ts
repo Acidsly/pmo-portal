@@ -6,7 +6,7 @@ const P = (x: Partial<Project>): Project => ({ id: 1, code: '', title: 'P', type
   department: '', status: 'Реалізація', rag: '', progress: 0, start: '', goLive: '', planEnd: '', forecastEnd: '', archivedAt: '', budget: 0,
   actualCost: 0, lastUpdate: '', lastReport: '', lastComment: '', links: [], team: [], description: '', canEdit: false, pending: false, ...x });
 const p = P({ status: 'Реалізація', type: 'Звичайний', progress: 40, planEnd: '2026-12-01', actualCost: 100 });
-const draft = (x: Partial<ProjectDraft>): ProjectDraft => ({ title: '', code: '', department: 'ІТ', links: [], type: 'Звичайний', priority: '2 — Середній',
+const draft = (x: Partial<ProjectDraft>): ProjectDraft => ({ title: '', code: '', department: 'ІТ', country: 'Україна', links: [], type: 'Звичайний', priority: '2 — Середній',
   manager: null, owner: null, team: [], start: '', goLive: '', planEnd: '', status: 'Ініціація', budget: 0, description: '', ...x });
 
 test('nextCode: максимальный PRJ + 1, трёхзначный', () => {
@@ -55,13 +55,17 @@ test('правка карточки: изменения без описания'
 
 describe('#27: уникальное название проекта', () => {
   const D = { title: 'CRM для продажів', code: '', department: 'ІТ', links: [], type: 'Звичайний', priority: '2 — Середній', manager: { id: 1, name: 'M', email: 'm@x' },
-    owner: null, team: [], start: '', goLive: '', planEnd: '', status: 'Ініціація', budget: 0, description: '' };
+    owner: null, team: [], start: '', goLive: '', planEnd: '', status: 'Ініціація', budget: 0, description: '', country: 'Україна' };
   test('такое же название (регистр и пробелы не важны) — ошибка', () => {
     expect(validateProject({ ...D, title: '  crm  для ПРОДАЖІВ ' }, [], ['CRM для продажів'])).toBe('errTitleTaken');
   });
   test('другое название — можно; правка без смены названия существующего дубля — можно', () => {
     expect(validateProject({ ...D, title: 'CRM 2' }, [], ['CRM для продажів'])).toBe('');
     expect(validateProject(D, [], ['CRM для продажів'], 'CRM для продажів')).toBe('');
+  });
+  test('країна: у нового проекта обязательна, при правке карточки — не проверяется (меняет «Призначення»)', () => {
+    expect(validateProject({ ...D, title: 'CRM 3', country: '' })).toBe('errCountry');
+    expect(validateProject({ ...D, title: 'CRM 3', country: '', description: 'Мета' }, [], [], '', false)).toBe('');
   });
 });
 
@@ -101,7 +105,7 @@ test('#54: фактическая дата записывается только
 });
 test('#54: даты проверяются только у нового проекта — правка карточки со старыми датами сохраняется', () => {
   const m = { id: 1, name: 'M', email: 'm@x.ua' };
-  const D = { title: 'П', code: '', department: 'ІТ', links: [], type: 'Звичайний', priority: '', manager: m, owner: null, team: [], start: '2026-03-02', goLive: '2026-01-01', planEnd: '', status: 'Ініціація', budget: 0, description: '' };
+  const D = { title: 'П', code: '', department: 'ІТ', links: [], type: 'Звичайний', priority: '', manager: m, owner: null, team: [], start: '2026-03-02', goLive: '2026-01-01', planEnd: '', status: 'Ініціація', budget: 0, description: '', country: 'Україна' };
   expect(validateProject(D)).toBe('errDatesOrder');
   expect(validateProject({ ...D, description: 'Мета' }, [], [], 'П', false)).toBe('');   // описание обязательно при правке (#96)
 });

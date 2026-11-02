@@ -25,16 +25,25 @@ else                      { Connect-PnPOnline -Url $SiteUrl -ClientId $ClientId 
 
 function G([string]$url) { try { return Invoke-PnPGraphMethod -Url $url -Method Get } catch { return $null } }
 $enc = [uri]::EscapeDataString($Email)
-$u = G "v1.0/users/$enc`?`$select=displayName,mail,userPrincipalName,jobTitle,accountEnabled,proxyAddresses"
-# гость (внешний e-mail): UPN вида имя_домен#EXT#@тенант — ищем по почте
+$sel = "displayName,mail,userPrincipalName,jobTitle,accountEnabled,proxyAddresses,userType,id"
+$u = G "v1.0/users/$enc`?`$select=$sel"
+# по почте: гость (UPN имя_домен#EXT#@тенант, адрес — mail или otherMails) и учётные записи межтенантной синхронизации
 if (-not $u) {
     $q = $Email.Replace("'", "''")
-    $u = @((G "v1.0/users?`$filter=mail eq '$q' or otherMails/any(x:x eq '$q')&`$select=displayName,mail,userPrincipalName,jobTitle,accountEnabled,proxyAddresses,userType").value)[0]
-    if ($u) { $enc = [uri]::EscapeDataString($u.userPrincipalName); Write-Host "Entra ID: найден по почте — $($u.userType) · UPN $($u.userPrincipalName)" }
+    $u = @((G "v1.0/users?`$filter=mail eq '$q' or otherMails/any(x:x eq '$q')&`$select=$sel").value)[0]
+    if ($u) { Write-Host "Entra ID: найден по почте — $($u.userType) · UPN $($u.userPrincipalName)" }
 }
 if (-not $u) { Write-Host "Entra ID: пользователь $Email не найден (ни по UPN, ни по почте)." -ForegroundColor Red; return }
+$enc = [uri]::EscapeDataString([string]$u.id)
 $mail = ([string]($u.mail ?? $u.userPrincipalName)).ToLowerInvariant()
-Write-Host "Entra ID: $($u.displayName) · $($u.jobTitle) · UPN $($u.userPrincipalName) · почта $($u.mail) · вход разрешён: $($u.accountEnabled)"
+Write-Host "Entra ID: $($u.displayName) · $($u.jobTitle) · UPN $($u.userPrincipalName) · почта $($u.mail) · вход разрешён: $($u.accountEnabled)$(if ($u.userPrincipalName -match '#EXT#') { " · из другого тенанта ($($u.userType))" })"
+# как SharePoint сопоставит e-mail с учётной записью (так права выдаёт синхронизация) — только чтение, без добавления на сайт
+try {
+    $ctx = Get-PnPContext
+    $res = [Microsoft.SharePoint.Client.Utilities.Utility]::ResolvePrincipal($ctx, $ctx.Web, $Email, [Microsoft.SharePoint.Client.Utilities.PrincipalType]::User, [Microsoft.SharePoint.Client.Utilities.PrincipalSource]::All, $null, $false)
+    $ctx.ExecuteQuery()
+    Write-Host "  SharePoint: $Email → $(if ($res.Value) { $res.Value.LoginName } else { 'не сопоставляется (права по этому адресу не выдать)' })"
+} catch { Write-Host "  SharePoint: сопоставление не проверено ($($_.Exception.Message))" -ForegroundColor Yellow }
 $aliases = @($u.proxyAddresses | Where-Object { $_ -like "smtp:*" } | ForEach-Object { ($_ -replace '^smtp:', '').ToLowerInvariant() })
 if ($aliases.Count) { Write-Host "  адреса: $($aliases -join ', ')" }
 $m = G "v1.0/users/$enc/manager?`$select=displayName,mail,userPrincipalName"
@@ -61,12 +70,19 @@ Write-Host "Сайт: группы — $(if ($inGroups.Count) { $inGroups -join 
 # проекты: роли человека и его подчинённых, «Доступ до картки»
 $projects = @(Get-PnPListItem -List "Lists/Projects" -PageSize 500)
 $team = @(Get-PnPListItem -List "Lists/ProjectTeam" -PageSize 500 | Where-Object { [string]$_.FileSystemObjectType -ne "Folder" })
+# CEO країни — по списку «Країни» (только у владельцев сайта; приложение синхронизации читает)
+$ceoOf = @{}
+if (Get-PnPList -Identity "Lists/Countries" -ErrorAction SilentlyContinue) {
+    foreach ($x in (Get-PnPListItem -List "Lists/Countries" -PageSize 100 -Fields "Title","coCeo")) {
+        foreach ($u in @($x["coCeo"] | Where-Object { $_ -and $_.Email })) { $ceoOf[([string]$u.Email).ToLowerInvariant()] += @([string]$x["Title"]) } }
+}
 function RolesOf([string]$e) {
     $out = @()
     foreach ($p in $projects) {
         $code = [string]$p["pmCode"]
         if ($p["pmManager"] -and ([string]$p["pmManager"].Email).ToLowerInvariant() -eq $e) { $out += "$code PM" }
         if ($p["pmOwner"] -and ([string]$p["pmOwner"].Email).ToLowerInvariant() -eq $e) { $out += "$code власник" }
+        if ($ceoOf[$e] -and $ceoOf[$e] -contains [string]$p["pmCountry"]) { $out += "$code CEO країни ($($p["pmCountry"]))" }
         foreach ($t in @($team | Where-Object { $_["tmProject"] -and $_["tmProject"].LookupId -eq $p.Id -and $_["tmUser"] -and ([string]$_["tmUser"].Email).ToLowerInvariant() -eq $e })) { $out += "$code команда/$($t["tmRole"])" }
     }
     return $out

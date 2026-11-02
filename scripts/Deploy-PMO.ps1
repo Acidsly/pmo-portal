@@ -24,6 +24,8 @@
 .PARAMETER CertificatePath / CertificatePassword — вход по файлу .pfx
 .PARAMETER SiteAlias    адрес сайта /sites/<SiteAlias>
 .PARAMETER Owner        e-mail владельца сайта
+.PARAMETER SiteScoped   приложение с правами только на сайт (PMO Dev, Sites.Selected): центр администрирования не открывается,
+                        сайт должен уже существовать
 
 .EXAMPLE
     ./Deploy-PMO.ps1 -TenantName contoso -ClientId <guid> -Owner yurii@contoso.com
@@ -38,8 +40,12 @@ param(
     [string]$Thumbprint,
     [string]$CertificatePath,
     [SecureString]$CertificatePassword,
+    [switch]$SiteScoped,
     # список «Відгуки» и кнопка «Відгук» в приложении — для теста с фокус-группой (Invoke-Env передаёт только для test)
-    [switch]$Feedback
+    [switch]$Feedback,
+    # «Країни»: CEO по странам — JSON { "Країна": ["e-mail", …] } вне git (config/countries-<env>.json; Invoke-Env передаёт, если файл есть).
+    # Источник CEO — только файл: строки «Країни» приводятся к нему; нет файла — CEO не меняются
+    [string]$CeoFile
 )
 
 $ErrorActionPreference = "Stop"
@@ -161,8 +167,15 @@ function Set-BaseView($List, [string]$Title, [string[]]$Fields, [string]$Query) 
 # 1. Сайт, языки, группа PMO
 # ===========================================================================
 Write-Host "1. Сайт $siteUrl" -ForegroundColor Cyan
-Connect-Target $adminUrl
-try { $exists = Get-PnPTenantSite -Identity $siteUrl -ErrorAction Stop } catch { $exists = $null }
+if ($SiteScoped) {
+    # PMO Dev: прав на центр администрирования нет — сайт создаёт владелец, здесь только проверка доступа
+    Connect-Target $siteUrl
+    try { Get-PnPWeb -ErrorAction Stop | Out-Null } catch { throw "Нет доступа к $siteUrl приложением сайта: $($_.Exception.Message)" }
+    $exists = $true
+} else {
+    Connect-Target $adminUrl
+    try { $exists = Get-PnPTenantSite -Identity $siteUrl -ErrorAction Stop } catch { $exists = $null }
+}
 if (-not $exists) {
     $a = @{ Type = "CommunicationSite"; Title = $SiteTitle; Url = $siteUrl; Lcid = 1058; Wait = $true }
     if ($Owner) { $a.Owner = $Owner }
@@ -224,6 +237,8 @@ $rag       = @("Зелений", "Жовтий", "Червоний")
 $status    = @("Ініціація", "Планування", "Реалізація", "Призупинено", "Завершено", "Скасовано")
 $repStatus = @("Ініціація", "Планування", "Реалізація", "Призупинено", "Скасовано", "Завершено")
 $types     = @("Стратегічний", "Звичайний")
+# одна страна на проект (проект нескольких стран — копией на каждую); ставит PMO при создании, потом — «Призначення»
+$countries = @("Україна", "Польща", "Чехія", "Нідерланди", "Велика Британія", "Казахстан", "Узбекистан", "Киргизстан", "Грузія", "Азербайджан")
 
 # ===========================================================================
 # 2. Проєкти — карточка проекта
@@ -237,6 +252,7 @@ F $P pmType        Choice   "Тип проєкту"        "Project type"       
 F $P pmManager     User     "PM"                 "PM"                  "PM"                   "UserSelectionMode='PeopleOnly' Required='TRUE'"
 F $P pmOwner       User     "Власник"            "Owner"               "Собственник"          "UserSelectionMode='PeopleOnly'"
 F $P pmStakeholders UserMulti "Стейкхолдери"     "Stakeholders"        "Стейкхолдеры"         "UserSelectionMode='PeopleOnly' Mult='TRUE'"
+F $P pmCountry     Choice   "Країна"             "Country"             "Страна"               "Format='Dropdown'" (Choices $countries)
 F $P pmDepartment  Choice   "Напрям"             "Area"                "Направление"          "Format='Dropdown'" (Choices @("ІТ","HR та кадрове адміністрування","Розрахунок зарплати","Продажі","Фінанси","Операції","Юридичний"))
 # #78: отображаемое «Фаза проєкту» (этап жизненного цикла); внутреннее имя pmStatus не меняется
 F $P pmStatus      Choice   "Фаза проєкту"       "Project phase"       "Фаза проекта"       "Format='Dropdown' Required='TRUE'" (Choices $status "Ініціація")
@@ -257,6 +273,8 @@ F $P pmActualEnd   DateTime "Дата завершення (факт)" "Actual c
 F $P pmArchivedAt  DateTime "Дата завершення / скасування" "Completed / cancelled on" "Дата завершения / отмены" "Format='DateOnly'"
 F $P pmBudget      Currency "Бюджет (план)"      "Budget (plan)"       "Бюджет (план)"        "LCID='1058' Decimals='0'"
 F $P pmActualCost  Currency "Витрати (факт)"     "Actual cost"         "Затраты (факт)"       "LCID='1058' Decimals='0'"
+# 1.7.7: прогноз затрат к завершению — ключевой показатель из погодженого отчёта (пишет синхронизация)
+F $P pmForecastCost Currency "Прогноз витрат на завершення" "Cost at completion forecast" "Прогноз затрат на завершение" "LCID='1058' Decimals='0'"
 F $P pmLastUpdate  DateTime "Останній статус-звіт" "Last status report" "Последний статус-отчёт" "Format='DateOnly'"
 F $P pmLastReport  Note     "Останній апдейт"    "Latest update"       "Последний апдейт"     "NumLines='3' RichText='FALSE'"
 F $P pmLastComment Note     "Останній коментар"  "Latest comment"      "Последний комментарий" "NumLines='3' RichText='FALSE'"
@@ -330,7 +348,11 @@ F $R srDate        DateTime "Дата подання"       "Submission date"   
 F $R srPeriodFrom  DateTime "Період з"           "Period from"         "Период с"             "Format='DateOnly'"
 F $R srPeriod      Choice   "Період"             "Period"              "Период"               "Format='Dropdown'" (Choices @("Тиждень","2 тижні","Місяць","Квартал") "2 тижні")
 F $R srSchedule    Choice   "Терміни"            "Schedule"            "Сроки"                "Format='Dropdown' Required='TRUE'" (Choices $rag)
-F $R srBudget      Choice   "Бюджет"             "Budget"              "Бюджет"               "Format='Dropdown' Required='TRUE'" (Choices $rag)
+# #121: «Не оцінено» — оценка бюджета на ранних фазах (общий стан её не учитывает: формула смотрит только красные и жёлтые)
+$ragBudget = $rag + @("Не оцінено")
+F $R srBudget      Choice   "Бюджет"             "Budget"              "Бюджет"               "Format='Dropdown' Required='TRUE'" (Choices $ragBudget)
+$cur = Get-PnPField -List $R -Identity srBudget
+if (@($ragBudget | Where-Object { $cur.Choices -notcontains $_ }).Count) { Set-PnPField -List $R -Identity srBudget -Values @{ Choices = [string[]]$ragBudget } | Out-Null; Write-Host "    оценки бюджета: $($ragBudget -join ', ')" }
 F $R srResources   Choice   "Ресурси"            "Resources"           "Ресурсы"              "Format='Dropdown' Required='TRUE'" (Choices $rag)
 # Общее состояние — худшая из трёх оценок: хотя бы одна красная -> красный; хотя бы одна жёлтая -> жёлтый; иначе зелёный
 $anyRed = 'OR([srSchedule]="Червоний",[srBudget]="Червоний",[srResources]="Червоний")'
@@ -349,10 +371,15 @@ F $R srForecastEnd DateTime "Прогноз завершення" "Forecast comp
 F $R srBasedOn     Number   "На основі звіту"    "Based on report"     "На основе отчёта"     "Decimals='0'"
 F $R srActualEnd   DateTime "Дата завершення (факт)" "Actual completion date" "Дата завершения (факт)" "Format='DateOnly'"
 F $R srActualCost  Currency "Витрати на дату"    "Cost to date"        "Затраты на дату"      "LCID='1058' Decimals='0'"
+# 1.7.7: бюджет ведётся как сроки — план и прогноз меняются отчётом (с причиной), в карточку — после погодження
+F $R srBudgetPlan  Currency "Бюджет (план)"      "Budget (plan)"       "Бюджет (план)"        "LCID='1058' Decimals='0'"
+F $R srForecastCost Currency "Прогноз витрат на завершення" "Cost at completion forecast" "Прогноз затрат на завершение" "LCID='1058' Decimals='0'"
 F $R srKeyReason   Note     "Причина зміни показників" "Reason for changing indicators" "Причина изменения показателей" "NumLines='3' RichText='FALSE'"
 F $R srDone        Note     "Зроблено за період" "Done this period"    "Сделано за период"    "NumLines='5' RichText='FALSE'"
 F $R srNext        Note     "План на наступний період" "Plan for next period" "План на следующий период" "NumLines='5' RichText='FALSE'"
 F $R srIssues      Note     "Проблеми та ризики за період" "Issues and risks for the period" "Проблемы и риски за период" "NumLines='5' RichText='FALSE'"
+# 1.7.7: план / факт — что из «Плану на наступний період» прошлого погодженого отчёта не сделано и почему
+F $R srNotDone     Note     "Не зроблено з плану і чому" "Not done from the plan and why" "Не сделано из плана и почему" "NumLines='4' RichText='FALSE'"
 F $R srDecision    Boolean  "Потрібне рішення керівництва" "Management decision needed" "Требуется решение руководства" "" "<Default>0</Default>"
 F $R srDecisionText Note    "Яке рішення потрібне" "Decision required" "Какое решение нужно"  "NumLines='3' RichText='FALSE'"
 # помощник отчёта (copilot/README.md): пишет приложение; синхронизация не читает и не пишет, в журнал не попадает
@@ -481,6 +508,8 @@ $PA = Ensure-List "Lists/ProjectAssignments" "Призначення" "Assignmen
 F $PA paProject     Lookup   "Проєкт"             "Project"             "Проект"               $lookup
 F $PA paManager     User     "Новий PM"           "New PM"              "Новый PM"             "UserSelectionMode='PeopleOnly'"
 F $PA paOwner       User     "Новий власник"      "New owner"           "Новый владелец"       "UserSelectionMode='PeopleOnly'"
+# пусто — страна без изменений (значения по умолчанию нет)
+F $PA paCountry     Choice   "Нова країна"        "New country"         "Новая страна"         "Format='Dropdown' FillInChoice='FALSE'" (Choices $countries)
 F $PA paNote        Note     "Коментар"           "Comment"             "Комментарий"          "NumLines='4' RichText='FALSE'"
 F $PA paApplied     Boolean  "Службове: застосовано" "System: applied"  "Служебное: применено" "Hidden='TRUE'" "<Default>0</Default>"
 F $PA pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='64'"
@@ -522,6 +551,32 @@ foreach ($it in (Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "T
         $vals.pmMigrated = $newMarks
         Set-PnPListItem -List "Lists/Projects" -Identity $it.Id -Values $vals -UpdateType SystemUpdate | Out-Null
         Write-Host "    миграция «$($it["Title"])»: $newMarks"
+    }
+}
+
+# 6f. Країни — CEO країни по каждой стране (просмотр и комментарии на проекты своих стран; права выдаёт синхронизация).
+#     Строка на страну (Title — значение выбора pmCountry), CEO — из файла -Countries; список видят только владельцы сайта.
+Write-Host "6f. Список «Країни»" -ForegroundColor Cyan
+$CO = Ensure-List "Lists/Countries" "Країни" "Countries" "Страны"
+F $CO coCeo         UserMulti "CEO країни"        "Country CEO"         "CEO страны"           "UserSelectionMode='PeopleOnly' Mult='TRUE'"
+$script:Loc += , @($CO, "Title", "Країна", "Country", "Страна")
+$ceoMap = $null
+if ($CeoFile) {
+    if (-not (Test-Path $CeoFile)) { throw "Нет файла CEO по странам: $CeoFile" }
+    $ceoMap = Get-Content -Raw $CeoFile | ConvertFrom-Json -AsHashtable
+    foreach ($cty in @($ceoMap.Keys | Where-Object { -not $_.StartsWith("_") })) { if ($countries -notcontains $cty) { throw "$CeoFile : страны «$cty» нет в выборе «Країна»" } }
+}
+$coRows = @{}; foreach ($x in (Get-PnPListItem -List "Lists/Countries" -PageSize 100 -Fields "Title","coCeo")) { $coRows[[string]$x["Title"]] = $x }
+foreach ($cty in $countries) {
+    $row = $coRows[$cty]
+    if (-not $row) { $row = Add-PnPListItem -List "Lists/Countries" -Values @{ Title = $cty }; Write-Host "    + країна $cty" }
+    if ($ceoMap) {
+        $ceoWant = @($ceoMap[$cty] | Where-Object { $_ } | ForEach-Object { ([string]$_).ToLowerInvariant() } | Sort-Object)
+        $ceoHave = @($row["coCeo"] | Where-Object { $_ -and $_.Email } | ForEach-Object { ([string]$_.Email).ToLowerInvariant() } | Sort-Object)
+        if (($ceoWant -join ";") -ne ($ceoHave -join ";")) {
+            Set-PnPListItem -List "Lists/Countries" -Identity $row.Id -Values @{ coCeo = @($ceoWant) } -UpdateType SystemUpdate | Out-Null
+            Write-Host "    CEO $cty : $(if ($ceoWant.Count) { $ceoWant -join ', ' } else { '—' })"
+        }
     }
 }
 
@@ -620,13 +675,14 @@ if ($Feedback) {
 # Подсказки к полям (описания столбцов, uk / en / ru)
 # ---------------------------------------------------------------------------
 $keep = @("Залиште порожнім, якщо не змінюється.", "Leave empty if unchanged.", "Оставьте пустым, если не меняется.")
-foreach ($n in @("srStart","srGoLive","srPlanEnd","srForecastEnd","srActualCost")) { Desc $R $n $keep[0] $keep[1] $keep[2] }
+foreach ($n in @("srStart","srGoLive","srPlanEnd","srForecastEnd","srActualCost","srBudgetPlan","srForecastCost")) { Desc $R $n $keep[0] $keep[1] $keep[2] }
 # #77: статус, тип и % — в каждом отчёте (зафиксированы в нём; равные карточке синхронизация не меняет)
 Desc $R srType "Тип проєкту на дату звіту (записується завжди)." "Project type as of the report (always recorded)." "Тип проекта на дату отчёта (записывается всегда)."
 Desc $R srProgress "% виконання на дату звіту (записується завжди)." "% complete as of the report (always recorded)." "% выполнения на дату отчёта (записывается всегда)."
 Desc $R srStatus "Фаза проєкту на дату звіту (записується завжди). «Завершено» / «Скасовано» переводить проєкт в архів." "Project phase as of the report (always recorded). «Завершено» / «Скасовано» moves the project to the archive." "Фаза проекта на дату отчёта (записывается всегда). «Завершено» / «Скасовано» переводит проект в архив."
 Desc $R srActualEnd "Обов'язково для «Завершено» і «Скасовано»: коли проєкт фактично завершено або скасовано (не раніше старту, не пізніше дати подання)." "Required for «Завершено» and «Скасовано»: when the project was actually completed or cancelled (not before the start, not after the submission date)." "Обязательно для «Завершено» и «Скасовано»: когда проект фактически завершён или отменён (не раньше старта, не позже даты подачи)."
-Desc $R srKeyReason "Обов'язково, якщо змінюєте статус, тип або дати — потрапить у журнал змін." "Required if you change the status, type or dates — goes to the change log." "Обязательно, если меняете статус, тип или даты — попадёт в журнал изменений."
+Desc $R srKeyReason "Обов'язково, якщо змінюєте статус, тип, дати, бюджет або прогноз витрат — потрапить у журнал змін." "Required if you change the status, type, dates, budget or cost forecast — goes to the change log." "Обязательно, если меняете статус, тип, даты, бюджет или прогноз затрат — попадёт в журнал изменений."
+Desc $R srNotDone "Обов'язково, якщо в минулому погодженому звіті був план: що з нього не зроблено і чому (або «усе виконано»)." "Required if the last approved report had a plan: what of it was not done and why (or “all done”)." "Обязательно, если в прошлом согласованном отчёте был план: что из него не сделано и почему (или «всё выполнено»)."
 Desc $R srDecisionText "Заповніть, якщо позначено «Потрібне рішення керівництва»." "Fill in if «Management decision needed» is checked." "Заполните, если отмечено «Требуется решение руководства»."
 Desc $R srSchedule "Загальний стан звіту — найгірша з трьох оцінок." "Overall health is the worst of the three ratings." "Общее состояние отчёта — худшая из трёх оценок."
 Desc $K riScore "Оцінка = ймовірність × вплив. Від 15 — червоний, від 8 — жовтий." "Score = probability × impact. 15+ red, 8+ yellow." "Оценка = вероятность × влияние. От 15 — красный, от 8 — жёлтый."
@@ -676,9 +732,10 @@ Invoke-PnPQuery
 # ===========================================================================
 Write-Host "7. Формы и права списков" -ForegroundColor Cyan
 # Ключевые показатели и служебные поля не редактируются в карточке — только через статус-отчёт
+# страна — при создании (PMO), потом только «Призначення»
 Set-FormVisibility $P @("pmStatus","pmRAG","pmType","pmProgress","pmStart","pmGoLive","pmPlanEnd","pmForecastEnd","pmActualEnd",
-                        "pmActualCost","pmArchivedAt","pmLastUpdate","pmLastReport","pmLastComment") $true $false
-Set-FormVisibility $P @("pmRAG","pmForecastEnd","pmActualEnd","pmActualCost","pmArchivedAt","pmLastUpdate","pmLastReport","pmLastComment") $false $false
+                        "pmActualCost","pmArchivedAt","pmLastUpdate","pmLastReport","pmLastComment","pmCountry","pmBudget") $true $false
+Set-FormVisibility $P @("pmRAG","pmForecastEnd","pmActualEnd","pmActualCost","pmForecastCost","pmArchivedAt","pmLastUpdate","pmLastReport","pmLastComment") $false $false
 # «Стратегічний» в отчётах и рисках заполняет синхронизация
 # «Стратегічний» и «Пріоритет» в отчётах и рисках — копия из проекта, заполняет синхронизация
 Set-FormVisibility $R @("srProjectType","srProjectPriority","srApproval","srApprovedBy","srApprovedAt","srApprovalNote") $false $false
@@ -727,6 +784,18 @@ foreach ($grp in @($members.Title, $PMO_GROUP)) {
     }
 }
 Set-ListRoles "Lists/ProjectState"    @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
+# «Країни» — e-mail CEO: только владельцы сайта (и синхронизация), участники и PMO не читают
+$col = Get-PnPList -Identity "Lists/Countries" -Includes HasUniqueRoleAssignments
+if (-not $col.HasUniqueRoleAssignments) { Set-PnPList -Identity "Lists/Countries" -BreakRoleInheritance | Out-Null; Write-Host "  «Країни»: собственные права списка" }
+Set-ListRoles "Lists/Countries" @{ (Get-PnPGroup -AssociatedOwnerGroup).Title = (Get-RoleName "Administrator") }
+$ctxCo = Get-PnPContext; $raCo = (Get-PnPList -Identity "Lists/Countries").RoleAssignments; $ctxCo.Load($raCo); Invoke-PnPQuery
+foreach ($a in $raCo) { $ctxCo.Load($a.Member) }; Invoke-PnPQuery
+foreach ($grp in @($members.Title, $PMO_GROUP)) {
+    if (@($raCo | Where-Object { $_.Member.Title -eq $grp }).Count) {
+        $gObj = Get-PnPGroup -Identity $grp; (Get-PnPList -Identity "Lists/Countries").RoleAssignments.GetByPrincipal($gObj).DeleteObject(); Invoke-PnPQuery
+        Write-Host "  «Країни» $grp : права списка сняты (только владельцы)"
+    }
+}
 # свежие проверки приложения перед записью — фильтры по индексированным полям
 foreach ($ix in @(@("Lists/Projects", "Title"), @("Lists/StatusReports", "srProject"), @("Lists/RisksIssues", "riProject"), @("Lists/ProjectComments", "cmProject"),
                   @("Lists/ProjectTeam", "tmProject"), @("Lists/ReportApprovals", "apReport"), @("Lists/ReportApprovals", "apProject"), @("Lists/ProjectAssignments", "paProject"), @("Lists/NotifyState", "Title"), @("Lists/KeyChanges", "kcDate"))) {
@@ -754,7 +823,7 @@ $archived = "<Or><Or><Eq><FieldRef Name='pmStatus'/><Value Type='Choice'>Зав�
 $order = "<OrderBy><FieldRef Name='pmType' Ascending='FALSE'/><FieldRef Name='pmPriority'/></OrderBy>"
 
 # Порядок колонок во всех представлениях: стратегический, приоритет, название, затем остальные
-$pFields = @("pmType","pmPriority","LinkTitle","pmManager","pmStatus","pmRAG","pmLastUpdate","pmProgress","pmPlanEnd","pmLastReport")
+$pFields = @("pmType","pmPriority","LinkTitle","pmManager","pmCountry","pmStatus","pmRAG","pmLastUpdate","pmProgress","pmPlanEnd","pmLastReport")
 $vAll     = Set-BaseView $P "Усі проєкти" $pFields "$order<Where>$notArchived</Where>"
 $null     = Ensure-View $P "Стратегічні" $pFields "$order<Where><And>$active<Eq><FieldRef Name='pmType'/><Value Type='Choice'>Стратегічний</Value></Eq></And></Where>"
 $null     = Ensure-View $P "Проблемні" @("pmType","pmPriority","LinkTitle","pmRAG","pmManager","pmLastReport","pmLastUpdate") `
@@ -782,7 +851,7 @@ $vRisks = Ensure-View $K "Відкриті" $kFields `
 
 $null = Set-BaseView $C "Усі зміни" @("kcProject","kcDate","kcChangedBy","kcKind","LinkTitle","kcFrom","kcTo","kcReason") "<OrderBy><FieldRef Name='kcDate' Ascending='FALSE'/></OrderBy>"
 $null = Set-BaseView $NS "Усі" @("LinkTitle","nsUser","nsReadId","nsReadCmId","nsReadSet","Modified") "<OrderBy><FieldRef Name='Title'/></OrderBy>"
-$null = Set-BaseView $PA "Усі призначення" @("paProject","paManager","paOwner","paNote","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
+$null = Set-BaseView $PA "Усі призначення" @("paProject","paManager","paOwner","paCountry","paNote","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
 $null = Set-BaseView $AP "Усі погодження" @("apProject","apReport","apDecision","apSchedule","apBudget","apResources","apNote","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
 $null = Set-BaseView $TM "Уся команда" @("tmProject","tmUser","tmRole","tmTopics") "<OrderBy><FieldRef Name='tmProject'/></OrderBy>"
 $null = Set-BaseView $M "Усі коментарі" @("cmProject","cmText","Author","Created") "<OrderBy><FieldRef Name='Created' Ascending='FALSE'/></OrderBy>"
@@ -843,7 +912,7 @@ foreach ($lib in @("SitePages", "SiteAssets", "Shared Documents")) {
     if (Get-PnPList -Identity $lib -ErrorAction SilentlyContinue) { Set-ListRoles $lib @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ } }
 }
 # списки портала не видны в «Вміст сайту» и поиске по сайту; приложение и владельцы открывают их по адресу
-$portalLists = @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/KeyChanges", "Lists/ProjectComments", "Lists/ProjectTeam", "Lists/ReportApprovals", "Lists/ProjectAssignments", "Lists/NotifyState", "Lists/ProjectState") + $(if ($Feedback) { @("Lists/Feedback", "Lists/FeedbackPublic") } else { @() })
+$portalLists = @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/KeyChanges", "Lists/ProjectComments", "Lists/ProjectTeam", "Lists/ReportApprovals", "Lists/ProjectAssignments", "Lists/NotifyState", "Lists/ProjectState", "Lists/Countries") + $(if ($Feedback) { @("Lists/Feedback", "Lists/FeedbackPublic") } else { @() })
 foreach ($u in $portalLists) {
     $l = Get-PnPList -Identity $u -Includes Hidden
     if (-not $l.Hidden) { Set-PnPList -Identity $u -Hidden $true | Out-Null; Write-Host "    скрыт список $u" }

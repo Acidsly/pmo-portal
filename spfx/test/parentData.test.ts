@@ -43,3 +43,45 @@ describe('журнал и конфликт правок', () => {
   });
   test('поле журнала pmParent — подпись «parent»', () => expect(FIELD_KEY.pmParent).toBe('parent'));
 });
+
+// «Країна»: чтение, запись нового проекта (правка карточки страну не пишет), портфель за странами, список стран = выбор Deploy-PMO.ps1
+import { mapProject as mapP2, mapAssign } from '../src/webparts/pmoPortal/data/map';
+import { projectBody as pBody, projectEditBody as pEdit } from '../src/webparts/pmoPortal/data/write';
+import { byCountry } from '../src/webparts/pmoPortal/logic/analytics';
+import { COUNTRIES } from '../src/webparts/pmoPortal/logic/projects';
+describe('країна', () => {
+  test('чтение проекта и «Призначення»', () => {
+    expect(mapP2({ Id: 1, pmCountry: 'Польща' } as any).country).toBe('Польща');
+    expect(mapP2({ Id: 1 } as any).country).toBe('');
+    expect(mapAssign({ Id: 2, paCountry: 'Чехія' } as any).country).toBe('Чехія');
+  });
+  test('новый проект пишет страну; правка карточки — нет', () => {
+    const d: any = { title: 'П', code: '', department: 'ІТ', links: [], type: 'Звичайний', priority: '', manager: null, owner: null, team: [], start: '', goLive: '', planEnd: '', status: 'Ініціація', budget: 0, description: '', country: 'Польща' };
+    expect(pBody(d, 'PRJ-001').pmCountry).toBe('Польща');
+    expect('pmCountry' in pEdit(d, [], 'x', '', '')).toBe(false);
+  });
+  test('портфель за странами: активные, без страны — «—»', () => {
+    const rows = byCountry([{ status: 'Реалізація', country: 'Польща', rag: 'Зелений' }, { status: 'Реалізація', country: 'Польща', rag: 'Червоний' },
+      { status: 'Реалізація', rag: '' }, { status: 'Завершено', country: 'Чехія', rag: 'Зелений' }] as any);
+    expect(rows.map(r => `${r.dept}:${r.total}:${r.g}${r.r}${r.na}`)).toEqual(['Польща:2:110', '—:1:001']);
+    // «—» в конце, даже если таких проектов больше
+    const many = byCountry([{ status: 'Реалізація', rag: '' }, { status: 'Реалізація', rag: '' }, { status: 'Реалізація', country: 'Чехія', rag: '' }] as any);
+    expect(many.map(r => r.dept)).toEqual(['Чехія', '—']);
+  });
+  test('список стран приложения — как выбор «Країна» в Deploy-PMO.ps1', () => {
+    const src = require('fs').readFileSync(require('path').join(__dirname, '../../scripts/Deploy-PMO.ps1'), 'utf8');
+    const m = /\$countries = @\(([^)]*)\)/.exec(src)!;
+    expect(m[1].split(',').map((x: string) => x.trim().replace(/^"|"$/g, ''))).toEqual(COUNTRIES);
+  });
+});
+
+// кросс-ревью: приложение раньше Deploy-PMO.ps1 — проекты и «Призначення» читаются и без «Країни» (запасные запросы)
+import { PROJECT_SELECT, ASSIGN_SELECT, PROJECT_OPTIONAL, ASSIGN_COUNTRY } from '../src/webparts/pmoPortal/data/map';
+test('«Країна» — не в основном запросе, а отдельной частью с запасным запросом без неё', () => {
+  expect(PROJECT_SELECT).not.toMatch(/pmCountry|pmForecastCost/); expect(ASSIGN_SELECT).not.toMatch(/paCountry/);
+  expect(PROJECT_OPTIONAL).toBe(',pmCountry,pmForecastCost');   // 1.7.7: и прогноз витрат — тем же запасным запросом expect(ASSIGN_COUNTRY).toBe(',paCountry');
+  const src = require('fs').readFileSync(require('path').join(__dirname, '../src/webparts/pmoPortal/data/SpRepo.ts'), 'utf8');
+  // загрузка и свежая проверка: сначала со страной, затем без неё
+  expect((src.match(/PROJECT_PARENT\.select \+ PROJECT_OPTIONAL/g) || []).length).toBe(2);
+  expect((src.match(/ASSIGN_SELECT \+ ASSIGN_COUNTRY, ASSIGN_EXPAND[^)]*\)\s*\.catch\(\(\) => this\.items\('ProjectAssignments', ASSIGN_SELECT, ASSIGN_EXPAND/g) || []).length).toBe(2);
+});

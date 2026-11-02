@@ -22,13 +22,14 @@ const ev = (el: W, t: string): void => { el.dispatchEvent(new w.Event(t, { bubbl
 // «войти как» PMO (кнопка меню пользователя; обработчик — по data-act на документе)
 function asUser(n: string): void { const b = w.document.createElement('button'); b.dataset.act = 'asuser'; b.dataset.n = n; w.document.body.appendChild(b); b.click(); b.remove(); }
 function asPmo(): void { const b = w.document.createElement('button'); b.dataset.act = 'asuser'; b.dataset.n = 'Олександра Мороз'; w.document.body.appendChild(b); b.click(); b.remove(); }
-function newProject(title: string, start: string, golive: string): W {
+function newProject(title: string, start: string, golive: string, country = 'Польща'): W {
   asPmo();
   q('[data-act="nav"][data-page="projects"]').click();
   q('[data-act="newproj"]').click();
   const f = q('#pform'); const g = (id: string): W => f.querySelector('#' + id);
   g('p-title').value = title; ev(g('p-title'), 'input');
   const pm = g('p-pm'); if (pm.tagName === 'SELECT') { pm.value = Array.from(pm.options).map((o: W) => o.value).filter(Boolean)[1]; ev(pm, 'change'); }
+  if (g('p-country')) { g('p-country').value = country; ev(g('p-country'), 'change'); }
   if (g('p-start')) { g('p-start').value = start; ev(g('p-start'), 'change'); }
   if (g('p-golive')) { g('p-golive').value = golive; ev(g('p-golive'), 'change'); }
   f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
@@ -102,7 +103,7 @@ test('#54: «Скасовано» с фактической датой → по�
   set('f-st', 'Скасовано');
   expect(q('#f-ae-wrap').hidden).toBe(false);
   const start = g('f-start').value || '2000-01-01';
-  set('f-t', 'Скасовано'); set('f-kr', 'Рішення PMO');
+  set('f-t', 'Скасовано'); set('f-kr', 'Рішення PMO'); set('f-nd', 'Проєкт скасовано');
   set('f-ae', start > '2026-09-15' ? start : '2026-09-15');
   const ae = g('f-ae').value;
   f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
@@ -151,13 +152,14 @@ describe('#43 смена PM / власника — только PMO', () => {
     q('[data-act="editproj"][data-id="2"]').click();
     expect(q('#pform select#p-pm')).toBeNull();
     expect(q('#p-pm-fixed').textContent).toBe('Андрій Мельник');
-    expect(q('#pform').textContent).toContain('PM і власника змінює лише PMO.');
+    expect(q('#pform').textContent).toContain('PM, власника і країну змінює лише PMO.');
+    expect(q('#pform select#p-country')).toBeNull();
   });
   test('PMO: без выбора и без причины — ошибки; затем новый PM в карточке и «Призначення» в истории', () => {
     asPmo(); card(1);
     q('[data-act="assign"][data-id="1"]').click();
     const f = q('#aform'); const submit = (): void => { f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true })); };
-    submit(); expect(err(f)).toBe('Оберіть нового PM або нового власника.');
+    submit(); expect(err(f)).toBe('Оберіть нового PM, нового власника або нову країну.');
     const pm = f.querySelector('#a-pm'); pm.value = 'Андрій Мельник'; ev(pm, 'change');
     submit(); expect(err(f)).toBe('Вкажіть причину зміни.');
     f.querySelector('#a-note').value = 'Ротація PM'; submit();
@@ -167,6 +169,16 @@ describe('#43 смена PM / власника — только PMO', () => {
     q('[data-act="togglech"]') && q('[data-act="togglech"]').click();
     expect(w.document.body.textContent).toContain('Призначення');
     expect(w.document.body.textContent).toContain('Ротація PM');
+  });
+  test('PMO: смена страны — в карточке и в истории, «Країна було → стало»', () => {
+    asPmo(); card(1);
+    q('[data-act="assign"][data-id="1"]').click();
+    const f = q('#aform');
+    const c = f.querySelector('#a-country'); c.value = 'Польща'; ev(c, 'change');
+    f.querySelector('#a-note').value = 'Проєкт польської компанії'; f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    expect(q('#aform')).toBeNull();
+    expect(w.document.body.textContent).toContain('Польща');
+    expect(w.document.body.textContent).toContain('Проєкт польської компанії');
   });
   test('PMO: архивный проект — кнопки нет', () => {
     asPmo();
@@ -184,6 +196,7 @@ describe('#46 / #48 события отчётов и рисков в истор�
     ['sched', 'budget', 'res'].forEach(n => { const r = f.querySelector(`input[name="${n}"][value="Зелений"]`); r.checked = true; ev(r, 'change'); });
     const t = f.querySelector('#f-t'); t.value = title; ev(t, 'input');
     const kr = f.querySelector('#f-kr'); if (kr) { kr.value = 'Причина'; ev(kr, 'input'); }
+    const nd = f.querySelector('#f-nd'); if (nd) { nd.value = 'Усе виконано'; ev(nd, 'input'); }   // 1.7.7: был план — обязательно
     f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
   };
   test('#46 «Новий звіт на основі повернутого» — событие со ссылкой на отчёт', () => {
@@ -419,7 +432,7 @@ test('колонки по умолчанию — те же, что в прило
 // #91 / #92: форма записи реестра — те же векторы, что riskForm.test.ts приложения (tests/cases/risk-form.json)
 describe('реєстр ризиків (#91, #92): прототип', () => {
   const RF = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '../../tests/cases/risk-form.json'), 'utf8'));
-  const ID: Record<string, string> = { title: 'k-title-e', strategy: 'k-str-e', mitigation: 'k-mit-e', contingency: 'k-cont-e' };
+  const ID: Record<string, string> = { title: 'k-title-e', owner: 'k-owner-e', strategy: 'k-str-e', mitigation: 'k-mit-e', contingency: 'k-cont-e' };
   const openNew = (): W => { q('[data-act="nav"][data-page="risks"]').click(); q('[data-act="newrisk"]').click(); return q('#kform'); };
   (RF.errors as any[]).filter(x => x.isNew).forEach(x => test('обязательные поля: ' + x.name, () => {
     const f = openNew();
@@ -427,11 +440,20 @@ describe('реєстр ризиків (#91, #92): прототип', () => {
     f.querySelector('#k-title').value = x.draft.title; ev(f.querySelector('#k-title'), 'input');
     if (x.draft.strategy) { const s = f.querySelector(`input[name="k-str"][value="${x.draft.strategy}"]`); s.checked = true; ev(s, 'change'); }
     f.querySelector('#k-mit').value = x.draft.mitigation; f.querySelector('#k-cont').value = x.draft.contingency;
+    if ('owner' in x.draft && !x.draft.owner) { const o = f.querySelector('#k-owner'); o.value = ''; ev(o, 'change'); }   // #129: без власника
     f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
     const shown = Object.keys(ID).filter(k => !f.querySelector('#' + ID[k]).hidden);
     expect(shown.sort()).toEqual(x.out.slice().sort());
     // сохранено — запись в списке; нет — сообщение об ошибке в форме
     if (x.out.length) expect(err(f)).not.toBe(''); else expect(q('#main').textContent).toContain(x.draft.title);
+  }));
+  (RF.typeSwitch as any[]).forEach(x => test('#130 ' + x.name, () => {
+    const f = openNew(); const t = f.querySelector('#k-title');
+    for (const s of x.steps) {
+      if (s.type) { const ty = f.querySelector(`input[name="k-type"][value="${s.type}"]`); ty.checked = true; ev(ty, 'change'); }
+      else { t.value = s.set; ev(t, 'input'); }
+    }
+    expect(t.value).toBe(x.title);
   }));
   test('звёздочки — по типу: «Проблема» без стратегії й плану дій', () => {
     const f = openNew();
@@ -464,4 +486,71 @@ describe('реєстр ризиків (#91, #92): прототип', () => {
     k.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
     expect(mine().length).toBe(n0 * 2);
   });
+});
+
+describe('Країна: обязательна у нового проекта, CEO країни видит проекты своих стран', () => {
+  test('новый проект без страны — ошибка; со страной — создан, страна в карточке', () => {
+    const f = newProject('Проєкт без країни', '2026-03-02', '2026-04-01', '');
+    expect(err(f)).toBe('Оберіть країну проєкту.');
+    const ok = newProject('Проєкт у Чехії', '2026-03-02', '2026-04-01', 'Чехія');
+    expect(err(ok)).toBe('');
+    expect(w.document.body.textContent).toContain('Чехія');
+  });
+  test('CEO Європа видит польский проект (CEO країни в «Доступ до картки»), украинский — нет', () => {
+    asUser('Марта Новак');
+    q('[data-act="nav"][data-page="projects"]').click();
+    expect(q('[data-act="openp"][data-id="3"]')).not.toBeNull();   // PRJ-003 — Польща
+    expect(q('[data-act="openp"][data-id="1"]')).toBeNull();       // PRJ-001 — Україна
+    q('[data-act="openp"][data-id="3"]').click();
+    expect(w.document.body.textContent).toContain('CEO країни · Польща');
+  });
+});
+
+describe('1.7.7 прототип: бюджет, прогноз витрат, план / факт', () => {
+  const card = (id: number): void => { q('[data-act="nav"][data-page="projects"]').click(); q(`[data-act="openp"][data-id="${id}"]`).click(); };
+  const txt = (): string => (w.document.body.textContent || '').replace(/[  ]/g, ' ');
+  test('карточка: прогноз и перевитрата; форма карточки — бюджет только для чтения', () => {
+    card(1);                                                  // демо PRJ-001: прогноз = бюджет × 1,12
+    expect(txt()).toContain('Прогноз витрат на завершення');
+    expect(txt()).toMatch(/\+[\d ]+ \$ \(12%\)/);
+    q('[data-act="editproj"][data-id="1"]').click();
+    expect(q('#p-budget-fixed')).not.toBeNull();
+    expect(txt()).toContain('Бюджет (план) змінюється статус-звітом');
+  });
+  test('отчёт: «Скасовано» — прогноз = витрати, поле закрыто; «Планувалось» показано; новый бюджет і прогноз — после погодження в карточке и истории', () => {
+    q('[data-act="nav"][data-page="reports"]').click();
+    q('[data-act="newrep"]:not([data-id])').click();
+    const f = q('#repform'); const g = (id: string): W => f.querySelector('#' + id);
+    const set = (id: string, v: string): void => { g(id).value = v; ev(g(id), 'input'); ev(g(id), 'change'); };
+    expect(g('f-pl-wrap').hidden).toBe(false);                // у демо-проекта есть погоджений отчёт с планом
+    set('f-st', 'Скасовано');
+    expect(g('f-fcost').disabled).toBe(true);
+    expect(g('f-fcost').value).toBe(g('f-c').value);
+    set('f-st', 'Реалізація');
+    expect(g('f-fcost').disabled).toBe(false);
+    const pid = +g('f-p').value;
+    ['sched', 'budget', 'res'].forEach(n => { f.querySelector(`input[name="${n}"][value="Жовтий"]`).checked = true; });
+    set('f-bp', '9999000'); set('f-fcost', '12345000'); set('f-c', '1000');
+    expect(g('f-kr-wrap').hidden).toBe(false);                // бюджет и прогноз изменены — причина обязательна
+    set('f-t', 'Новий бюджет'); set('f-kr', 'Додатковий обсяг'); set('f-nd', 'Усе виконано');
+    f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    expect(q('#repform')).toBeNull();
+    // PMO погоджує — бюджет і прогноз у картці, «було → стало» в історії
+    asPmo(); card(pid);
+    const rep = Array.from(w.document.querySelectorAll('[data-act="repopen"]'))[0] as W; rep.click();
+    q('#ap-ok').click();
+    card(pid);
+    expect(txt()).toContain('9 999 000 $');
+    expect(txt()).toContain('12 345 000 $');
+    q('[data-act="togglech"]') && q('[data-act="togglech"]').click();
+    expect(txt()).toContain('Прогноз витрат на завершення');
+  });
+});
+
+// #114: мобильная карточка риска — просроченный срок открытого риска красным, как в таблице
+test('прототип #114: карточка риска — просроченный срок открытого .late', () => {
+  q('[data-act="nav"][data-page="risks"]').click();
+  const late = Array.from(w.document.querySelectorAll('#main tbody tr')).filter((tr: W) => tr.querySelector('.late')).length;
+  const cards = Array.from(w.document.querySelectorAll('#main .mcards .mcard .mc-m .late')).length;
+  expect(late).toBeGreaterThan(0); expect(cards).toBe(late);
 });

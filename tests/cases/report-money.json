@@ -1,0 +1,197 @@
+{
+ "_about": "#135: бюджет (план), витрати на дату и прогноз витрат на дату отчёта: из самого отчёта; иначе — последний погоджений раньше него, где сумма была; иначе, если позже никто не менял, — из карточки; иначе null (неизвестно). reportMoneyAt приложения (logic/forms.ts) и прототипа (PPM_RULES). В отчётах: null — сумма не менялась.",
+ "cases": [
+  {
+   "name": "усе в самому звіті",
+   "reports": [
+    {
+     "id": 1,
+     "date": "2026-10-30",
+     "approval": "Погоджено",
+     "budgetPlan": 500,
+     "actualCost": 110,
+     "forecastCost": 160
+    }
+   ],
+   "p": {
+    "budget": 900,
+    "actualCost": 300,
+    "forecastCost": 950
+   },
+   "r": 1,
+   "out": {
+    "budgetPlan": 500,
+    "actualCost": 110,
+    "forecastCost": 160
+   }
+  },
+  {
+   "name": "#135: суми не змінювались — з картки (пізніше ніхто не змінював)",
+   "reports": [
+    {
+     "id": 1,
+     "date": "2026-10-30",
+     "approval": "Погоджено",
+     "budgetPlan": null,
+     "actualCost": null,
+     "forecastCost": null
+    }
+   ],
+   "p": {
+    "budget": 500,
+    "actualCost": 110,
+    "forecastCost": null
+   },
+   "r": 1,
+   "out": {
+    "budgetPlan": 500,
+    "actualCost": 110,
+    "forecastCost": null
+   }
+  },
+  {
+   "name": "з попереднього погодженого",
+   "reports": [
+    {
+     "id": 1,
+     "date": "2026-10-01",
+     "approval": "Погоджено",
+     "budgetPlan": 400,
+     "actualCost": 50,
+     "forecastCost": null
+    },
+    {
+     "id": 2,
+     "date": "2026-10-16",
+     "approval": "Погоджено",
+     "budgetPlan": null,
+     "actualCost": null,
+     "forecastCost": null
+    },
+    {
+     "id": 3,
+     "date": "2026-10-30",
+     "approval": "Погоджено",
+     "budgetPlan": 600,
+     "actualCost": 200,
+     "forecastCost": null
+    }
+   ],
+   "p": {
+    "budget": 600,
+    "actualCost": 200,
+    "forecastCost": null
+   },
+   "r": 2,
+   "out": {
+    "budgetPlan": 400,
+    "actualCost": 50,
+    "forecastCost": null
+   }
+  },
+  {
+   "name": "раніше не було, пізніше змінили — невідомо (не з картки)",
+   "reports": [
+    {
+     "id": 1,
+     "date": "2026-10-01",
+     "approval": "Погоджено",
+     "budgetPlan": null,
+     "actualCost": null,
+     "forecastCost": null
+    },
+    {
+     "id": 2,
+     "date": "2026-10-30",
+     "approval": "Погоджено",
+     "budgetPlan": 700,
+     "actualCost": null,
+     "forecastCost": null
+    }
+   ],
+   "p": {
+    "budget": 700,
+    "actualCost": 80,
+    "forecastCost": null
+   },
+   "r": 1,
+   "out": {
+    "budgetPlan": null,
+    "actualCost": 80,
+    "forecastCost": null
+   }
+  },
+  {
+   "name": "повернуті й на погодженні як джерело не враховуються",
+   "reports": [
+    {
+     "id": 1,
+     "date": "2026-10-01",
+     "approval": "Погоджено",
+     "budgetPlan": 400,
+     "actualCost": null,
+     "forecastCost": null
+    },
+    {
+     "id": 2,
+     "date": "2026-10-10",
+     "approval": "Повернуто",
+     "budgetPlan": 999,
+     "actualCost": null,
+     "forecastCost": null
+    },
+    {
+     "id": 3,
+     "date": "2026-10-20",
+     "approval": "На погодженні",
+     "budgetPlan": null,
+     "actualCost": null,
+     "forecastCost": null
+    }
+   ],
+   "p": {
+    "budget": 400,
+    "actualCost": 0,
+    "forecastCost": null
+   },
+   "r": 3,
+   "out": {
+    "budgetPlan": 400,
+    "actualCost": 0,
+    "forecastCost": null
+   }
+  },
+  {
+   "name": "той самий день — за номером",
+   "reports": [
+    {
+     "id": 5,
+     "date": "2026-10-30",
+     "approval": "Погоджено",
+     "budgetPlan": 300,
+     "actualCost": null,
+     "forecastCost": null
+    },
+    {
+     "id": 6,
+     "date": "2026-10-30",
+     "approval": "Погоджено",
+     "budgetPlan": null,
+     "actualCost": null,
+     "forecastCost": null
+    }
+   ],
+   "p": {
+    "budget": 300,
+    "actualCost": 0,
+    "forecastCost": null
+   },
+   "r": 6,
+   "out": {
+    "budgetPlan": 300,
+    "actualCost": 0,
+    "forecastCost": null
+   }
+  }
+ ]
+}

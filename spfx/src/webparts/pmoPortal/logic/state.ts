@@ -7,7 +7,7 @@ const MAP: [string, keyof Project, 'text' | 'number'][] = [
   ['pmStatus', 'status', 'text'], ['pmRAG', 'rag', 'text'], ['pmType', 'type', 'text'], ['pmProgress', 'progress', 'number'],
   ['pmStart', 'start', 'text'], ['pmGoLive', 'goLive', 'text'], ['pmPlanEnd', 'planEnd', 'text'], ['pmForecastEnd', 'forecastEnd', 'text'],
   ['pmActualCost', 'actualCost', 'number'], ['pmArchivedAt', 'archivedAt', 'text'], ['pmLastUpdate', 'lastUpdate', 'text'],
-  ['pmLastReport', 'lastReport', 'text'], ['pmCode', 'code', 'text'], ['pmActualEnd', 'actualEnd', 'text']];
+  ['pmLastReport', 'lastReport', 'text'], ['pmCode', 'code', 'text'], ['pmActualEnd', 'actualEnd', 'text'], ['pmCountry', 'country', 'text'], ['pmBudget', 'budget', 'number'], ['pmForecastCost', 'forecastCost', 'number']];
 
 export function parseState(json: string | null | undefined): StateJson | undefined {
   if (!json) return undefined;
@@ -21,7 +21,8 @@ export function applyState(p: Project, st: StateJson | undefined): Project {
   for (const [k, prop, kind] of MAP) {
     if (!(k in st)) continue;
     const v = st[k] === null || st[k] === undefined ? '' : String(st[k]);
-    w[prop] = kind === 'number' ? (v === '' ? 0 : Number(v)) : v;
+    // прогноз витрат не задан — null («—»), а не 0 (1.7.7); остальные числа — 0
+    w[prop] = kind === 'number' ? (v === '' ? (prop === 'forecastCost' ? null : 0) : Number(v)) : v;
   }
   return out;
 }

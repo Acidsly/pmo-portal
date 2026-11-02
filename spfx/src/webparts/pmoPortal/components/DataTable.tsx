@@ -58,7 +58,7 @@ export function DataTable<R extends { id: number }>(p: { tkey: string; defs: Tab
           <label><input type="checkbox" checked={on} disabled={isLock} onChange={() => save(toggleCol(st, id, lock))} /><span>{defs[id].label}</span></label>
           <span className="mv">
             <button aria-label="↑" disabled={!on || idx <= 1} onClick={() => save(moveCol(st, id, -1, lock))}>↑</button>
-            <button aria-label="↓" disabled={!on || isLock || idx === st.cols.length - 1} onClick={() => save(moveCol(st, id, 1, lock))}>↓</button>
+            <button aria-label="↓" disabled={!on || isLock || idx === 0 || idx === st.cols.length - 1} onClick={() => save(moveCol(st, id, 1, lock))}>↓</button>
           </span></div>;
       })}</div>
       <div className="pop-f"><button className="more" onClick={() => save({ ...st, cols: defaults.slice() })}>{t('colsReset')}</button>

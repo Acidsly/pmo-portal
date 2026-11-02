@@ -3,6 +3,96 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.10.3",
+   "date": "02.11.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Помічник ШІ («Заповнити з ШІ») пропонує оцінку «Бюджет» за правилом PMO: прогноз витрат більший за бюджет до 9% — жовтий, від 10% — червоний (#137).</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.10.2",
+   "date": "02.11.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>«Детальний огляд системи»: нова назва подання «Високі ризики та проблеми».</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.10.1",
+   "date": "02.11.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення: версії тесту й проду вирівняно, без змін у роботі порталу.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.10.0",
+   "date": "02.11.2026",
+   "html": "<p><b>Змінено</b> (рішення PMO за відгуками тестування R8)</p>\n<ul>\n<li>Оцінка «Бюджет»: у фазах «Ініціація» і «Планування» можна обрати «Не оцінено» — загальний стан тоді рахується з двох інших оцінок (#121, #123).</li>\n<li>Під оцінкою «Бюджет» — підказка за правилом PMO: перевищення прогнозу витрат над бюджетом до 9% — жовтий, від 10% — червоний; якщо обрано зеленішу оцінку — попередження (#137).</li>\n<li>Невідомі суми лишаються порожніми, а не «0»; у розрахунках порожня сума — 0 (#111).</li>\n<li>«Витрати на дату» — усі витрати проєкту разом, з початку проєкту (#122).</li>\n<li>Власник ризику обов'язковий; за замовчуванням — PM проєкту (#129).</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.9.0",
+   "date": "02.11.2026",
+   "html": "<p><b>Нове</b> (відгуки тестування R8)</p>\n<ul>\n<li>Статус-звіт: відкриті ризики й проблеми проєкту видно прямо у формі; підказки, якщо прогноз завершення вже минув, витрати на дату менші за погоджені або проєкт іде в архів з відкритими ризиками (#124, #125, #127, #134).</li>\n<li>Позначка «План виконано повністю» — не треба вручну писати «Усе виконано» (#120).</li>\n<li>Зміна проєкту у формі з уже введеним текстом і закриття незбереженого звіту — з питанням, щоб текст не загубився і не потрапив в інший проєкт (#133, #134).</li>\n<li>У перегляді звіту — бюджет, витрати й прогноз витрат на дату звіту, навіть якщо звіт їх не змінював, і «Планувалось» — план попереднього звіту (#135, #136).</li>\n</ul>\n<p><b>Змінено</b></p>\n<ul>\n<li>«Високі ризики та проблеми» — нова назва подання й показника на головній: там і проблеми з оцінкою від 15 (#128).</li>\n<li>«Потребують рішення» — запит лише з останнього звіту проєкту: новий звіт знімає запит попереднього (#132).</li>\n<li>Ризик архівного проєкту пояснює: «Проєкт в архіві — ризик лише для перегляду» (#118).</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.8.1",
+   "date": "02.11.2026",
+   "html": "<p><b>Виправлено</b> (звірка тестів з усіма опрацьованими відгуками)</p>\n<ul>\n<li>На телефоні поля сум відкривають клавіатуру з комою — копійки можна набрати (#131).</li>\n<li>Меню колонок: першу колонку більше не можна зсунути вниз — порядок «стратегічний, пріоритет, назва» не ламається (#49).</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.8.0",
+   "date": "02.11.2026",
+   "html": "<p><b>Виправлено</b> (відгуки тестування R8)</p>\n<ul>\n<li>Суми з копійками: «1450,50» у бюджеті, витратах і прогнозі тепер округлюється до 1 451 $, а не перетворюється на 145 050 $ (#131).</li>\n<li>Ризик або проблема: при перемиканні типу кожен тип зберігає свій опис — повернувшись до «Ризик», бачите опис ризику (#130).</li>\n<li>Некоректна дата (наприклад, 31.11.2026) більше не зникає мовчки: вона лишається в полі з поясненням, а форма не зберігається, доки дату не виправлено (#119).</li>\n<li>На iPhone кнопка календаря біля дати відкриває вибір дати (#116).</li>\n<li>На телефоні прострочений термін відкритого ризику виділено червоним, як у таблиці (#114).</li>\n<li>«Динаміка стану портфеля»: стовпчик «сьогодні» збігається з кільцем «Портфель за станом» — враховується стан картки, а не погоджений звіт, який до картки не застосовано (#117).</li>\n<li>«Історія змін»: ризик, створений і закритий протягом кількох хвилин, тепер має і «Додано», і «Закрито» (#115).</li>\n<li>Помічник ШІ («Перевірити з ШІ»): пункт плану, пояснений у «Не зроблено з плану і чому», більше не вважається невідображеним (#112).</li>\n</ul>\n<p><b>Перевірте повторно</b></p>\n<ul>\n<li>Ручне введення сум з копійками; перемикання «Ризик ↔ Проблема»; дата 31.11; календар на iPhone; червоні терміни ризиків на телефоні; «Динаміка» і кільце на головній.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.9",
+   "date": "28.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>«Довідка»: новий розділ «Зовнішній учасник проєкту» — як додати людину не з компанії (запит у хелпдеск, потім пошук за повною адресою). Підказки пошуку людей кажуть те саме.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.8",
+   "date": "28.10.2026",
+   "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>Зовнішнього учасника (гостя), якого ще немає на сайті, тепер можна знайти за повною адресою пошти — раніше пошук писав «Не знайдено».</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.7",
+   "date": "26.10.2026",
+   "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>Пошук людей пише «Не знайдено в організації», якщо нікого не знайдено. Учасника команди, якого не вибрано зі списку, портал не плутає з порожньою роллю — пояснює, що людину треба вибрати з пошуку або спершу запросити до організації.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.6",
+   "date": "26.10.2026",
+   "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>Зовнішнього учасника (гостя організації) тепер можна додати до команди проєкту, призначити PM, власником чи відповідальним за ризик. Якщо людини ще немає в організації, портал пояснює, що її спершу має запросити адміністратор Microsoft 365.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.5",
+   "date": "21.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>«Довідка» і «Детальний огляд системи» — про країну, бюджет і прогноз витрат, план і факт; помічник ШІ — чим більше звітів, тим корисніший.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.4",
+   "date": "21.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення без змін у роботі порталу.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.3",
+   "date": "21.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення без змін у роботі порталу.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.2",
+   "date": "21.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення без змін у роботі порталу.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.1",
+   "date": "21.10.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення без змін у роботі порталу.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.0",
+   "date": "21.10.2026",
+   "html": "<p><b>Нове</b></p>\n<ul>\n<li><b>Бюджет — як терміни.</b> У статус-звіті: <b>Бюджет (план)</b> і <b>Прогноз витрат на завершення</b> (підказка «за темпом витрат»); зміна — з причиною, у картку — після погодження PMO; у картці — прогноз і відхилення від бюджету. <b>План і факт:</b> «Планувалось» з останнього погодженого звіту і поле <b>Не зроблено з плану і чому</b> (обов'язкове, якщо план був); помічник ШІ враховує його під час перевірки.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.6.0",
+   "date": "21.10.2026",
+   "html": "<p><b>Нове</b></p>\n<ul>\n<li><b>Країна</b> проєкту: PMO обирає її при створенні, далі змінює через «Змінити PM / власника / країну». <b>CEO країни</b> бачить проєкти своїх країн і може коментувати. Колонка <b>Країна</b> у «Проєктах» і «Архіві», на «Головній» — <b>Портфель за країнами</b>.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.5.4",
    "date": "28.10.2026",
    "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>Зовнішнього учасника (гостя), якого ще немає на сайті, тепер можна знайти за повною адресою пошти — раніше пошук писав «Не знайдено».</li>\n</ul>"
@@ -220,6 +310,96 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.10.3",
+   "date": "02.11.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>The AI assistant («Fill with AI») suggests the «Budget» rating by the PMO rule: cost forecast up to 9% over budget — yellow, 10% and more — red (#137).</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.10.2",
+   "date": "02.11.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>«Detailed system overview»: the new view name «High risks and issues».</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.10.1",
+   "date": "02.11.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update: test and production versions aligned, no changes in how the portal works.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.10.0",
+   "date": "02.11.2026",
+   "html": "<p><b>Changed</b> (PMO decisions on R8 testing feedback)</p>\n<ul>\n<li>«Budget» rating: in the «Initiation» and «Planning» phases you can choose «Not rated» — overall health is then calculated from the other two ratings (#121, #123).</li>\n<li>A hint under the «Budget» rating by the PMO rule: cost forecast up to 9% over budget — yellow, 10% and more — red; a greener rating shows a warning (#137).</li>\n<li>Unknown amounts stay empty instead of «0»; calculations treat an empty amount as 0 (#111).</li>\n<li>«Cost to date» — all project costs together, since the project start (#122).</li>\n<li>The risk owner is required; by default — the project PM (#129).</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.9.0",
+   "date": "02.11.2026",
+   "html": "<p><b>New</b> (R8 testing feedback)</p>\n<ul>\n<li>Status report: the project's open risks and issues are shown right in the form; hints when the forecast completion date has passed, the cost to date is lower than approved, or the project goes to the archive with open risks (#124, #125, #127, #134).</li>\n<li>\"The plan is fully done\" checkbox — no need to type \"All done\" by hand (#120).</li>\n<li>Changing the project in a form that already has text, and closing an unsaved report, now ask first, so the text is not lost or moved to another project (#133, #134).</li>\n<li>A report view shows the budget, cost and cost forecast as of the report date, even if the report did not change them, and \"Planned\" — the previous report's plan (#135, #136).</li>\n</ul>\n<p><b>Changed</b></p>\n<ul>\n<li>\"High risks and issues\" — the new name of the view and the home page indicator: issues with a score of 15+ are there too (#128).</li>\n<li>\"Decision needed\" — only the request from the project's latest report: a new report clears the previous request (#132).</li>\n<li>A risk of an archived project explains: \"The project is archived — the risk is view-only\" (#118).</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.8.1",
+   "date": "02.11.2026",
+   "html": "<p><b>Fixed</b> (tests reconciled with all handled feedback)</p>\n<ul>\n<li>On a phone, amount fields open a keyboard with a comma — cents can be typed (#131).</li>\n<li>Columns menu: the first column can no longer be moved down — the order «strategic, priority, title» stays (#49).</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.8.0",
+   "date": "02.11.2026",
+   "html": "<p><b>Fixed</b> (R8 testing feedback)</p>\n<ul>\n<li>Amounts with cents: «1450,50» in the budget, cost and forecast now rounds to $1,451 instead of becoming $145,050 (#131).</li>\n<li>Risk or issue: when switching the type, each type keeps its own description — back on «Risk», you see the risk description (#130).</li>\n<li>An invalid date (e.g. 31.11.2026) no longer disappears silently: it stays in the field with an explanation, and the form is not saved until the date is fixed (#119).</li>\n<li>On iPhone the calendar button next to a date opens the date picker (#116).</li>\n<li>On a phone an overdue due date of an open risk is red, as in the table (#114).</li>\n<li>«Portfolio health over time»: the «today» column matches the «Portfolio by health» ring — the card state counts, not an approved report that was not applied to the card (#117).</li>\n<li>«Change history»: a risk created and closed within a few minutes now shows both «Added» and «Closed» (#115).</li>\n<li>AI assistant («Check with AI»): a plan item explained in «Not done from the plan and why» is no longer reported as missing (#112).</li>\n</ul>\n<p><b>Please re-check</b></p>\n<ul>\n<li>Typing amounts with cents; switching «Risk ↔ Issue»; the date 31.11; the calendar on iPhone; red risk due dates on a phone; «Portfolio health over time» and the ring on the home page.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.9",
+   "date": "28.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>Help: new section «External project participant» — how to add a person from outside the company (a helpdesk request, then search by the full e-mail address). The people search hints say the same.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.8",
+   "date": "28.10.2026",
+   "html": "<p><b>Fixed</b></p>\n<ul>\n<li>An external participant (guest) who is not yet on the site can now be found by their full e-mail address — the search used to show «Not found».</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.7",
+   "date": "26.10.2026",
+   "html": "<p><b>Fixed</b></p>\n<ul>\n<li>The people search shows «Not found in the organization» when nobody matches. A team member not selected from the list is no longer reported as a missing role — the portal explains that the person must be selected from the search or first invited to the organization.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.6",
+   "date": "26.10.2026",
+   "html": "<p><b>Fixed</b></p>\n<ul>\n<li>An external participant (a guest of the organization) can now be added to the project team or assigned as PM, owner or risk owner. If the person is not yet in the organization, the portal explains that the Microsoft 365 administrator must invite them first.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.5",
+   "date": "21.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>\"Help\" and \"Detailed system overview\" — country, budget and cost forecast, plan vs actual; the AI assistant — the more reports, the more useful.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.4",
+   "date": "21.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update with no changes to how the portal works.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.3",
+   "date": "21.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update with no changes to how the portal works.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.2",
+   "date": "21.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update with no changes to how the portal works.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.1",
+   "date": "21.10.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update with no changes to how the portal works.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.0",
+   "date": "21.10.2026",
+   "html": "<p><b>New</b></p>\n<ul>\n<li><b>Budget works like the schedule.</b> In the status report: <b>Budget (plan)</b> and <b>Cost at completion forecast</b> (\"at the current spending rate\" hint); a change needs a reason and reaches the card after PMO approval; the card shows the forecast and the deviation from the budget. <b>Plan vs actual:</b> \"Planned\" from the last approved report and <b>Not done from the plan and why</b> (required if there was a plan); the AI assistant takes it into account when checking.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.6.0",
+   "date": "21.10.2026",
+   "html": "<p><b>New</b></p>\n<ul>\n<li>Project <b>Country</b>: the PMO chooses it when creating a project and later changes it with \"Change PM / owner / country\". The <b>country CEO</b> sees the projects of their countries and can comment. <b>Country</b> column in \"Projects\" and \"Archive\"; <b>Portfolio by country</b> on the home page.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.5.4",
    "date": "28.10.2026",
    "html": "<p><b>Fixed</b></p>\n<ul>\n<li>An external participant (guest) who is not yet on the site can now be found by their full e-mail address — the search used to show «Not found».</li>\n</ul>"
@@ -436,6 +616,96 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.10.3",
+   "date": "02.11.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Помощник ИИ («Заполнить с ИИ») предлагает оценку «Бюджет» по правилу PMO: прогноз затрат больше бюджета до 9% — жёлтый, от 10% — красный (#137).</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.10.2",
+   "date": "02.11.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>«Подробный обзор системы»: новое название представления «Высокие риски и проблемы».</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.10.1",
+   "date": "02.11.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Техническое обновление: версии теста и прода выровнены, без изменений в работе портала.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.10.0",
+   "date": "02.11.2026",
+   "html": "<p><b>Изменено</b> (решения PMO по отзывам тестирования R8)</p>\n<ul>\n<li>Оценка «Бюджет»: в фазах «Инициация» и «Планирование» можно выбрать «Не оценено» — общее состояние тогда считается по двум другим оценкам (#121, #123).</li>\n<li>Под оценкой «Бюджет» — подсказка по правилу PMO: превышение прогноза затрат над бюджетом до 9% — жёлтый, от 10% — красный; если выбрана более зелёная оценка — предупреждение (#137).</li>\n<li>Неизвестные суммы остаются пустыми, а не «0»; в расчётах пустая сумма — 0 (#111).</li>\n<li>«Затраты на дату» — все затраты проекта вместе, с начала проекта (#122).</li>\n<li>Владелец риска обязателен; по умолчанию — PM проекта (#129).</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.9.0",
+   "date": "02.11.2026",
+   "html": "<p><b>Новое</b> (отзывы тестирования R8)</p>\n<ul>\n<li>Статус-отчёт: открытые риски и проблемы проекта видны прямо в форме; подсказки, если прогноз завершения уже прошёл, затраты на дату меньше согласованных или проект уходит в архив с открытыми рисками (#124, #125, #127, #134).</li>\n<li>Отметка «План выполнен полностью» — не нужно вручную писать «Всё выполнено» (#120).</li>\n<li>Смена проекта в форме с уже введённым текстом и закрытие несохранённого отчёта — с вопросом, чтобы текст не потерялся и не попал в другой проект (#133, #134).</li>\n<li>В просмотре отчёта — бюджет, затраты и прогноз затрат на дату отчёта, даже если отчёт их не менял, и «Планировалось» — план предыдущего отчёта (#135, #136).</li>\n</ul>\n<p><b>Изменено</b></p>\n<ul>\n<li>«Высокие риски и проблемы» — новое название представления и показателя на главной: там и проблемы с оценкой от 15 (#128).</li>\n<li>«Требуют решения» — запрос только из последнего отчёта проекта: новый отчёт снимает запрос предыдущего (#132).</li>\n<li>Риск архивного проекта поясняет: «Проект в архиве — риск только для просмотра» (#118).</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.8.1",
+   "date": "02.11.2026",
+   "html": "<p><b>Исправлено</b> (сверка тестов со всеми обработанными отзывами)</p>\n<ul>\n<li>На телефоне поля сумм открывают клавиатуру с запятой — копейки можно набрать (#131).</li>\n<li>Меню колонок: первую колонку больше нельзя сдвинуть вниз — порядок «стратегический, приоритет, название» не ломается (#49).</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.8.0",
+   "date": "02.11.2026",
+   "html": "<p><b>Исправлено</b> (отзывы тестирования R8)</p>\n<ul>\n<li>Суммы с копейками: «1450,50» в бюджете, затратах и прогнозе теперь округляется до 1 451 $, а не превращается в 145 050 $ (#131).</li>\n<li>Риск или проблема: при переключении типа каждый тип хранит своё описание — вернувшись к «Риск», видите описание риска (#130).</li>\n<li>Некорректная дата (например, 31.11.2026) больше не исчезает молча: она остаётся в поле с пояснением, а форма не сохраняется, пока дату не исправили (#119).</li>\n<li>На iPhone кнопка календаря у даты открывает выбор даты (#116).</li>\n<li>На телефоне просроченный срок открытого риска выделен красным, как в таблице (#114).</li>\n<li>«Динамика состояния портфеля»: столбец «сегодня» совпадает с кольцом «Портфель по состоянию» — учитывается состояние карточки, а не погодженый отчёт, не применённый к карточке (#117).</li>\n<li>«История изменений»: риск, созданный и закрытый за несколько минут, теперь имеет и «Добавлено», и «Закрыт» (#115).</li>\n<li>Помощник ИИ («Проверить с ИИ»): пункт плана, объяснённый в «Не сделано из плана и почему», больше не считается неотражённым (#112).</li>\n</ul>\n<p><b>Проверьте повторно</b></p>\n<ul>\n<li>Ручной ввод сумм с копейками; переключение «Риск ↔ Проблема»; дата 31.11; календарь на iPhone; красные сроки рисков на телефоне; «Динамика» и кольцо на главной.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.9",
+   "date": "28.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>«Довідка»: новый раздел «Внешний участник проекта» — как добавить человека не из компании (запрос в хелпдеск, затем поиск по полному адресу). Подсказки поиска людей говорят то же.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.8",
+   "date": "28.10.2026",
+   "html": "<p><b>Исправлено</b></p>\n<ul>\n<li>Внешнего участника (гостя), которого ещё нет на сайте, теперь можно найти по полному адресу почты — раньше поиск писал «Не найдено».</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.7",
+   "date": "26.10.2026",
+   "html": "<p><b>Исправлено</b></p>\n<ul>\n<li>Поиск людей пишет «Не найдено в организации», если никого не нашлось. Участника команды, не выбранного из списка, портал не путает с пустой ролью — объясняет, что человека нужно выбрать из поиска или сначала пригласить в организацию.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.6",
+   "date": "26.10.2026",
+   "html": "<p><b>Исправлено</b></p>\n<ul>\n<li>Внешнего участника (гостя организации) теперь можно добавить в команду проекта, назначить PM, владельцем или ответственным за риск. Если человека ещё нет в организации, портал объясняет, что его сначала должен пригласить администратор Microsoft 365.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.5",
+   "date": "21.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>«Справка» и «Подробный обзор системы» — о стране, бюджете и прогнозе затрат, плане и факте; помощник ИИ — чем больше отчётов, тем полезнее.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.4",
+   "date": "21.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Техническое обновление без изменений в работе портала.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.3",
+   "date": "21.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Техническое обновление без изменений в работе портала.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.2",
+   "date": "21.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Техническое обновление без изменений в работе портала.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.1",
+   "date": "21.10.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Техническое обновление без изменений в работе портала.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.7.0",
+   "date": "21.10.2026",
+   "html": "<p><b>Новое</b></p>\n<ul>\n<li><b>Бюджет — как сроки.</b> В статус-отчёте: <b>Бюджет (план)</b> и <b>Прогноз затрат на завершение</b> (подсказка «по темпу затрат»); изменение — с причиной, в карточку — после согласования PMO; в карточке — прогноз и отклонение от бюджета. <b>План и факт:</b> «Планировалось» из последнего согласованного отчёта и поле <b>Не сделано из плана и почему</b> (обязательно, если план был); помощник ИИ учитывает его при проверке.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.6.0",
+   "date": "21.10.2026",
+   "html": "<p><b>Новое</b></p>\n<ul>\n<li><b>Страна</b> проекта: PMO выбирает её при создании, дальше меняет через «Сменить PM / владельца / страну». <b>CEO страны</b> видит проекты своих стран и может комментировать. Колонка <b>Страна</b> в «Проектах» и «Архиве», на «Главной» — <b>Портфель по странам</b>.</li>\n</ul>"
+  },
   {
    "ver": "1.7.5.4",
    "date": "28.10.2026",

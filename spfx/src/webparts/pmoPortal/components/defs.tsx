@@ -21,6 +21,9 @@ const ragOrder = (v: string): number => (RAG_ORDER[v] === undefined ? 3 : RAG_OR
 const clamp = (s: string): React.ReactNode => (s ? <span className="clamp2" title={s}>{s}</span> : <Muted />);
 const dateCell = (iso: string): React.ReactNode => (iso ? fmtDate(iso) : <Muted />);
 
+/** Срок риска: просроченный у открытого — красным (таблица и карточка на телефоне, #114). */
+export const riskDue = (k: Risk, today: string): React.ReactNode => (k.due && k.due < today && k.status !== 'Закрито' ? <span className="late">{fmtDate(k.due)}</span> : fmtDate(k.due));
+
 function shared(x: DefsCtx): {
   stratHead: JSX.Element; prioHead: JSX.Element; stratCell(type: string): JSX.Element; prioCell(v: string): JSX.Element;
   stratLabel(v: string): React.ReactNode; prioLabel(v: string): React.ReactNode; ragLabel(v: string): React.ReactNode; link(p: Project): JSX.Element;
@@ -72,6 +75,7 @@ export function projectDefs(x: DefsCtx, archive: boolean): TableDefs<Project> {
       sort: p => forecastDelta(p.planEnd, p.forecastEnd), cls: 'num' },
     budget: { label: t('cBudgetP'), cell: p => money(p.budget), sort: p => p.budget, cls: 'num' },
     actual: { label: t('cActual'), cell: p => money(p.actualCost), sort: p => p.actualCost, cls: 'num' },
+    fcost: { label: fl('fcost'), cell: p => (p.forecastCost ? money(p.forecastCost) : '—'), sort: p => p.forecastCost || 0, cls: 'num' },
     use: { label: t('cUse'), cell: p => { const u = budgetUse(p.budget, p.actualCost); return <span className={budgetLevel(u)}>{u}%</span>; },
       sort: p => (p.budget ? p.actualCost / p.budget : 0), cls: 'num' },
     update: { label: fl('lastReport'), cell: p => clamp(p.lastReport), sort: p => p.lastReport, cls: 'w-upd' },
@@ -80,6 +84,7 @@ export function projectDefs(x: DefsCtx, archive: boolean): TableDefs<Project> {
     cmtBy: { label: t('cCmtBy'), cell: p => { const c = lastCm(p); return c ? <PersonCell p={c.author} /> : <Muted />; },
       sort: p => { const c = lastCm(p); return c && c.author ? c.author.name : ''; }, filter: p => { const c = lastCm(p); return c && c.author ? c.author.name : ''; } },
     dept: { label: fl('dept'), cell: p => tv(p.department), sort: p => p.department, filter: p => p.department },
+    country: { label: fl('country'), cell: p => (p.country ? tv(p.country) : '—'), sort: p => tv(p.country || ''), filter: p => p.country || '' },
     // «Батьківський проєкт»: видимый — ссылкой на карточку; фильтр и сортировка — по подписи «PRJ-001 · Назва»
     parent: { label: fl('parent'), cell: p => (!p.parent ? <Muted /> : x.byId[p.parent.id] ? <button className="link" onClick={() => x.open(p.parent!.id)}>{parentLabel(p.parent)}</button>
       : parentLabel(p.parent)), sort: p => parentLabel(p.parent), filter: p => parentLabel(p.parent) },
@@ -145,7 +150,7 @@ export function riskDefs(x: DefsCtx): TableDefs<Risk> {
     imp: { label: t('cImp'), cell: k => String(k.impact), sort: k => k.impact, filter: k => String(k.impact), cls: 'num' },
     owner: { label: fl('kOwner'), cell: k => <PersonCell p={k.owner} />, sort: k => (k.owner ? k.owner.name : ''), filter: k => (k.owner ? k.owner.name : '') },
     status: { label: fl('kStatus'), cell: k => <StatusPill v={k.status} />, sort: k => k.status, filter: k => k.status },
-    due: { label: fl('kDue'), cell: k => (k.due && k.due < today && k.status !== 'Закрито' ? <span className="late">{fmtDate(k.due)}</span> : fmtDate(k.due)), sort: k => k.due }
+    due: { label: fl('kDue'), cell: k => riskDue(k, today), sort: k => k.due }
   };
   return { lock: 'proj', cols, defaults: ['strat', 'prio', 'proj', 'title', 'type', 'score', 'strategy', 'owner', 'status', 'due'] };
 }
@@ -163,5 +168,5 @@ export const riskCard = (x: DefsCtx) => (k: Risk): React.ReactNode => {
   const pj = x.byId[k.projectId];
   return <button className="mcard" onClick={() => x.openRisk(k.id, k.projectId)}>
     <span className="mc-h"><b>{k.title}</b><Score s={riskScore(k.probability, k.impact)} /></span>
-    <span className="mc-m">{pj ? pj.title : ''} · <StatusPill v={k.status} />{k.due ? <> · {fmtDate(k.due)}</> : null}</span></button>;
+    <span className="mc-m">{pj ? pj.title : ''} · <StatusPill v={k.status} />{k.due ? <> · {riskDue(k, x.today)}</> : null}</span></button>;
 };

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
 import { isArch, isActive, newestFirst } from '../logic/status';
-import { RV, reportView } from '../logic/views';
+import { RV, reportView, latestReportIds } from '../logic/views';
 import { DataTable } from '../components/DataTable';
 import { reportDefs, reportCard } from '../components/defs';
 import { Plus } from '../components/Icons';
@@ -12,7 +12,8 @@ import { Hero, ViewSel, useDefsCtx } from './common';
 export const Reports: React.FC<{ data: PortalData }> = ({ data }) => {
   const c = React.useContext(AppCtx); const { t } = c;
   const x = useDefsCtx(data);
-  const rows = data.reports.filter(r => x.byId[r.projectId] && reportView(c.views.reports, r))
+  const latest = latestReportIds(data.reports);   // #132: «Потребують рішення» — только последний отчёт проекта
+  const rows = data.reports.filter(r => x.byId[r.projectId] && reportView(c.views.reports, r, latest))
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : newestFirst(a, b)));   // по дате отчёта, в один день — новые сверху
   const canAdd = data.projects.some(p => !isArch(p.status) && isActive(p.status) && p.canEdit);
   const add = canAdd ? <button className="cmd primary" onClick={() => c.openForm('report')}><Plus />{t('newReport')}</button> : null;

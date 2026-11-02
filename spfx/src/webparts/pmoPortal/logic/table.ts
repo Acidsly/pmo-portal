@@ -38,8 +38,8 @@ export function toggleCol(st: TableState, id: string, lock: string): TableState 
 }
 export function moveCol(st: TableState, id: string, dir: -1 | 1, lock: string): TableState {
   const i = st.cols.indexOf(id), j = i + dir;
-  // как в прототипе: на первую позицию не сдвигается ничего, закреплённая колонка не сдвигается вниз
-  if (i < 0 || j < 1 || j >= st.cols.length || (dir === 1 && id === lock)) return st;
+  // как в прототипе: первая колонка не сдвигается и на первую позицию не сдвигается ничего (#49), закреплённая колонка не сдвигается вниз
+  if (i < 1 || j < 1 || j >= st.cols.length || (dir === 1 && id === lock)) return st;
   const cols = st.cols.slice(); cols[i] = cols[j]; cols[j] = id;
   return { ...st, cols };
 }

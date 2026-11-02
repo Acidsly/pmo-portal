@@ -75,6 +75,7 @@ function openForm(): W {
 const fill = (f: W): void => {
   for (const n of ['sched', 'budget', 'res']) { const r = f.querySelector(`input[name="${n}"][value="Зелений"]`); r.checked = true; ev(r, 'change'); }
   const t = f.querySelector('#f-t'); t.value = 'Резюме'; ev(t, 'input');
+  const nd = f.querySelector('#f-nd'); if (nd) { nd.value = 'Усе виконано'; ev(nd, 'input'); }   // 1.7.7: был план — обязательно
 };
 const submit = async (f: W): Promise<void> => { f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true })); await flush(); };
 const sub = (): W => q('#f-submit');
