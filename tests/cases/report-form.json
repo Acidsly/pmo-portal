@@ -1,5 +1,5 @@
 {
- "_about": "Форма статус-отчёта: одни и те же сценарии проверяют приложение (spfx/test/reportForm.test.ts — logic/forms.ts) и прототип (spfx/test/prototypeForm.test.ts — prototype/pmo-prototype.html в jsdom). Даты задаются всегда (они отличаются от карточки — нужна причина, если keyReason не пуст). Фактическая дата (#54, actualEnd) — при «Завершено» / «Скасовано»: обязательна, не раньше старта, не позже даты отчёта (date).",
+ "_about": "Форма статус-отчёта: одни и те же сценарии проверяют приложение (spfx/test/reportForm.test.ts — logic/forms.ts) и прототип (spfx/test/prototypeForm.test.ts — prototype/pmo-prototype.html в jsdom). Даты задаются всегда (они отличаются от карточки — нужна причина, если keyReason не пуст). Фактическая дата (#54, actualEnd) — при «Завершено» / «Скасовано»: обязательна, не раньше старта, не позже даты отчёта (date). «Не оцінено» в оценке «Бюджет» (#111 / #121 / #123) — только в фазах «Ініціація» и «Планування»; в других — ошибка errBudgetNA.",
  "status": [
   {
    "name": "#52 «Завершено» — 100 % и поле закрыто",
@@ -513,6 +513,82 @@
     "notDone"
    ],
    "message": "errReqAll"
+  },
+  {
+   "name": "#121 «Бюджет — Не оцінено» у фазі «Ініціація» — можна",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Не оцінено",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Причина",
+    "start": "2026-03-02",
+    "goLive": "",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "",
+    "status": "Ініціація"
+   },
+   "progressText": "10",
+   "out": [],
+   "message": ""
+  },
+  {
+   "name": "#121 «Бюджет — Не оцінено» у фазі «Планування» — можна",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Не оцінено",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Причина",
+    "start": "2026-03-02",
+    "goLive": "",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "",
+    "status": "Планування"
+   },
+   "progressText": "10",
+   "out": [],
+   "message": ""
+  },
+  {
+   "name": "#121 «Бюджет — Не оцінено» у фазі «Реалізація» — помилка",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Не оцінено",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Причина",
+    "start": "2026-03-02",
+    "goLive": "",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "",
+    "status": "Реалізація"
+   },
+   "progressText": "10",
+   "out": [
+    "budget"
+   ],
+   "message": "errBudgetNA"
+  },
+  {
+   "name": "#121 «Бюджет — Не оцінено» у фазі «Призупинено» — помилка",
+   "draft": {
+    "schedule": "Зелений",
+    "budget": "Не оцінено",
+    "resources": "Зелений",
+    "title": "Резюме",
+    "keyReason": "Причина",
+    "start": "2026-03-02",
+    "goLive": "",
+    "planEnd": "2026-12-01",
+    "forecastEnd": "",
+    "status": "Призупинено"
+   },
+   "progressText": "10",
+   "out": [
+    "budget"
+   ],
+   "message": "errBudgetNA"
   }
  ],
  "projectSwitch": [

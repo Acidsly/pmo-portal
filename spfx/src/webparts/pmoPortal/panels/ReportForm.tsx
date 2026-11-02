@@ -7,7 +7,7 @@ import { isActive, byOrder } from '../logic/status';
 import { calcRag, Rag } from '../logic/rag';
 import { ReportDraft, reportPeriodFrom, reportFromProject, reportFromReturned, keyChanged, reportErrors, formErrorText, parseProgress, progressLocked, FieldErr,
   initialReport, switchStatus, switchProject, reportToSave, reportProjectChoice, archiveStatus, lastPlan, withPlan, reportWarnings, ReportWarn,
-  reportHasText, clearReportText, reportDirty, PLAN_ALL_DONE } from '../logic/forms';
+  reportHasText, clearReportText, reportDirty, PLAN_ALL_DONE, budgetNaAllowed } from '../logic/forms';
 import { paceForecast } from '../logic/status';
 import { money } from '../components/Bits';
 import { reportBody } from '../data/write';
@@ -79,7 +79,7 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
   const openRisks = ofProject(data.risks, p.id).filter(k => k.status !== 'Закрито').sort((a, b) => riskScore(b.probability, b.impact) - riskScore(a.probability, a.impact));
   const warns = reportWarnings(d, p, openRisks.length, c.today);
   const warn = (f: ReportWarn['f']): React.ReactNode => warns.filter(x => x.f === f).map(x => <p key={x.k} className="fwarn" id={'w-' + f}>
-    {t(x.k).replace('{v}', money(x.n || 0)).replace('{n}', String(x.n || 0))}</p>);
+    {t(x.k).replace('{v}', money(x.n || 0)).replace('{n}', String(x.n || 0)).replace('{rag}', tv(x.rag || '').toLowerCase())}</p>);
   const planDone = d.notDone === PLAN_ALL_DONE;
 
   const save = async (e: React.FormEvent): Promise<void> => {
@@ -129,7 +129,9 @@ export const ReportForm: React.FC<{ data: PortalData; projectId: number; fromId?
         <span className="muted">{t('subHint')}</span></div>
       <div className="dims">
         <RagPick name="sched" label={fl('rSched')} req={true} invalid={bad('sched')} value={d.schedule} onChange={v => set({ schedule: v })} />
-        <RagPick name="budget" label={fl('rBudget')} req={true} invalid={bad('budget')} value={d.budget} onChange={v => set({ budget: v })} />
+        {/* #121: «Не оцінено» — только на ранних фазах; #137 — подсказка по правилу PMO (перевищення прогнозу над бюджетом) */}
+        <RagPick name="budget" label={fl('rBudget')} req={true} invalid={bad('budget')} value={d.budget} onChange={v => set({ budget: v })} na={budgetNaAllowed(d.status)}>
+          <FieldErrText msg={fErr('budget')} />{warn('budget')}</RagPick>
         <RagPick name="res" label={fl('rRes')} req={true} invalid={bad('res')} value={d.resources} onChange={v => set({ resources: v })} />
       </div>
       <div className="ragcalc"><span className="k">{t('ragCalc')}</span>

@@ -897,9 +897,29 @@ export const T: Record<string, L3> = {
   "Меньше согласованных затрат ({v}) — проверьте сумму."
  ],
  "costHint": [
-  "Усі витрати з початку проєкту (наростаючим підсумком).",
-  "All costs since the project start (cumulative).",
-  "Все затраты с начала проекта (нарастающим итогом)."
+  "Усі витрати проєкту разом, з початку проєкту (наростаючим підсумком).",
+  "All project costs together, since the project start (cumulative).",
+  "Все затраты проекта вместе, с начала проекта (нарастающим итогом)."
+ ],
+ "errBudgetNA": [
+  "«Не оцінено» для бюджету — лише у фазах «Ініціація» і «Планування». Оберіть оцінку.",
+  "«Not rated» for the budget is allowed only in the «Initiation» and «Planning» phases. Choose a rating.",
+  "«Не оценено» для бюджета — только в фазах «Инициация» и «Планирование». Выберите оценку."
+ ],
+ "hintBudgetRule": [
+  "Прогноз витрат перевищує бюджет на {n}% — за правилом PMO: {rag} (до 9% — жовтий, від 10% — червоний).",
+  "The cost forecast exceeds the budget by {n}% — by the PMO rule: {rag} (up to 9% — yellow, 10% and more — red).",
+  "Прогноз затрат превышает бюджет на {n}% — по правилу PMO: {rag} (до 9% — жёлтый, от 10% — красный)."
+ ],
+ "warnBudgetRule": [
+  "Прогноз витрат перевищує бюджет на {n}% — за правилом PMO це {rag} (до 9% — жовтий, від 10% — червоний). Перевірте оцінку «Бюджет».",
+  "The cost forecast exceeds the budget by {n}% — by the PMO rule this is {rag} (up to 9% — yellow, 10% and more — red). Check the «Budget» rating.",
+  "Прогноз затрат превышает бюджет на {n}% — по правилу PMO это {rag} (до 9% — жёлтый, от 10% — красный). Проверьте оценку «Бюджет»."
+ ],
+ "errRiskOwner": [
+  "Вкажіть власника. Якщо відповідального ще немає — PM проєкту.",
+  "Set the owner. If no one is responsible yet — the project PM.",
+  "Укажите владельца. Если ответственного ещё нет — PM проекта."
  ],
  "warnArchRisks": [
   "Відкритих ризиків і проблем: {n}. Після погодження проєкт перейде в архів, і змінити їх буде неможливо — перегляньте їх нижче.",

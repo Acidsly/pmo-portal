@@ -45,7 +45,7 @@ describe('#41 / #45 поле суммы MoneyIn', () => {
   test('кросс-ревью: ноль в фокусе — пустое поле; вставка «1450.50» — 1451 (не 145050)', () => {
     const seen: number[] = []; mount(<Host init={0} seen={seen} />);
     const i = root.querySelector('#m') as HTMLInputElement;
-    expect(i.value).toBe('0');
+    expect(i.value).toBe('');   // #111 / #121: сумма не задана — поле пустое, а не «0»
     act(() => { Simulate.focus(i); }); expect(i.value).toBe('');
     act(() => { Simulate.change(i, { target: { value: '1450.50' } } as any); }); expect(seen[seen.length - 1]).toBe(1451);
     act(() => { Simulate.blur(i); }); expect(i.value).toBe('1 451');

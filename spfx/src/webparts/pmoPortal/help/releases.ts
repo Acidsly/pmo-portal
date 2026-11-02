@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.10.0",
+   "date": "02.11.2026",
+   "html": "<p><b>Змінено</b> (рішення PMO за відгуками тестування R8)</p>\n<ul>\n<li>Оцінка «Бюджет»: у фазах «Ініціація» і «Планування» можна обрати «Не оцінено» — загальний стан тоді рахується з двох інших оцінок (#121, #123).</li>\n<li>Під оцінкою «Бюджет» — підказка за правилом PMO: перевищення прогнозу витрат над бюджетом до 9% — жовтий, від 10% — червоний; якщо обрано зеленішу оцінку — попередження (#137).</li>\n<li>Невідомі суми лишаються порожніми, а не «0»; у розрахунках порожня сума — 0 (#111).</li>\n<li>«Витрати на дату» — усі витрати проєкту разом, з початку проєкту (#122).</li>\n<li>Власник ризику обов'язковий; за замовчуванням — PM проєкту (#129).</li>\n</ul>"
+  },
+  {
    "ver": "1.7.9.0",
    "date": "02.11.2026",
    "html": "<p><b>Нове</b> (відгуки тестування R8)</p>\n<ul>\n<li>Статус-звіт: відкриті ризики й проблеми проєкту видно прямо у формі; підказки, якщо прогноз завершення вже минув, витрати на дату менші за погоджені або проєкт іде в архів з відкритими ризиками (#124, #125, #127, #134).</li>\n<li>Позначка «План виконано повністю» — не треба вручну писати «Усе виконано» (#120).</li>\n<li>Зміна проєкту у формі з уже введеним текстом і закриття незбереженого звіту — з питанням, щоб текст не загубився і не потрапив в інший проєкт (#133, #134).</li>\n<li>У перегляді звіту — бюджет, витрати й прогноз витрат на дату звіту, навіть якщо звіт їх не змінював, і «Планувалось» — план попереднього звіту (#135, #136).</li>\n</ul>\n<p><b>Змінено</b></p>\n<ul>\n<li>«Високі ризики та проблеми» — нова назва подання й показника на головній: там і проблеми з оцінкою від 15 (#128).</li>\n<li>«Потребують рішення» — запит лише з останнього звіту проєкту: новий звіт знімає запит попереднього (#132).</li>\n<li>Ризик архівного проєкту пояснює: «Проєкт в архіві — ризик лише для перегляду» (#118).</li>\n</ul>"
@@ -280,6 +285,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.10.0",
+   "date": "02.11.2026",
+   "html": "<p><b>Changed</b> (PMO decisions on R8 testing feedback)</p>\n<ul>\n<li>«Budget» rating: in the «Initiation» and «Planning» phases you can choose «Not rated» — overall health is then calculated from the other two ratings (#121, #123).</li>\n<li>A hint under the «Budget» rating by the PMO rule: cost forecast up to 9% over budget — yellow, 10% and more — red; a greener rating shows a warning (#137).</li>\n<li>Unknown amounts stay empty instead of «0»; calculations treat an empty amount as 0 (#111).</li>\n<li>«Cost to date» — all project costs together, since the project start (#122).</li>\n<li>The risk owner is required; by default — the project PM (#129).</li>\n</ul>"
+  },
+  {
    "ver": "1.7.9.0",
    "date": "02.11.2026",
    "html": "<p><b>New</b> (R8 testing feedback)</p>\n<ul>\n<li>Status report: the project's open risks and issues are shown right in the form; hints when the forecast completion date has passed, the cost to date is lower than approved, or the project goes to the archive with open risks (#124, #125, #127, #134).</li>\n<li>\"The plan is fully done\" checkbox — no need to type \"All done\" by hand (#120).</li>\n<li>Changing the project in a form that already has text, and closing an unsaved report, now ask first, so the text is not lost or moved to another project (#133, #134).</li>\n<li>A report view shows the budget, cost and cost forecast as of the report date, even if the report did not change them, and \"Planned\" — the previous report's plan (#135, #136).</li>\n</ul>\n<p><b>Changed</b></p>\n<ul>\n<li>\"High risks and issues\" — the new name of the view and the home page indicator: issues with a score of 15+ are there too (#128).</li>\n<li>\"Decision needed\" — only the request from the project's latest report: a new report clears the previous request (#132).</li>\n<li>A risk of an archived project explains: \"The project is archived — the risk is view-only\" (#118).</li>\n</ul>"
@@ -556,6 +566,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.10.0",
+   "date": "02.11.2026",
+   "html": "<p><b>Изменено</b> (решения PMO по отзывам тестирования R8)</p>\n<ul>\n<li>Оценка «Бюджет»: в фазах «Инициация» и «Планирование» можно выбрать «Не оценено» — общее состояние тогда считается по двум другим оценкам (#121, #123).</li>\n<li>Под оценкой «Бюджет» — подсказка по правилу PMO: превышение прогноза затрат над бюджетом до 9% — жёлтый, от 10% — красный; если выбрана более зелёная оценка — предупреждение (#137).</li>\n<li>Неизвестные суммы остаются пустыми, а не «0»; в расчётах пустая сумма — 0 (#111).</li>\n<li>«Затраты на дату» — все затраты проекта вместе, с начала проекта (#122).</li>\n<li>Владелец риска обязателен; по умолчанию — PM проекта (#129).</li>\n</ul>"
+  },
   {
    "ver": "1.7.9.0",
    "date": "02.11.2026",

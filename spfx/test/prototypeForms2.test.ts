@@ -432,7 +432,7 @@ test('колонки по умолчанию — те же, что в прило
 // #91 / #92: форма записи реестра — те же векторы, что riskForm.test.ts приложения (tests/cases/risk-form.json)
 describe('реєстр ризиків (#91, #92): прототип', () => {
   const RF = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '../../tests/cases/risk-form.json'), 'utf8'));
-  const ID: Record<string, string> = { title: 'k-title-e', strategy: 'k-str-e', mitigation: 'k-mit-e', contingency: 'k-cont-e' };
+  const ID: Record<string, string> = { title: 'k-title-e', owner: 'k-owner-e', strategy: 'k-str-e', mitigation: 'k-mit-e', contingency: 'k-cont-e' };
   const openNew = (): W => { q('[data-act="nav"][data-page="risks"]').click(); q('[data-act="newrisk"]').click(); return q('#kform'); };
   (RF.errors as any[]).filter(x => x.isNew).forEach(x => test('обязательные поля: ' + x.name, () => {
     const f = openNew();
@@ -440,6 +440,7 @@ describe('реєстр ризиків (#91, #92): прототип', () => {
     f.querySelector('#k-title').value = x.draft.title; ev(f.querySelector('#k-title'), 'input');
     if (x.draft.strategy) { const s = f.querySelector(`input[name="k-str"][value="${x.draft.strategy}"]`); s.checked = true; ev(s, 'change'); }
     f.querySelector('#k-mit').value = x.draft.mitigation; f.querySelector('#k-cont').value = x.draft.contingency;
+    if ('owner' in x.draft && !x.draft.owner) { const o = f.querySelector('#k-owner'); o.value = ''; ev(o, 'change'); }   // #129: без власника
     f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
     const shown = Object.keys(ID).filter(k => !f.querySelector('#' + ID[k]).hidden);
     expect(shown.sort()).toEqual(x.out.slice().sort());

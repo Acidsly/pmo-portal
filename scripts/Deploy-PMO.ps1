@@ -348,7 +348,11 @@ F $R srDate        DateTime "Дата подання"       "Submission date"   
 F $R srPeriodFrom  DateTime "Період з"           "Period from"         "Период с"             "Format='DateOnly'"
 F $R srPeriod      Choice   "Період"             "Period"              "Период"               "Format='Dropdown'" (Choices @("Тиждень","2 тижні","Місяць","Квартал") "2 тижні")
 F $R srSchedule    Choice   "Терміни"            "Schedule"            "Сроки"                "Format='Dropdown' Required='TRUE'" (Choices $rag)
-F $R srBudget      Choice   "Бюджет"             "Budget"              "Бюджет"               "Format='Dropdown' Required='TRUE'" (Choices $rag)
+# #121: «Не оцінено» — оценка бюджета на ранних фазах (общий стан её не учитывает: формула смотрит только красные и жёлтые)
+$ragBudget = $rag + @("Не оцінено")
+F $R srBudget      Choice   "Бюджет"             "Budget"              "Бюджет"               "Format='Dropdown' Required='TRUE'" (Choices $ragBudget)
+$cur = Get-PnPField -List $R -Identity srBudget
+if (@($ragBudget | Where-Object { $cur.Choices -notcontains $_ }).Count) { Set-PnPField -List $R -Identity srBudget -Values @{ Choices = [string[]]$ragBudget } | Out-Null; Write-Host "    оценки бюджета: $($ragBudget -join ', ')" }
 F $R srResources   Choice   "Ресурси"            "Resources"           "Ресурсы"              "Format='Dropdown' Required='TRUE'" (Choices $rag)
 # Общее состояние — худшая из трёх оценок: хотя бы одна красная -> красный; хотя бы одна жёлтая -> жёлтый; иначе зелёный
 $anyRed = 'OR([srSchedule]="Червоний",[srBudget]="Червоний",[srResources]="Червоний")'

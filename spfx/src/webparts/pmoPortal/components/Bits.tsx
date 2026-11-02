@@ -6,7 +6,7 @@ import { Person } from '../data/types';
 import { daysBetween } from '../logic/dates';
 import { AppCtx } from './ctx';
 
-const RC: Record<string, string> = { 'Зелений': 'var(--g)', 'Жовтий': 'var(--y)', 'Червоний': 'var(--r)' };
+const RC: Record<string, string> = { 'Зелений': 'var(--g)', 'Жовтий': 'var(--y)', 'Червоний': 'var(--r)', 'Не оцінено': 'var(--na)' };
 const FC: Record<Fresh, string> = { g: 'var(--g)', y: 'var(--y)', r: 'var(--r)', na: 'var(--na)' };
 const COLORS = ['#8764b8', '#038387', '#ca5010', '#0078d4', '#498205', '#c239b3', '#986f0b', '#4f6bed'];
 

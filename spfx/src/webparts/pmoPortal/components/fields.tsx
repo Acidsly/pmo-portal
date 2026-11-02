@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Person } from '../data/types';
-import { Rag, RAGS } from '../logic/rag';
+import { Rag, RAGS, BUDGET_NA } from '../logic/rag';
 import { Avatar, ragColor } from './Bits';
 import { tv } from '../i18n/values';
 import { AppCtx } from './ctx';
@@ -11,11 +11,13 @@ import { maskDmy, parseDmy, formatDmy } from '../logic/dates';
 /** Поле суммы (#41, #45): вне фокуса — «1 450 000», в фокусе — цифры без пробелов (и набранная «,» / «.», #131); значение наружу — целое число. */
 export const MoneyIn: React.FC<{ id: string; value: number; onChange(v: number): void; disabled?: boolean; invalid?: boolean }> = p => {
   const [focus, setFocus] = React.useState(false);
-  const [txt, setTxt] = React.useState(String(Math.max(0, Math.round(p.value || 0))));
-  React.useEffect(() => { if (!focus) setTxt(String(Math.max(0, Math.round(p.value || 0)))); }, [p.value, focus]);
+  // #111 / #121: сумма не задана — поле пустое, а не «0» (в расчётах пусто = 0)
+  const shown = (v: number): string => { const n = Math.max(0, Math.round(v || 0)); return n ? String(n) : ''; };
+  const [txt, setTxt] = React.useState(shown(p.value));
+  React.useEffect(() => { if (!focus) setTxt(shown(p.value)); }, [p.value, focus]);
   // #131: «decimal» — на iPhone в цифровой клавиатуре есть запятая (копейки), у «numeric» её нет
   return <input type="text" id={p.id} inputMode="decimal" autoComplete="off" disabled={p.disabled} aria-invalid={p.invalid || undefined}
-    value={focus ? txt : groupDigits(parseMoney(txt))}
+    value={focus ? txt : parseMoney(txt) ? groupDigits(parseMoney(txt)) : ''}
     onFocus={() => { setFocus(true); const n = parseMoney(txt); setTxt(n ? String(n) : ''); }}
     onBlur={() => { setFocus(false); p.onChange(parseMoney(txt)); }}
     onChange={e => { const v = maskMoney(e.target.value); setTxt(v); p.onChange(parseMoney(v)); }} />;
@@ -35,9 +37,10 @@ export function SegPick<V extends string>(p: { name: string; options: V[]; value
 }
 
 /** Оценка RAG (ragPick прототипа): fieldset.ragpick с тремя кнопками-точками. */
-export const RagPick: React.FC<{ name: string; label: string; req?: boolean; value: Rag; onChange(v: Rag): void; invalid?: boolean }> = p =>
+/** na — ещё вариант «Не оцінено» (оценка «Бюджет» на ранних фазах, #121); err — пояснение под оценкой. */
+export const RagPick: React.FC<{ name: string; label: string; req?: boolean; value: Rag; onChange(v: Rag): void; invalid?: boolean; na?: boolean; children?: React.ReactNode }> = p =>
   <fieldset className="ragpick" aria-invalid={p.invalid || undefined}><legend>{p.label}{p.req ? ' *' : ''}</legend>
-    <SegPick name={p.name} options={RAGS} value={p.value} onChange={p.onChange} dots={true} /></fieldset>;
+    <SegPick name={p.name} options={p.na ? [...RAGS, BUDGET_NA] : RAGS} value={p.value} onChange={p.onChange} dots={true} />{p.children}</fieldset>;
 
 /** Дата YYYY-MM-DD (input type=date). */
 /** Поле даты (#26): «дд.мм.рррр» с подсказкой на языке интерфейса (встроенное поле браузера берёт язык Windows/Chrome),

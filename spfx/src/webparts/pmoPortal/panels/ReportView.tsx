@@ -4,7 +4,7 @@ import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
 import { StatusReport, Project } from '../data/types';
 import { tv } from '../i18n/values';
-import { calcRag, Rag } from '../logic/rag';
+import { calcRag, Rag, BUDGET_NA } from '../logic/rag';
 import { isArch } from '../logic/status';
 import { AP_OK, AP_PENDING, AP_RETURNED, approvalResult } from '../logic/approval';
 import { RagPick, Err, Frow, errText, guardText } from '../components/fields';
@@ -85,7 +85,8 @@ export const ReportView: React.FC<{ data: PortalData; report: StatusReport | und
       <p className="note" style={{ margin: '0 0 12px' }}>{t('apHint')}</p>
       <div className="dims">
         <RagPick name="ap-s" label={fl('rSched')} req={true} value={s} onChange={setS} />
-        <RagPick name="ap-b" label={fl('rBudget')} req={true} value={b} onChange={setB} />
+        {/* #121: у отчёта «Не оцінено» — PMO видит её выбранной и может вернуть */}
+        <RagPick name="ap-b" label={fl('rBudget')} req={true} value={b} onChange={setB} na={r.budget === BUDGET_NA} />
         <RagPick name="ap-r" label={fl('rRes')} req={true} value={res} onChange={setRes} />
       </div>
       <div className="ragcalc"><span className="k">{t('ragCalc')}</span>

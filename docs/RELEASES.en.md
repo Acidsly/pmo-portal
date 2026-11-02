@@ -1,5 +1,14 @@
 # What's new
 
+## 1.7.10.0 · 02.11.2026
+
+**Changed** (PMO decisions on R8 testing feedback)
+- «Budget» rating: in the «Initiation» and «Planning» phases you can choose «Not rated» — overall health is then calculated from the other two ratings (#121, #123).
+- A hint under the «Budget» rating by the PMO rule: cost forecast up to 9% over budget — yellow, 10% and more — red; a greener rating shows a warning (#137).
+- Unknown amounts stay empty instead of «0»; calculations treat an empty amount as 0 (#111).
+- «Cost to date» — all project costs together, since the project start (#122).
+- The risk owner is required; by default — the project PM (#129).
+
 ## 1.7.9.0 · 02.11.2026
 
 **New** (R8 testing feedback)

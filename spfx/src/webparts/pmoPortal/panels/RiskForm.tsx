@@ -108,8 +108,9 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
         <p className="note" style={{ margin: '8px 0 0' }}>{t('riskHow')}</p>
       </div>
       <div className="fgrid2 frow">
-        <div><label className="t" htmlFor="k-owner">{fl('kOwner')}</label>
-          <PeoplePicker id="k-owner" multi={false} disabled={off('owner')} value={d.owner ? [d.owner] : []} search={q => c.repo.searchPeople(q)} onChange={v => set({ owner: v[0] || null })} /></div>
+        <div><label className="t" htmlFor="k-owner">{fl('kOwner') + star('owner')}</label>
+          <PeoplePicker id="k-owner" multi={false} disabled={off('owner')} value={d.owner ? [d.owner] : []} search={q => c.repo.searchPeople(q)} onChange={v => set({ owner: v[0] || null })} />
+          <FieldErrText msg={fe('owner')} /></div>
         <div><label className="t" htmlFor="k-status">{fl('kStatus')}</label>
           <select id="k-status" disabled={!edit} value={d.status} onChange={e => set({ status: e.target.value })}><Opts values={STATUSES} /></select></div>
         <div><label className="t" htmlFor="k-due">{fl('kDue')}</label><DateIn id="k-due" disabled={off('due')} value={d.due} onChange={v => set({ due: v })} />

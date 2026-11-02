@@ -1,12 +1,14 @@
 import { Project, Person, Link, StatusReport } from '../data/types';
 import { parentLabel } from './projects';
 import { TeamRow, teamText, linksText, validateTeamLinks, teamMarks } from './team';
-import { Rag } from './rag';
+import { Rag, BUDGET_NA } from './rag';
 import { todayIso } from './dates';
 
 /** Черновик статус-отчёта (форма reportForm прототипа). */
 /** #120: «План виконано повністю» — текст «Не зроблено з плану і чому» (значение хранится по-украински, на экране — перевод). */
 export const PLAN_ALL_DONE = 'Усе виконано';
+/** #121: «Не оцінено» в оценке «Бюджет» — только в фазах «Ініціація» и «Планування». */
+export const budgetNaAllowed = (status: string): boolean => status === 'Ініціація' || status === 'Планування';
 export interface ReportDraft {
   /** date — дата подання (#62): сегодня, пишется в момент сохранения; periodFrom — начало периода (#69), считается при сохранении. */
   projectId: number; date: string; periodFrom?: string; schedule: Rag; budget: Rag; resources: Rag;
@@ -103,7 +105,9 @@ export const archiveStatus = (status: string): boolean => status === 'Завер
  *  черновик при открытии — «Завершено» сразу 100 % (#52, «на основе повернутого»). */
 export const initialReport = (d: ReportDraft): ReportDraft => (progressLocked(d.status) ? { ...d, progress: 100 } : d);
 /** Смена статуса (#52): «Завершено» — 100 % и запоминается прежнее значение; уход с «Завершено» — прежнее значение. */
-export function switchStatus(d: ReportDraft, prev: number | null, status: string): { d: ReportDraft; prev: number | null } {
+export function switchStatus(d0: ReportDraft, prev: number | null, status: string): { d: ReportDraft; prev: number | null } {
+  // #121: «Не оцінено» бюджета — только в «Ініціація» / «Планування»: на другой фазе оценку нужно выбрать заново
+  const d = d0.budget === BUDGET_NA && !budgetNaAllowed(status) ? { ...d0, budget: '' as Rag } : d0;
   if (progressLocked(status) && !progressLocked(d.status)) return { d: { ...d, status, progress: 100 }, prev: d.progress };
   if (!progressLocked(status) && progressLocked(d.status)) return { d: { ...d, status, progress: prev === null ? d.progress : prev }, prev: null };
   return { d: { ...d, status }, prev };
@@ -145,6 +149,8 @@ export function reportErrors(d: ReportDraft, p: Project, progressText?: string):
   const out: FieldErr[] = [];
   if (!d.schedule) out.push({ f: 'sched', k: 'errReq' });
   if (!d.budget) out.push({ f: 'budget', k: 'errReq' });
+  // #121: «Не оцінено» — только на ранних фазах
+  else if (d.budget === BUDGET_NA && !budgetNaAllowed(d.status)) out.push({ f: 'budget', k: 'errBudgetNA' });
   if (!d.resources) out.push({ f: 'res', k: 'errReq' });
   if (keyChanged(d, p) && !d.keyReason.trim()) out.push({ f: 'keyReason', k: 'errReq' });
   if (!d.title.trim()) out.push({ f: 'title', k: 'errReq' });
@@ -194,13 +200,14 @@ export const validateRisk = (d: RiskDraft): string => (!d.title.trim() ? 'errRis
 /** #91: обязательные поля новой записи реестра (и копии) — «Ризик»: опис, стратегія, заходи, план дій у разі настання
  *  (при любой оценке); «Проблема»: опис и заходи (стратегия и план на случай наступления к случившемуся неприменимы).
  *  Пробелы — пусто. Существующая запись меняется только статусом (#92) — поля не проверяются. Векторы tests/cases/risk-form.json. */
-export type RiskField = 'title' | 'strategy' | 'mitigation' | 'contingency';
-export const RISK_REQUIRED: Record<string, RiskField[]> = { 'Ризик': ['title', 'strategy', 'mitigation', 'contingency'], 'Проблема': ['title', 'mitigation'] };
-export const RISK_ERR: Record<RiskField, string> = { title: 'errRiskTitle', strategy: 'errRiskStrategy', mitigation: 'errRiskMit', contingency: 'errRiskCont' };
+export type RiskField = 'title' | 'owner' | 'strategy' | 'mitigation' | 'contingency';
+// #129: власник обязателен (в новой записи по умолчанию — PM)
+export const RISK_REQUIRED: Record<string, RiskField[]> = { 'Ризик': ['title', 'owner', 'strategy', 'mitigation', 'contingency'], 'Проблема': ['title', 'owner', 'mitigation'] };
+export const RISK_ERR: Record<RiskField, string> = { title: 'errRiskTitle', owner: 'errRiskOwner', strategy: 'errRiskStrategy', mitigation: 'errRiskMit', contingency: 'errRiskCont' };
 export const riskRequired = (type: string): RiskField[] => RISK_REQUIRED[type] || RISK_REQUIRED['Ризик'];
 export function riskErrors(d: RiskDraft, isNew: boolean): RiskField[] {
   if (!isNew) return [];
-  return riskRequired(d.type).filter(f => !String(d[f] || '').trim());
+  return riskRequired(d.type).filter(f => (f === 'owner' ? !d.owner : !String(d[f] || '').trim()));
 }
 /** #92: в сохранённой записи меняется только «Статус»; остальное — через «Копіювати ризик» (новая запись). */
 export const riskEditable = (field: string, isNew: boolean): boolean => isNew || field === 'status';
@@ -251,10 +258,21 @@ export function riskTypeSwitch(st: RiskTypeState, to: string): RiskTypeState {
 /** Предупреждения формы отчёта (не блокируют сохранение; векторы tests/cases/report-warn.json, те же — прототип):
  *  #127 прогноз завершения открытого проекта раньше даты подання; #125 «Витрати на дату» меньше погоджених в карточке;
  *  #124 архивная фаза при открытых рисках и проблемах (после архивации их не изменить). */
-export interface ReportWarn { f: 'forecastEnd' | 'actualCost' | 'status'; k: string; n?: number }
-export function reportWarnings(d: { status: string; forecastEnd: string; actualCost: number }, p: { actualCost?: number | null }, openRisks: number, today: string): ReportWarn[] {
+export interface ReportWarn { f: 'forecastEnd' | 'actualCost' | 'status' | 'budget'; k: string; n?: number; rag?: Rag }
+/** #137: оценка «Бюджет» по правилу PMO — перевищення прогнозу витрат над бюджетом (план): нет — зелёный, до 9% — жёлтый, от 10% — красный. */
+export function budgetRule(budget: number, forecast: number): { n: number; rag: Rag } | null {
+  if (!(budget > 0) || !(forecast > 0) || forecast <= budget) return null;
+  const pct = (forecast - budget) / budget * 100;
+  return { n: Math.max(1, Math.floor(pct + 1e-9)), rag: pct >= 10 - 1e-9 ? 'Червоний' : 'Жовтий' };
+}
+const RAG_ORDER: Record<string, number> = { 'Зелений': 0, 'Жовтий': 1, 'Червоний': 2 };
+export function reportWarnings(d: { status: string; forecastEnd: string; actualCost: number; budgetPlan?: number; forecastCost?: number; budget?: Rag }, p: { actualCost?: number | null },
+  openRisks: number, today: string): ReportWarn[] {
   const out: ReportWarn[] = [];
   const arch = archiveStatus(d.status);
+  // #137: «Завершено» / «Скасовано» — прогноз = витрати на дату
+  const br = budgetRule(d.budgetPlan || 0, arch ? d.actualCost || 0 : d.forecastCost || 0);
+  if (br) out.push({ f: 'budget', k: d.budget && RAG_ORDER[d.budget] !== undefined && RAG_ORDER[d.budget] < RAG_ORDER[br.rag] ? 'warnBudgetRule' : 'hintBudgetRule', n: br.n, rag: br.rag });
   if (!arch && d.forecastEnd && d.forecastEnd < today) out.push({ f: 'forecastEnd', k: 'warnForecastPast' });
   if ((p.actualCost || 0) > 0 && d.actualCost < (p.actualCost || 0)) out.push({ f: 'actualCost', k: 'warnCostDown', n: p.actualCost || 0 });
   if (arch && openRisks > 0) out.push({ f: 'status', k: 'warnArchRisks', n: openRisks });
