@@ -1,0 +1,89 @@
+{
+  "_about": "Источник стейкхолдеров проекта в синхронизации (Get-Stakeholders, Invoke-PMOSync.ps1): «Команда проєкту», если проект прошёл миграцию (отметка team в pmMigrated), если у проекта есть строки команды или прежнее поле «Стейкхолдери» пусто (проекты, созданные приложением, отметки не имеют — прод 02.11.2026: команда не получала доступ); иначе — прежнее поле pmStakeholders (сайт до миграции). hasTeam — есть список «Команда проєкту»; team — e-mail строк команды проекта.",
+  "cases": [
+    {
+      "name": "отметка team — команда",
+      "hasTeam": true,
+      "migrated": "team,links",
+      "stakeholders": [
+        "old@x"
+      ],
+      "team": [
+        "a@x",
+        "b@x"
+      ],
+      "out": [
+        "a@x",
+        "b@x"
+      ]
+    },
+    {
+      "name": "прод 02.11: без отметки, есть команда — команда",
+      "hasTeam": true,
+      "migrated": "",
+      "stakeholders": [],
+      "team": [
+        "a@x"
+      ],
+      "out": [
+        "a@x"
+      ]
+    },
+    {
+      "name": "без отметки, есть команда и прежнее поле — команда",
+      "hasTeam": true,
+      "migrated": "",
+      "stakeholders": [
+        "old@x"
+      ],
+      "team": [
+        "a@x"
+      ],
+      "out": [
+        "a@x"
+      ]
+    },
+    {
+      "name": "без отметки, команды нет, прежнее поле пусто — пусто",
+      "hasTeam": true,
+      "migrated": "",
+      "stakeholders": [],
+      "team": [],
+      "out": []
+    },
+    {
+      "name": "сайт до миграции: без отметки, команды нет, прежнее поле — прежнее поле",
+      "hasTeam": true,
+      "migrated": "",
+      "stakeholders": [
+        "old@x"
+      ],
+      "team": [],
+      "out": [
+        "old@x"
+      ]
+    },
+    {
+      "name": "отметка team, команды нет — пусто (прежнее поле не используется)",
+      "hasTeam": true,
+      "migrated": "team",
+      "stakeholders": [
+        "old@x"
+      ],
+      "team": [],
+      "out": []
+    },
+    {
+      "name": "списка команды нет — прежнее поле",
+      "hasTeam": false,
+      "migrated": "",
+      "stakeholders": [
+        "old@x"
+      ],
+      "team": [],
+      "out": [
+        "old@x"
+      ]
+    }
+  ]
+}

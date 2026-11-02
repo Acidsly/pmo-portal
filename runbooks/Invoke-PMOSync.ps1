@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:dd29ff22b066 — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:2010a485c432 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -892,9 +892,12 @@ foreach ($it in @($teamItems)) { if (-not $it) { continue }
     if ($TEAM[$lk.LookupId] -notcontains $e) { $TEAM[$lk.LookupId] += $e }
 }
 function Get-Stakeholders($item) {
-    # после миграции (Deploy-PMO.ps1, отметка «team») источник — «Команда проєкту»; до неё — pmStakeholders
-    if ($HAS_TEAM -and ([string]$item["pmMigrated"]).Split(",") -contains "team") { return @($TEAM[$item.Id] ?? @()) }
-    return @(Emails $item["pmStakeholders"])
+    # источник — «Команда проєкту»: после миграции (Deploy-PMO.ps1, отметка «team»), а также у проектов без отметки, если у них есть
+    # строки команды или прежнее поле пусто — проекты, созданные приложением, отметки не получают (прод 02.11.2026: команда не получала
+    # доступ до следующего deploy); прежнее поле pmStakeholders — только у сайта до миграции (векторы tests/cases/stakeholders.json)
+    $old = @(Emails $item["pmStakeholders"])
+    if ($HAS_TEAM -and (([string]$item["pmMigrated"]).Split(",") -contains "team" -or $TEAM.ContainsKey($item.Id) -or -not $old.Count)) { return @($TEAM[$item.Id] ?? @()) }
+    return $old
 }
 $PROJ = @{}
 foreach ($it in $projects) {
