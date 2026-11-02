@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.11.0 · 02.11.2026
+
+**New**
+- **"Countries and CEOs"** (for the PMO, menu under the avatar): the directory of project countries: add a country with names in three languages, assign or change the country CEO, set the order, deactivate a country. New countries appear in the "Country" choice right away; a new CEO gets access within ~15 minutes.
+
 ## 1.7.10.4 · 02.11.2026
 
 **Changed**

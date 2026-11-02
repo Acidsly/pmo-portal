@@ -17,7 +17,8 @@ import { Risks } from '../pages/Risks';
 import { ProjectCard } from '../panels/ProjectCard';
 import { ReportForm } from '../panels/ReportForm';
 import { ProjectForm } from '../panels/ProjectForm';
-import { setValueLang } from '../i18n/values';
+import { setValueLang, setExtraValues } from '../i18n/values';
+import { countryLabels } from '../logic/countries';
 import { FeedbackForm } from '../panels/FeedbackForm';
 import { Help } from '../panels/Help';
 import { Overview } from '../panels/Overview';
@@ -34,6 +35,7 @@ import { aiLangOf } from '../logic/aiCheck';
 import { Feedback, feedbackOrder } from '../pages/Feedback';
 import { FeedbackView } from '../panels/FeedbackView';
 import { AssignForm } from '../panels/AssignForm';
+import { CountriesPanel } from '../panels/CountriesPanel';
 import { RiskForm } from '../panels/RiskForm';
 import { ReportView } from '../panels/ReportView';
 import { Toast, useToast } from './Toast';
@@ -94,6 +96,8 @@ export const App: React.FC<AppProps> = p => {
   const nav = (r: Route): void => { const h = format(r); if (window.location.hash !== h) window.location.hash = h; setRoute(r); };
   const tt = makeT(lang);
   setValueLang(lang);   // значения выбора — на языке интерфейса (i18n/values.ts)
+  // переводы стран из довідника (PMO добавляет страны без кода) — поверх встроенных
+  setExtraValues(data && data.countries ? countryLabels(data.countries) : {});
   // #134: форма с несохранёнными данными (отчёт) — вопрос перед закрытием панели
   const closeGuard = React.useRef<(() => boolean) | null>(null);
   const ctx: Ctx = { ...tt, lang, today: todayIso(), me: p.userEmail, ai: !!aiSw && aiSw.on, webUrl: p.webUrl, views: route.views, canCreate: !!data && data.canCreate,
@@ -126,6 +130,7 @@ export const App: React.FC<AppProps> = p => {
   else if (data && (route.form === 'project' || route.form === 'edit')) panelEl = <ProjectForm data={data} project={route.form === 'edit' ? project : undefined} onCancel={project ? back : close} />;
   else if (data && route.form === 'notifications') panelEl = <NotifyPanel data={data}
     onOpen={(f, id) => { setNtfRet(true); ctx.openForm(f, id); }} onCancel={project ? back : close} />;
+  else if (data && route.form === 'countries') panelEl = <CountriesPanel data={data} onCancel={back} />;
   else if (data && route.form === 'assign') panelEl = <AssignForm data={data} projectId={route.projectId} onCancel={project ? back : close} />;
   else if (data && route.form.indexOf('risk:') === 0) panelEl = <RiskForm data={data} projectId={route.projectId} riskId={Number(route.form.slice(5)) || 0} onCancel={project ? back : close} />;
   else if (data && project) panelEl = <ProjectCard project={project} data={data} repo={p.repo} onClose={close} />;
@@ -140,6 +145,7 @@ export const App: React.FC<AppProps> = p => {
       <Header page={route.page} lang={lang} theme={theme} userName={p.userName} userEmail={p.userEmail}
         onPage={pg => ctx.go(pg)} onLang={l => { setLang(l); saveLang(l); }} onTheme={v => { setTheme(v); saveTheme(v); }}
         onFeedback={openFeedback} onHelp={() => ctx.openForm('help', route.projectId)}
+        onCountries={data && data.canCountries ? () => ctx.openForm('countries', route.projectId) : undefined}
         bell={data ? { unread: bellUnread, onOpen: () => { setNtfRet(false); ctx.openForm('notifications', route.projectId); } } : undefined} ai={aiSw} />
       {diagOn(window.location.search, !!p.admin, window.location.hash) ? <Diag /> : null}
       <main className="pmo-main">

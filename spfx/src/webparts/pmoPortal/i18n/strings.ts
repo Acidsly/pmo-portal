@@ -1326,6 +1326,121 @@ export const T: Record<string, L3> = {
   "Comment (reason)",
   "Комментарий (причина)"
  ],
+ "coTitle": [
+  "Країни і CEO",
+  "Countries and CEOs",
+  "Страны и CEO"
+ ],
+ "coHint": [
+  "Довідник країн проєктів. CEO країни бачить усі проєкти своєї країни й може їх коментувати; після збереження доступ оновиться протягом ~15 хвилин. Довідник бачать лише PMO і власники сайту.",
+  "Directory of project countries. A country CEO sees all projects of the country and can comment on them; after saving, access is updated within ~15 minutes. Only the PMO and site owners see this directory.",
+  "Справочник стран проектов. CEO страны видит все проекты своей страны и может их комментировать; после сохранения доступ обновится в течение ~15 минут. Справочник видят только PMO и владельцы сайта."
+ ],
+ "coAdd": [
+  "+ Додати країну",
+  "+ Add country",
+  "+ Добавить страну"
+ ],
+ "coNew": [
+  "Нова країна",
+  "New country",
+  "Новая страна"
+ ],
+ "coNameUk": [
+  "Назва (українською)",
+  "Name (Ukrainian)",
+  "Название (на украинском)"
+ ],
+ "coNameEn": [
+  "Назва англійською",
+  "Name in English",
+  "Название на английском"
+ ],
+ "coNameRu": [
+  "Назва російською",
+  "Name in Russian",
+  "Название на русском"
+ ],
+ "coOrder": [
+  "Порядок у списку",
+  "Order in the list",
+  "Порядок в списке"
+ ],
+ "coActive": [
+  "Активна (є у виборі для проєктів)",
+  "Active (available for projects)",
+  "Активна (есть в выборе для проектов)"
+ ],
+ "coCeo": [
+  "CEO країни",
+  "Country CEO",
+  "CEO страны"
+ ],
+ "coProjects": [
+  "Активних проєктів",
+  "Active projects",
+  "Активных проектов"
+ ],
+ "coOff": [
+  "вимкнена",
+  "inactive",
+  "выключена"
+ ],
+ "coNoCeo": [
+  "CEO не призначено",
+  "No CEO assigned",
+  "CEO не назначен"
+ ],
+ "coNameLocked": [
+  "Назва записана в проєктах — змінити її не можна. Щоб виправити, додайте нову країну, перепризначте проєкти («Змінити PM / власника / країну») і вимкніть стару.",
+  "The name is stored in projects and cannot be changed. To fix it, add a new country, reassign the projects (“Change PM / owner / country”) and deactivate the old one.",
+  "Название записано в проектах — изменить его нельзя. Чтобы исправить, добавьте новую страну, переназначьте проекты («Сменить PM / владельца / страну») и выключите старую."
+ ],
+ "coBack": [
+  "До списку країн",
+  "Back to countries",
+  "К списку стран"
+ ],
+ "savedCountry": [
+  "Збережено. Доступ CEO оновиться протягом ~15 хвилин.",
+  "Saved. CEO access will be updated within ~15 minutes.",
+  "Сохранено. Доступ CEO обновится в течение ~15 минут."
+ ],
+ "errCountryName": [
+  "Вкажіть назву країни",
+  "Enter the country name",
+  "Укажите название страны"
+ ],
+ "errCountryDup": [
+  "Така країна вже є в довіднику",
+  "This country is already in the directory",
+  "Такая страна уже есть в справочнике"
+ ],
+ "errCountryRename": [
+  "Назву наявної країни змінити не можна",
+  "The name of an existing country cannot be changed",
+  "Название существующей страны изменить нельзя"
+ ],
+ "errCountryChars": [
+  "Назва не може містити кому, крапку з комою чи лапки",
+  "The name cannot contain commas, semicolons or quotes",
+  "Название не может содержать запятую, точку с запятой или кавычки"
+ ],
+ "errCountryStale": [
+  "Цю країну щойно змінив інший користувач — дані оновлено, перевірте й збережіть ще раз",
+  "This country was just changed by someone else — data refreshed, check and save again",
+  "Эту страну только что изменил другой пользователь — данные обновлены, проверьте и сохраните ещё раз"
+ ],
+ "warnCountryNoCeo": [
+  "Без CEO ніхто не отримає доступ до проєктів цієї країни як CEO",
+  "Without a CEO nobody gets access to this country’s projects as CEO",
+  "Без CEO никто не получит доступ к проектам этой страны как CEO"
+ ],
+ "warnCountryInactive": [
+  "Країни не буде у виборі для проєктів. Її активні проєкти ({n}) залишаються з нею, CEO зберігає доступ до них",
+  "The country will not be offered for projects. Its active projects ({n}) keep it, the CEO keeps access to them",
+  "Страны не будет в выборе для проектов. Её активные проекты ({n}) остаются с ней, CEO сохраняет доступ к ним"
+ ],
  "errAssignSame": [
   "Оберіть нового PM, нового власника або нову країну.",
   "Choose a new PM, a new owner or a new country.",

@@ -4,7 +4,7 @@ import { withParentNames } from '../logic/projects';
 import { Project, StatusReport, Risk, Comment, ChangeEntry, Person, FeedbackRow, Approval } from './types';
 import { mapProject, mapReport, mapRisk, mapComment, mapChange, PROJECT_SELECT, PROJECT_EXPAND, PROJECT_PARENT, PROJECT_OPTIONAL, ASSIGN_COUNTRY, REPORT_SELECT, REPORT_EXPAND, REPORT_AI, REPORT_BUDGET, RISK_SELECT, RISK_EXPAND,
   COMMENT_SELECT, COMMENT_EXPAND, CHANGE_SELECT, CHANGE_EXPAND, TEAM_SELECT, TEAM_EXPAND, mapTeam, APPROVAL_SELECT, APPROVAL_EXPAND, mapApproval, ASSIGN_SELECT, ASSIGN_EXPAND, mapAssign, canAdd, canManage,
-  withoutFolders, CHANGES_ON_LOAD, changesOf, changesSince, NOTIFY_SELECT, NOTIFY_SELECT_BASE, mapNotify, NotifyRow } from './map';
+  withoutFolders, CNAME_SELECT, mapCountryName, CCEO_SELECT, CCEO_EXPAND, mapCountryCeo, CountryCeo, CHANGES_ON_LOAD, changesOf, changesSince, NOTIFY_SELECT, NOTIFY_SELECT_BASE, mapNotify, NotifyRow } from './map';
 import { withApproval, approvedIds as approvedOf, pendingReports, latestReport } from '../logic/approval';
 import { applyAssignments } from '../logic/assign';
 import { NOTIFY_DAYS, ReadMarks, mergeMarks } from '../logic/notify';
@@ -14,11 +14,12 @@ import { Regional, regionalFrom, toFormValues } from './formValues';
 import { fromSiteUser, isEmailQuery, isUserNotFound, loginOf, pickerPeople } from './people';
 import { applyState, parseState, StateJson } from '../logic/state';
 import { Fresh } from '../logic/guard';
+import { CountryName, CountryRaw, countryList } from '../logic/countries';
 
 /** Поля «Відгуки — загальні» для страницы «Відгуки» (fpDecidedAt — отдельно: его может ещё не быть на сайте). */
 const FP_SELECT = 'Id,fpId,fpCreated,fpAuthor,fpScreen,fpText,fpStatus,fpAnswer,fpShots';
 
-export type WritableList = 'Projects' | 'StatusReports' | 'RisksIssues' | 'ProjectComments' | 'Feedback' | 'ProjectTeam' | 'ReportApprovals' | 'ProjectAssignments' | 'NotifyState';
+export type WritableList = 'Projects' | 'StatusReports' | 'RisksIssues' | 'ProjectComments' | 'Feedback' | 'ProjectTeam' | 'ReportApprovals' | 'ProjectAssignments' | 'NotifyState' | 'CountryNames' | 'Countries';
 
 export interface PortalData { projects: Project[]; reports: StatusReport[]; risks: Risk[]; comments: Comment[];
   /** Журнал — только переносы плановой даты (главная, «Зсуви термінів»); весь журнал проекта — SpRepo.loadChanges. */
@@ -35,7 +36,11 @@ export interface PortalData { projects: Project[]; reports: StatusReport[]; risk
   /** Страница «Відгуки»: все отзывы с решениями (пусто, если списка нет). */
   feedbackRows: FeedbackRow[];
   /** Сповіщення: журнал за 14 дней (видимые проекты) и своя строка «Прочитане» (null — строки ещё нет). */
-  recent: ChangeEntry[]; notify: NotifyRow | null; }
+  recent: ChangeEntry[]; notify: NotifyRow | null;
+  /** Довідник країн (порядок, переводы, активные); списка ещё нет — встроенный набор. */
+  countries: CountryName[];
+  /** Ведёт довідник (PMO и владельцы): право добавлять в «Назви країн». */
+  canCountries: boolean; }
 
 /** Чтение списков портала от имени пользователя: видны только проекты, которые ему открыла синхронизация. */
 export class SpRepo {
@@ -87,6 +92,8 @@ export class SpRepo {
       // сповіщення: журнал за 14 дней и своя строка «Прочитане» (до развёртывания — пусто / null)
       this.items('KeyChanges', CHANGE_SELECT, CHANGE_EXPAND, changesSince(since)).catch(() => [] as any[]),
       this.items('NotifyState', NOTIFY_SELECT, '', this.ownRow()).catch(() => this.items('NotifyState', NOTIFY_SELECT_BASE, '', this.ownRow())).catch(() => [] as any[])]);
+    // довідник країн: до Deploy-PMO.ps1 списка нет — встроенный набор, право вести — нет
+    const [cn, cnPerm] = await Promise.all([this.items('CountryNames', CNAME_SELECT, '').catch(() => null as any[] | null), this.listPerms('CountryNames').catch(() => undefined)]);
     const approvals = (ap || []).map(mapApproval);
     const assigns = pa.map(mapAssign);
     // решение PMO, ещё не перенесённое синхронизацией, видно сразу (как применение отчёта в карточку)
@@ -108,7 +115,8 @@ export class SpRepo {
       .map(x => applyPending(x, byProj[x.id] || [], ap ? approvedIds : undefined)).map(x => applyAssignments(x, assigns))
       .map(x => { const pr = pendingReports(byProj[x.id] || [])[0]; return { ...x, pendingDate: pr ? pr.date : undefined, lastRep: latestReport(byProj[x.id] || []) }; }), reports, risks: k.map(mapRisk),
       comments: c.map(mapComment), changes: h.map(mapChange), canCreate: canAdd(perm), canApprove: canAdd(perm), approvals, feedback: canAdd(fbPerm), feedbackAdmin: canManage(fbPerm), feedbackRows,
-      recent: rc.map(mapChange), notify: ns[0] ? mapNotify(ns[0]) : null };
+      recent: rc.map(mapChange), notify: ns[0] ? mapNotify(ns[0]) : null,
+      countries: countryList(cn ? cn.map(mapCountryName) as CountryRaw[] : null), canCountries: !!cn && canAdd(cnPerm) };
   }
 
   private ownRow(): string { return `Title eq '${this.me.toLowerCase().replace(/'/g, "''")}'`; }
@@ -302,13 +310,20 @@ export class SpRepo {
     return { etag: String(j['odata.etag'] || ''), risk: mapRisk(j) };
   }
 
+  /** Экран PMO «Країни і CEO»: свежие строки обоих списков (CEO — только у PMO и владельцев). */
+  async loadCountryAdmin(): Promise<{ names: CountryName[]; ceo: CountryCeo[] }> {
+    const [cn, co] = await Promise.all([this.items('CountryNames', CNAME_SELECT, ''), this.items('Countries', CCEO_SELECT, CCEO_EXPAND)]);
+    // пустой список — пусто (не встроенный набор: у его строк нет Id, правка стала бы «новой страной»)
+    return { names: cn.length ? countryList(cn.map(mapCountryName) as CountryRaw[]) : [], ceo: co.map(mapCountryCeo) };
+  }
+
   /** Отметка изменений списков портала: самое позднее изменение записей (один лёгкий запрос). */
   async stamp(): Promise<string> {
     const j = await this.getJson(`${this.webUrl}/_api/web/lists?$select=Title,LastItemModifiedDate,RootFolder/ServerRelativeUrl&$expand=RootFolder&$filter=Hidden eq true`);
     // эталон синхронизация пишет каждый запуск — по нему не перечитываем (иначе полная перезагрузка каждые 5 минут);
     // журнал — только при событиях: по нему перечитываем, чтобы точка колокольчика появилась без перезагрузки страницы;
     // «Прочитане» — нет: чужие отметки «прочитано» не должны перезагружать данные у всех
-    const portal = ['/Lists/Projects', '/Lists/StatusReports', '/Lists/RisksIssues', '/Lists/ProjectComments', '/Lists/ProjectTeam', '/Lists/ReportApprovals', '/Lists/ProjectAssignments', '/Lists/KeyChanges'];
+    const portal = ['/Lists/Projects', '/Lists/StatusReports', '/Lists/RisksIssues', '/Lists/ProjectComments', '/Lists/ProjectTeam', '/Lists/ReportApprovals', '/Lists/ProjectAssignments', '/Lists/KeyChanges', '/Lists/CountryNames'];
     return (j.value || []).filter((l: any) => l.RootFolder && portal.some(u => String(l.RootFolder.ServerRelativeUrl).endsWith(u)))
       .reduce((m: string, l: any) => (String(l.LastItemModifiedDate) > m ? String(l.LastItemModifiedDate) : m), '');
   }

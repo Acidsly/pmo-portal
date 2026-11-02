@@ -7,7 +7,7 @@ import { isArch } from '../logic/status';
 import { assignmentPlan } from '../logic/assign';
 import { guard } from '../logic/guard';
 import { Frow, Err, PeoplePicker, Opts, errText, guardText } from '../components/fields';
-import { COUNTRIES } from '../logic/projects';
+import { countryChoices } from '../logic/countries';
 import { tv } from '../i18n/values';
 
 const low = (p: Person | null | undefined): string => (p ? p.email.toLowerCase() : '');
@@ -57,7 +57,7 @@ export const AssignForm: React.FC<{ data: PortalData; projectId: number; onCance
       <Frow label={t('assignNewOwner')} htmlFor="a-own"><PeoplePicker id="a-own" multi={false} value={owner ? [owner] : []} search={search} onChange={v => setOwner(v[0] || null)} /></Frow>
       <Frow label={fl('country')}><div className="fixedval">{p.country ? tv(p.country) : '—'}</div></Frow>
       <Frow label={t('assignNewCountry')} htmlFor="a-country">
-        <select id="a-country" value={country} onChange={e => setCountry(e.target.value)}><option value="">{t('notSet')}</option><Opts values={COUNTRIES} /></select></Frow>
+        <select id="a-country" value={country} onChange={e => setCountry(e.target.value)}><option value="">{t('notSet')}</option><Opts values={countryChoices(data.countries, p.country)} /></select></Frow>
       <Frow label={t('assignNote')} htmlFor="a-note" req={true}><textarea id="a-note" value={note} onChange={e => setNote(e.target.value)} /></Frow>
       <Err msg={err} />
       <div className="actions">

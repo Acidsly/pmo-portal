@@ -462,6 +462,11 @@ form .fsec:first-child{margin-top:0}
 .pop-sw:disabled{opacity:.45;cursor:default}
 .pop-hint{margin:4px 8px 6px;max-width:300px;font-size:12px}
 .pop-user-menu{width:300px;max-width:100%}
+.co-list{list-style:none;margin:8px 0 12px;padding:0;display:grid;gap:6px}
+.co-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) auto;gap:10px;align-items:center;width:100%;text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:inherit;font:inherit;cursor:pointer}
+.co-row:hover{border-color:var(--theme)}
+.co-ceo{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.co-cnt{font-variant-numeric:tabular-nums}
 .pop-user-menu .ai-panel{margin:6px 4px}
 .me{border:0;background:none;padding:0;border-radius:50%;cursor:pointer;display:grid;place-items:center}
 .bell{position:relative;border:0;background:var(--bg-alt);cursor:pointer;color:var(--text-2);width:34px;height:34px;border-radius:10px;display:grid;place-items:center}

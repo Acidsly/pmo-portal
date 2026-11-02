@@ -17,6 +17,8 @@ export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: 
   onPage(p: Page): void; onLang(l: Lang): void; onTheme(v: 'light' | 'dark'): void;
   /** Вкладка «Відгуки» — только если на сайте есть список «Відгуки» (тест с фокус-группой); отзыв оставляют на ней. */
   onFeedback?: () => void; onHelp(): void;
+  /** PMO и владельцы: «Країни і CEO» в меню пользователя. */
+  onCountries?: () => void;
   /** Сповіщення: красная точка — есть новые для меня события. */
   bell?: { unread: number; onOpen(): void };
   /** Пилотная группа: в меню аватара — переключатель «Помічник ШІ» (согласие — при включении). */
@@ -56,6 +58,8 @@ export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: 
     {me ? <Pop anchor={me} align="right" onClose={closeMe}><div className="pop-user-menu" id="me-pop">
         <div className="pop-me"><Avatar name={p.userName} /><span className="pn"><b>{p.userName}</b><small>{p.userEmail}</small></span></div>
         <div className="me-prefs">{langSeg}{themeSeg}</div>
+        {p.onCountries ? <div className="pop-list"><button type="button" className="pop-row" id="me-countries" onClick={() => { closeMe(); if (p.onCountries) p.onCountries(); }}>
+          <span><Lucide k="projects" />{t('coTitle')}</span></button></div> : null}
         {ai ? <><div className="pop-list pop-sws">
           <button type="button" className="pop-row pop-sw" role="switch" id="ai-switch" aria-checked={ai.on} disabled={ai.busy} onClick={ai.toggle}>
             <span><Lucide k="ai" />{t('aiSwitch')}</span><span className="sw" aria-hidden="true" /></button></div>

@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.11.0",
+   "date": "02.11.2026",
+   "html": "<p><b>Нове</b></p>\n<ul>\n<li><b>«Країни і CEO»</b> (для PMO, меню під аватаром): довідник країн проєктів — додати країну з назвами трьома мовами, призначити або змінити CEO країни, порядок, вимкнути країну. Нові країни одразу з'являються у виборі «Країна»; доступ нового CEO — протягом ~15 хвилин.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.10.4",
    "date": "02.11.2026",
    "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Підказка під «Не зроблено з плану і чому» тепер радить позначку «План виконано повністю» замість «так і напишіть».</li>\n</ul>"
@@ -315,6 +320,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.11.0",
+   "date": "02.11.2026",
+   "html": "<p><b>New</b></p>\n<ul>\n<li><b>\"Countries and CEOs\"</b> (for the PMO, menu under the avatar): the directory of project countries: add a country with names in three languages, assign or change the country CEO, set the order, deactivate a country. New countries appear in the \"Country\" choice right away; a new CEO gets access within ~15 minutes.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.10.4",
    "date": "02.11.2026",
    "html": "<p><b>Changed</b></p>\n<ul>\n<li>The hint under «Not done from the plan and why» now points to the «The plan is fully done» checkbox instead of «say so».</li>\n</ul>"
@@ -626,6 +636,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.11.0",
+   "date": "02.11.2026",
+   "html": "<p><b>Новое</b></p>\n<ul>\n<li><b>«Страны и CEO»</b> (для PMO, меню под аватаром): справочник стран проектов — добавить страну с названиями на трёх языках, назначить или сменить CEO страны, порядок, выключить страну. Новые страны сразу появляются в выборе «Страна»; доступ нового CEO — в течение ~15 минут.</li>\n</ul>"
+  },
   {
    "ver": "1.7.10.4",
    "date": "02.11.2026",
