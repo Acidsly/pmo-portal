@@ -106,7 +106,7 @@ describe('«Планувалось» — общие векторы (прилож
   afterAll(() => win && win.close());
   for (const c of (lastPlanCases as any).cases) test(c.name, () => {
     const reps = c.reports.map((r: any) => ({ projectId: 1, ...r }));
-    expect(lastPlan(reps, 1, c.excludeId || 0)).toEqual(c.out);
-    expect(JSON.parse(JSON.stringify(win.PPM_RULES.lastPlanOf(c.reports, c.excludeId || null)))).toEqual(c.out);
+    expect(lastPlan(reps, 1, c.excludeId || 0, c.before)).toEqual(c.out);
+    expect(JSON.parse(JSON.stringify(win.PPM_RULES.lastPlanOf(c.reports, c.excludeId || null, c.before)))).toEqual(c.out);
   });
 });

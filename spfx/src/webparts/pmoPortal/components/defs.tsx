@@ -22,7 +22,7 @@ const clamp = (s: string): React.ReactNode => (s ? <span className="clamp2" titl
 const dateCell = (iso: string): React.ReactNode => (iso ? fmtDate(iso) : <Muted />);
 
 /** Срок риска: просроченный у открытого — красным (таблица и карточка на телефоне, #114). */
-const riskDue = (k: Risk, today: string): React.ReactNode => (k.due && k.due < today && k.status !== 'Закрито' ? <span className="late">{fmtDate(k.due)}</span> : fmtDate(k.due));
+export const riskDue = (k: Risk, today: string): React.ReactNode => (k.due && k.due < today && k.status !== 'Закрито' ? <span className="late">{fmtDate(k.due)}</span> : fmtDate(k.due));
 
 function shared(x: DefsCtx): {
   stratHead: JSX.Element; prioHead: JSX.Element; stratCell(type: string): JSX.Element; prioCell(v: string): JSX.Element;

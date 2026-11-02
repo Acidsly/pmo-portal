@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.9.0",
+   "date": "02.11.2026",
+   "html": "<p><b>Нове</b> (відгуки тестування R8)</p>\n<ul>\n<li>Статус-звіт: відкриті ризики й проблеми проєкту видно прямо у формі; підказки, якщо прогноз завершення вже минув, витрати на дату менші за погоджені або проєкт іде в архів з відкритими ризиками (#124, #125, #127, #134).</li>\n<li>Позначка «План виконано повністю» — не треба вручну писати «Усе виконано» (#120).</li>\n<li>Зміна проєкту у формі з уже введеним текстом і закриття незбереженого звіту — з питанням, щоб текст не загубився і не потрапив в інший проєкт (#133, #134).</li>\n<li>У перегляді звіту — бюджет, витрати й прогноз витрат на дату звіту, навіть якщо звіт їх не змінював, і «Планувалось» — план попереднього звіту (#135, #136).</li>\n</ul>\n<p><b>Змінено</b></p>\n<ul>\n<li>«Високі ризики та проблеми» — нова назва подання й показника на головній: там і проблеми з оцінкою від 15 (#128).</li>\n<li>«Потребують рішення» — запит лише з останнього звіту проєкту: новий звіт знімає запит попереднього (#132).</li>\n<li>Ризик архівного проєкту пояснює: «Проєкт в архіві — ризик лише для перегляду» (#118).</li>\n</ul>"
+  },
+  {
    "ver": "1.7.8.1",
    "date": "02.11.2026",
    "html": "<p><b>Виправлено</b> (звірка тестів з усіма опрацьованими відгуками)</p>\n<ul>\n<li>На телефоні поля сум відкривають клавіатуру з комою — копійки можна набрати (#131).</li>\n<li>Меню колонок: першу колонку більше не можна зсунути вниз — порядок «стратегічний, пріоритет, назва» не ламається (#49).</li>\n</ul>"
@@ -275,6 +280,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.9.0",
+   "date": "02.11.2026",
+   "html": "<p><b>New</b> (R8 testing feedback)</p>\n<ul>\n<li>Status report: the project's open risks and issues are shown right in the form; hints when the forecast completion date has passed, the cost to date is lower than approved, or the project goes to the archive with open risks (#124, #125, #127, #134).</li>\n<li>\"The plan is fully done\" checkbox — no need to type \"All done\" by hand (#120).</li>\n<li>Changing the project in a form that already has text, and closing an unsaved report, now ask first, so the text is not lost or moved to another project (#133, #134).</li>\n<li>A report view shows the budget, cost and cost forecast as of the report date, even if the report did not change them, and \"Planned\" — the previous report's plan (#135, #136).</li>\n</ul>\n<p><b>Changed</b></p>\n<ul>\n<li>\"High risks and issues\" — the new name of the view and the home page indicator: issues with a score of 15+ are there too (#128).</li>\n<li>\"Decision needed\" — only the request from the project's latest report: a new report clears the previous request (#132).</li>\n<li>A risk of an archived project explains: \"The project is archived — the risk is view-only\" (#118).</li>\n</ul>"
+  },
+  {
    "ver": "1.7.8.1",
    "date": "02.11.2026",
    "html": "<p><b>Fixed</b> (tests reconciled with all handled feedback)</p>\n<ul>\n<li>On a phone, amount fields open a keyboard with a comma — cents can be typed (#131).</li>\n<li>Columns menu: the first column can no longer be moved down — the order «strategic, priority, title» stays (#49).</li>\n</ul>"
@@ -546,6 +556,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.9.0",
+   "date": "02.11.2026",
+   "html": "<p><b>Новое</b> (отзывы тестирования R8)</p>\n<ul>\n<li>Статус-отчёт: открытые риски и проблемы проекта видны прямо в форме; подсказки, если прогноз завершения уже прошёл, затраты на дату меньше согласованных или проект уходит в архив с открытыми рисками (#124, #125, #127, #134).</li>\n<li>Отметка «План выполнен полностью» — не нужно вручную писать «Всё выполнено» (#120).</li>\n<li>Смена проекта в форме с уже введённым текстом и закрытие несохранённого отчёта — с вопросом, чтобы текст не потерялся и не попал в другой проект (#133, #134).</li>\n<li>В просмотре отчёта — бюджет, затраты и прогноз затрат на дату отчёта, даже если отчёт их не менял, и «Планировалось» — план предыдущего отчёта (#135, #136).</li>\n</ul>\n<p><b>Изменено</b></p>\n<ul>\n<li>«Высокие риски и проблемы» — новое название представления и показателя на главной: там и проблемы с оценкой от 15 (#128).</li>\n<li>«Требуют решения» — запрос только из последнего отчёта проекта: новый отчёт снимает запрос предыдущего (#132).</li>\n<li>Риск архивного проекта поясняет: «Проект в архиве — риск только для просмотра» (#118).</li>\n</ul>"
+  },
   {
    "ver": "1.7.8.1",
    "date": "02.11.2026",

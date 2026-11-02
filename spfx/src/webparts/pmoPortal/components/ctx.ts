@@ -26,5 +26,7 @@ export interface Ctx {
   toast(m: string): void;
   /** Помощник ИИ в форме отчёта: пилотная группа и переключатель «Помічник ШІ» включён. */
   ai?: boolean;
+  /** #134: форма с несохранёнными данными спрашивает перед закрытием панели (Esc, фон, ×); null — снять. guard() = можно закрыть. */
+  setCloseGuard?(guard: (() => boolean) | null): void;
 }
 export const AppCtx = React.createContext<Ctx>(undefined as unknown as Ctx);

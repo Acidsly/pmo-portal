@@ -9,7 +9,7 @@ export type ArchiveView = 'all' | 'done' | 'cancelled' | 'strat' | 'mine' | 'pm'
 export const PV: Record<ProjectView, string> = { all: 'Усі проєкти', strat: 'Стратегічні', problem: 'Проблемні', mine: 'Мої проєкти (усі)', pm: 'Я PM', stale: 'Немає свіжого звіту', late: 'Прострочені' };
 export const RV: Record<ReportView, string> = { all: 'Усі звіти', decision: 'Потребують рішення', awaiting: 'Очікують погодження' };
 export const AV: Record<ArchiveView, string> = { all: 'Усі проєкти', done: 'Завершені', cancelled: 'Скасовані', strat: 'Стратегічні', mine: 'Мої проєкти (усі)', pm: 'Я PM' };
-export const KV: Record<RiskView, string> = { open: 'Відкриті', high: 'Високі ризики', all: 'Усі елементи', archived: 'Ризики архівних проєктів' };
+export const KV: Record<RiskView, string> = { open: 'Відкриті', high: 'Високі ризики та проблеми', all: 'Усі елементи', archived: 'Ризики архівних проєктів' };
 
 /** #36 «Я PM»: поточний користувач — PM проєкту. */
 export const isPm = (p: Project, me: string): boolean => !!p.manager && !!me && p.manager.email.toLowerCase() === me.toLowerCase();
@@ -30,8 +30,15 @@ export function projectView(v: ProjectView, p: Project, today: string, me: strin
 /** Представления «Архів»: без условия «активный» (там только завершённые и отменённые); «Завершені» / «Скасовані» — по статусу. */
 export const archiveView = (v: ArchiveView, p: Project, me: string): boolean =>
   (v === 'done' ? p.status === 'Завершено' : v === 'cancelled' ? p.status === 'Скасовано' : v === 'strat' ? p.type === 'Стратегічний' : v === 'mine' ? participants(p).indexOf(me.toLowerCase()) >= 0 : v === 'pm' ? isPm(p, me) : true);
-export const reportView = (v: ReportView, r: StatusReport): boolean =>
-  (v === 'decision' ? r.decision : v === 'awaiting' ? (r.approval || 'На погодженні') === 'На погодженні' : true);
+/** Номера последних поданных отчётов каждого проекта (дата, затем номер) — #132: запрос рішення актуален только в последнем. */
+export function latestReportIds(reports: StatusReport[]): Set<number> {
+  const best: Record<number, StatusReport> = {};
+  reports.forEach(r => { const b = best[r.projectId]; if (!b || r.date > b.date || (r.date === b.date && r.id > b.id)) best[r.projectId] = r; });
+  return new Set(Object.keys(best).map(k => best[Number(k)].id));
+}
+/** #132: «Потребують рішення» — запрос только из последнего отчёта проекта (новый отчёт снимает запрос прежнего); latest — latestReportIds. */
+export const reportView = (v: ReportView, r: StatusReport, latest?: Set<number>): boolean =>
+  (v === 'decision' ? r.decision && (!latest || latest.has(r.id)) : v === 'awaiting' ? (r.approval || 'На погодженні') === 'На погодженні' : true);
 export const riskView = (v: RiskView, k: Risk): boolean =>
   (v === 'open' ? k.status !== 'Закрито' : v === 'high' ? k.status !== 'Закрито' && riskScore(k.probability, k.impact) >= 15 : true);
 /** Представление рисков; проект риска в архиве — только в «Ризики архівних проєктів» (#32), остальные представления — без архива. */

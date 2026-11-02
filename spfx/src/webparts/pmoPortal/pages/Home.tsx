@@ -5,6 +5,7 @@ import { PortalData } from '../data/SpRepo';
 import { Project, StatusReport, Risk } from '../data/types';
 import { isArch, isActive, freshness, riskScore, byOrder, staleFirst } from '../logic/status';
 import { donutCounts, snapshots } from '../logic/dynamics';
+import { latestReportIds } from '../logic/views';
 import { kpis, riskMatrix, slips, launches, byDept, byCountry, Slip } from '../logic/analytics';
 import { KpiStrip, RiskMap, DeptBars } from '../components/Analytics';
 import { Page } from '../components/ctx';
@@ -34,7 +35,8 @@ export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
   const k = kpis(vis, data.reports, data.risks, today);
   const sl = slips(vis, data.changes);
   const ln = launches(vis, today);
-  const dec = data.reports.filter(r => r.decision && shown(r.projectId)).sort(byDateDesc);
+  const latest = latestReportIds(data.reports);   // #132: запрос рішення — только из последнего отчёта проекта
+  const dec = data.reports.filter(r => r.decision && latest.has(r.id) && shown(r.projectId)).sort(byDateDesc);
   const openAll = data.risks.filter(k => k.status !== 'Закрито' && shown(k.projectId))
     .sort((a, b) => riskScore(b.probability, b.impact) - riskScore(a.probability, a.impact));
   const open = openAll.slice(0, 6);   // на главной — шесть самых высоких; сколько всего — подписью под таблицей

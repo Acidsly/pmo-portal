@@ -727,9 +727,9 @@ export const T: Record<string, L3> = {
   "{n} из {m}"
  ],
  "kpiHigh": [
-  "Високі ризики",
-  "High risks",
-  "Высокие риски"
+  "Високі ризики та проблеми",
+  "High risks and issues",
+  "Высокие риски и проблемы"
  ],
  "kpiLate": [
   "Прострочені",
@@ -885,6 +885,51 @@ export const T: Record<string, L3> = {
   "Некоректна дата — введіть дд.мм.рррр, наприклад 30.11.2026.",
   "Invalid date — enter dd.mm.yyyy, e.g. 30.11.2026.",
   "Некорректная дата — введите дд.мм.гггг, например 30.11.2026."
+ ],
+ "warnForecastPast": [
+  "Прогноз завершення вже минув — перевірте дату.",
+  "The forecast completion date has already passed — check the date.",
+  "Прогноз завершения уже прошёл — проверьте дату."
+ ],
+ "warnCostDown": [
+  "Менше за погоджені витрати ({v}) — перевірте суму.",
+  "Less than the approved cost ({v}) — check the amount.",
+  "Меньше согласованных затрат ({v}) — проверьте сумму."
+ ],
+ "costHint": [
+  "Усі витрати з початку проєкту (наростаючим підсумком).",
+  "All costs since the project start (cumulative).",
+  "Все затраты с начала проекта (нарастающим итогом)."
+ ],
+ "warnArchRisks": [
+  "Відкритих ризиків і проблем: {n}. Після погодження проєкт перейде в архів, і змінити їх буде неможливо — перегляньте їх нижче.",
+  "Open risks and issues: {n}. After approval the project goes to the archive and they can no longer be changed — review them below.",
+  "Открытых рисков и проблем: {n}. После согласования проект уйдёт в архив, и изменить их будет нельзя — просмотрите их ниже."
+ ],
+ "openRisksT": [
+  "Відкриті ризики та проблеми ({n})",
+  "Open risks and issues ({n})",
+  "Открытые риски и проблемы ({n})"
+ ],
+ "riskArchived": [
+  "Проєкт в архіві — ризик лише для перегляду.",
+  "The project is archived — the risk is view-only.",
+  "Проект в архиве — риск только для просмотра."
+ ],
+ "confirmSwitch": [
+  "У звіті вже є введений текст. Змінити проєкт і очистити текст?",
+  "The report already has text. Change the project and clear the text?",
+  "В отчёте уже есть введённый текст. Сменить проект и очистить текст?"
+ ],
+ "confirmClose": [
+  "Звіт не збережено. Закрити без збереження?",
+  "The report is not saved. Close without saving?",
+  "Отчёт не сохранён. Закрыть без сохранения?"
+ ],
+ "planAllDone": [
+  "План виконано повністю",
+  "The plan is fully done",
+  "План выполнен полностью"
  ],
  "repPending": [
   "на погодженні · {date}",

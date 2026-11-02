@@ -1,0 +1,226 @@
+{
+ "_about": "Предупреждения формы статус-отчёта (не блокируют сохранение): #127 прогноз завершения открытого проекта раньше даты подання (today); #125 «Витрати на дату» меньше погоджених в карточке (n — сумма карточки); #124 архивная фаза («Завершено» / «Скасовано») при открытых рисках и проблемах (n — сколько). reportWarnings приложения (logic/forms.ts) и прототипа (PPM_RULES).",
+ "cases": [
+  {
+   "name": "нічого не порушено",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "2026-12-01",
+    "actualCost": 110
+   },
+   "p": {
+    "actualCost": 110
+   },
+   "open": 2,
+   "today": "2026-10-30",
+   "out": []
+  },
+  {
+   "name": "#127 прогноз минув",
+   "d": {
+    "status": "Планування",
+    "forecastEnd": "2026-10-20",
+    "actualCost": 0
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "forecastEnd",
+     "k": "warnForecastPast"
+    }
+   ]
+  },
+  {
+   "name": "#127 прогноз = сьогодні — не минув",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "2026-10-30",
+    "actualCost": 0
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": []
+  },
+  {
+   "name": "#127 прогноз не задано — нічого",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 0
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": []
+  },
+  {
+   "name": "#127 архівна фаза — прогноз не перевіряється",
+   "d": {
+    "status": "Завершено",
+    "forecastEnd": "2026-10-01",
+    "actualCost": 0
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": []
+  },
+  {
+   "name": "#125 витрати менші за погоджені",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 50
+   },
+   "p": {
+    "actualCost": 110
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "actualCost",
+     "k": "warnCostDown",
+     "n": 110
+    }
+   ]
+  },
+  {
+   "name": "#125 витрати 0 при погоджених 110 — теж",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 0
+   },
+   "p": {
+    "actualCost": 110
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "actualCost",
+     "k": "warnCostDown",
+     "n": 110
+    }
+   ]
+  },
+  {
+   "name": "#125 у картці витрат немає — нічого",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 0
+   },
+   "p": {
+    "actualCost": null
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": []
+  },
+  {
+   "name": "#125 більші — нічого",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "",
+    "actualCost": 200
+   },
+   "p": {
+    "actualCost": 110
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": []
+  },
+  {
+   "name": "#124 «Завершено» з відкритими ризиками",
+   "d": {
+    "status": "Завершено",
+    "forecastEnd": "",
+    "actualCost": 0
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 2,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "status",
+     "k": "warnArchRisks",
+     "n": 2
+    }
+   ]
+  },
+  {
+   "name": "#124 «Скасовано» з відкритими ризиками",
+   "d": {
+    "status": "Скасовано",
+    "forecastEnd": "",
+    "actualCost": 0
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 1,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "status",
+     "k": "warnArchRisks",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "name": "#124 відкритих немає — нічого",
+   "d": {
+    "status": "Завершено",
+    "forecastEnd": "",
+    "actualCost": 0
+   },
+   "p": {
+    "actualCost": 0
+   },
+   "open": 0,
+   "today": "2026-10-30",
+   "out": []
+  },
+  {
+   "name": "усе разом: минув прогноз і менші витрати",
+   "d": {
+    "status": "Реалізація",
+    "forecastEnd": "2026-01-01",
+    "actualCost": 10
+   },
+   "p": {
+    "actualCost": 20
+   },
+   "open": 3,
+   "today": "2026-10-30",
+   "out": [
+    {
+     "f": "forecastEnd",
+     "k": "warnForecastPast"
+    },
+    {
+     "f": "actualCost",
+     "k": "warnCostDown",
+     "n": 20
+    }
+   ]
+  }
+ ]
+}

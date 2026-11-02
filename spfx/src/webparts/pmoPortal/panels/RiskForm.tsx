@@ -88,7 +88,8 @@ export const RiskForm: React.FC<{ data: PortalData; projectId: number; riskId: n
   return <>
     <div className="ph"><div><div className="k"><EntTag kind={d.type === 'Проблема' ? 'issue' : 'risk'} /><span>{t('listLabel')} «{t('navRisks')}»</span></div><h2>{k ? t('riskCard') : d.type === 'Проблема' ? t('newIssueT') : t('newRiskT')}</h2></div>
       <button className="x" aria-label={t('close')} onClick={onCancel}>×</button></div>
-    {edit ? null : <p className="note lock">🔒 {t('readOnly')}</p>}
+    {/* #118: в архивном проекте — причина: архив, а не «только PM» */}
+    {edit ? null : <p className="note lock" id="k-ro">🔒 {isArch(p.status) ? t('riskArchived') : t('readOnly')}</p>}
     {edit && k ? <p className="note" id="k-only">{t('riskOnlyStatus')}</p> : null}
     {copied ? <p className="note" id="k-copy">{t('riskCopyNote').replace('{t}', copied.title)}</p> : null}
     <form onSubmit={save} noValidate={true}>

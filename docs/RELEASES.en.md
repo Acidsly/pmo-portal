@@ -1,5 +1,18 @@
 # What's new
 
+## 1.7.9.0 · 02.11.2026
+
+**New** (R8 testing feedback)
+- Status report: the project's open risks and issues are shown right in the form; hints when the forecast completion date has passed, the cost to date is lower than approved, or the project goes to the archive with open risks (#124, #125, #127, #134).
+- "The plan is fully done" checkbox — no need to type "All done" by hand (#120).
+- Changing the project in a form that already has text, and closing an unsaved report, now ask first, so the text is not lost or moved to another project (#133, #134).
+- A report view shows the budget, cost and cost forecast as of the report date, even if the report did not change them, and "Planned" — the previous report's plan (#135, #136).
+
+**Changed**
+- "High risks and issues" — the new name of the view and the home page indicator: issues with a score of 15+ are there too (#128).
+- "Decision needed" — only the request from the project's latest report: a new report clears the previous request (#132).
+- A risk of an archived project explains: "The project is archived — the risk is view-only" (#118).
+
 ## 1.7.8.1 · 02.11.2026
 
 **Fixed** (tests reconciled with all handled feedback)

@@ -16,6 +16,7 @@ let blobs: W[];
 beforeEach(async () => {
   blobs = [];
   w = new JSDOM(HTML, { runScripts: 'dangerously', pretendToBeVisual: true, url: 'https://pmo.test/', beforeParse(win: W) {
+      win.confirm = () => true;   // #133 / #134: вопрос «закрыть без сохранения» — да
     win.matchMedia = () => ({ matches: false, addEventListener() { /* */ }, removeEventListener() { /* */ }, addListener() { /* */ } });
     win.HTMLElement.prototype.scrollIntoView = function (): void { /* */ }; win.scrollTo = () => undefined;
     // CSV: содержимое файла перехватывается здесь (в jsdom нет URL.createObjectURL)

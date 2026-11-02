@@ -5,6 +5,8 @@ import { Rag } from './rag';
 import { todayIso } from './dates';
 
 /** Черновик статус-отчёта (форма reportForm прототипа). */
+/** #120: «План виконано повністю» — текст «Не зроблено з плану і чому» (значение хранится по-украински, на экране — перевод). */
+export const PLAN_ALL_DONE = 'Усе виконано';
 export interface ReportDraft {
   /** date — дата подання (#62): сегодня, пишется в момент сохранения; periodFrom — начало периода (#69), считается при сохранении. */
   projectId: number; date: string; periodFrom?: string; schedule: Rag; budget: Rag; resources: Rag;
@@ -50,8 +52,10 @@ export function reportFromProject(p: Project, today: string): ReportDraft {
 
 /** «Планувалось» (1.7.7): «План на наступний період» последнего погодженого отчёта проекта (без погодження — применённого);
  *  excludeId — сам отчёт (возвращённый, на основе которого новый). Нет — пусто (поле «Не зроблено» необязательно). */
-export function lastPlan(reports: StatusReport[], projectId: number, excludeId = 0): { text: string; date: string } {
-  const ok = reports.filter(r => r.projectId === projectId && r.id !== excludeId && (r.approval === 'Погоджено' || (!r.approval && r.applied)))
+export function lastPlan(reports: StatusReport[], projectId: number, excludeId = 0, before?: { date: string; id: number }): { text: string; date: string } {
+  // before — просмотр отчёта (#136): план последнего погодженого отчёта, поданного раньше этого (дата, затем номер)
+  const ok = reports.filter(r => r.projectId === projectId && r.id !== excludeId && (r.approval === 'Погоджено' || (!r.approval && r.applied))
+    && (!before || r.date < before.date || (r.date === before.date && r.id < before.id)))
     .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id));
   const last = ok[ok.length - 1];
   const text = last ? (last.next || '').trim() : '';
@@ -107,7 +111,9 @@ export function switchStatus(d: ReportDraft, prev: number | null, status: string
 /** Смена проекта в общей форме: показатели — нового проекта (статус, %, даты; поле % снова открыто), оценки и тексты — введённые. */
 export const switchProject = (d: ReportDraft, np: Project, plan: { text: string; date: string } = { text: '', date: '' }): ReportDraft =>
   initialReport(withPlan({ ...reportFromProject(np, d.date), schedule: d.schedule, budget: d.budget, resources: d.resources,
-    title: d.title, done: d.done, next: d.next, issues: d.issues, decision: d.decision, decisionText: d.decisionText, notDone: d.notDone }, plan));
+    title: d.title, done: d.done, next: d.next, issues: d.issues, decision: d.decision, decisionText: d.decisionText,
+    // #120: отметка «План виконано повністю» относится к плану прежнего проекта — снимается
+    notDone: d.notDone === PLAN_ALL_DONE ? '' : d.notDone }, plan));
 /** Что записывается: при «Завершено» — всегда 100 %; фактическая дата — только при «Завершено» / «Скасовано» (#54). */
 export const reportToSave = (d: ReportDraft): ReportDraft => {
   const x = progressLocked(d.status) ? { ...d, progress: 100 } : d;
@@ -239,4 +245,51 @@ export interface RiskTypeState { type: string; title: string; memo: Record<strin
 export function riskTypeSwitch(st: RiskTypeState, to: string): RiskTypeState {
   if (to === st.type) return st;
   return { type: to, title: Object.prototype.hasOwnProperty.call(st.memo, to) ? st.memo[to] : st.title, memo: { ...st.memo, [st.type]: st.title } };
+}
+
+
+/** Предупреждения формы отчёта (не блокируют сохранение; векторы tests/cases/report-warn.json, те же — прототип):
+ *  #127 прогноз завершения открытого проекта раньше даты подання; #125 «Витрати на дату» меньше погоджених в карточке;
+ *  #124 архивная фаза при открытых рисках и проблемах (после архивации их не изменить). */
+export interface ReportWarn { f: 'forecastEnd' | 'actualCost' | 'status'; k: string; n?: number }
+export function reportWarnings(d: { status: string; forecastEnd: string; actualCost: number }, p: { actualCost?: number | null }, openRisks: number, today: string): ReportWarn[] {
+  const out: ReportWarn[] = [];
+  const arch = archiveStatus(d.status);
+  if (!arch && d.forecastEnd && d.forecastEnd < today) out.push({ f: 'forecastEnd', k: 'warnForecastPast' });
+  if ((p.actualCost || 0) > 0 && d.actualCost < (p.actualCost || 0)) out.push({ f: 'actualCost', k: 'warnCostDown', n: p.actualCost || 0 });
+  if (arch && openRisks > 0) out.push({ f: 'status', k: 'warnArchRisks', n: openRisks });
+  return out;
+}
+
+/** #133 / #134: тексты отчёта, которые PM вводит сам (показатели подставляются из карточки и при смене проекта меняются вместе с ним). */
+const REPORT_TEXT: (keyof ReportDraft)[] = ['title', 'done', 'notDone', 'next', 'issues', 'keyReason', 'decisionText'];
+/** Введён ли текст (пробелы и «Усе виконано» от отметки #120 — не текст). */
+export const reportHasText = (d: ReportDraft): boolean => REPORT_TEXT.some(k => { const v = String(d[k] || '').trim(); return !!v && !(k === 'notDone' && v === PLAN_ALL_DONE); });
+/** Смена проекта с очисткой текста (#133): тексты прежнего проекта не переходят в отчёт другого. */
+export const clearReportText = (d: ReportDraft): ReportDraft => ({ ...d, title: '', done: '', notDone: '', next: '', issues: '', keyReason: '', decision: false, decisionText: '' });
+/** Изменена ли форма относительно открытой (#134: закрыть без сохранения — с вопросом). */
+export function reportDirty(d: ReportDraft, init: ReportDraft): boolean {
+  const keys: (keyof ReportDraft)[] = ['projectId', 'schedule', 'budget', 'resources', 'status', 'type', 'progress', 'start', 'goLive', 'planEnd', 'forecastEnd',
+    'actualEnd', 'actualCost', 'budgetPlan', 'forecastCost', 'decision', ...REPORT_TEXT];
+  return keys.some(k => String(d[k] === undefined || d[k] === null ? '' : d[k]) !== String(init[k] === undefined || init[k] === null ? '' : init[k]));
+}
+
+/** #135: бюджет, витрати и прогноз витрат на дату отчёта. В отчёт пишутся только изменённые суммы (запись незменённых откатила бы
+ *  карточку более поздним отчётом), поэтому значение — из самого отчёта, иначе из последнего погодженого раньше него, где сумма была;
+ *  если позже этого отчёта сумму никто не менял — текущая из карточки; иначе неизвестно (null). Векторы tests/cases/report-money.json. */
+export type MoneyKey = 'budgetPlan' | 'actualCost' | 'forecastCost';
+export function reportMoneyAt(reports: StatusReport[], p: { budget?: number | null; actualCost?: number | null; forecastCost?: number | null }, r: StatusReport): Record<MoneyKey, number | null> {
+  const ok = (x: StatusReport): boolean => x.projectId === r.projectId && (x.approval === 'Погоджено' || (!x.approval && x.applied));
+  const cmp = (a: StatusReport, b: StatusReport): number => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id);
+  const has = (v: number | null | undefined): boolean => v !== null && v !== undefined;
+  const card: Record<MoneyKey, number | null | undefined> = { budgetPlan: p.budget, actualCost: p.actualCost, forecastCost: p.forecastCost };
+  const out = {} as Record<MoneyKey, number | null>;
+  (['budgetPlan', 'actualCost', 'forecastCost'] as MoneyKey[]).forEach(k => {
+    if (has(r[k])) { out[k] = r[k] as number; return; }
+    const earlier = reports.filter(x => x.id !== r.id && ok(x) && cmp(x, r) < 0 && has(x[k])).sort(cmp);
+    if (earlier.length) { out[k] = earlier[earlier.length - 1][k] as number; return; }
+    const later = reports.some(x => x.id !== r.id && ok(x) && cmp(x, r) > 0 && has(x[k]));
+    out[k] = !later && has(card[k]) ? card[k] as number : null;
+  });
+  return out;
 }
