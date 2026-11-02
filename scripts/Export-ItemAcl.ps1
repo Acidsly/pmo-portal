@@ -32,12 +32,15 @@ foreach ($url in @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues",
         $items = $list.GetItems($q)
         $ctx.Load($items)
         $ctx.ExecuteQuery()
-        foreach ($it in $items) {
-            $ctx.Load($it.RoleAssignments)
+        # частями по 25 записей: один запрос на все записи страницы превышал предел SharePoint (2 МБ на запрос; прод 02.11.2026)
+        $all = @($items)
+        for ($i = 0; $i -lt $all.Count; $i += 25) {
+            $part = $all[$i..([Math]::Min($i + 24, $all.Count - 1))]
+            foreach ($it in $part) { $ctx.Load($it.RoleAssignments) }
+            $ctx.ExecuteQuery()
+            foreach ($it in $part) { foreach ($ra in $it.RoleAssignments) { $ctx.Load($ra.Member); $ctx.Load($ra.RoleDefinitionBindings) } }
+            $ctx.ExecuteQuery()
         }
-        $ctx.ExecuteQuery()
-        foreach ($it in $items) { foreach ($ra in $it.RoleAssignments) { $ctx.Load($ra.Member); $ctx.Load($ra.RoleDefinitionBindings) } }
-        $ctx.ExecuteQuery()
         foreach ($it in $items) {
             $acl = @($it.RoleAssignments | ForEach-Object {
                 $who = [string]$_.Member.LoginName; $who = ($who -replace '^.*\|', '').ToLowerInvariant()
