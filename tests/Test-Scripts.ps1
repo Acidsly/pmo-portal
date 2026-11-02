@@ -44,7 +44,7 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/parent.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/money.json", "tests/cases/last-plan.json", "tests/cases/assignments.json", "tests/cases/history.json", "tests/cases/notify-state.json", "tests/cases/archive.json", "tests/cases/feedback-decided.json", "tests/cases/archive-migration.json", "config/focus-group.example.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/parent.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/money.json", "tests/cases/last-plan.json", "tests/cases/assignments.json", "tests/cases/history.json", "tests/cases/notify-state.json", "tests/cases/archive.json", "tests/cases/feedback-decided.json", "tests/cases/archive-migration.json", "tests/cases/stakeholders.json", "config/focus-group.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
@@ -70,6 +70,19 @@ foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/acl.json") | Conv
     $got = ($res | ForEach-Object { "$($_.e) $($_.l) $($_.r)" }) -join "; "
     $exp = ($c.expect | ForEach-Object { $_ -join " " }) -join "; "
     if ($got -eq $exp) { Ok $c.name } else { Bad "$($c.name): $got — ожидалось $exp" }
+}
+
+Write-Host "3b2. Источник стейкхолдеров — «Команда проєкту» (Get-Stakeholders, tests/cases/stakeholders.json)"
+foreach ($n in @("Email", "Emails", "Get-Stakeholders")) {
+    $fn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $n }, $true) | Select-Object -First 1
+    if ($fn) { Invoke-Expression $fn.Extent.Text } else { Bad "нет функции $n" }
+}
+foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/stakeholders.json") | ConvertFrom-Json).cases) {
+    $HAS_TEAM = [bool]$c.hasTeam
+    $TEAM = @{}; if (@($c.team).Count) { $TEAM[7] = @($c.team) }
+    $item = @{ Id = 7; pmMigrated = [string]$c.migrated; pmStakeholders = @($c.stakeholders | ForEach-Object { [pscustomobject]@{ Email = $_ } }) }
+    $got = @(Get-Stakeholders $item) -join ","
+    if ($got -eq (@($c.out) -join ",")) { Ok "стейкхолдеры: $($c.name)" } else { Bad "стейкхолдеры: $($c.name): «$got», ожидалось «$(@($c.out) -join ",")»" }
 }
 
 Write-Host "3c. Папки проектов: роли, заморозка архива, перенос записей (tests/cases/folders.json)"
