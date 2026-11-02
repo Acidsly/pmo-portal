@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.10.4 · 02.11.2026
+
+**Changed**
+- The hint under «Not done from the plan and why» now points to the «The plan is fully done» checkbox instead of «say so».
+
 ## 1.7.10.3 · 02.11.2026
 
 **Changed**

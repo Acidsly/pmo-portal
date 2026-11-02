@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.10.4",
+   "date": "02.11.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Підказка під «Не зроблено з плану і чому» тепер радить позначку «План виконано повністю» замість «так і напишіть».</li>\n</ul>"
+  },
+  {
    "ver": "1.7.10.3",
    "date": "02.11.2026",
    "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Помічник ШІ («Заповнити з ШІ») пропонує оцінку «Бюджет» за правилом PMO: прогноз витрат більший за бюджет до 9% — жовтий, від 10% — червоний (#137).</li>\n</ul>"
@@ -310,6 +315,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.10.4",
+   "date": "02.11.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>The hint under «Not done from the plan and why» now points to the «The plan is fully done» checkbox instead of «say so».</li>\n</ul>"
+  },
+  {
    "ver": "1.7.10.3",
    "date": "02.11.2026",
    "html": "<p><b>Changed</b></p>\n<ul>\n<li>The AI assistant («Fill with AI») suggests the «Budget» rating by the PMO rule: cost forecast up to 9% over budget — yellow, 10% and more — red (#137).</li>\n</ul>"
@@ -616,6 +626,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.10.4",
+   "date": "02.11.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Подсказка под «Не сделано из плана и почему» теперь советует отметку «План выполнен полностью» вместо «так и напишите».</li>\n</ul>"
+  },
   {
    "ver": "1.7.10.3",
    "date": "02.11.2026",
