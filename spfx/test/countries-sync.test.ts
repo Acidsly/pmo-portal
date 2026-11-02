@@ -24,9 +24,9 @@ test('переклади стартового набору: Deploy-PMO.ps1 ($cou
 
 const block = (from: string, to: string): string => deploy.slice(deploy.indexOf(from), deploy.indexOf(to, deploy.indexOf(from)));
 
-test('deploy: CEO з файлу — лише порожнє, перезапис — тільки з -ForceCeo; ключі файлу — з довідника', () => {
+test('deploy: CEO з файлу — лише для нового рядка «Країни», перезапис — тільки з -ForceCeo; ключі файлу — з довідника', () => {
   const b = block('# 6f. Довідник країн', '# 6a2.');
-  expect(b).toMatch(/\(\$ForceCeo -or -not \$ceoHave\.Count\)/);
+  expect(b).toMatch(/\(\$ForceCeo -or \$isNew\)/);
   expect(b).not.toMatch(/\$countries -notcontains \$cty/);
   expect(b).toMatch(/if \(-not \$cnRows\[\$cty\]\) \{ throw/);
   // стартовые строки — только недостающие (переводы, порядок, «активна» PMO не меняются)

@@ -44,9 +44,10 @@ param(
     # список «Відгуки» и кнопка «Відгук» в приложении — для теста с фокус-группой (Invoke-Env передаёт только для test)
     [switch]$Feedback,
     # «Країни»: CEO по странам — JSON { "Країна": ["e-mail", …] } вне git (config/countries-<env>.json; Invoke-Env передаёт, если файл есть).
-    # 1.7.11: довідник ведёт PMO в портале — файл только заполняет пустое (новая страна, CEO не назначен); заполненное PMO не трогает
+    # 1.7.11: довідник ведёт PMO в портале — CEO из файла получают только строки «Країни», созданные этим запуском; CEO, которых
+    # PMO назначил или снял, не трогаются
     [string]$CeoFile,
-    # привести CEO всех стран из файла к файлу (перезаписать то, что ввёл PMO) — только по решению владельца
+    # CEO стран, перечисленных в файле, — по файлу (перезаписать то, что ввёл PMO; страны не из файла не меняются) — только по решению владельца
     [switch]$ForceCeo
 )
 
@@ -612,12 +613,13 @@ if ($CeoFile) {
 $coRows = @{}; foreach ($x in (Get-PnPListItem -List "Lists/Countries" -PageSize 100 -Fields "Title","coCeo")) { $coRows[([string]$x["Title"]).Trim()] = $x }
 foreach ($cty in @($cnRows.Keys)) {
     $row = $coRows[$cty]
-    if (-not $row) { $row = Add-PnPListItem -List "Lists/Countries" -Values @{ Title = $cty }; Write-Host "    + країна $cty" }
+    $isNew = -not $row
+    if ($isNew) { $row = Add-PnPListItem -List "Lists/Countries" -Values @{ Title = $cty }; Write-Host "    + країна $cty" }
     if ($ceoMap -and $ceoMap.ContainsKey($cty)) {
         $ceoWant = @($ceoMap[$cty] | Where-Object { $_ } | ForEach-Object { ([string]$_).ToLowerInvariant() } | Sort-Object)
         $ceoHave = @($row["coCeo"] | Where-Object { $_ -and $_.Email } | ForEach-Object { ([string]$_.Email).ToLowerInvariant() } | Sort-Object)
-        # CEO, назначенных PMO в портале, файл не перезаписывает (только пустое; -ForceCeo — по решению владельца)
-        if (($ceoWant -join ";") -ne ($ceoHave -join ";") -and ($ForceCeo -or -not $ceoHave.Count)) {
+        # CEO ведёт PMO в портале: файл — только для новой строки (пустой CEO мог снять сам PMO); -ForceCeo — по решению владельца
+        if (($ceoWant -join ";") -ne ($ceoHave -join ";") -and ($ForceCeo -or $isNew)) {
             Set-PnPListItem -List "Lists/Countries" -Identity $row.Id -Values @{ coCeo = @($ceoWant) } -UpdateType SystemUpdate | Out-Null
             Write-Host "    CEO $cty : $(if ($ceoWant.Count) { $ceoWant -join ', ' } else { '—' })"
         }

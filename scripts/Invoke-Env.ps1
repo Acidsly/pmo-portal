@@ -17,6 +17,8 @@ param(
     [Parameter(Mandatory)][ValidateSet("test", "prod")][string]$Env,
     [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "refresh", "renumber", "renumber-dryrun", "feedback-answers", "whois", "acl-export", "app", "feedback", "probe-formvalues", "perm-check", "aa-whoami")][string]$Action,
     [switch]$ConfirmProduction,
+    # deploy: CEO стран из config/countries-<env>.json — по файлу, поверх того, что ввёл PMO (только владелец, по решению)
+    [switch]$ForceCeo,
     # для -Action whois: e-mail человека, чей доступ проверить
     [string]$Email,
     # для -Action acl-export: куда сохранить выгрузку прав (JSON)
@@ -136,7 +138,7 @@ if ($Action -eq "feedback") {
     $a.Feedback = $true   # «Відгуки» — на тесте и на проде (решение 20.10.2026: на проде тоже)
     # CEO по странам — файл вне git: config/countries-<env>.json (e-mail сотрудников); нет файла — CEO не меняются
     $cf = Join-Path $root "config/countries-$Env.json"
-    if (Test-Path $cf) { $a.CeoFile = $cf }
+    if (Test-Path $cf) { $a.CeoFile = $cf; if ($ForceCeo) { $a.ForceCeo = $true } }
     # конфиг разработчика (PMO Dev, права только на тестовый сайт): без центра администрирования
     if ($cfg.SiteScoped) { $a.SiteScoped = $true }
     & (Join-Path $PSScriptRoot "Deploy-PMO.ps1") @a

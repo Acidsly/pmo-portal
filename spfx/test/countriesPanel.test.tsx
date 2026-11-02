@@ -139,3 +139,38 @@ test('CEO з пошуку: нова людина — ensureUser, у «Країн
   expect(calls).toContainEqual(['ensure', 'Md@x']);
   expect(calls).toContainEqual(['update', 'Countries', 12, { coCeoId: [77] }]);
 });
+
+test('кросс-ревью M1: людину не знайдено — нічого не записано', async () => {
+  ctx.repo.searchPeople = async () => [{ id: 0, email: 'gone@x', name: 'Гість' }];
+  ctx.repo.ensureUser = async () => { throw new Error('userNotFound'); };
+  await mount(<CountriesPanel data={data()} onCancel={() => undefined} />);
+  act(() => { Simulate.click(root.querySelector('.co-row[data-name="Польща"]') as Element); });
+  jest.useFakeTimers();
+  act(() => { Simulate.change($('#co-ceo'), { target: { value: 'Гість' } } as any); });
+  await act(async () => { jest.advanceTimersByTime(300); await Promise.resolve(); });
+  jest.useRealTimers();
+  act(() => { Simulate.mouseDown(root.querySelector('.picker-list .pop-row') as Element); });
+  await submit();
+  expect(calls).toEqual([]); expect($('.err').textContent).not.toBe('');
+});
+
+test('кросс-ревью M1: нова країна, CEO-рядок не записався — повтор оновлює свій рядок, а не «дубль»', async () => {
+  const created: any[] = [];
+  let failCeo = true;
+  admin = () => ({ names: [...names(), ...created], ceo: ceo() });
+  ctx.repo.create = async (list: string, body: any) => {
+    calls.push(['create', list, body]);
+    if (list === 'Countries' && failCeo) { failCeo = false; throw new Error('Countries: 500 boom'); }
+    if (list === 'CountryNames') created.push({ id: 99, name: body.Title, en: body.cnEn, ru: body.cnRu, order: body.cnOrder, active: body.cnActive, modified: 'n99' });
+    return 99;
+  };
+  await mount(<CountriesPanel data={data()} onCancel={() => undefined} />);
+  act(() => { Simulate.click($('#co-add')); });
+  type('#co-name', 'Молдова');
+  await submit();
+  expect($('.err').textContent).toContain('boom');
+  expect($('#co-name').disabled).toBe(true);   // форма — уже своя записана строка
+  calls = [];
+  await submit();
+  expect(calls).toEqual([['update', 'CountryNames', 99, { cnEn: 'Молдова', cnRu: 'Молдова', cnOrder: 40, cnActive: true }], ['create', 'Countries', { Title: 'Молдова', coCeoId: [] }]]);
+});

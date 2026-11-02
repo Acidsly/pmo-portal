@@ -66,15 +66,27 @@ export const CountriesPanel: React.FC<{ data: PortalData; onCancel(): void }> = 
       if (d.id && (countryStale(opened.n, fn ? fn.n.modified : '') || countryStale(opened.c, fn && fn.c ? fn.c.modified : ''))) { edit(fn); setErr(t('errCountryStale')); setBusy(false); return; }
       const again = validateCountry({ id: d.id, name }, fresh.map(r => r.n));
       if (again.length) { setErr(t(again[0])); setBusy(false); return; }
-      const order = d.order.trim() === '' ? null : Number(d.order.replace(',', '.'));
+      const order = d.order.trim() === '' ? null : Number(d.order);
       const names = { cnEn: d.en.trim() || name, cnRu: d.ru.trim() || name, cnOrder: order === null || isNaN(order) ? null : order, cnActive: d.active };
-      if (d.id) await c.repo.update('CountryNames', d.id, names); else await c.repo.create('CountryNames', { Title: name, ...names });
+      // люди — до первой записи: человек не найден (гость не приглашён) — ничего не записано
       const ids: number[] = [];
       for (const p of d.ceo) ids.push(p.id || await c.repo.ensureUser(p));
-      const ceoRow = fn && fn.c ? fn.c : fresh.map(r => r.c).filter(x => x && x.name === name)[0];
-      if (ceoRow) await c.repo.update('Countries', ceoRow.id, { coCeoId: ids });
-      else await c.repo.create('Countries', { Title: name, coCeoId: ids });
-      await c.reload();
+      let nameId = d.id;
+      try {
+        if (d.id) await c.repo.update('CountryNames', d.id, names); else nameId = await c.repo.create('CountryNames', { Title: name, ...names });
+        const ceoRow = fn && fn.c ? fn.c : fresh.map(r => r.c).filter(x => x && x.name === name)[0];
+        if (ceoRow) await c.repo.update('Countries', ceoRow.id, { coCeoId: ids });
+        else await c.repo.create('Countries', { Title: name, coCeoId: ids });
+      } catch (x) {
+        // часть записана: повтор «Зберегти» — по своей же свежей строке (не «змінив інший» и не дубль), введённое в форме сохраняется
+        if (nameId) {
+          const again2 = await load().catch(() => null);
+          const own = again2 ? again2.filter(r => r.n.id === nameId)[0] : undefined;
+          if (own) { setOpened({ n: own.n.modified, c: own.c ? own.c.modified : undefined }); setD({ ...d, id: nameId, name }); }
+        }
+        throw x;
+      }
+      await c.reload().catch(() => undefined);
       await load();
       c.toast(t('savedCountry'));
       setD(null); setBusy(false);
@@ -89,7 +101,7 @@ export const CountriesPanel: React.FC<{ data: PortalData; onCancel(): void }> = 
       <Frow label={t('coNameEn')} htmlFor="co-en"><input id="co-en" value={d.en} placeholder={d.name} onChange={e => set({ en: e.target.value })} /></Frow>
       <Frow label={t('coNameRu')} htmlFor="co-ru"><input id="co-ru" value={d.ru} placeholder={d.name} onChange={e => set({ ru: e.target.value })} /></Frow>
       <Frow label={t('coCeo')} htmlFor="co-ceo"><PeoplePicker id="co-ceo" multi={true} value={d.ceo} search={search} onChange={v => set({ ceo: v })} /></Frow>
-      <Frow label={t('coOrder')} htmlFor="co-order"><input id="co-order" inputMode="numeric" value={d.order} onChange={e => set({ order: e.target.value })} /></Frow>
+      <Frow label={t('coOrder')} htmlFor="co-order"><input id="co-order" inputMode="numeric" value={d.order} onChange={e => set({ order: e.target.value.replace(/[^\d]/g, '') })} /></Frow>
       <div className="frow"><label className="check"><input type="checkbox" id="co-active" checked={d.active} onChange={e => set({ active: e.target.checked })} /> {t('coActive')}</label></div>
       {warns.map(([k, n]) => <p key={k} className="fwarn" id={'co-' + k}>{t(k).replace('{n}', String(n))}</p>)}
       <Err msg={err} />

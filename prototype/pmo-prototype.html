@@ -2620,7 +2620,7 @@ function countriesPanel(cid){
       <div class="frow"><label class="t" for="co-en">${t('coNameEn')}</label><input id="co-en" value="${c && c.en !== c.name ? esc(c.en) : ''}"></div>
       <div class="frow"><label class="t" for="co-ru">${t('coNameRu')}</label><input id="co-ru" value="${c && c.ru !== c.name ? esc(c.ru) : ''}"></div>
       <div class="frow"><label class="t" for="co-ceo">${t('coCeo')}</label><select id="co-ceo" multiple size="4">${Object.keys(ORG).map(n => `<option value="${esc(n)}"${c && c.ceo.includes(n) ? ' selected' : ''}>${esc(n)} — ${esc(roleOf(n))}</option>`).join('')}</select></div>
-      <div class="frow"><label class="t" for="co-order">${t('coOrder')}</label><input id="co-order" inputmode="numeric" value="${c ? (isNaN(c.order) ? '' : c.order) : next}"></div>
+      <div class="frow"><label class="t" for="co-order">${t('coOrder')}</label><input id="co-order" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')" value="${c ? (isNaN(c.order) ? '' : c.order) : next}"></div>
       <div class="frow"><label class="check"><input type="checkbox" id="co-active"${!c || c.active ? ' checked' : ''}> ${t('coActive')}</label></div>
       <div id="co-warns"></div>
       <p class="err" hidden></p>

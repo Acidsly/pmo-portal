@@ -313,7 +313,8 @@ export class SpRepo {
   /** Экран PMO «Країни і CEO»: свежие строки обоих списков (CEO — только у PMO и владельцев). */
   async loadCountryAdmin(): Promise<{ names: CountryName[]; ceo: CountryCeo[] }> {
     const [cn, co] = await Promise.all([this.items('CountryNames', CNAME_SELECT, ''), this.items('Countries', CCEO_SELECT, CCEO_EXPAND)]);
-    return { names: countryList(cn.map(mapCountryName) as CountryRaw[]), ceo: co.map(mapCountryCeo) };
+    // пустой список — пусто (не встроенный набор: у его строк нет Id, правка стала бы «новой страной»)
+    return { names: cn.length ? countryList(cn.map(mapCountryName) as CountryRaw[]) : [], ceo: co.map(mapCountryCeo) };
   }
 
   /** Отметка изменений списков портала: самое позднее изменение записей (один лёгкий запрос). */
