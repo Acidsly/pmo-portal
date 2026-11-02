@@ -7,7 +7,8 @@ import { PortalData } from '../data/SpRepo';
 import { Project, Person } from '../data/types';
 import { loginOf } from '../data/people';
 import { ProjectDraft, validateProject, nextCode, cardDiff } from '../logic/forms';
-import { parentChoices, parentLabel, COUNTRIES } from '../logic/projects';
+import { parentChoices, parentLabel } from '../logic/projects';
+import { countryChoices } from '../logic/countries';
 import { projectBody, projectEditBody, teamBody, teamRows } from '../data/write';
 import { TeamRow, cleanTeam, cleanLinks, teamPlan } from '../logic/team';
 import { Frow, SegPick, DateIn, Err, PeoplePicker, Opts, errText, guardText, MoneyIn, badDateIn } from '../components/fields';
@@ -119,7 +120,7 @@ export const ProjectForm: React.FC<{ data: PortalData; project?: Project; onCanc
       </div>
       {/* «Країна»: у нового проекта обязательна (PMO), потом — только «Призначення» */}
       {isNew ? <Frow label={fl('country')} htmlFor="f-country" req={true}>
-          <select id="f-country" value={d.country || ''} onChange={e => set({ country: e.target.value })}><option value="">{t('notSet')}</option><Opts values={COUNTRIES} /></select></Frow>
+          <select id="f-country" value={d.country || ''} onChange={e => set({ country: e.target.value })}><option value="">{t('notSet')}</option><Opts values={countryChoices(data.countries, d.country)} /></select></Frow>
         : <Frow label={fl('country')}><div className="fixedval" id="f-country-fixed">{project!.country ? tv(project!.country) : '—'}</div></Frow>}
       {isNew ? <fieldset className="ragpick"><legend>{fl('type')}</legend><SegPick name="f-type" options={TYPES} value={d.type} onChange={v => set({ type: v })} /></fieldset> : null}
       {/* #105: пріоритет — рядом с типом, с подсказкой, чем они различаются */}

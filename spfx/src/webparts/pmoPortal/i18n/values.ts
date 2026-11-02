@@ -92,5 +92,8 @@ export const VALUES: Record<string, L3> = {
 let cur: Lang = 0;
 /** Язык для значений — выставляет App при каждой отрисовке. */
 export function setValueLang(l: Lang): void { cur = l; }
+let extra: Record<string, L3> = {};
+/** Переводы из довідника «Назви країн» (поверх встроенных; PMO добавляет страны без кода) — выставляет App после загрузки. */
+export function setExtraValues(m: Record<string, L3>): void { extra = m; }
 /** Значение выбора на языке интерфейса; неизвестное (или пустое) — как есть. */
-export const tv = (v: string | null | undefined): string => (v ? (VALUES[v] ? VALUES[v][cur] : v) : '');
+export const tv = (v: string | null | undefined): string => (v ? (extra[v] ? extra[v][cur] : VALUES[v] ? VALUES[v][cur] : v) : '');

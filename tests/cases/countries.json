@@ -1,0 +1,63 @@
+{
+ "_comment": "Довідник «Країни і CEO» (план 2026-11-02-countries-directory.md): список країн з «Назви країн» (порядок, порожнє «активна» = так, переклад за замовчуванням = uk; немає списку — вбудований набір), варіанти у формах (активні + поточна країна проєкту), перевірка рядка PMO і попередження. Проганяють Jest (logic/countries.ts) і прототип (jsdom).",
+ "list": [
+  { "name": "немає списку — вбудований набір у порядку коду", "rows": null,
+    "expect": ["Україна", "Польща", "Чехія", "Нідерланди", "Велика Британія", "Казахстан", "Узбекистан", "Киргизстан", "Грузія", "Азербайджан"] },
+  { "name": "порожній список — теж вбудований набір", "rows": [],
+    "expect": ["Україна", "Польща", "Чехія", "Нідерланди", "Велика Британія", "Казахстан", "Узбекистан", "Киргизстан", "Грузія", "Азербайджан"] },
+  { "name": "за порядком, однаковий порядок — за назвою; без порядку — в кінці", "rows": [
+    { "id": 1, "name": "Польща", "en": "Poland", "ru": "Польша", "order": 20, "active": true },
+    { "id": 2, "name": "Україна", "en": "Ukraine", "ru": "Украина", "order": 10, "active": true },
+    { "id": 3, "name": "Чехія", "en": "", "ru": null, "order": null, "active": null },
+    { "id": 4, "name": "Грузія", "en": "Georgia", "ru": "Грузия", "order": 20, "active": false }],
+    "expect": ["Україна", "Грузія", "Польща", "Чехія"] },
+  { "name": "рядок без назви не потрапляє", "rows": [
+    { "id": 1, "name": "  ", "en": "x", "ru": "x", "order": 1, "active": true },
+    { "id": 2, "name": "Молдова", "en": "Moldova", "ru": "Молдова", "order": 2, "active": true }],
+    "expect": ["Молдова"] }
+ ],
+ "labels": [
+  { "name": "переклади з довідника; порожній переклад — uk", "rows": [
+    { "id": 3, "name": "Чехія", "en": "", "ru": null, "order": 1, "active": null },
+    { "id": 5, "name": "Молдова", "en": "Moldova", "ru": "Молдова", "order": 2, "active": true }],
+    "expect": { "Чехія": ["Чехія", "Чехія", "Чехія"], "Молдова": ["Молдова", "Moldova", "Молдова"] } },
+  { "name": "немає списку — переклади вбудованого набору", "rows": null,
+    "pick": "Велика Британія", "expect": { "Велика Британія": ["Велика Британія", "United Kingdom", "Великобритания"] } }
+ ],
+ "choices": [
+  { "name": "лише активні", "rows": [
+    { "id": 1, "name": "Україна", "order": 1, "active": true },
+    { "id": 2, "name": "Грузія", "order": 2, "active": false },
+    { "id": 3, "name": "Чехія", "order": 3, "active": null }], "current": "", "expect": ["Україна", "Чехія"] },
+  { "name": "вимкнена поточна країна проєкту не зникає — в кінці", "rows": [
+    { "id": 1, "name": "Україна", "order": 1, "active": true },
+    { "id": 2, "name": "Грузія", "order": 2, "active": false },
+    { "id": 3, "name": "Чехія", "order": 3, "active": true }], "current": "Грузія", "expect": ["Україна", "Чехія", "Грузія"] },
+  { "name": "поточна, якої немає в довіднику, — теж", "rows": [
+    { "id": 1, "name": "Україна", "order": 1, "active": true }], "current": "Атлантида", "expect": ["Україна", "Атлантида"] }
+ ],
+ "validate": [
+  { "name": "нова країна — гаразд", "draft": { "id": 0, "name": " Молдова ", "en": "", "ru": "" }, "expect": [] },
+  { "name": "без назви", "draft": { "id": 0, "name": "  ", "en": "Moldova", "ru": "" }, "expect": ["errCountryName"] },
+  { "name": "така назва вже є (без урахування регістру й пробілів)", "draft": { "id": 0, "name": " польща", "en": "", "ru": "" }, "expect": ["errCountryDup"] },
+  { "name": "власний рядок — не дубль", "draft": { "id": 1, "name": "Польща", "en": "Poland", "ru": "Польша" }, "expect": [] },
+  { "name": "назву наявної країни не змінюють", "draft": { "id": 1, "name": "Польща (PL)", "en": "Poland", "ru": "Польша" }, "expect": ["errCountryRename"] },
+  { "name": "назва з лапкою або комою — ні (значення вибору SharePoint)", "draft": { "id": 0, "name": "Боснія, Герцеговина", "en": "", "ru": "" }, "expect": ["errCountryChars"] }
+ ],
+ "validateRows": [
+  { "id": 1, "name": "Польща", "en": "Poland", "ru": "Польша", "order": 20, "active": true },
+  { "id": 2, "name": "Україна", "en": "Ukraine", "ru": "Украина", "order": 10, "active": true }
+ ],
+ "warnings": [
+  { "name": "активна без CEO", "active": true, "ceo": 0, "projects": 3, "expect": [["warnCountryNoCeo", 0]] },
+  { "name": "вимкнена з активними проєктами", "active": false, "ceo": 1, "projects": 2, "expect": [["warnCountryInactive", 2]] },
+  { "name": "вимкнена без CEO і без проєктів — без попереджень", "active": false, "ceo": 0, "projects": 0, "expect": [] },
+  { "name": "активна з CEO", "active": true, "ceo": 2, "projects": 5, "expect": [] }
+ ],
+ "stale": [
+  { "name": "не змінювали", "opened": "2026-11-02T10:00:00Z", "fresh": "2026-11-02T10:00:00Z", "expect": false },
+  { "name": "змінив інший PMO", "opened": "2026-11-02T10:00:00Z", "fresh": "2026-11-02T10:05:00Z", "expect": true },
+  { "name": "рядок новий (не відкривали)", "opened": "", "fresh": "2026-11-02T10:05:00Z", "expect": false },
+  { "name": "рядок зник", "opened": "2026-11-02T10:00:00Z", "fresh": "", "expect": true }
+ ]
+}

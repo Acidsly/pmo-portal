@@ -44,8 +44,10 @@ param(
     # список «Відгуки» и кнопка «Відгук» в приложении — для теста с фокус-группой (Invoke-Env передаёт только для test)
     [switch]$Feedback,
     # «Країни»: CEO по странам — JSON { "Країна": ["e-mail", …] } вне git (config/countries-<env>.json; Invoke-Env передаёт, если файл есть).
-    # Источник CEO — только файл: строки «Країни» приводятся к нему; нет файла — CEO не меняются
-    [string]$CeoFile
+    # 1.7.11: довідник ведёт PMO в портале — файл только заполняет пустое (новая страна, CEO не назначен); заполненное PMO не трогает
+    [string]$CeoFile,
+    # привести CEO всех стран из файла к файлу (перезаписать то, что ввёл PMO) — только по решению владельца
+    [switch]$ForceCeo
 )
 
 $ErrorActionPreference = "Stop"
@@ -217,6 +219,14 @@ if (-not (Get-PnPRoleDefinition | Where-Object Name -eq $ROLE_UPDATE)) {
     Write-Host "  + уровень прав «$ROLE_UPDATE»" -ForegroundColor Green
 }
 
+# «довідник»: PMO добавляет и правит строки довідника країн, но не удаляет (страну выключают «Активна»).
+$ROLE_DIR = "Довідник (портал)"
+if (-not (Get-PnPRoleDefinition | Where-Object Name -eq $ROLE_DIR)) {
+    Add-PnPRoleDefinition -RoleName $ROLE_DIR -Description "Портфель проєктів: довідник — переглядати, додавати й змінювати записи без видалення" `
+        -Include ViewListItems, AddListItems, EditListItems, OpenItems, ViewVersions, ViewFormPages, ViewPages, Open, BrowseUserInfo, UseRemoteAPIs, UseClientIntegration | Out-Null
+    Write-Host "  + уровень прав «$ROLE_DIR»" -ForegroundColor Green
+}
+
 # PMO видит все проекты и заводит новые; править проект может только его PM (права элементов выдаёт синхронизация)
 try { $g = Get-PnPGroup -Identity $PMO_GROUP -ErrorAction Stop } catch { $g = $null }
 if (-not $g) {
@@ -238,7 +248,14 @@ $status    = @("Ініціація", "Планування", "Реалізаці
 $repStatus = @("Ініціація", "Планування", "Реалізація", "Призупинено", "Скасовано", "Завершено")
 $types     = @("Стратегічний", "Звичайний")
 # одна страна на проект (проект нескольких стран — копией на каждую); ставит PMO при создании, потом — «Призначення»
+# 1.7.11: стартовый набор довідника «Назви країн»; новые страны добавляет PMO в портале (поля выбора — FillInChoice)
 $countries = @("Україна", "Польща", "Чехія", "Нідерланди", "Велика Британія", "Казахстан", "Узбекистан", "Киргизстан", "Грузія", "Азербайджан")
+# переводы стартового набора — как i18n/values.ts (сверяет spfx/test/countries-sync.test.ts)
+$countryNames = @{
+    "Україна" = @("Ukraine", "Украина"); "Польща" = @("Poland", "Польша"); "Чехія" = @("Czechia", "Чехия"); "Нідерланди" = @("Netherlands", "Нидерланды")
+    "Велика Британія" = @("United Kingdom", "Великобритания"); "Казахстан" = @("Kazakhstan", "Казахстан"); "Узбекистан" = @("Uzbekistan", "Узбекистан")
+    "Киргизстан" = @("Kyrgyzstan", "Кыргызстан"); "Грузія" = @("Georgia", "Грузия"); "Азербайджан" = @("Azerbaijan", "Азербайджан")
+}
 
 # ===========================================================================
 # 2. Проєкти — карточка проекта
@@ -252,7 +269,7 @@ F $P pmType        Choice   "Тип проєкту"        "Project type"       
 F $P pmManager     User     "PM"                 "PM"                  "PM"                   "UserSelectionMode='PeopleOnly' Required='TRUE'"
 F $P pmOwner       User     "Власник"            "Owner"               "Собственник"          "UserSelectionMode='PeopleOnly'"
 F $P pmStakeholders UserMulti "Стейкхолдери"     "Stakeholders"        "Стейкхолдеры"         "UserSelectionMode='PeopleOnly' Mult='TRUE'"
-F $P pmCountry     Choice   "Країна"             "Country"             "Страна"               "Format='Dropdown'" (Choices $countries)
+F $P pmCountry     Choice   "Країна"             "Country"             "Страна"               "Format='Dropdown' FillInChoice='TRUE'" (Choices $countries)
 F $P pmDepartment  Choice   "Напрям"             "Area"                "Направление"          "Format='Dropdown'" (Choices @("ІТ","HR та кадрове адміністрування","Розрахунок зарплати","Продажі","Фінанси","Операції","Юридичний"))
 # #78: отображаемое «Фаза проєкту» (этап жизненного цикла); внутреннее имя pmStatus не меняется
 F $P pmStatus      Choice   "Фаза проєкту"       "Project phase"       "Фаза проекта"       "Format='Dropdown' Required='TRUE'" (Choices $status "Ініціація")
@@ -509,7 +526,7 @@ F $PA paProject     Lookup   "Проєкт"             "Project"             "�
 F $PA paManager     User     "Новий PM"           "New PM"              "Новый PM"             "UserSelectionMode='PeopleOnly'"
 F $PA paOwner       User     "Новий власник"      "New owner"           "Новый владелец"       "UserSelectionMode='PeopleOnly'"
 # пусто — страна без изменений (значения по умолчанию нет)
-F $PA paCountry     Choice   "Нова країна"        "New country"         "Новая страна"         "Format='Dropdown' FillInChoice='FALSE'" (Choices $countries)
+F $PA paCountry     Choice   "Нова країна"        "New country"         "Новая страна"         "Format='Dropdown' FillInChoice='TRUE'" (Choices $countries)
 F $PA paNote        Note     "Коментар"           "Comment"             "Комментарий"          "NumLines='4' RichText='FALSE'"
 F $PA paApplied     Boolean  "Службове: застосовано" "System: applied"  "Служебное: применено" "Hidden='TRUE'" "<Default>0</Default>"
 F $PA pmoAcl        Text     "Службове: права"    "System: access"      "Служебное: права"     "Hidden='TRUE' MaxLength='64'"
@@ -554,26 +571,53 @@ foreach ($it in (Get-PnPListItem -List "Lists/Projects" -PageSize 500 -Fields "T
     }
 }
 
-# 6f. Країни — CEO країни по каждой стране (просмотр и комментарии на проекты своих стран; права выдаёт синхронизация).
-#     Строка на страну (Title — значение выбора pmCountry), CEO — из файла -Countries; список видят только владельцы сайта.
-Write-Host "6f. Список «Країни»" -ForegroundColor Cyan
+# 6f. Довідник країн (1.7.11, план 2026-11-02-countries-directory.md): ведёт PMO в портале.
+#     «Назви країн» — назва (Title = значение pmCountry), переводы, порядок, активна; читают все участники.
+#     «Країни» — CEO країни (просмотр и комментарии на проекты своих стран; права выдаёт синхронизация); только PMO и владельцы.
+Write-Host "6f. Довідник країн" -ForegroundColor Cyan
+$CN = Ensure-List "Lists/CountryNames" "Назви країн" "Country names" "Названия стран"
+F $CN cnEn          Text     "Назва англійською"  "Name in English"     "Название на английском" "MaxLength='100'"
+F $CN cnRu          Text     "Назва російською"   "Name in Russian"     "Название на русском"  "MaxLength='100'"
+F $CN cnOrder       Number   "Порядок"            "Order"               "Порядок"              "Decimals='0'"
+F $CN cnActive      Boolean  "Активна"            "Active"              "Активна"              "" "<Default>1</Default>"
+$script:Loc += , @($CN, "Title", "Країна", "Country", "Страна")
 $CO = Ensure-List "Lists/Countries" "Країни" "Countries" "Страны"
 F $CO coCeo         UserMulti "CEO країни"        "Country CEO"         "CEO страны"           "UserSelectionMode='PeopleOnly' Mult='TRUE'"
 $script:Loc += , @($CO, "Title", "Країна", "Country", "Страна")
+# поля выбора страны принимают страны довідника (FillInChoice): F существующее поле не меняет — отдельно, идемпотентно
+foreach ($fc in @(@("Lists/Projects", "pmCountry"), @("Lists/ProjectAssignments", "paCountry"))) {
+    $fld = Get-PnPField -List $fc[0] -Identity $fc[1]
+    if ($fld.SchemaXml -notmatch 'FillInChoice="TRUE"') {
+        $xml = if ($fld.SchemaXml -match 'FillInChoice="[^"]*"') { $fld.SchemaXml -replace 'FillInChoice="[^"]*"', 'FillInChoice="TRUE"' } else { $fld.SchemaXml -replace '^<Field ', '<Field FillInChoice="TRUE" ' }
+        $fld.SchemaXml = $xml; $fld.UpdateAndPushChanges($true); Invoke-PnPQuery
+        Write-Host "    $($fc[1]): страны довідника (FillInChoice)"
+    }
+}
+# стартовый набор: только недостающие строки; то, что ввёл PMO (переводы, порядок, активна), не меняется
+$cnRows = @{}; foreach ($x in (Get-PnPListItem -List "Lists/CountryNames" -PageSize 100 -Fields "Title")) { $cnRows[([string]$x["Title"]).Trim()] = $x }
+for ($i = 0; $i -lt $countries.Count; $i++) {
+    $cty = $countries[$i]
+    if (-not $cnRows[$cty]) {
+        $cnRows[$cty] = Add-PnPListItem -List "Lists/CountryNames" -Values @{ Title = $cty; cnEn = $countryNames[$cty][0]; cnRu = $countryNames[$cty][1]; cnOrder = ($i + 1) * 10; cnActive = $true }
+        Write-Host "    + назва країни $cty"
+    }
+}
 $ceoMap = $null
 if ($CeoFile) {
     if (-not (Test-Path $CeoFile)) { throw "Нет файла CEO по странам: $CeoFile" }
     $ceoMap = Get-Content -Raw $CeoFile | ConvertFrom-Json -AsHashtable
-    foreach ($cty in @($ceoMap.Keys | Where-Object { -not $_.StartsWith("_") })) { if ($countries -notcontains $cty) { throw "$CeoFile : страны «$cty» нет в выборе «Країна»" } }
+    # страны файла — из довідника (в т. ч. добавленные PMO); опечатка в файле — ошибка
+    foreach ($cty in @($ceoMap.Keys | Where-Object { -not $_.StartsWith("_") })) { if (-not $cnRows[$cty]) { throw "$CeoFile : страны «$cty» нет в довіднику «Назви країн»" } }
 }
-$coRows = @{}; foreach ($x in (Get-PnPListItem -List "Lists/Countries" -PageSize 100 -Fields "Title","coCeo")) { $coRows[[string]$x["Title"]] = $x }
-foreach ($cty in $countries) {
+$coRows = @{}; foreach ($x in (Get-PnPListItem -List "Lists/Countries" -PageSize 100 -Fields "Title","coCeo")) { $coRows[([string]$x["Title"]).Trim()] = $x }
+foreach ($cty in @($cnRows.Keys)) {
     $row = $coRows[$cty]
     if (-not $row) { $row = Add-PnPListItem -List "Lists/Countries" -Values @{ Title = $cty }; Write-Host "    + країна $cty" }
-    if ($ceoMap) {
+    if ($ceoMap -and $ceoMap.ContainsKey($cty)) {
         $ceoWant = @($ceoMap[$cty] | Where-Object { $_ } | ForEach-Object { ([string]$_).ToLowerInvariant() } | Sort-Object)
         $ceoHave = @($row["coCeo"] | Where-Object { $_ -and $_.Email } | ForEach-Object { ([string]$_.Email).ToLowerInvariant() } | Sort-Object)
-        if (($ceoWant -join ";") -ne ($ceoHave -join ";")) {
+        # CEO, назначенных PMO в портале, файл не перезаписывает (только пустое; -ForceCeo — по решению владельца)
+        if (($ceoWant -join ";") -ne ($ceoHave -join ";") -and ($ForceCeo -or -not $ceoHave.Count)) {
             Set-PnPListItem -List "Lists/Countries" -Identity $row.Id -Values @{ coCeo = @($ceoWant) } -UpdateType SystemUpdate | Out-Null
             Write-Host "    CEO $cty : $(if ($ceoWant.Count) { $ceoWant -join ', ' } else { '—' })"
         }
@@ -784,18 +828,18 @@ foreach ($grp in @($members.Title, $PMO_GROUP)) {
     }
 }
 Set-ListRoles "Lists/ProjectState"    @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ }
-# «Країни» — e-mail CEO: только владельцы сайта (и синхронизация), участники и PMO не читают
+# «Країни» — e-mail CEO: PMO ведёт (добавляет и правит, без удаления) и владельцы; участники не читают (решение владельца 02.11.2026)
 $col = Get-PnPList -Identity "Lists/Countries" -Includes HasUniqueRoleAssignments
 if (-not $col.HasUniqueRoleAssignments) { Set-PnPList -Identity "Lists/Countries" -BreakRoleInheritance | Out-Null; Write-Host "  «Країни»: собственные права списка" }
-Set-ListRoles "Lists/Countries" @{ (Get-PnPGroup -AssociatedOwnerGroup).Title = (Get-RoleName "Administrator") }
+Set-ListRoles "Lists/Countries" @{ (Get-PnPGroup -AssociatedOwnerGroup).Title = (Get-RoleName "Administrator"); $PMO_GROUP = $ROLE_DIR }
 $ctxCo = Get-PnPContext; $raCo = (Get-PnPList -Identity "Lists/Countries").RoleAssignments; $ctxCo.Load($raCo); Invoke-PnPQuery
 foreach ($a in $raCo) { $ctxCo.Load($a.Member) }; Invoke-PnPQuery
-foreach ($grp in @($members.Title, $PMO_GROUP)) {
-    if (@($raCo | Where-Object { $_.Member.Title -eq $grp }).Count) {
-        $gObj = Get-PnPGroup -Identity $grp; (Get-PnPList -Identity "Lists/Countries").RoleAssignments.GetByPrincipal($gObj).DeleteObject(); Invoke-PnPQuery
-        Write-Host "  «Країни» $grp : права списка сняты (только владельцы)"
-    }
+if (@($raCo | Where-Object { $_.Member.Title -eq $members.Title }).Count) {
+    (Get-PnPList -Identity "Lists/Countries").RoleAssignments.GetByPrincipal($members).DeleteObject(); Invoke-PnPQuery
+    Write-Host "  «Країни» $($members.Title) : права списка сняты (CEO видят только PMO и владельцы)"
 }
+# «Назви країн» — назви и переводы нужны всем (выбор и экран); ведёт PMO
+Set-ListRoles "Lists/CountryNames" @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_DIR }
 # свежие проверки приложения перед записью — фильтры по индексированным полям
 foreach ($ix in @(@("Lists/Projects", "Title"), @("Lists/StatusReports", "srProject"), @("Lists/RisksIssues", "riProject"), @("Lists/ProjectComments", "cmProject"),
                   @("Lists/ProjectTeam", "tmProject"), @("Lists/ReportApprovals", "apReport"), @("Lists/ReportApprovals", "apProject"), @("Lists/ProjectAssignments", "paProject"), @("Lists/NotifyState", "Title"), @("Lists/KeyChanges", "kcDate"))) {
@@ -912,7 +956,7 @@ foreach ($lib in @("SitePages", "SiteAssets", "Shared Documents")) {
     if (Get-PnPList -Identity $lib -ErrorAction SilentlyContinue) { Set-ListRoles $lib @{ $members.Title = $ROLE_READ; $PMO_GROUP = $ROLE_READ } }
 }
 # списки портала не видны в «Вміст сайту» и поиске по сайту; приложение и владельцы открывают их по адресу
-$portalLists = @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/KeyChanges", "Lists/ProjectComments", "Lists/ProjectTeam", "Lists/ReportApprovals", "Lists/ProjectAssignments", "Lists/NotifyState", "Lists/ProjectState", "Lists/Countries") + $(if ($Feedback) { @("Lists/Feedback", "Lists/FeedbackPublic") } else { @() })
+$portalLists = @("Lists/Projects", "Lists/StatusReports", "Lists/RisksIssues", "Lists/KeyChanges", "Lists/ProjectComments", "Lists/ProjectTeam", "Lists/ReportApprovals", "Lists/ProjectAssignments", "Lists/NotifyState", "Lists/ProjectState", "Lists/Countries", "Lists/CountryNames") + $(if ($Feedback) { @("Lists/Feedback", "Lists/FeedbackPublic") } else { @() })
 foreach ($u in $portalLists) {
     $l = Get-PnPList -Identity $u -Includes Hidden
     if (-not $l.Hidden) { Set-PnPList -Identity $u -Hidden $true | Out-Null; Write-Host "    скрыт список $u" }

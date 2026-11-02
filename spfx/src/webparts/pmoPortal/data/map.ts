@@ -115,3 +115,15 @@ export const CHANGE_EXPAND = 'kcChangedBy';
 export const mapComment = (r: any): Comment => ({ id: r.Id, projectId: r.cmProjectId, text: s(r.cmText), created: s(r.Created), author: mapPerson(r.Author) });
 export const mapChange = (r: any): ChangeEntry => ({ id: r.Id, projectId: r.kcProjectId, date: s(r.kcDate), who: mapPerson(r.kcChangedBy),
   kind: s(r.kcKind), field: s(r.kcField), from: s(r.kcFrom), to: s(r.kcTo), reason: s(r.kcReason) , item: typeof r.kcItem === 'number' && r.kcItem > 0 ? r.kcItem : undefined });
+
+/** Довідник країн: «Назви країн» (читают все) и «Країни» (CEO — только PMO и владельцы). */
+export const CNAME_SELECT = 'Id,Title,cnEn,cnRu,cnOrder,cnActive,Modified';
+export const mapCountryName = (r: any): { id: number; name: string; en: string; ru: string; order: number | null; active: boolean | null; modified: string } =>
+  ({ id: r.Id, name: s(r.Title), en: s(r.cnEn), ru: s(r.cnRu), order: typeof r.cnOrder === 'number' ? r.cnOrder : null,
+    active: typeof r.cnActive === 'boolean' ? r.cnActive : null, modified: s(r.Modified) });
+export const CCEO_SELECT = ['Id', 'Title', 'Modified', ...people('coCeo')].join(',');
+export const CCEO_EXPAND = 'coCeo';
+export interface CountryCeo { id: number; name: string; ceo: Person[]; modified: string }
+export const mapCountryCeo = (r: any): CountryCeo => ({ id: r.Id, name: s(r.Title).trim(), modified: s(r.Modified),
+  ceo: (Array.isArray(r.coCeo) ? r.coCeo : []).map(mapPerson).filter((x: Person | null): x is Person => !!x) });
+
