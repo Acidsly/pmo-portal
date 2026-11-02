@@ -27,8 +27,12 @@ function G([string]$url) { try { return Invoke-PnPGraphMethod -Url $url -Method 
 $enc = [uri]::EscapeDataString($Email)
 $sel = "displayName,mail,userPrincipalName,jobTitle,accountEnabled,proxyAddresses,userType,id"
 $u = G "v1.0/users/$enc`?`$select=$sel"
-# по почте: учётные записи межтенантной синхронизации (UPN …#EXT#@…, почта — адрес в своём тенанте)
-if (-not $u) { $u = @((G "v1.0/users?`$filter=mail eq '$($Email -replace "'", "''")'&`$select=$sel").value)[0] }
+# по почте: гость (UPN имя_домен#EXT#@тенант, адрес — mail или otherMails) и учётные записи межтенантной синхронизации
+if (-not $u) {
+    $q = $Email.Replace("'", "''")
+    $u = @((G "v1.0/users?`$filter=mail eq '$q' or otherMails/any(x:x eq '$q')&`$select=$sel").value)[0]
+    if ($u) { Write-Host "Entra ID: найден по почте — $($u.userType) · UPN $($u.userPrincipalName)" }
+}
 if (-not $u) { Write-Host "Entra ID: пользователь $Email не найден (ни по UPN, ни по почте)." -ForegroundColor Red; return }
 $enc = [uri]::EscapeDataString([string]$u.id)
 $mail = ([string]($u.mail ?? $u.userPrincipalName)).ToLowerInvariant()

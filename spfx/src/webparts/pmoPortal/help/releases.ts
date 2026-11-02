@@ -78,6 +78,16 @@ export const RELEASES: [Release[], Release[], Release[]] = [
    "html": "<p><b>Нове</b></p>\n<ul>\n<li><b>Країна</b> проєкту: PMO обирає її при створенні, далі змінює через «Змінити PM / власника / країну». <b>CEO країни</b> бачить проєкти своїх країн і може коментувати. Колонка <b>Країна</b> у «Проєктах» і «Архіві», на «Головній» — <b>Портфель за країнами</b>.</li>\n</ul>"
   },
   {
+   "ver": "1.7.5.4",
+   "date": "28.10.2026",
+   "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>Зовнішнього учасника (гостя), якого ще немає на сайті, тепер можна знайти за повною адресою пошти — раніше пошук писав «Не знайдено».</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.5.3",
+   "date": "26.10.2026",
+   "html": "<p><b>Виправлено</b></p>\n<ul>\n<li>Зовнішнього учасника (гостя організації) тепер можна додати до команди проєкту, призначити PM, власником чи відповідальним за ризик. Пошук людей пише «Не знайдено», якщо нікого не знайдено, а учасника команди, якого не вибрано зі списку, портал не плутає з порожньою роллю. Для гостей адміністратор має запросити людину до організації й дозволити гостей на сайті.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.5.2",
    "date": "20.10.2026",
    "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення без змін у роботі порталу.</li>\n</ul>"
@@ -360,6 +370,16 @@ export const RELEASES: [Release[], Release[], Release[]] = [
    "html": "<p><b>New</b></p>\n<ul>\n<li>Project <b>Country</b>: the PMO chooses it when creating a project and later changes it with \"Change PM / owner / country\". The <b>country CEO</b> sees the projects of their countries and can comment. <b>Country</b> column in \"Projects\" and \"Archive\"; <b>Portfolio by country</b> on the home page.</li>\n</ul>"
   },
   {
+   "ver": "1.7.5.4",
+   "date": "28.10.2026",
+   "html": "<p><b>Fixed</b></p>\n<ul>\n<li>An external participant (guest) who is not yet on the site can now be found by their full e-mail address — the search used to show «Not found».</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.5.3",
+   "date": "26.10.2026",
+   "html": "<p><b>Fixed</b></p>\n<ul>\n<li>An external participant (a guest of the organization) can now be added to the project team or assigned as PM, owner or risk owner. The people search shows «Not found» when nobody matches, and a team member not selected from the list is no longer reported as a missing role. For guests, the administrator must invite the person to the organization and allow guests on the site.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.5.2",
    "date": "20.10.2026",
    "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update with no changes to how the portal works.</li>\n</ul>"
@@ -640,6 +660,16 @@ export const RELEASES: [Release[], Release[], Release[]] = [
    "ver": "1.7.6.0",
    "date": "21.10.2026",
    "html": "<p><b>Новое</b></p>\n<ul>\n<li><b>Страна</b> проекта: PMO выбирает её при создании, дальше меняет через «Сменить PM / владельца / страну». <b>CEO страны</b> видит проекты своих стран и может комментировать. Колонка <b>Страна</b> в «Проектах» и «Архиве», на «Главной» — <b>Портфель по странам</b>.</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.5.4",
+   "date": "28.10.2026",
+   "html": "<p><b>Исправлено</b></p>\n<ul>\n<li>Внешнего участника (гостя), которого ещё нет на сайте, теперь можно найти по полному адресу почты — раньше поиск писал «Не найдено».</li>\n</ul>"
+  },
+  {
+   "ver": "1.7.5.3",
+   "date": "26.10.2026",
+   "html": "<p><b>Исправлено</b></p>\n<ul>\n<li>Внешнего участника (гостя организации) теперь можно добавить в команду проекта, назначить PM, владельцем или ответственным за риск. Поиск людей пишет «Не найдено», если никого не нашлось, а участника команды, не выбранного из списка, портал не путает с пустой ролью. Для гостей администратор должен пригласить человека в организацию и разрешить гостей на сайте.</li>\n</ul>"
   },
   {
    "ver": "1.7.5.2",

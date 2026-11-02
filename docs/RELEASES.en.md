@@ -98,6 +98,16 @@
 **New**
 - Project **Country**: the PMO chooses it when creating a project and later changes it with "Change PM / owner / country". The **country CEO** sees the projects of their countries and can comment. **Country** column in "Projects" and "Archive"; **Portfolio by country** on the home page.
 
+## 1.7.5.4 · 28.10.2026
+
+**Fixed**
+- An external participant (guest) who is not yet on the site can now be found by their full e-mail address — the search used to show «Not found».
+
+## 1.7.5.3 · 26.10.2026
+
+**Fixed**
+- An external participant (a guest of the organization) can now be added to the project team or assigned as PM, owner or risk owner. The people search shows «Not found» when nobody matches, and a team member not selected from the list is no longer reported as a missing role. For guests, the administrator must invite the person to the organization and allow guests on the site.
+
 ## 1.7.5.2 · 20.10.2026
 
 **Changed**

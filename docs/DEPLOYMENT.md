@@ -152,7 +152,7 @@ Install-Module Az.Accounts, Az.Resources, Az.Automation -Scope CurrentUser   # �
 
 Где запускать:
 - **Azure Automation** (рабочий режим; вход `Connect-AzAccount … -UseDeviceAuthentication`, модули Az.Accounts, Az.Resources, Az.Automation):
-  1. `scripts/New-PMOAutomation.ps1 [-Wait]` — группа `rg-pmo-automation`, учётная запись `aa-pmo-sync` (Germany West Central) с системной управляемой учётной записью, среда PowerShell 7.6 `PowerShell-7.6-PnP` с PnP.PowerShell 3.4.1 (`-PsVersion`; прежняя `PowerShell-7.4-PnP` не удаляется — в ней прод-runbook до выпуска из `main`, после него её можно удалить в портале), зашифрованная переменная кэша `pmo-managers-<env>` (`-CacheEnvs`, по умолчанию `test`);
+  1. `scripts/New-PMOAutomation.ps1 [-Wait]` — группа `rg-pmo-automation`, учётная запись `aa-pmo-sync` (Germany West Central) с системной управляемой учётной записью, среда PowerShell 7.6 `PowerShell-7.6-PnP` с PnP.PowerShell 3.4.1 (`-PsVersion`; с 22.10.2026 в ней все runbook — `PMO-Sync`, `PMO-Sync-Test`, `PMO-WhoAmI`; прежняя `PowerShell-7.4-PnP` больше не используется, её можно удалить в портале; в Azure среда 7.6 пока выполняет PowerShell 7.6.0-preview.5), зашифрованная переменная кэша `pmo-managers-<env>` (`-CacheEnvs`, по умолчанию `test`);
   2. `scripts/Grant-PMOAutomation.ps1 -SiteUrl <сайт> -DeployClientId <PMO Deploy>` (глобальный администратор) — Sites.Selected, User.Read.All и FullControl только на сайт портала (для второго сайта — с `-SkipAppRoles`);
   3. `scripts/Build-Runbook.ps1` → коммит → `scripts/Publish-Runbook.ps1 -Env test|prod`;
   4. `scripts/Set-AzureSchedule.ps1` (см. выше).
@@ -182,6 +182,16 @@ New-ApplicationAccessPolicy -AppId <PMO Sync> -PolicyScopeGroupId "PMO Sync send
 Проект в архиве — только просмотр для всех, включая PM; полный доступ — только у владельцев сайта. Статус-отчёт не от PM синхронизация не применяет.
 
 Остальные пользователи проект не видят — ни в приложении, ни в списках, ни в поиске. Главная приложения считает сводку только по видимым пользователю проектам.
+
+### Внешние участники (гости)
+
+Человека не из организации (например, подрядчика с адресом gmail.com) можно сделать участником команды, PM, владельцем или ответственным за риск, только если он **гость организации** и сайт пускает гостей. Иначе поиск людей в портале его не находит («Не знайдено…»), а SharePoint отвечает «Не вдалося знайти вказаного користувача» — и приложению, и синхронизации.
+
+1. **Гость в Entra ID.** Администратор Microsoft 365: https://entra.microsoft.com → Identity → Users → All users → New user → **Invite external user**. Гость должен принять приглашение (Invitation state — «Accepted»). Работа с человеком в Teams ещё не значит, что он гость: внешний чат Teams и общие каналы гостевую запись не создают. Проверить: `-Action whois -Email <адрес>` — гость находится по почте и по всем адресам (`proxyAddresses`); строка `SharePoint: … → …#ext#@…` значит, что сайт его видит, `→ <сам адрес>` — не видит.
+2. **Гости на сайте.** SharePoint admin center (https://smarthrua-admin.sharepoint.com) → Sites → Active sites → сайт (`pmo-test` / `ppm` — проверьте URL на вкладке General: названия сайтов одинаковые) → Settings → **External file sharing = Existing guests**. Это самый узкий уровень: сайт пускает только уже приглашённых гостей и никого не приглашает сам. Если пункт недоступен, тот же уровень сначала разрешается для тенанта: Policies → Sharing. Без этого гость не находится ни по почте, ни по логину `…#ext#@…` (проверено на тесте 26.10.2026: после смены настройки — сразу).
+3. **В портале** — набрать **адрес почты** гостя (не логин `имя_домен#ext#…`) и выбрать человека из списка. Подсказки гостей по части имени на сайтах выключены (`ShowPeoplePickerSuggestionsForGuestUsers = False`): гостя, которого ещё нет среди пользователей сайта, поиск SharePoint не находит даже по полному адресу. Поэтому, если поиск пуст и набран полный адрес, портал сам просит SharePoint найти человека по адресу (`ensureuser`) — гость появляется в списке и добавляется в пользователи сайта (с 1.7.5.4). По части имени гость находится, только когда он уже есть среди пользователей сайта. Права и «Учасники сайту» синхронизация выдаёт в ближайший запуск, как всем.
+
+Портал сохраняет человека по логину из поиска (у гостя он `имя_домен#ext#@тенант`, а не адрес почты) — с 1.7.5.3.
 
 **Power BI** читает данные от имени владельца набора данных и видит всё. Если отчёт будет открыт PM, настройте в нём RLS (ограничение строк) по e-mail участников — либо давайте доступ к отчёту только группе PMO.
 

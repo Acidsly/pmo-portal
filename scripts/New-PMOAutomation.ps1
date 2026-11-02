@@ -8,8 +8,8 @@
     Идемпотентно: повторный запуск ничего не дублирует.
       1. Группа ресурсов и учётная запись Automation с системной управляемой учётной записью (ролей Azure ей не выдаётся).
       2. Среда выполнения PowerShell 7.6 с пакетом PnP.PowerShell (из PowerShell Gallery; импорт 10–30 мин).
-         Прежняя среда PowerShell-7.4-PnP не удаляется: прод-runbook PMO-Sync работает в ней до выпуска из main
-         (поддержка PowerShell 7.4 заканчивается 10.11.2026).
+         С 22.10.2026 все runbook — в PowerShell 7.6 (поддержка 7.4 заканчивается 10.11.2026); прежняя среда
+         PowerShell-7.4-PnP не используется.
       3. Зашифрованная переменная кэша оргструктуры pmo-managers-<env>.
     Вход в Azure выполняет человек заранее: Connect-AzAccount -Tenant <tenant> -Subscription <sub> -UseDeviceAuthentication.
     Выводит Object ID и App ID управляемой учётной записи — они нужны для прав (этап 3).
