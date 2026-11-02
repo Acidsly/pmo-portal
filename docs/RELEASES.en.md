@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.10.2 · 02.11.2026
+
+**Changed**
+- «Detailed system overview»: the new view name «High risks and issues».
+
 ## 1.7.10.1 · 02.11.2026
 
 **Changed**

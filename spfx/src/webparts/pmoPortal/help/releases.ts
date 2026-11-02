@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.10.2",
+   "date": "02.11.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>«Детальний огляд системи»: нова назва подання «Високі ризики та проблеми».</li>\n</ul>"
+  },
+  {
    "ver": "1.7.10.1",
    "date": "02.11.2026",
    "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення: версії тесту й проду вирівняно, без змін у роботі порталу.</li>\n</ul>"
@@ -300,6 +305,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.10.2",
+   "date": "02.11.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>«Detailed system overview»: the new view name «High risks and issues».</li>\n</ul>"
+  },
+  {
    "ver": "1.7.10.1",
    "date": "02.11.2026",
    "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update: test and production versions aligned, no changes in how the portal works.</li>\n</ul>"
@@ -596,6 +606,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.10.2",
+   "date": "02.11.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>«Подробный обзор системы»: новое название представления «Высокие риски и проблемы».</li>\n</ul>"
+  },
   {
    "ver": "1.7.10.1",
    "date": "02.11.2026",
