@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.10.1",
+   "date": "02.11.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення: версії тесту й проду вирівняно, без змін у роботі порталу.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.10.0",
    "date": "02.11.2026",
    "html": "<p><b>Змінено</b> (рішення PMO за відгуками тестування R8)</p>\n<ul>\n<li>Оцінка «Бюджет»: у фазах «Ініціація» і «Планування» можна обрати «Не оцінено» — загальний стан тоді рахується з двох інших оцінок (#121, #123).</li>\n<li>Під оцінкою «Бюджет» — підказка за правилом PMO: перевищення прогнозу витрат над бюджетом до 9% — жовтий, від 10% — червоний; якщо обрано зеленішу оцінку — попередження (#137).</li>\n<li>Невідомі суми лишаються порожніми, а не «0»; у розрахунках порожня сума — 0 (#111).</li>\n<li>«Витрати на дату» — усі витрати проєкту разом, з початку проєкту (#122).</li>\n<li>Власник ризику обов'язковий; за замовчуванням — PM проєкту (#129).</li>\n</ul>"
@@ -295,6 +300,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.10.1",
+   "date": "02.11.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update: test and production versions aligned, no changes in how the portal works.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.10.0",
    "date": "02.11.2026",
    "html": "<p><b>Changed</b> (PMO decisions on R8 testing feedback)</p>\n<ul>\n<li>«Budget» rating: in the «Initiation» and «Planning» phases you can choose «Not rated» — overall health is then calculated from the other two ratings (#121, #123).</li>\n<li>A hint under the «Budget» rating by the PMO rule: cost forecast up to 9% over budget — yellow, 10% and more — red; a greener rating shows a warning (#137).</li>\n<li>Unknown amounts stay empty instead of «0»; calculations treat an empty amount as 0 (#111).</li>\n<li>«Cost to date» — all project costs together, since the project start (#122).</li>\n<li>The risk owner is required; by default — the project PM (#129).</li>\n</ul>"
@@ -586,6 +596,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.10.1",
+   "date": "02.11.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Техническое обновление: версии теста и прода выровнены, без изменений в работе портала.</li>\n</ul>"
+  },
   {
    "ver": "1.7.10.0",
    "date": "02.11.2026",

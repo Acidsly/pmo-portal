@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.10.1 · 02.11.2026
+
+**Changed**
+- Technical update: test and production versions aligned, no changes in how the portal works.
+
 ## 1.7.10.0 · 02.11.2026
 
 **Changed** (PMO decisions on R8 testing feedback)
