@@ -18,7 +18,8 @@ describe('только текст', () => {
     const t0 = Date.now();
     expect(toPlain('<script'.repeat(60000))).toBe('');
     toPlain('<a'.repeat(60000)); toPlain('[x](' + '['.repeat(60000)); toPlain('**a'.repeat(60000));
-    expect(Date.now() - t0).toBeLessThan(500);
+    // квадратичная работа на 60000 символов — минуты; запас на медленный сервер CI (там 500 мс не хватало — 1,3 с)
+    expect(Date.now() - t0).toBeLessThan(5000);
   });
 });
 describe('вставка в поле', () => {

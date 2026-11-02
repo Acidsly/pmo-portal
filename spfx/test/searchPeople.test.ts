@@ -31,3 +31,6 @@ test('часть имени или найдено поиском — ensureuser 
   expect((await b.repo.searchPeople('d@x.com')).length).toBe(1);
   expect(b.calls.length).toBe(1);
 });
+
+// модуль, а не общий скрипт: без export TypeScript в ts-jest видит const этого файла и соседнего с тем же именем (SpRepo, repoWith) как одну область — в CI падало
+export {};
