@@ -1,5 +1,11 @@
 # What's new
 
+## 1.7.8.1 · 02.11.2026
+
+**Fixed** (tests reconciled with all handled feedback)
+- On a phone, amount fields open a keyboard with a comma — cents can be typed (#131).
+- Columns menu: the first column can no longer be moved down — the order «strategic, priority, title» stays (#49).
+
 ## 1.7.8.0 · 02.11.2026
 
 **Fixed** (R8 testing feedback)

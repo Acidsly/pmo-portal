@@ -59,12 +59,12 @@ describe('#54 / #64 прототип: фактическая дата прове
   });
 });
 
-// BUG (прототип ≠ приложение, обещано в ответе на #54): после погодження «Дата завершення (факт)» попадает в карточку и архив,
+// Найдено сверкой 02.11.2026, исправлено (прототип ≠ приложение, обещано в ответе на #54): после погодження «Дата завершення (факт)» попадает в карточку и архив,
 // но не в «Історію змін» — applyReport прототипа считает diffs по vals без ae, а p.ae ставит уже после (prototype/pmo-prototype.html,
 // function applyReport: `if (complete){ p.archivedAt = r.date; if (r.ae) p.ae = r.ae; }`). В приложении — есть (overlay ['actualEnd','ae'],
 // синхронизация — $DISPLAY.pmActualEnd; regression-r3.test.tsx). Воспроизведение: отчёт «Завершено» с фактической датой → погодження PMO →
 // карточка → «Історія змін»: «Оновлено статус-звітом» — фаза, %, прогноз витрат, без «Дата завершення (факт)».
-test.skip('BUG #54 прототип: после погодження фактическая дата — в «Історії змін» проекта', () => {
+test(' #54 прототип: после погодження фактическая дата — в «Історії змін» проекта', () => {
   const { f, g, set } = openReport();
   const pid = g('f-p').value;
   ['sched', 'budget', 'res'].forEach(n => { f.querySelector(`input[name="${n}"][value="Зелений"]`).checked = true; });
@@ -105,22 +105,24 @@ test('#55 прототип: форма риска из карточки — та
   expect(q('.ph h2').textContent).toBe('Нова проблема');
 });
 
-test('#58 прототип: после сортировки и смены представления карточки — те же строки и в том же порядке, что таблица', () => {
-  const firstCells = (): string[] => qa('.tablewrap.dt.has-cards tbody tr').map((tr: W) => (tr.querySelector('[data-act="openp"], [data-act="riskopen"], [data-act="repopen"]') || tr).textContent.trim());
+test('#58 прототип: после сортировки и смены представления карточки — те же записи и в том же порядке, что таблица', () => {
+  // записи по порядку: в таблице — кнопка открытия в строке, в карточках — сама карточка (data-rid)
+  const tableIds = (): string[] => qa('.tablewrap.dt.has-cards tbody tr').map((tr: W) => (tr.querySelector('[data-rid]') as W).dataset.rid);
+  const cardIds = (): string[] => qa('.mcards .mcard').map((c: W) => c.dataset.rid);
   for (const page of ['reports', 'risks']) {
     q(`[data-act="nav"][data-page="${page}"]`).click();
+    expect(tableIds().length).toBeGreaterThan(1);
+    expect(cardIds()).toEqual(tableIds());
     const sorter = q('.dt thead [data-act="tsort"]') || q('.dt thead button');
-    if (sorter) { sorter.click(); }
-    const rows = qa('.tablewrap.dt.has-cards tbody tr').length;
-    expect(rows).toBeGreaterThan(0);
-    expect(qa('.mcards .mcard').length).toBe(rows);
-    // представление «Усі» / другое — состав меняется вместе с таблицей
-    const vs = q('select[data-act="view"]');
+    expect(sorter).not.toBeNull();
+    const before = tableIds(); sorter.click(); sorter.click();
+    expect(cardIds()).toEqual(tableIds());
+    expect(tableIds().slice().sort()).toEqual(before.slice().sort());   // те же записи
+    const vs = q('select[data-act="view"]'); expect(vs).not.toBeNull();
     for (const o of Array.from(vs.options) as W[]) {
       const s = q('select[data-act="view"]'); s.value = o.value; ev(s, 'change');
-      expect(qa('.mcards .mcard').length).toBe(qa('.tablewrap.dt.has-cards tbody tr').length);
+      expect(cardIds()).toEqual(tableIds());
     }
-    expect(firstCells().length).toBe(qa('.mcards .mcard').length);
   }
 });
 

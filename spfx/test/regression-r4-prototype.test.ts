@@ -80,13 +80,13 @@ describe('#119 некоректна дата: прототип', () => {
     const f = openNewRisk(); const t = typeDate(f, 'k-due', '31112099');
     expect(badShown(t)).toBe(true); expect(t.getAttribute('aria-invalid')).toBe('true');
   });
-  // BUG: у формі звіту прототипу обробник форми «input» (clearAll, #40) ховає всі .ferr і знімає aria-invalid — зокрема помилку дати,
+  // Знайдено звіркою 02.11.2026, виправлено (clearAll не чіпає .date-bad): у формі звіту прототипу обробник форми «input» (clearAll, #40) ховає всі .ferr і знімає aria-invalid — зокрема помилку дати,
   // яку щойно показало саме поле. Застосунок (DateIn) показує помилку одразу й не ховає її при правці інших полів; прототип — ні.
-  test.skip('BUG: звіт — повна некоректна дата: помилка одразу (без виходу з поля), як у застосунку', () => {
+  test(': звіт — повна некоректна дата: помилка одразу (без виходу з поля), як у застосунку', () => {
     const f = openReport(); const t = typeDate(f, 'f-plan', '31112026');
     expect(badShown(t)).toBe(true); expect(t.getAttribute('aria-invalid')).toBe('true');
   });
-  test.skip('BUG: звіт — правка іншого поля не ховає помилку некоректної дати, поки дату не виправлено', () => {
+  test(': звіт — правка іншого поля не ховає помилку некоректної дати, поки дату не виправлено', () => {
     const f = openReport(); const t = typeDate(f, 'f-plan', '31112026'); t.blur(); ev(t, 'blur'); expect(badShown(t)).toBe(true);
     const s = f.querySelector('#f-title') || f.querySelector('textarea'); s.value = 'Резюме'; ev(s, 'input');
     expect(t.dataset.bad).toBe('1');            // дата досі некоректна (збереження блокується)…
@@ -106,7 +106,7 @@ describe('#119 некоректна дата: прототип', () => {
   });
   test('інший проєкт у формі звіту — некоректний текст попереднього не лишається й не блокує', () => {
     const f = openReport(); const sel = f.querySelector('#f-p');
-    if (!sel || sel.tagName !== 'SELECT' || sel.options.length < 2) return;   // один проект — сценария нет
+    expect(sel && sel.tagName).toBe('SELECT'); expect(sel.options.length).toBeGreaterThan(1);   // сценарий есть всегда: у формы несколько проектов
     const t = typeDate(f, 'f-golive', '31112026'); t.blur(); ev(t, 'blur'); expect(badShown(t)).toBe(true);
     const other = Array.from(sel.options).map((o: W) => o.value).filter((v: string) => v !== sel.value)[0];
     sel.value = other; ev(sel, 'change');

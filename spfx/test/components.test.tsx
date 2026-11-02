@@ -50,6 +50,10 @@ describe('#41 / #45 поле суммы MoneyIn', () => {
     act(() => { Simulate.change(i, { target: { value: '1450.50' } } as any); }); expect(seen[seen.length - 1]).toBe(1451);
     act(() => { Simulate.blur(i); }); expect(i.value).toBe('1 451');
   });
+  test('#131 клавіатура телефона з комою: inputMode «decimal» (у «numeric» на iPhone коми немає)', () => {
+    mount(<Host init={0} seen={[]} />);
+    expect((root.querySelector('#m') as HTMLInputElement).inputMode).toBe('decimal');
+  });
   // #131: ручной ввод по символу — запятая / точка не теряются (было «1450,50» → 145 050)
   test.each([['1450,50', 1451, '1 451'], ['500.50', 501, '501'], ['600,5', 601, '601'], ['1 450,49', 1450, '1 450'], ['2,400,000', 2400000, '2 400 000']])(
     '#131 ввод «%s» по символу → %d', (typed, n, shown) => {

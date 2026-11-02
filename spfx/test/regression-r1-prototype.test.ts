@@ -105,6 +105,9 @@ describe('#10: номер нового проекта — автоматичес
     const after = codes();
     expect(after.length).toBe(before.length + 2);
     expect(new Set(after).size).toBe(after.length);
+    // как nextCode портала: следующий после наибольшего номера (не по id записи)
+    const n = (c: string): number => Number(c.slice(4)), max = Math.max(...before.map(n));
+    expect(after.filter(c => before.indexOf(c) < 0).map(n).sort((a, b) => a - b)).toEqual([max + 1, max + 2]);
   });
 });
 

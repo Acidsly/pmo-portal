@@ -177,3 +177,7 @@ test('прототип #119: «31.11.2026» у «Дата завершення (
   tx.value = '30112026'; ev(tx, 'input'); tx.blur();
   expect(fe.hidden).toBe(true); expect(g('f-plan').value).toBe('2026-11-30');
 });
+test('прототип #131: суми звіту — клавіатура з комою (inputmode «decimal»)', () => {
+  const { g } = openForm();
+  expect(['f-c', 'f-bp', 'f-fcost'].map(id => g(id).getAttribute('inputmode'))).toEqual(['decimal', 'decimal', 'decimal']);
+});

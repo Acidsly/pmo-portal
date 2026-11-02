@@ -13,7 +13,8 @@ export const MoneyIn: React.FC<{ id: string; value: number; onChange(v: number):
   const [focus, setFocus] = React.useState(false);
   const [txt, setTxt] = React.useState(String(Math.max(0, Math.round(p.value || 0))));
   React.useEffect(() => { if (!focus) setTxt(String(Math.max(0, Math.round(p.value || 0)))); }, [p.value, focus]);
-  return <input type="text" id={p.id} inputMode="numeric" autoComplete="off" disabled={p.disabled} aria-invalid={p.invalid || undefined}
+  // #131: «decimal» — на iPhone в цифровой клавиатуре есть запятая (копейки), у «numeric» её нет
+  return <input type="text" id={p.id} inputMode="decimal" autoComplete="off" disabled={p.disabled} aria-invalid={p.invalid || undefined}
     value={focus ? txt : groupDigits(parseMoney(txt))}
     onFocus={() => { setFocus(true); const n = parseMoney(txt); setTxt(n ? String(n) : ''); }}
     onBlur={() => { setFocus(false); p.onChange(parseMoney(txt)); }}

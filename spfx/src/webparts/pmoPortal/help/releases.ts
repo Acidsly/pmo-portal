@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.8.1",
+   "date": "02.11.2026",
+   "html": "<p><b>Виправлено</b> (звірка тестів з усіма опрацьованими відгуками)</p>\n<ul>\n<li>На телефоні поля сум відкривають клавіатуру з комою — копійки можна набрати (#131).</li>\n<li>Меню колонок: першу колонку більше не можна зсунути вниз — порядок «стратегічний, пріоритет, назва» не ламається (#49).</li>\n</ul>"
+  },
+  {
    "ver": "1.7.8.0",
    "date": "02.11.2026",
    "html": "<p><b>Виправлено</b> (відгуки тестування R8)</p>\n<ul>\n<li>Суми з копійками: «1450,50» у бюджеті, витратах і прогнозі тепер округлюється до 1 451 $, а не перетворюється на 145 050 $ (#131).</li>\n<li>Ризик або проблема: при перемиканні типу кожен тип зберігає свій опис — повернувшись до «Ризик», бачите опис ризику (#130).</li>\n<li>Некоректна дата (наприклад, 31.11.2026) більше не зникає мовчки: вона лишається в полі з поясненням, а форма не зберігається, доки дату не виправлено (#119).</li>\n<li>На iPhone кнопка календаря біля дати відкриває вибір дати (#116).</li>\n<li>На телефоні прострочений термін відкритого ризику виділено червоним, як у таблиці (#114).</li>\n<li>«Динаміка стану портфеля»: стовпчик «сьогодні» збігається з кільцем «Портфель за станом» — враховується стан картки, а не погоджений звіт, який до картки не застосовано (#117).</li>\n<li>«Історія змін»: ризик, створений і закритий протягом кількох хвилин, тепер має і «Додано», і «Закрито» (#115).</li>\n<li>Помічник ШІ («Перевірити з ШІ»): пункт плану, пояснений у «Не зроблено з плану і чому», більше не вважається невідображеним (#112).</li>\n</ul>\n<p><b>Перевірте повторно</b></p>\n<ul>\n<li>Ручне введення сум з копійками; перемикання «Ризик ↔ Проблема»; дата 31.11; календар на iPhone; червоні терміни ризиків на телефоні; «Динаміка» і кільце на головній.</li>\n</ul>"
@@ -270,6 +275,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.8.1",
+   "date": "02.11.2026",
+   "html": "<p><b>Fixed</b> (tests reconciled with all handled feedback)</p>\n<ul>\n<li>On a phone, amount fields open a keyboard with a comma — cents can be typed (#131).</li>\n<li>Columns menu: the first column can no longer be moved down — the order «strategic, priority, title» stays (#49).</li>\n</ul>"
+  },
+  {
    "ver": "1.7.8.0",
    "date": "02.11.2026",
    "html": "<p><b>Fixed</b> (R8 testing feedback)</p>\n<ul>\n<li>Amounts with cents: «1450,50» in the budget, cost and forecast now rounds to $1,451 instead of becoming $145,050 (#131).</li>\n<li>Risk or issue: when switching the type, each type keeps its own description — back on «Risk», you see the risk description (#130).</li>\n<li>An invalid date (e.g. 31.11.2026) no longer disappears silently: it stays in the field with an explanation, and the form is not saved until the date is fixed (#119).</li>\n<li>On iPhone the calendar button next to a date opens the date picker (#116).</li>\n<li>On a phone an overdue due date of an open risk is red, as in the table (#114).</li>\n<li>«Portfolio health over time»: the «today» column matches the «Portfolio by health» ring — the card state counts, not an approved report that was not applied to the card (#117).</li>\n<li>«Change history»: a risk created and closed within a few minutes now shows both «Added» and «Closed» (#115).</li>\n<li>AI assistant («Check with AI»): a plan item explained in «Not done from the plan and why» is no longer reported as missing (#112).</li>\n</ul>\n<p><b>Please re-check</b></p>\n<ul>\n<li>Typing amounts with cents; switching «Risk ↔ Issue»; the date 31.11; the calendar on iPhone; red risk due dates on a phone; «Portfolio health over time» and the ring on the home page.</li>\n</ul>"
@@ -536,6 +546,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.8.1",
+   "date": "02.11.2026",
+   "html": "<p><b>Исправлено</b> (сверка тестов со всеми обработанными отзывами)</p>\n<ul>\n<li>На телефоне поля сумм открывают клавиатуру с запятой — копейки можно набрать (#131).</li>\n<li>Меню колонок: первую колонку больше нельзя сдвинуть вниз — порядок «стратегический, приоритет, название» не ломается (#49).</li>\n</ul>"
+  },
   {
    "ver": "1.7.8.0",
    "date": "02.11.2026",
