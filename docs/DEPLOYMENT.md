@@ -344,11 +344,11 @@ pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action app   # сборка
 
 **Оценка бюджета «Не оцінено» (srBudget, 1.7.10.0) — порядок:** сначала `deploy` (значение выбора только добавляется; формула «Загальний стан» не меняется — «Не оцінено» не красная и не жёлтая), потом `-Action app`: отчёт с «Не оцінено» до `deploy` не сохранится. Синхронизация значение переносит как есть (`CalcRag` без изменений).
 
-**Выпуск 1.7.10.2 на прод (с 1.7.5.4: 1.7.6 «Країна», 1.7.7 бюджет через отчёт, гости, доработки R8) — сводный порядок, каждый шаг — после «да»:**
+**Выпуск 1.7.10.3 на прод (с 1.7.5.4: 1.7.6 «Країна», 1.7.7 бюджет через отчёт, гости, доработки R8) — сводный порядок, каждый шаг — после «да»:**
 1. Снимок «до»: `-Env prod -Action acl-export -File <до.json>` и `-Env prod -Action sync-dryrun` (текущий код).
 2. `main` = `origin/main`; `scripts/Publish-Runbook.ps1 -Env prod` (синхронизация понимает страну, CEO, бюджет и прогноз; полей ещё нет — читает пусто) → `-Env prod -Action sync-dryrun`: изменений в существующих карточках быть не должно (эталоны дополняются `pmBudget` / `pmForecastCost` / `pmCountry` из карточки без отката).
 3. `-Env prod -Action deploy -ConfirmProduction` — поля и значения только добавляются (`pmCountry`, «Країни» с CEO из `config/countries-prod.json`, `srBudgetPlan`, `srForecastCost`, `srNotDone`, `pmForecastCost`, `paCountry`, «Не оцінено» в srBudget); ничего не удаляется.
-4. `-Env prod -Action app -ConfirmProduction` — приложение 1.7.10.2.
+4. `-Env prod -Action app -ConfirmProduction` — приложение 1.7.10.3.
 5. `-Env prod -Action sync-dryrun` → `-Env prod -Action sync -ConfirmProduction` → `-Env prod -Action rebuild-permissions -ConfirmProduction` (CEO країни — просмотр).
 6. Снимок «после»: `acl-export -File <после.json>`, сравнение с «до»: никто не теряет доступ, добавляются только CEO країни; `whois` для CEO; первое задание `PMO-Sync` по расписанию — без ошибок.
 7. Prompt «Перевірка» в Copilot Studio уже обновлён (агент общий для теста и прода).

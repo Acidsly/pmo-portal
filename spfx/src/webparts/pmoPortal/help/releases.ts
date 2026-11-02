@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.10.3",
+   "date": "02.11.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Помічник ШІ («Заповнити з ШІ») пропонує оцінку «Бюджет» за правилом PMO: прогноз витрат більший за бюджет до 9% — жовтий, від 10% — червоний (#137).</li>\n</ul>"
+  },
+  {
    "ver": "1.7.10.2",
    "date": "02.11.2026",
    "html": "<p><b>Змінено</b></p>\n<ul>\n<li>«Детальний огляд системи»: нова назва подання «Високі ризики та проблеми».</li>\n</ul>"
@@ -305,6 +310,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.10.3",
+   "date": "02.11.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>The AI assistant («Fill with AI») suggests the «Budget» rating by the PMO rule: cost forecast up to 9% over budget — yellow, 10% and more — red (#137).</li>\n</ul>"
+  },
+  {
    "ver": "1.7.10.2",
    "date": "02.11.2026",
    "html": "<p><b>Changed</b></p>\n<ul>\n<li>«Detailed system overview»: the new view name «High risks and issues».</li>\n</ul>"
@@ -606,6 +616,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.10.3",
+   "date": "02.11.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Помощник ИИ («Заполнить с ИИ») предлагает оценку «Бюджет» по правилу PMO: прогноз затрат больше бюджета до 9% — жёлтый, от 10% — красный (#137).</li>\n</ul>"
+  },
   {
    "ver": "1.7.10.2",
    "date": "02.11.2026",

@@ -2271,6 +2271,41 @@
           "forecastEnd"
         ]
       }
+    },
+    {
+      "name": "#137: прогноз витрат і бюджет (план) — у project і draft, лише задані (правило оцінки «Бюджет» у «Чернетці»)",
+      "input": {
+        "project": {
+          "budget": 540000,
+          "forecastCost": 675000
+        },
+        "draft": {
+          "budgetPlan": 540000,
+          "forecastCost": 700000
+        }
+      },
+      "equal": {
+        "project.forecastCost": 675000,
+        "draft.forecastCost": 700000,
+        "draft.budgetPlan": 540000
+      }
+    },
+    {
+      "name": "#137: прогноз не задано (0) — поля немає",
+      "input": {
+        "project": {
+          "forecastCost": 0
+        },
+        "draft": {
+          "budgetPlan": 0,
+          "forecastCost": 0
+        }
+      },
+      "absent": [
+        "project.forecastCost",
+        "draft.forecastCost",
+        "draft.budgetPlan"
+      ]
     }
   ]
 }

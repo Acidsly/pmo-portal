@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.10.3 · 02.11.2026
+
+**Changed**
+- The AI assistant («Fill with AI») suggests the «Budget» rating by the PMO rule: cost forecast up to 9% over budget — yellow, 10% and more — red (#137).
+
 ## 1.7.10.2 · 02.11.2026
 
 **Changed**
