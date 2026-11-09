@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.11.2 · 09.11.2026
+
+**Changed**
+- Table headers: the filter funnel is always to the right of the column name, narrow columns (Health, Schedule, Budget, Resources) included — the header row is even.
+
 ## 1.7.11.1 · 02.11.2026
 
 **Changed**
