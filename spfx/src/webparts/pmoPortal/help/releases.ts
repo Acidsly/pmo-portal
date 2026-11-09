@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.11.2",
+   "date": "09.11.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Заголовки таблиць: воронка фільтра завжди праворуч від назви колонки — і у вузьких колонках («Стан», «Терміни», «Бюджет», «Ресурси»), рядок заголовків рівний.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.11.1",
    "date": "02.11.2026",
    "html": "<p><b>Змінено</b></p>\n<ul>\n<li>«Країни і CEO»: поля назв і порядку — у стилі інших форм порталу.</li>\n</ul>"
@@ -325,6 +330,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.11.2",
+   "date": "09.11.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>Table headers: the filter funnel is always to the right of the column name, narrow columns (Health, Schedule, Budget, Resources) included — the header row is even.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.11.1",
    "date": "02.11.2026",
    "html": "<p><b>Changed</b></p>\n<ul>\n<li>\"Countries and CEOs\": name and order fields now look like in the other portal forms.</li>\n</ul>"
@@ -646,6 +656,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.11.2",
+   "date": "09.11.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Заголовки таблиц: воронка фильтра всегда справа от названия колонки — и в узких колонках («Состояние», «Сроки», «Бюджет», «Ресурсы»), строка заголовков ровная.</li>\n</ul>"
+  },
   {
    "ver": "1.7.11.1",
    "date": "02.11.2026",
