@@ -36,17 +36,21 @@ An archived project is view-only for everyone. If the portal is empty for you, y
 
 ## Home
 
-- **Key figures strip** at the top: active projects; the share of projects with a recent report (no older than 14 days); for the PMO — reports awaiting approval; high risks (open, score 15 and above); overdue projects (the plan date has passed but the project is open). Click a figure to open the filtered list.
+- **Switch** under the title: **Current projects** or **Support projects** (with counts). Each mode counts only its own projects: figures, charts, tables, the approval queue. The choice is remembered.
+- **Key figures strip** at the top: active projects; **report on time** — the share of projects with no missed report day; for the PMO — reports awaiting approval; high risks (open, score 15 and above); overdue projects (the plan date has passed but the project is open). Click a figure to open the filtered list.
 - **Portfolio by health** — a ring: how many active projects are green, yellow, red and not rated yet; **Portfolio health over time** — how health changed over the last 12 weeks: every project as of the snapshot date by its latest approved report, grey — no approved report yet; today's column matches the ring.
 - **Risk map** 5 × 5: rows are probability, columns are impact, each cell shows the number of open risks. Click a cell to list its risks below the map.
 - **Portfolio by department** — active projects of each department broken down by health; the number inside each coloured part of the bar is how many projects are in that state.
 - **Portfolio by country** — the same by the "Country" field.
 - **Biggest schedule slips** — the three projects whose forecast completion is later than planned: by how many days and how many times the plan was moved. **Go-lives in the next 7 days** — go-live date, health, PM.
+- In **Support projects** mode: in support; report on time (Thursdays); awaiting approval; **open issues** (and how many are high); **support period ended** (and how many end within 30 days). Instead of slips and go-lives — **Support period: ended or ends within 30 days**; the trend is weekly.
 - Below — **Projects at risk**, **No recent status report**, **Management decisions needed** (the request from the project's latest report: a new report clears the previous request), **Open risks**; "See all" opens the full list.
 
 Everything is counted only over the projects you can see (excluding the archive).
 
-## Projects
+## Current projects
+
+Active projects except support projects.
 
 - **Tiles** or **List** — the switch at the top. Tiles are handier on a phone.
 - **Show:** All projects, Strategic, At risk, My projects (all) — where I am PM, owner or on the team, **I am PM** — only projects where I am the PM, No recent report, Overdue.
@@ -54,8 +58,17 @@ Everything is counted only over the projects you can see (excluding the archive)
 - **A long list** scrolls in its own window: column headers stay at the top, the horizontal scroll bar is always at the bottom of the visible part of the table, so the right-hand columns of the first rows are visible without scrolling the page down. On the phone — as before, without a separate window.
 - **Filters** (funnel and "Show") apply while you stay on the page: switching to another tab resets them to the defaults (column choice and sorting are remembered). Column widths do not change with filters.
 - **"Report" column** — the date of the last approved report, with the approval of the newest report below it (for "Awaiting approval" and "Returned" — also the report date on its own line). Hover the label to see when and by whom the report was submitted. The column filter (⏷): by freshness and by approval — "Approved", "Awaiting approval", "Returned", "No reports submitted".
-- **Project phase** (life-cycle stage) is a coloured label: Initiation — purple, Planning — blue, Execution — green, On hold — orange, Completed — green, Cancelled — grey. The dot next to it is the project health (green, yellow, red, grey — not rated).
-- **Colours:** a red completion date means the deadline has passed and the project is still open. The dot in the "Report" column is the freshness of the last approved report: green — up to 8 days, yellow — 9–14, red — over 14, grey — no approved reports yet (hover over the dot to see how many days old the report is). Below the date is the **approval of the newest report**: "Approved", "Awaiting approval" or "Returned" (for the last two — the report date).
+- **Project phase** (life-cycle stage) is a coloured label: Initiation — purple, Planning — blue, Execution — green, Support — teal, On hold — orange, Completed — green, Cancelled — grey. The dot next to it is the project health (green, yellow, red, grey — not rated).
+- **Colours:** a red completion date means the deadline has passed and the project is still open. The dot in the "Report" column is freshness by **report days**: current projects report on **Monday and Thursday**, support projects on **Thursday**. Green — none missed, yellow — one report day missed, red — two or more, grey — no approved reports yet. Only an approved report counts, by its submission date; on the report day itself nothing is missed yet. Hover over the dot to see the report date, how many days were missed and a report awaiting approval, if any.
+
+## Support projects
+
+Projects that are not finished but need ongoing care: bugs, maintenance, small changes. Phase — **Support**.
+
+- The tab works like "Current projects": tiles or list, "Show", columns, CSV.
+- **Status report — every Thursday.** Control is manual, as for current projects: schedule, budget, resources; "Planned completion date" is the end of the support period.
+- **Move a project to support** or back — with a status report (see "How to change the project phase"). A project in support cannot be "On hold" at the same time.
+- "Status reports" and "Risks and issues" have the views "Support projects", "Support — awaiting approval", "Support — open issues" and others; the home figures lead to them. Below the date is the **approval of the newest report**: "Approved", "Awaiting approval" or "Returned" (for the last two — the report date).
 
 ## Project card
 
@@ -123,14 +136,15 @@ Before a decision the portal checks the report's current state: if another PMO h
 
 ## How to change the project phase
 
-The phase (Initiation, Planning, Execution, On hold, Cancelled, Completed) changes **only through a status report** — it is not edited in the card.
+The phase (Initiation, Planning, Execution, Support, On hold, Cancelled, Completed) changes **only through a status report** — it is not edited in the card.
 
 1. **The PM** opens the project card → **Add status report**.
 2. In **Key indicators** chooses the new **Project phase** (and changes dates and % complete if needed).
 3. Fills in **Reason for changing indicators** — why the phase changes; the reason goes to the history.
 4. Rates schedule, budget, resources, writes the summary → **Save**. The report goes for approval.
 5. **The PMO** approves the report — the phase in the card changes, and "Report approval" and "Updated by status report" rows appear in the history ("old → new", the reason). If the PMO returns the report, the phase does not change and the PM submits a new report.
-6. **"Completed — move to archive"** or **"Cancelled — move to archive"** — after approval the project gets the "Completed" or "Cancelled" phase, the "Completed / cancelled on" date and the "Actual completion date" and moves to the "Archive" tab; after that it is view-only.
+6. **"Completed — move to archive"** or **"Cancelled — move to archive"** — after approval the project gets the "Completed" or "Cancelled" phase, the "Completed / cancelled on" date and the "Actual completion date" and moves to the "Archived projects" tab; after that it is view-only.
+7. **"Support"** — after approval the project moves to the "Support projects" tab and reports every Thursday. Back — a report with the "Execution" phase (major rework) or "Completed" / "Cancelled".
 
 ## Risks and issues
 
@@ -187,9 +201,9 @@ A person from outside the company (a contractor, a consultant) can be added to a
 
 «Not found» for the full address — the ticket is not done yet or the invitation was not accepted: check with the helpdesk.
 
-## Archive
+## Archived projects
 
-The "Archive" tab lists projects with the **Completed** or **Cancelled** phase (the "Project phase" column) and their completion / cancellation date, view-only (no new comments). Their risks — "Risks and issues" → "Show: Risks of archived projects". Navigation is the same as in "Projects": **List** or **Tiles**, "Show" (All projects, **Completed**, **Cancelled**, Strategic, My projects, I am PM), CSV and column choice; tiles show the completion / cancellation date.
+The "Archived projects" tab lists projects with the **Completed** or **Cancelled** phase (the "Project phase" column) and their completion / cancellation date, view-only (no new comments). Their risks — "Risks and issues" → "Show: Risks of archived projects". Navigation is the same as in "Current projects": **List** or **Tiles**, "Show" (All projects, **Completed**, **Cancelled**, Strategic, My projects, I am PM), CSV and column choice; tiles show the completion / cancellation date.
 
 ## Language and theme
 

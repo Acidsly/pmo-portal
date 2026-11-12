@@ -3,10 +3,10 @@ import { tv } from '../i18n/values';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
 import { Project, StatusReport, Risk } from '../data/types';
-import { isArch, isActive, freshness, riskScore, byOrder, staleFirst } from '../logic/status';
+import { isArch, isActive, isSupport, projectFresh, riskScore, byOrder, staleFirst } from '../logic/status';
 import { donutCounts, snapshots } from '../logic/dynamics';
 import { latestReportIds } from '../logic/views';
-import { kpis, riskMatrix, slips, launches, byDept, byCountry, Slip } from '../logic/analytics';
+import { kpis, riskMatrix, slips, launches, byDept, byCountry, Slip, supportKpis, supportEnding } from '../logic/analytics';
 import { KpiStrip, RiskMap, DeptBars } from '../components/Analytics';
 import { Page } from '../components/ctx';
 import { Wp } from '../components/Wp';
@@ -18,22 +18,31 @@ import { Strat, Prio, Compass, Flag, Plus } from '../components/Icons';
 
 const byDateDesc = (a: StatusReport, b: StatusReport): number => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
 
-/** Главная — порядок блоков и колонки pageHome прототипа (строки 1167–1190). */
+/** Главная — порядок блоков и колонки pageHome прототипа. 1.7.12: переключатель «Поточні проєкти / Проєкти підтримки» —
+ *  каждый режим считает только свои проекты (показатели, кольцо, динамика, карта, таблицы, очередь погодження). */
 export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
-  const { t, fl, today, go, openProject, openForm } = React.useContext(AppCtx);
+  const { t, fl, today, go, openProject, openForm, views, setView } = React.useContext(AppCtx);
+  const sup = views.home === 'support';
+  const pick = (v: 'cur' | 'support'): void => { setView('home', v); try { localStorage.setItem('pmo-homeseg', v === 'support' ? 'sup' : 'cur'); } catch { /* нет хранилища */ } };
   const byId: Record<number, Project> = {};
   data.projects.forEach(p => { byId[p.id] = p; });
   const P = (id: number): Project => byId[id];
-  const shown = (id: number): boolean => !!byId[id] && !isArch(byId[id].status);
+  const inSeg = (p: Project): boolean => isSupport(p.status) === sup;
+  const shown = (id: number): boolean => !!byId[id] && !isArch(byId[id].status) && inSeg(byId[id]);
 
-  const vis = data.projects.filter(p => !isArch(p.status)).sort(byOrder);
+  const active = data.projects.filter(p => !isArch(p.status));
+  const nCur = active.filter(p => !isSupport(p.status)).length, nSup = active.length - nCur;
+  const vis = active.filter(inSeg).sort(byOrder);
+  const pg = sup ? 'support' : 'projects';
   const prob = vis.filter(p => isActive(p.status) && (p.rag === 'Червоний' || p.rag === 'Жовтий'))
     .sort((a, b) => (a.rag === 'Червоний' ? 0 : 1) - (b.rag === 'Червоний' ? 0 : 1));
-  const stale = vis.filter(p => isActive(p.status) && ['r', 'na'].indexOf(freshness(p.lastUpdate, today)) >= 0)   // старше 14 дней или отчётов нет
+  const stale = vis.filter(p => isActive(p.status) && ['r', 'na'].indexOf(projectFresh(p, today)) >= 0)   // пропущено два дня подачи и больше или отчётов нет
     .sort(staleFirst);   // сначала без отчётов, дальше — от самого давнего
   // аналитика (задача 7): по видимым проектам без архива
   const k = kpis(vis, data.reports, data.risks, today);
   const sl = slips(vis, data.changes);
+  const sk = sup ? supportKpis(vis, data.risks, today) : undefined;
+  const ending = sup ? supportEnding(vis, today) : [];
   const ln = launches(vis, today);
   const latest = latestReportIds(data.reports);   // #132: запрос рішення — только из последнего отчёта проекта
   const dec = data.reports.filter(r => r.decision && latest.has(r.id) && shown(r.projectId)).sort(byDateDesc);
@@ -59,7 +68,7 @@ export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
     { head: fl('lastReport'), cell: p => <span title={p.lastReport}>{p.lastReport}</span>, cls: 'wide' },
     { head: t('cRepDate'), cell: p => <>{p.lastUpdate ? fmtDate(p.lastUpdate) : <span className="muted">{t('noReports')}</span>}<RepMark r={p.lastRep} /></> }];
   const staleCols: Col<Project>[] = [S, PR, { head: fl('title'), cell: link }, { head: fl('pm'), cell: p => <PersonCell p={p.manager} /> },
-    { head: fl('last'), cell: p => <><FreshDate iso={p.lastUpdate} fresh={freshness(p.lastUpdate, today)} none={t('noReports')} tip={freshTip(t, p.lastUpdate, today)} /><RepMark r={p.lastRep} /></> },
+    { head: fl('last'), cell: p => <><FreshDate iso={p.lastUpdate} fresh={projectFresh(p, today)} none={t('noReports')} tip={freshTip(t, p, today)} /><RepMark r={p.lastRep} /></> },
     { head: t('cStatusOnly'), cell: p => <StatusPill v={p.status} /> }];
   const decCols: Col<StatusReport>[] = [...byProject<StatusReport>(), { head: fl('rProj'), cell: r => link(P(r.projectId)) },
     { head: fl('rDate'), cell: r => fmtDate(r.date) }, { head: fl('rDecText'), cell: r => r.decisionText, cls: 'wide' },
@@ -75,33 +84,44 @@ export const Home: React.FC<{ data: PortalData }> = ({ data }) => {
     { head: fl('kOwner'), cell: k => <PersonCell p={k.owner} /> },
     { head: fl('kDue'), cell: k => k.due && k.due < today && k.status !== 'Закрито' ? <span className="late">{fmtDate(k.due)}</span> : fmtDate(k.due) }];
 
+  const endCols: Col<Project>[] = [{ head: fl('plan'), cell: p => p.planEnd < today ? <span className="late">{fmtDate(p.planEnd)}</span> : fmtDate(p.planEnd), cls: 'fit' },
+    { head: fl('rProj'), cell: link }, { head: t('cHealth'), cell: p => <RagDot v={p.rag} notRated={t('notRated')} />, cls: 'c-ico' }, { head: fl('pm'), cell: p => <PersonCell p={p.manager} /> }];
+  // «Динаміка»: поточні — без проектов, которые сейчас на підтримці (за весь период, решение 09.11); підтримка — только они, срезы через 7 дней
+  const dynProjects = data.projects.filter(p => isSupport(p.status) === sup);
+  const healthT = t(sup ? 'wpSupHealth' : 'wpHealth'), dynT = t(sup ? 'wpSupDyn' : 'wpDyn');
+
   return <>
     <div className="hero">
-      <div><h1 className="page-title">{t('dash')}</h1><p className="page-sub">{t('visible') + vis.length}</p></div>
+      <div><h1 className="page-title">{t('dash')}</h1><p className="page-sub">{t('visible') + active.length}</p></div>
       {data.canCreate ? <button className="btn primary" onClick={() => openForm('project')}><Plus />{t('newProject')}</button> : null}
     </div>
-    <KpiStrip k={k} pmo={data.canApprove} t={t} go={(pg, v) => go(pg as Page, v)} />
+    <div className="seg home-seg" role="group" aria-label={t('dash')} style={{ margin: '0 0 16px' }}>
+      <button aria-pressed={!sup} onClick={() => pick('cur')}>{t('homeCur')} <b>{nCur}</b></button>
+      <button aria-pressed={sup} onClick={() => pick('support')}>{t('homeSup')} <b>{nSup}</b></button></div>
+    <KpiStrip k={k} pmo={data.canApprove} t={t} go={(p, v) => go(p as Page, v)} sup={sk} />
     <div className="grid2">
-      <Wp title={t('wpHealth')}><Donut c={donutCounts(vis)} label={t('wpHealth')} active={t('active')} notRated={t('notRated')} /></Wp>
-      <Wp title={t('wpDyn')}><Dynamics pts={snapshots(data.projects, data.reports.filter(r => r.approval === 'Погоджено'), today)} label={t('wpDyn')} today={t('today')} hint={t('dynHint')} notRated={t('notRated')} /></Wp>
+      <Wp title={healthT}><Donut c={donutCounts(vis)} label={healthT} active={t('active')} notRated={t('notRated')} /></Wp>
+      <Wp title={dynT}><Dynamics pts={snapshots(dynProjects, data.reports.filter(r => r.approval === 'Погоджено'), today, sup ? 7 : 14)} label={dynT} today={t('today')} hint={t('dynHint')} notRated={t('notRated')} /></Wp>
     </div>
     <div className="grid2">
-      <Wp title={t('wpRiskMap')} more={() => go('risks', 'open')} moreLabel={t('showAll')}><RiskMap m={riskMatrix(vis, data.risks)} byId={byId} t={t} openRisk={(id, pid) => openForm('risk:' + id, pid)} /></Wp>
+      <Wp title={t('wpRiskMap')} more={() => go('risks', sup ? 'support' : 'curOpen')} moreLabel={t('showAll')}><RiskMap m={riskMatrix(vis, data.risks)} byId={byId} t={t} openRisk={(id, pid) => openForm('risk:' + id, pid)} /></Wp>
       {/* справа от карты рисков — напрями и країни друг под другом (как прототип) */}
       <div className="stack2">
         <Wp title={t('wpDept')}><DeptBars rows={byDept(vis)} t={t} empty={t('emptyProblem')} /></Wp>
         <Wp title={t('wpCountry')}><DeptBars rows={byCountry(vis)} t={t} empty={t('emptyProblem')} /></Wp>
       </div>
     </div>
-    <div className="grid2">
-      <Wp title={t('wpSlips')}><SimpleTable cols={slipCols} rows={sl} empty={t('emptySlips')} /></Wp>
-      <Wp title={t('wpLaunch')}><SimpleTable cols={lnCols} rows={ln} empty={t('emptyLaunch')} /></Wp>
-    </div>
+    {sup
+      ? <div className="dash"><Wp title={t('wpSupEnd')} more={() => go('support', 'late')} moreLabel={t('showAll')}><SimpleTable cols={endCols} rows={ending} empty={t('emptySupEnd')} /></Wp></div>
+      : <div className="grid2">
+        <Wp title={t('wpSlips')}><SimpleTable cols={slipCols} rows={sl} empty={t('emptySlips')} /></Wp>
+        <Wp title={t('wpLaunch')}><SimpleTable cols={lnCols} rows={ln} empty={t('emptyLaunch')} /></Wp>
+      </div>}
     <div className="dash">
-      <Wp title={t('wpProblem')} more={() => go('projects', 'problem')} moreLabel={t('showAll')}><SimpleTable cols={probCols} rows={prob} empty={t('emptyProblem')} /></Wp>
-      <Wp title={t('wpStale')} more={() => go('projects', 'stale')} moreLabel={t('showAll')}><SimpleTable cols={staleCols} rows={stale} empty={t('emptyStale')} /></Wp>
-      <Wp title={t('wpDecision')} more={() => go('reports', 'decision')} moreLabel={t('showAll')}><SimpleTable cols={decCols} rows={dec} empty={t('emptyDecision')} /></Wp>
-      <Wp title={t('wpRisks')} more={() => go('risks', 'open')} moreLabel={t('showAll')}><SimpleTable cols={riskCols} rows={open} empty={t('emptyRisks')} />
+      <Wp title={t('wpProblem')} more={() => go(pg, 'problem')} moreLabel={t('showAll')}><SimpleTable cols={probCols} rows={prob} empty={t('emptyProblem')} /></Wp>
+      <Wp title={t('wpStale')} more={() => go(pg, 'stale')} moreLabel={t('showAll')}><SimpleTable cols={staleCols} rows={stale} empty={t('emptyStale')} /></Wp>
+      <Wp title={t('wpDecision')} more={() => go('reports', sup ? 'supDecision' : 'curDecision')} moreLabel={t('showAll')}><SimpleTable cols={decCols} rows={dec} empty={t('emptyDecision')} /></Wp>
+      <Wp title={t('wpRisks')} more={() => go('risks', sup ? 'support' : 'curOpen')} moreLabel={t('showAll')}><SimpleTable cols={riskCols} rows={open} empty={t('emptyRisks')} />
         {openAll.length > open.length ? <p className="hint">{t('shown')} {open.length} {t('of')} {openAll.length}</p> : null}</Wp>
     </div>
   </>;

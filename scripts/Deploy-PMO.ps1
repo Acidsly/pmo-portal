@@ -245,8 +245,9 @@ if ($pmoRoles -notcontains $ROLE_READ) { Set-PnPGroupPermissions -Identity $PMO_
 
 $rag       = @("Зелений", "Жовтий", "Червоний")
 # архив — «Завершено» / «Скасовано» (прежнее «Архівний» переводит миграция 6a3 и затем убирает из выбора)
-$status    = @("Ініціація", "Планування", "Реалізація", "Призупинено", "Завершено", "Скасовано")
-$repStatus = @("Ініціація", "Планування", "Реалізація", "Призупинено", "Скасовано", "Завершено")
+# 1.7.12: «Підтримка» — проєкти підтримки (SPEC 5.2), отчёт по четвергам; добавляется к существующим полям без миграции
+$status    = @("Ініціація", "Планування", "Реалізація", "Підтримка", "Призупинено", "Завершено", "Скасовано")
+$repStatus = @("Ініціація", "Планування", "Реалізація", "Підтримка", "Призупинено", "Скасовано", "Завершено")
 $types     = @("Стратегічний", "Звичайний")
 # одна страна на проект (проект нескольких стран — копией на каждую); ставит PMO при создании, потом — «Призначення»
 # 1.7.11: стартовый набор довідника «Назви країн»; новые страны добавляет PMO в портале (поля выбора — FillInChoice)
@@ -379,6 +380,10 @@ F $R srRAG         Calculated "Загальний стан"   "Overall health"  
     ("<Formula>=IF($anyRed,""Червоний"",IF($anyYel,""Жовтий"",""Зелений""))</Formula>" +
      "<FieldRefs><FieldRef Name='srSchedule'/><FieldRef Name='srBudget'/><FieldRef Name='srResources'/></FieldRefs>")
 F $R srStatus      Choice   "Фаза проєкту"       "Project phase"       "Фаза проекта"       "Format='Dropdown'" (Choices $repStatus)
+# 1.7.12: F не меняет выбор у существующего поля — недостающие фазы («Підтримка») дописываются явно, прежние варианты остаются
+$curRs = @((Get-PnPField -List $R -Identity srStatus).Choices)
+$addRs = @($repStatus | Where-Object { $curRs -notcontains $_ })
+if ($addRs.Count) { Set-PnPField -List $R -Identity srStatus -Values @{ Choices = [string[]]($repStatus + @($curRs | Where-Object { $repStatus -notcontains $_ })) } | Out-Null; Write-Host "    фази у звітах: + $($addRs -join ', ')" }
 F $R srType        Choice   "Тип проєкту"        "Project type"        "Тип проекта"          "Format='Dropdown'" (Choices $types)
 F $R srProgress    Number   "% виконання"        "% complete"          "% выполнения"         "Min='0' Max='100' Decimals='0'"
 F $R srStart       DateTime "Дата старту"        "Start date"          "Дата старта"          "Format='DateOnly'"
@@ -879,9 +884,15 @@ $null     = Ensure-View $P "Мої проєкти" $pFields `
     ("$order<Where><And>$notArchived<Or><Eq><FieldRef Name='pmManager'/><Value Type='Integer'><UserID Type='Integer'/></Value></Eq>" +
      "<Or><Eq><FieldRef Name='pmOwner'/><Value Type='Integer'><UserID Type='Integer'/></Value></Eq>" +
      "<Includes><FieldRef Name='pmStakeholders' LookupId='TRUE'/><Value Type='Integer'><UserID Type='Integer'/></Value></Includes></Or></Or></And></Where>")
+# 1.7.12: свежесть — по дням подачи (поточні — пн и чт, підтримка — чт, SPEC правило 7); CAML дни недели не умеет — порог
+# приближённый (два пропущенных дня подачи: поточні — старше 7 дней, підтримка — старше 14); списки участникам не показываются, точное правило — в приложении
+$isSup = "<Eq><FieldRef Name='pmStatus'/><Value Type='Choice'>Підтримка</Value></Eq>"
+$notSup = "<Neq><FieldRef Name='pmStatus'/><Value Type='Choice'>Підтримка</Value></Neq>"
 $null     = Ensure-View $P "Немає свіжого звіту" @("pmType","pmPriority","LinkTitle","pmManager","pmLastUpdate","pmStatus") `
     ("<Where><And>$active<Or><IsNull><FieldRef Name='pmLastUpdate'/></IsNull>" +
-     "<Lt><FieldRef Name='pmLastUpdate'/><Value Type='DateTime'><Today OffsetDays='-14'/></Value></Lt></Or></And></Where>")
+     "<Or><And>$notSup<Lt><FieldRef Name='pmLastUpdate'/><Value Type='DateTime'><Today OffsetDays='-7'/></Value></Lt></And>" +
+     "<And>$isSup<Lt><FieldRef Name='pmLastUpdate'/><Value Type='DateTime'><Today OffsetDays='-14'/></Value></Lt></And></Or></Or></And></Where>")
+$null     = Ensure-View $P "Проєкти підтримки" $pFields "$order<Where>$isSup</Where>"
 $vArchive = Ensure-View $P "Архів" @("pmType","pmPriority","LinkTitle","pmStatus","pmManager","pmOwner","pmArchivedAt","pmPlanEnd","pmBudget","pmActualCost") `
     "<OrderBy><FieldRef Name='pmArchivedAt' Ascending='FALSE'/></OrderBy><Where>$archived</Where>"
 

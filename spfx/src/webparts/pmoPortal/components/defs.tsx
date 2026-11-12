@@ -3,7 +3,7 @@ import { tv } from '../i18n/values';
 import { ColDef } from '../logic/table';
 import { Project, StatusReport, Risk, Comment } from '../data/types';
 import { Rag } from '../logic/rag';
-import { freshness, isPlanLate, forecastDelta, budgetUse, budgetLevel, riskScore } from '../logic/status';
+import { projectFresh, isPlanLate, forecastDelta, budgetUse, budgetLevel, riskScore } from '../logic/status';
 import { daysBetween } from '../logic/dates';
 import { freshBucket, scoreBucket, apBucket, AP_BUCKET } from '../logic/views';
 import { RagDot, PersonCell, People, Score, Progress, Muted, ApBadge, StatusPill, fmtDate, money, freshColor, RepMark, freshTip, periodText } from './Bits';
@@ -16,7 +16,7 @@ export interface TableDefs<R> { lock: string; defaults: string[]; cols: Record<s
 export interface DefsCtx { t(k: string): string; fl(k: string): string; today: string; byId: Record<number, Project>; comments: Comment[]; open(id: number): void; openRisk(id: number, projectId: number): void; openReport(id: number, projectId: number): void; }
 
 const RAG_ORDER: Record<string, number> = { 'Червоний': 0, 'Жовтий': 1, 'Зелений': 2 };
-const STATUSES = ['Ініціація', 'Планування', 'Реалізація', 'Призупинено', 'Завершено', 'Скасовано'];
+const STATUSES = ['Ініціація', 'Планування', 'Реалізація', 'Підтримка', 'Призупинено', 'Завершено', 'Скасовано'];
 const ragOrder = (v: string): number => (RAG_ORDER[v] === undefined ? 3 : RAG_ORDER[v]);
 const clamp = (s: string): React.ReactNode => (s ? <span className="clamp2" title={s}>{s}</span> : <Muted />);
 const dateCell = (iso: string): React.ReactNode => (iso ? fmtDate(iso) : <Muted />);
@@ -59,10 +59,10 @@ export function projectDefs(x: DefsCtx, archive: boolean): TableDefs<Project> {
     rag: { label: t('cHealth'), cell: p => <RagDot v={p.rag} notRated={t('notRated')} />, sort: p => ragOrder(p.rag), filter: p => p.rag, flabel: S.ragLabel, cls: 'w-ico w-min' },
     // #29: отчёт на погодженні виден в колонке — и без погодженых отчётов («на погодженні · дата»), и рядом с последним погодженим
     // точка — свежесть последнего погодженого отчёта; ниже — погодження самого нового отчёта (#29: и отчёт на погодженні)
-    repDate: { label: t('cRepDate'), cell: p => <><span className="rag" title={freshTip(t, p.lastUpdate, today)}><span className="dot sm" style={{ background: freshColor(freshness(p.lastUpdate, today)) }} />{p.lastUpdate ? fmtDate(p.lastUpdate) : t('noReports')}</span>
+    repDate: { label: t('cRepDate'), cell: p => <><span className="rag" title={freshTip(t, p, today)}><span className="dot sm" style={{ background: freshColor(projectFresh(p, today)) }} />{p.lastUpdate ? fmtDate(p.lastUpdate) : t('noReports')}</span>
         <RepMark r={p.lastRep} /></>,
       // фильтр: свежесть (0–3) и #73 погодження самого нового отчёта (a1–a4)
-      sort: p => p.lastUpdate, filter: p => [freshBucket(p.lastUpdate, today), apBucket(p.lastRep)],
+      sort: p => p.lastUpdate, filter: p => [freshBucket(p, today), apBucket(p.lastRep)],
       flabel: v => (v[0] === 'a' ? (AP_BUCKET[v] ? <ApBadge v={AP_BUCKET[v]} /> : <span className="ilabel muted">{t('apNone')}</span>)
         : <span className="ilabel"><span className="dot sm" style={{ background: ['var(--g)', 'var(--y)', 'var(--r)', 'var(--na)'][Number(v)] }} />{t('fr' + v)}</span>) },
     repAge: { label: t('cRepAge'), cell: p => { const a = age(p); return a === null ? <Muted /> : String(a); }, sort: p => age(p), cls: 'num' },

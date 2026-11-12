@@ -10,7 +10,8 @@ import { AiSwitch } from '../ai/useAiSwitch';
 import { aiLangOf } from '../logic/aiCheck';
 import { aiEnableNote } from '../logic/aiLogin';
 
-const NAV: [Page, string][] = [['home', 'navHome'], ['projects', 'navProjects'], ['reports', 'navReports'], ['risks', 'navRisks'], ['archive', 'navArchive'], ['feedback', 'navFeedback']];
+// 1.7.12: три вкладки проектов — поточні, підтримка, архівні (порядок как в прототипе)
+const NAV: [Page, string][] = [['home', 'navHome'], ['projects', 'navProjects'], ['support', 'navSupport'], ['archive', 'navArchive'], ['reports', 'navReports'], ['risks', 'navRisks'], ['feedback', 'navFeedback']];
 
 /** Шапка прототипа (строки 465–481, renderChrome): логотип, вкладки, язык, тема, пользователь. */
 export const Header: React.FC<{ page: Page; lang: Lang; theme: Theme; userName: string; userEmail: string;

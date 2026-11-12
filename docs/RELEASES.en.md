@@ -1,5 +1,19 @@
 # What's new
 
+## 1.7.12.0 · 12.11.2026
+
+**New**
+- **Support projects.** A new project phase "Support" — for projects that are not finished but need ongoing care: bugs, maintenance. The PM moves a project to support with a status report (phase "Support", reason), the PMO approves. A separate **"Support projects"** tab; status report — every Thursday.
+- **Home: two modes** — the "Current projects / Support projects" switch. Each mode counts only its own projects; support shows open issues and support periods that ended or end within 30 days.
+
+**Changed**
+- The "Projects" and "Archive" tabs are now "Current projects" (without support) and "Archived projects".
+- **Report freshness follows report days:** current projects — Monday and Thursday, support — Thursday. Green — none missed, yellow — one report day missed, red — two or more. The "With a recent report" figure is now "Report on time".
+- Home figures open the view of their own category ("Current — awaiting approval", "Support — open issues" and others): the number on the tile matches the list.
+
+**Check again**
+- The dot colour in the "Report" column and the "No recent report" list — after the release some projects may turn yellow or red: the new rule is stricter.
+
 ## 1.7.11.2 · 09.11.2026
 
 **Changed**

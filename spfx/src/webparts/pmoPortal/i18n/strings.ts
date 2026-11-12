@@ -1886,11 +1886,6 @@ export const T: Record<string, L3> = {
   "one missed",
   "пропущен один"
  ],
- "freshTip": [
-  "Останній погоджений звіт — {n} дн. тому. Зелений — до 8 днів, жовтий — 9–14, червоний — понад 14.",
-  "Last approved report — {n} days ago. Green — up to 8 days, yellow — 9–14, red — over 14.",
-  "Последний согласованный отчёт — {n} дн. назад. Зелёный — до 8 дней, жёлтый — 9–14, красный — больше 14."
- ],
  "freshTipSlots": [
   "Останній погоджений звіт — від {d}, пропущено днів подачі: {n}.",
   "Last approved report — of {d}, missed report days: {n}.",

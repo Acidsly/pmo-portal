@@ -107,6 +107,20 @@ $STATE_DATES = @("pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd", "pmArchive
 # Проект в архиве: «Завершено» или «Скасовано» (векторы tests/cases/archive.json, те же — isArch приложения);
 # «Архівний» — прежнее значение, понимается до миграции (Deploy-PMO.ps1, раздел миграции архива)
 function Test-ArchivedStatus([string]$status) { return $status -in @("Завершено", "Скасовано", "Архівний") }
+# 1.7.12 «Підтримка» (SPEC 5.2): активный проект в этой фазе — проект підтримки (векторы tests/cases/kind.json — те же, что isSupport приложения)
+function Test-SupportStatus([string]$status) { return $status -eq "Підтримка" }
+# Пропущенные дни подачи статус-отчёта (SPEC правило 7, векторы tests/cases/fresh.json — те же, что missedSlots приложения и прототипа):
+# дни подачи S, где $last < S < $today (поточні — пн и чт, підтримка — чт); отчётов нет — $null. Сейчас — зеркало правила для векторов
+# (напоминания и дайджест считают дни — известный долг, SPEC раздел 9).
+function Get-MissedSlots([string]$last, [string]$today, [string]$kind) {
+    if (-not $last) { return $null }
+    $days = if ($kind -eq "support") { @([DayOfWeek]::Thursday) } else { @([DayOfWeek]::Monday, [DayOfWeek]::Thursday) }
+    $d = [datetime]::ParseExact($last, "yyyy-MM-dd", [Globalization.CultureInfo]::InvariantCulture).AddDays(1)
+    $end = [datetime]::ParseExact($today, "yyyy-MM-dd", [Globalization.CultureInfo]::InvariantCulture)
+    $n = 0
+    while ($d -lt $end) { if ($days -contains $d.DayOfWeek) { $n++ }; $d = $d.AddDays(1) }
+    return $n
+}
 # «Розглянуто» отзыва для колокольчика автора (fpDecidedAt, векторы tests/cases/feedback-decided.json): сменились статус или ответ
 # и статус не «Новий» — сейчас; прежняя строка без отметки и уже разобранный отзыв — давняя дата (вне окна колокольчика: о старых разборах
 # не сповіщаем — решение 12.10.2026); иначе «keep» — не трогать.

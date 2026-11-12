@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
-import { isArch, newestFirst, staleFirst } from '../logic/status';
+import { isArch, isSupport, newestFirst, staleFirst } from '../logic/status';
 import { PV, projectView } from '../logic/views';
 import { DataTable } from '../components/DataTable';
 import { projectDefs } from '../components/defs';
@@ -12,13 +12,13 @@ import { Hero, ViewSel, useDefsCtx } from './common';
 const MODE = 'pmo-projmode';
 const readMode = (): 'list' | 'tiles' => { try { return localStorage.getItem(MODE) === 'list' ? 'list' : 'tiles'; } catch { return 'tiles'; } };
 
-/** «Проєкти» (pageProjects прототипа): плитки или таблица, представления. */
+/** «Поточні проєкти» (pageProjects прототипа): активные без фазы «Підтримка» (1.7.12); плитки или таблица, представления. */
 export const Projects: React.FC<{ data: PortalData }> = ({ data }) => {
   const c = React.useContext(AppCtx); const { t } = c;
   const [mode, setMode] = React.useState<'list' | 'tiles'>(readMode);
   const pick = (m: 'list' | 'tiles'): void => { setMode(m); try { localStorage.setItem(MODE, m); } catch { /* нет хранилища */ } };
   const x = useDefsCtx(data);
-  const vis = data.projects.filter(p => !isArch(p.status));
+  const vis = data.projects.filter(p => !isArch(p.status) && !isSupport(p.status));
   // новые сверху; в «Немає свіжого звіту» — сначала без отчётов, дальше от самого давнего
   const rows = vis.filter(p => projectView(c.views.projects, p, c.today, c.me)).sort(c.views.projects === 'stale' ? staleFirst : newestFirst);
   const modeSw = <span className="seg" role="group">
