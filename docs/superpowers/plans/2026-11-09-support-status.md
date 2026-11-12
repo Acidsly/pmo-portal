@@ -44,32 +44,34 @@
 
 ## Этапы
 
+**12.11.2026:** этапы 1–7 выполнены — 1.7.12.0 на тесте (`deploy`, `app`, `PMO-Sync-Test`, расписания теста включены `-Live`); тест-планы `docs/testing/test-plan-support-{pm,pmo}.uk.{md,pdf}`. Решено по ходу: демо-проекты підтримки на тест не добавлялись (PM переводят свои проекты отчётом — это и есть проверка), CAML-порог «Немає свіжого звіту» — 7 / 14 дней.
+
 Кто: Claude — код, тесты, документация, сборка, выкладка на тест; владелец — Copilot Studio, приёмка, прод.
 
-- [ ] **Этап 1: категория и свежесть — приложение и прототип** (Claude, 1,5 сессии)
+- [x] **Этап 1: категория и свежесть — приложение и прототип** (Claude, 1,5 сессии)
   Файлы: `logic/status.ts` (`isSupport`, `projectKind`, `REPORT_DAYS`, `missedSlots`, `freshness(last, today, kind)` — `kind` **обязательный**), все вызовы в том же коммите: `defs.tsx:62,65`, `Tiles.tsx:21`, `ProjectCard.tsx:193`, `Home.tsx:32,62`, `views.ts:25,47` (`freshBucket`), `analytics.ts:16`, `Bits.tsx` (`freshTip` — текст «пропущено звітів: N»); `scripts/PMO.Common.ps1` (`Test-SupportStatus`, `Get-MissedSlots` — зеркало для векторов, потребителя в синхронизации пока нет); прототип — порт `missedSlots` / `freshness` вместо `age() > 14 / > 8` (`freshColor` 1523, `stale` 1616, `freshBucket` 1763, аналитика ~2010) и тексты `fr0` / `fr1` / `freshTip` / `emptyStale`; векторы `tests/cases/kind.json`, `tests/cases/fresh.json`; новый тест прототипа в jsdom с подменой даты (`jest.useFakeTimers().setSystemTime`, `TODAY` прототипа считается при загрузке), гоняет `fresh.json`; `tests/Test-Scripts.ps1` (векторы и запрет строки «Підтримка» вне разрешённых мест).
   Переписать под новое правило старые тесты свежести: `status.test.ts:14–18`, `views.test.ts:27–28`, `components.test.tsx:487` (`freshTip`), а также `analytics` / `regression-*`, если упадут.
   Приёмка: векторы проходят в Jest (приложение и прототип) и `Test-Scripts.ps1`; без новой реализации тесты свежести падают (проверено); `test:unit` и `build` зелёные в конце этапа.
 
-- [ ] **Этап 2: значение «Підтримка» везде** (Claude, 1–1,5 сессии; владелец — 15 мин в Copilot Studio)
+- [x] **Этап 2: значение «Підтримка» везде** (Claude, 1–1,5 сессии; владелец — 15 мин в Copilot Studio)
   Файлы: `Deploy-PMO.ps1` (`$status`, `$repStatus`; дополнение недостающих вариантов `srStatus` по образцу `pmStatus`, стр. 277–281, — общей функцией; представления «Підтримка» и «Немає свіжого звіту»: поточні `OffsetDays='-4'`, підтримка `'-7'`, — CAML-порог приближённый, списки участникам скрыты), `i18n/values.ts` и прототип `VAL`, цвета `SC` (`Bits.tsx`) и `STC`, списки фаз в `defs.tsx`, `ProjectForm.tsx`, `ReportForm.tsx` и прототипе, `tests/cases/report-form.json` и остальные векторы с перечнем фаз (`state.json`, `folders.json`, `notify.json`, `archive.json`, `ai-check.json`, `ai-context.json`), `ai/evalCases.json` (+1 кейс), `Seed-TestData.ps1` (2 проекта підтримки, коды — следующие свободные) и `Refresh-TestData.ps1` (их отчёты — по четвергам).
   Сверку покрытия начинать с `grep` по всему репозиторию по всем значениям фаз (в том числе `regression-r2.test.tsx`, `forms.test.ts`, `overlay-dynamics.test.ts`, `help/guide.ts`, `PMO.Digest.ps1`), а не со списка выше.
   Приёмка: сверка «значение → место» N/N, 0 расхождений (отдельный проход после кода); проверка в `Test-Scripts.ps1`: у `srStatus` есть дополнение вариантов; `deploy` повторно ничего не меняет; «Набір перевірок» помощника ИИ проходит (владелец).
 
-- [ ] **Этап 3: три вкладки** (Claude, 1,5 сессии)
+- [x] **Этап 3: три вкладки** (Claude, 1,5 сессии)
   Файлы: `components/ctx.ts` (`Page` + `support`, `Views.support`), `logic/route.ts` (`PAGES`, `DEFAULT_VIEWS`, `parse` / `format`; `#projects` и `#archive` не меняются), `components/Header.tsx` (`NAV`: Головна · Поточні проєкти · Проєкти підтримки · Архівні проєкти · Статус-звіти · Ризики та проблеми · Відгуки), `i18n/strings.ts` (названия вкладок uk / en / ru), `pages/Support.tsx` (по образцу `Projects.tsx`), `pages/Projects.tsx` (без підтримки), `logic/views.ts` (`SV`; `RV` / `KV` + «Підтримка»), `pages/Reports.tsx`, `pages/Risks.tsx`, все вызовы `freshness` с категорией (`defs.tsx`, `Tiles.tsx`, `ProjectCard.tsx`, `views.ts`, `Bits.tsx`), прототип — то же.
   Приёмка: `route.test.ts`, `prototypeNav.test.ts` (новая вкладка, старые адреса), рендер-тест `Support` в `components.test.tsx`; в «Поточні» нет проектов підтримки и наоборот; меню на ширине 375 px помещается (`mobile.test.ts` / ручная проверка прототипа).
 
-- [ ] **Этап 4: главная** (Claude, 1,5 сессии)
+- [x] **Этап 4: главная** (Claude, 1,5 сессии)
   Все функции аналитики получают уже отобранный набор проектов режима: `Home.tsx:27,29` (`shown`, `vis` — очередь погодження и решения), `analytics.ts:35,43,53` (зсуви, запуски, напрями / країни), `dynamics.ts` (`donutCounts`, `snapshots`); прототип — `visP` (1490), `isActive` в 1536, 1612–1617, 1677, 2010–2120, 2650, 3088 — каждое место решить по таблице выше.
   Файлы: `pages/Home.tsx` (переключатель, `#home/support`, режим в `localStorage`), `logic/analytics.ts` («звіт вчасно %» = `missed = 0`, вектор на каждую категорию; `kpis` и остальные — по переданному набору; `supportKpis`: на підтримці, звіт вчасно %, очікують погодження, відкриті проблеми / високі, період минув / спливає ≤ 30 дн.), `logic/dynamics.ts` (`snapshots(…, step)`), `components/Analytics.tsx`, тексты, прототип `pageHome`.
   Приёмка: векторы аналитики и динамики (шаг 7 и 14); рендер-тест обоих режимов; «Показати все» и показатели ведут во вкладку своего режима; скриншоты `docs/img/` (светлая / тёмная, 3 языка, телефон).
 
-- [ ] **Этап 5: документация** (Claude, 0,5 сессии)
+- [x] **Этап 5: документация** (Claude, 0,5 сессии)
   `docs/SPEC.md` (поле `pmStatus`, правила 7, 12, 17, разделы 6.1–6.2, новая вкладка, долг: пороги напоминаний и дайджеста), `docs/USER-GUIDE.{uk,en,ru}.md` + `scripts/spfx.sh npm run guide`, `docs/PROTOTYPE.md`, `docs/ROADMAP.md`, `CLAUDE.md` (бизнес-правила: фазы, свежесть), `CHANGELOG.md`.
   Приёмка: `tests/Test-Scripts.ps1`, `scripts/spfx.sh npm run test:unit`, `scripts/spfx.sh npm run build` — зелёные.
 
-- [ ] **Этап 6: кросс-ревью кода** (Sonnet) — находки исправить с тестом или согласовать с владельцем как долг. Затем `git rebase origin/main` и **последним коммитом** — версия приложения (следующая после `main`, ожидается 1.7.12.0) и `docs/RELEASES.{uk,en,ru}.md`.
+- [x] **Этап 6: кросс-ревью кода** (Sonnet) — находки исправить с тестом или согласовать с владельцем как долг. Затем `git rebase origin/main` и **последним коммитом** — версия приложения (следующая после `main`, ожидается 1.7.12.0) и `docs/RELEASES.{uk,en,ru}.md`.
 
 - [ ] **Этап 7: тест-сайт** (Claude, 0,5 сессии + 2–5 дней приёмки владельцем и PMO)
   `git fetch && git rebase origin/main` → `-Env test -Action deploy` → `-Action app` → `scripts/Build-Runbook.ps1`, коммит, `scripts/Publish-Runbook.ps1 -Env test` (меняется `PMO.Common.ps1`) → `sync-dryrun` → `sync` → `seed` / `refresh`. Проверка: PM фокус-группы переводит 1–2 проекта в підтримку отчётом, PMO погоджує; проект переходит во вкладку и в режим главной; свежесть в понедельник / пятницу.
