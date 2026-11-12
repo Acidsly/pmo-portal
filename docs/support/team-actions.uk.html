@@ -1,0 +1,202 @@
+<title>Підтримка: що зробити команді</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap">
+<style>
+/* Макет: документ для PMO про фазу «Підтримка» — шапка, картки-розділи, кроки, таблиці, скриншоти прототипу. Палітра — як у пам'ятках PPM (eclectic.group). */
+:root{
+  --bg:#F6F5F8; --paper:#FFFFFF; --ink:#141217; --text:#3D3A44; --muted:#7A7682; --line:#E2DFE8; --soft:#F1EFF5;
+  --coral:#F2805F; --violet:#8C6CCB; --violet-soft:#EEE8FA; --coral-soft:#FFEDE7; --ok:#2E9E57; --warn:#C98A0B; --ok-soft:#E7F5EC; --bad:#D9443B; --bad-soft:#FCEBEA;
+  --head:#0D0D0D; --head-text:#FFFFFF; --head-muted:#B9B4C2; --head-lead:#D9D5E0; --font:"Roboto","Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#121114; --paper:#1B1A1F; --ink:#F3F1F7; --text:#CFCBD6; --muted:#9A95A3; --line:#2F2C36; --soft:#24222A;
+  --coral:#FF957A; --violet:#AA8EE6; --violet-soft:#2C2540; --coral-soft:#3A2620; --ok:#45C06E; --warn:#F2B233; --ok-soft:#1D3325; --bad:#F0675E; --bad-soft:#3A2321; --head:#000; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#121114; --paper:#1B1A1F; --ink:#F3F1F7; --text:#CFCBD6; --muted:#9A95A3; --line:#2F2C36; --soft:#24222A;
+  --coral:#FF957A; --violet:#AA8EE6; --violet-soft:#2C2540; --coral-soft:#3A2620; --ok:#45C06E; --warn:#F2B233; --ok-soft:#1D3325; --bad:#F0675E; --bad-soft:#3A2321; --head:#000; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font:15px/1.6 var(--font);margin:0}
+.band{background:var(--head);color:var(--head-text);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:36px 30px}
+.in,.wrap{max-width:860px;margin:0 auto}
+.stripe{height:4px;background:linear-gradient(90deg,var(--coral) 0 50%,var(--violet) 50% 100%)}
+.eyebrow{font:500 12px/1 var(--font);letter-spacing:.12em;text-transform:uppercase;color:var(--head-muted)}
+h1{font:900 clamp(26px,5vw,40px)/1.08 var(--font);text-transform:uppercase;margin:12px 0 10px;text-wrap:balance}
+.lead{max-width:64ch;color:var(--head-lead);margin:0;font-size:16px}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px;display:grid;gap:22px}
+h2{font:900 14px/1.2 var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);margin:0 0 10px;display:flex;align-items:center;gap:10px;text-wrap:balance}
+h2::before{content:"";width:4px;height:17px;background:var(--coral);border-radius:2px;flex:none}
+h2 .who{font:500 11px/1 var(--font);letter-spacing:.06em;padding:5px 8px;border-radius:999px;background:var(--violet-soft);color:var(--ink)}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:18px 20px;min-width:0}
+.card > p{margin:0 0 10px;max-width:68ch}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:6px}
+.stat{background:var(--soft);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font:900 26px/1 var(--font);color:var(--ink);font-variant-numeric:tabular-nums}
+.stat span{display:block;font-size:13px;margin-top:6px;line-height:1.35}
+.note{font-size:13px;color:var(--muted);margin:10px 0 0}
+.step{display:grid;grid-template-columns:36px minmax(0,1fr);gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+.step:first-of-type{border-top:0;padding-top:4px}
+.n{width:28px;height:28px;border-radius:50%;background:var(--coral-soft);color:var(--ink);font:700 14px/28px var(--font);text-align:center;font-variant-numeric:tabular-nums}
+.step h3{font:700 15px/1.35 var(--font);color:var(--ink);margin:3px 0 6px}
+.step p{margin:0 0 8px;max-width:66ch}
+.path{display:inline-block;font:500 13px/1.4 var(--font);background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:2px 7px;color:var(--ink)}
+.ex{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:6px}
+.ex div{border-radius:8px;padding:8px 11px;font-size:13.5px;line-height:1.45}
+.ex .yes{background:var(--ok-soft)} .ex .no{background:var(--bad-soft)}
+.ex b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.ex .yes b{color:var(--ok)} .ex .no b{color:var(--bad)}
+.rule{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:6px}
+.rule div{border-radius:8px;padding:9px 11px;font-size:13.5px;background:var(--soft)}
+.rule b{display:block;color:var(--ink);font-size:13px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:0}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:560px}
+th,td{text-align:left;vertical-align:top;padding:9px 10px;border-top:1px solid var(--line)}
+th{font:700 11px/1.3 var(--font);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-top:0}
+td:first-child{font-weight:700;color:var(--ink)}
+.faq dt{font-weight:700;color:var(--ink);margin-top:12px}
+.faq dt:first-child{margin-top:0}
+.faq dd{margin:4px 0 0;max-width:68ch}
+ul{margin:4px 0 0;padding-left:20px} li{margin:4px 0}
+.shot{margin:12px 0 4px;display:grid;gap:8px}
+.shot img{display:block;width:auto;max-width:min(100%,520px);height:auto;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.legend{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:13.5px}
+.legend li{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;align-items:baseline;margin:0}
+.legend b{display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--coral);color:#fff;font:700 12px/22px var(--font);text-align:center}
+.ceo{display:grid;gap:8px}
+@media print{ .shot{break-inside:avoid} .ex,.rule,.stat,tr,.stats{break-inside:avoid} h2,h3{break-after:avoid} .card{break-inside:auto} }
+@media (max-width:600px){ .ex,.rule{grid-template-columns:1fr} .step{grid-template-columns:30px minmax(0,1fr);gap:10px} }
+
+.tag{display:inline-block;font:500 11px/1 var(--font);letter-spacing:.04em;padding:4px 8px;border-radius:999px;background:var(--soft);color:var(--ink);white-space:nowrap}
+.check{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:6px}
+.check li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px;margin:0}
+.check li::before{content:"";width:14px;height:14px;border:1.5px solid var(--muted);border-radius:4px;margin-top:4px}
+.tpl td{color:var(--muted);font-weight:400}
+</style>
+
+<header>
+  <div class="band"><div class="in">
+    <div class="eyebrow">PPM · для керівника, PMO і PM · проєкт рішення · 09.11.2026</div>
+    <h1>Підтримка: що зробити команді</h1>
+    <p class="lead">Що треба вирішити, підготувати і змінити в роботі, щоб фаза «Підтримка» і нові дні статус-звітів запрацювали. Як це виглядає в порталі — окремий документ «Проєкти підтримки в порталі».</p>
+  </div></div>
+  <div class="stripe"></div>
+</header>
+
+<main class="wrap">
+
+  <section class="card">
+    <h2>Хто що робить</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Хто</th><th>Що</th><th>Коли</th></tr></thead>
+      <tbody>
+        <tr><td>Керівник</td><td>затверджує регламент звітів і критерії підтримки; вирішує щодо проєктів, у яких минає період підтримки</td><td>до випуску; далі — щотижня</td></tr>
+        <tr><td>PMO</td><td>разом із PM складає перелік проєктів для підтримки; погоджує звіти в день подачі (пн і чт); доносить нові правила до PM</td><td>до випуску і в перший тиждень</td></tr>
+        <tr><td>PM поточних проєктів</td><td>звіт у понеділок і четвер</td><td>щотижня з дня випуску</td></tr>
+        <tr><td>PM проєктів підтримки</td><td>переводить проєкт у підтримку звітом; далі звіт щочетверга</td><td>перший четвер після випуску і далі</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="card">
+    <h2>Керівник <span class="who">рішення до випуску</span></h2>
+    <div class="step"><div class="n">1</div><div>
+      <h3>Затвердити регламент статус-звітів</h3>
+      <p>Поточні проєкти — понеділок і четвер, проєкти підтримки — четвер. Звіт подається в день подачі до кінця дня. Портал рахує пропуски саме за цими днями: зелений — без пропусків, жовтий — пропущено один, червоний — два і більше.</p>
+    </div></div>
+    <div class="step"><div class="n">2</div><div>
+      <h3>Затвердити, що вважається підтримкою</h3>
+      <p>Пропозиція для обговорення:</p>
+      <div class="ex">
+        <div class="yes"><b>Підтримка</b>систему запущено; робота — помилки, обслуговування, оновлення, дрібні зміни за зверненнями; є період (договір, рік) і бюджет на нього</div>
+        <div class="no"><b>Не підтримка</b>нова функціональність, новий етап, міграція — це поточний проєкт (Реалізація) або окремий новий проєкт</div>
+      </div>
+    </div></div>
+    <div class="step"><div class="n">3</div><div>
+      <h3>Домовитися про строк погодження звітів</h3>
+      <p>Свіжість рахується лише за погодженими звітами (за датою подання). Поки звіт на погодженні, він не рахується: якщо PMO не погодив звіт у день подачі, з наступного дня проєкт жовтий без провини PM, а два непогоджені звіти поспіль — червоний. Тому пропозиція: <b>PMO погоджує звіти в день подачі</b> — у понеділок і четвер до кінця дня. Після погодження колір відновлюється.</p>
+    </div></div>
+    <div class="step"><div class="n">4</div><div>
+      <h3>Щотижня дивитися режим «Проєкти підтримки» на головній</h3>
+      <p>Показник «Період підтримки минув» і блок «Період підтримки: минув або спливає за 30 днів» — сигнал для рішення: продовжити підтримку (PM подає звіт із новою датою завершення і бюджетом) або закрити (звіт із фазою «Завершено»).</p>
+    </div></div>
+  </section>
+
+  <section class="card">
+    <h2>PMO <span class="who">до випуску і перший тиждень</span></h2>
+    <div class="step"><div class="n">1</div><div>
+      <h3>Скласти з PM перелік проєктів для підтримки</h3>
+      <p>Пройти поточні проєкти у фазах «Реалізація» і «Призупинено» за критеріями керівника. Для кожного кандидата заповнити таблицю й узгодити її з керівником:</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Проєкт</th><th>PM</th><th>Чому підтримка</th><th>Кінець періоду підтримки</th><th>Бюджет на період</th></tr></thead>
+        <tbody class="tpl">
+          <tr><td>PRJ-…, назва</td><td>ПІБ</td><td>система в експлуатації з …, звернення, обслуговування</td><td>дд.мм.рррр</td><td>сума, $</td></tr>
+          <tr><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td></tr>
+        </tbody>
+      </table></div>
+    </div></div>
+    <div class="step"><div class="n">2</div><div>
+      <h3>Повідомити PM про нові правила</h3>
+      <p>Після випуску багато поточних проєктів одразу стануть жовтими або червоними: нове правило суворіше за попереднє (8 днів). Це очікувано; щоб повернутися до зеленого, достатньо подати звіт.</p>
+    </div></div>
+    <div class="step"><div class="n">3</div><div>
+      <h3>Погоджувати переходи у підтримку</h3>
+      <p>Перевірити в звіті: фаза «Підтримка», причина, нова «Дата завершення (план)» — кінець періоду, бюджет і прогноз на період. Якщо чогось бракує — повернути з коментарем.</p>
+    </div></div>
+    <div class="step"><div class="n">4</div><div>
+      <h3>Проблеми підтримки — у реєстр</h3>
+      <p>Помилки, що впливають на роботу, PM заносить у «Ризики та проблеми» з типом «Проблема». На головній вони рахуються в показнику «Відкриті проблеми».</p>
+    </div></div>
+  </section>
+
+  <section class="card">
+    <h2>PM <span class="who">проєкт переходить у підтримку</span></h2>
+    <p>Один статус-звіт, як і будь-яка зміна фази. Після погодження PMO проєкт з'явиться у вкладці «Проєкти підтримки».</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Поле звіту</th><th>Що вказати</th></tr></thead>
+      <tbody>
+        <tr><td>Фаза проєкту</td><td>«Підтримка»</td></tr>
+        <tr><td>Причина зміни показників</td><td>обов'язково: наприклад, «Систему запущено 02.03.2026, далі — підтримка за договором до 30.06.2027»</td></tr>
+        <tr><td>Дата завершення (план)</td><td>кінець періоду підтримки</td></tr>
+        <tr><td>Бюджет (план) і прогноз витрат</td><td>на період підтримки, якщо відрізняється від поточного (зміна — з причиною)</td></tr>
+        <tr><td>Терміни / Бюджет / Ресурси</td><td>оцінки, як зараз</td></tr>
+        <tr><td>Зроблено і план</td><td>що закрито за період і план на наступний тиждень</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="card">
+    <h2>PM <span class="who">щотижня</span></h2>
+    <div class="rule">
+      <div><b>Поточні проєкти</b>звіт у понеділок і четвер</div>
+      <div><b>Проєкти підтримки</b>звіт щочетверга</div>
+      <div><b>Пропустили</b>подайте звіт будь-якого дня — пропуски до його дати закриються після погодження</div>
+    </div>
+    <p style="margin-top:12px">У звіті підтримки корисно писати: скільки звернень і помилок закрито, що з обслуговування зроблено, що заплановано на тиждень, чи вистачає ресурсів і бюджету періоду.</p>
+    <p class="note">Повернути проєкт у роботу (велика доробка) — звіт із фазою «Реалізація». Закрити підтримку — звіт із фазою «Завершено» або «Скасовано», проєкт іде в архів.</p>
+  </section>
+
+  <section class="card">
+    <h2>Чекліст запуску</h2>
+    <ul class="check">
+      <li>Керівник затвердив регламент: поточні — пн і чт, підтримка — чт</li>
+      <li>Керівник затвердив критерії підтримки</li>
+      <li>PMO погоджує звіти в день подачі (понеділок і четвер)</li>
+      <li>PMO з PM склали і узгодили перелік проєктів для підтримки</li>
+      <li>PM повідомлено про нові правила і про те, що після випуску частина проєктів стане жовтою або червоною</li>
+      <li>Після перевірки на тестовому сайті — випуск на робочий портал</li>
+      <li>Перший тиждень: PM переводять проєкти зі списку в підтримку звітом, PMO погоджує</li>
+      <li>Через тиждень: керівник дивиться головну в обох режимах, PMO — «Немає свіжого звіту»</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Поки не змінюється</h2>
+    <ul>
+      <li>Години ресурсів і бюджет у межах годин — відкладено; бюджет підтримки контролюється вручну через статус-звіт.</li>
+      <li>Терміни за завданнями з helpdesk — пізніше (план R8).</li>
+      <li>Нагадування листом про пропущений звіт — вимкнені, як і зараз.</li>
+    </ul>
+  </section>
+
+</main>

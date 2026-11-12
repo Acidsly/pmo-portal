@@ -22,7 +22,7 @@
   --strat-bg:rgba(175,82,222,.12); --strat:#8e44c9;
   --pick-off:transparent; --pick-hover:rgba(0,0,0,.05);
   /* цвет раздела меню (значки Lucide), он же — метка сущности бокового окна */
-  --nv-home:#2563eb; --nv-projects:#7c3aed; --nv-reports:#0f766e; --nv-risks:#b45309; --nv-archive:#64748b; --nv-feedback:#be185d; --nv-ai:#6d28d9;
+  --nv-home:#2563eb; --nv-projects:#7c3aed; --nv-reports:#0f766e; --nv-risks:#b45309; --nv-support:#0a8f8a; --nv-archive:#64748b; --nv-feedback:#be185d; --nv-ai:#6d28d9;
   --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.06);
   --shadow-hi:0 2px 6px rgba(0,0,0,.06),0 18px 40px rgba(0,0,0,.10);
   --radius:20px;
@@ -38,7 +38,7 @@
     --g:#30d158; --y:#ffd60a; --r:#ff453a; --na:#48484a;
     --strat-bg:rgba(191,90,242,.2); --strat:#da8fff;
     --pick-off:rgba(255,255,255,.07); --pick-hover:rgba(255,255,255,.13);
-    --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-archive:#94a3b8; --nv-feedback:#f472b6; --nv-ai:#c4b5fd;
+    --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-support:#2dd4bf; --nv-archive:#94a3b8; --nv-feedback:#f472b6; --nv-ai:#c4b5fd;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
     --shadow-hi:0 2px 6px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.5);
   }
@@ -53,7 +53,7 @@
   --g:#30d158; --y:#ffd60a; --r:#ff453a; --na:#48484a;
   --strat-bg:rgba(191,90,242,.2); --strat:#da8fff;
   --pick-off:rgba(255,255,255,.07); --pick-hover:rgba(255,255,255,.13);
-  --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-archive:#94a3b8; --nv-feedback:#f472b6; --nv-ai:#c4b5fd;
+  --nv-home:#60a5fa; --nv-projects:#a78bfa; --nv-reports:#2dd4bf; --nv-risks:#fbbf24; --nv-support:#2dd4bf; --nv-archive:#94a3b8; --nv-feedback:#f472b6; --nv-ai:#c4b5fd;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
   --shadow-hi:0 2px 6px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.5);
 }
@@ -78,7 +78,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .nav .ni{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none;color:var(--nc);background:color-mix(in srgb,var(--nc) 14%,transparent)}
 .nav .ni svg{width:16px;height:16px}
 .nav [data-page=home]{--nc:var(--nv-home)}.nav [data-page=projects]{--nc:var(--nv-projects)}.nav [data-page=reports]{--nc:var(--nv-reports)}
-.nav [data-page=risks]{--nc:var(--nv-risks)}.nav [data-page=archive]{--nc:var(--nv-archive)}.nav [data-page=feedback]{--nc:var(--nv-feedback)}
+.nav [data-page=risks]{--nc:var(--nv-risks)}.nav [data-page=support]{--nc:var(--nv-support)}.nav [data-page=archive]{--nc:var(--nv-archive)}.nav [data-page=feedback]{--nc:var(--nv-feedback)}
 /* уже 1280 px меню и кнопки в одну строку не помещаются — меню своей строкой (с подписями; на телефоне — только значки) */
 /* меню своей строкой — разделы делят ширину поровну, без пустого места справа */
 @media (max-width:1279px){.nav{order:3;flex:1 0 100%}.nav button{flex:1 1 auto;justify-content:center}}
@@ -844,8 +844,8 @@ main { padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
   <div class="top-in">
     <div class="brand"><div class="logo" aria-hidden="true">PPM</div><div><div class="brand-name" id="siteName"></div><div class="brand-sub" id="siteSub"></div></div></div>
     <nav class="nav" aria-label="Navigation">
-      <button data-act="nav" data-page="home"></button><button data-act="nav" data-page="projects"></button>
-      <button data-act="nav" data-page="reports"></button><button data-act="nav" data-page="risks"></button><button data-act="nav" data-page="archive"></button><button data-act="nav" data-page="feedback"></button>
+      <button data-act="nav" data-page="home"></button><button data-act="nav" data-page="projects"></button><button data-act="nav" data-page="support"></button><button data-act="nav" data-page="archive"></button>
+      <button data-act="nav" data-page="reports"></button><button data-act="nav" data-page="risks"></button><button data-act="nav" data-page="feedback"></button>
     </nav>
     <div class="controls">
       <div class="seg" role="group" aria-label="Мова / Language / Язык">
@@ -893,7 +893,7 @@ const LANGS = ['uk','en','ru'];
 let LI = (() => { try { const v = localStorage.getItem('pmo-lang'); return v === '1' ? 1 : v === '2' ? 2 : 0; } catch(e) { return 0; } })();
 const T = {
  siteTitle:['PPM — Управління портфелем проєктів','PPM — Project Portfolio Management','PPM — Управление портфелем проектов'],
- navHome:['Головна','Home','Главная'], navProjects:['Проєкти','Projects','Проекты'],
+ navHome:['Головна','Home','Главная'], navProjects:['Поточні проєкти','Current projects','Текущие проекты'], navSupport:['Проєкти підтримки','Support projects','Проекты поддержки'],
  navReports:['Статус-звіти','Status reports','Статус-отчёты'], navRisks:['Ризики та проблеми','Risks and issues','Риски и проблемы'],
  dash:['Панель проєктів','Project dashboard','Панель проектов'],
  wpHealth:['Портфель за станом','Portfolio by health','Портфель по состоянию'],
@@ -909,13 +909,13 @@ const T = {
  today:['сьогодні','today','сегодня'],
  empty:['У цьому поданні немає елементів.','There are no items in this view.','В этом представлении нет элементов.'],
  emptyProblem:['Проблемних проєктів немає.','No projects at risk.','Проблемных проектов нет.'],
- emptyStale:['Усі активні проєкти звітували за останні 14 днів.','All active projects reported in the last 14 days.','Все активные проекты отчитались за последние 14 дней.'],
+ emptyStale:['Усі проєкти звітують вчасно: не більше одного пропущеного дня подачі.','All projects report on time: at most one missed report day.','Все проекты отчитываются вовремя: не больше одного пропущенного дня подачи.'],
  emptyDecision:['Відкритих запитів на рішення немає.','No open decision requests.','Открытых запросов на решение нет.'],
  emptyRisks:['Ризиків не зареєстровано.','No risks registered.','Рисков не зарегистрировано.'],
  newProject:['Новий проєкт','New project','Новый проект'], newReport:['Новий статус-звіт','New status report','Новый статус-отчёт'],
  view:['Відображати','Show','Отображать'], list:['Список','List','Список'], tiles:['Плитки','Tiles','Плитки'],
  viewsNote:['Назви подань SharePoint не перекладає.','SharePoint doesn’t translate view names.','Названия представлений SharePoint не переводит.'],
- hintProjects:['Червона дата завершення — термін минув, а проєкт не закрито. Світлофор звіту: зелений — до 8 днів, жовтий — 9–14, червоний — понад 14.','Red completion date means the deadline has passed and the project is still open. Report light: green up to 8 days, yellow 9–14, red over 14.','Красная дата завершения — срок прошёл, а проект не закрыт. Светофор отчёта: зелёный — до 8 дней, жёлтый — 9–14, красный — старше 14.'],
+ hintProjects:['Червона дата завершення — термін минув, а проєкт не закрито. Світлофор звіту — за днями подачі (поточні — понеділок і четвер, підтримка — четвер): зелений — без пропусків, жовтий — пропущено один, червоний — два і більше.','Red completion date means the deadline has passed and the project is still open. Report light follows report days (current projects — Monday and Thursday, support — Thursday): green — none missed, yellow — one missed, red — two or more.','Красная дата завершения — срок прошёл, а проект не закрыт. Светофор отчёта — по дням подачи (текущие — понедельник и четверг, поддержка — четверг): зелёный — без пропусков, жёлтый — пропущен один, красный — два и больше.'],
  hintRisks:['Оцінка = ймовірність × вплив. Від 15 — червоний, від 8 — жовтий.','Score = probability × impact. 15+ red, 8+ yellow.','Оценка = вероятность × влияние. От 15 — красный, от 8 — жёлтый.'],
  addReport:['Додати статус-звіт','Add status report','Добавить статус-отчёт'],
  changeKey:['Змінити ключові показники','Change key indicators','Изменить ключевые показатели'],
@@ -975,7 +975,7 @@ const T = {
  newFromReturned:['Новий звіт на основі повернутого','New report based on the returned one','Новый отчёт на основе возвращённого'],
  openReport:['Відкрити звіт','Open report','Открыть отчёт'],
  apBy:['Погодив','Approved by','Согласовал'],
- kpiActive:['Активні проєкти','Active projects','Активные проекты'], kpiFresh:['Зі свіжим звітом','With a recent report','Со свежим отчётом'],
+ kpiActive:['Активні проєкти','Active projects','Активные проекты'], kpiFresh:['Звіт вчасно','Report on time','Отчёт вовремя'],
  kpiFreshSub:['{n} з {m}','{n} of {m}','{n} из {m}'], kpiHigh:['Високі ризики та проблеми','High risks and issues','Высокие риски и проблемы'], kpiLate:['Прострочені','Overdue','Просроченные'],
  wpRiskMap:['Карта ризиків','Risk map','Карта рисков'],
  wpDept:['Портфель за напрямами','Portfolio by department','Портфель по направлениям'],
@@ -1081,7 +1081,14 @@ const T = {
  resetConfirm:['Усі зміни в базі буде видалено й замінено демо-даними. Продовжити?','All changes in the database will be deleted and replaced with demo data. Continue?','Все изменения в базе будут удалены и заменены демо-данными. Продолжить?'],
  fGeneral:['Основне','General','Основное'], fPeople:['Учасники','Stakeholders','Участники'], fDates:['Терміни','Timeline','Сроки'],
  codeAuto:['Буде присвоєно автоматично','Assigned automatically','Будет присвоен автоматически'],
- navArchive:['Архів','Archive','Архив'],
+ navArchive:['Архівні проєкти','Archived projects','Архивные проекты'],
+ supportSub:['Проєкти, які не завершені, а потребують постійного нагляду: помилки, обслуговування. Статус-звіт — щочетверга.','Projects that are not finished but need ongoing care: bugs, maintenance. Status report — every Thursday.','Проекты, которые не завершены, но требуют постоянного надзора: ошибки, обслуживание. Статус-отчёт — каждый четверг.'],
+ homeCur:['Поточні проєкти','Current projects','Текущие проекты'], homeSup:['Проєкти підтримки','Support projects','Проекты поддержки'],
+ kpiSupport:['На підтримці','In support','На поддержке'], kpiIssues:['Відкриті проблеми','Open issues','Открытые проблемы'], kpiIssuesSub:['з них високі: {n}','high: {n}','из них высокие: {n}'],
+ kpiSupEnd:['Період підтримки минув','Support period ended','Период поддержки истёк'], kpiSupEndSub:['спливає за 30 днів: {n}','ends within 30 days: {n}','истекает за 30 дней: {n}'],
+ wpSupEnd:['Період підтримки: минув або спливає за 30 днів','Support period: ended or ends within 30 days','Период поддержки: истёк или истекает за 30 дней'], emptySupEnd:['Періоди підтримки не спливають найближчі 30 днів','No support periods end in the next 30 days','Периоды поддержки не истекают в ближайшие 30 дней'],
+ wpSupHealth:['Підтримка за станом','Support by health','Поддержка по состоянию'], wpSupDyn:['Динаміка стану підтримки (щотижня)','Support health over time (weekly)','Динамика состояния поддержки (еженедельно)'],
+ emptySupport:['Проєктів підтримки немає. PM переводить проєкт у підтримку статус-звітом: «Фаза проєкту» — «Підтримка».','No support projects. A PM moves a project to support with a status report: Project phase — Support.','Проектов поддержки нет. PM переводит проект в поддержку статус-отчётом: «Фаза проекта» — «Поддержка».'],
  archiveSub:['Завершені та скасовані проєкти. Лише перегляд.','Completed and cancelled projects. View only.','Завершённые и отменённые проекты. Только просмотр.'],
  archivedNote:['Проєкт в архіві: лише перегляд.','This project is archived: view only.','Проект в архиве: только просмотр.'],
  onePending:['Звіт від {date} на погодженні PMO — новий можна подати після рішення.','The report from {date} is awaiting PMO approval — a new one can be submitted after the decision.','Отчёт от {date} на согласовании PMO — новый можно подать после решения.'], archNoComments:['Проєкт в архіві: лише перегляд.','The project is archived: view only.','Проект в архиве: только просмотр.'],
@@ -1108,9 +1115,13 @@ const T = {
  launchS:['запуск','go-live','запуск'], fcS:['прогноз','forecast','прогноз'], reportS:['звіт','report','отчёт'], factS:['факт','actual','факт'],
  cStrat:['Стратегічний','Strategic','Стратегический'], cPrio:['Пріоритет','Priority','Приоритет'], cStatusOnly:['Фаза проєкту','Project phase','Фаза проекта'],
  cHealth:['Стан','Health','Состояние'], cRepDate:['Звіт','Report','Отчёт'], ago:['дн. тому','days ago','дн. назад'],
- fr0:['до 8 днів','up to 8 days','до 8 дней'], fr1:['9–14 днів','9–14 days','9–14 дней'],
- freshTip:['Останній погоджений звіт — {n} дн. тому. Зелений — до 8 днів, жовтий — 9–14, червоний — понад 14.','Last approved report — {n} days ago. Green — up to 8 days, yellow — 9–14, red — over 14.','Последний согласованный отчёт — {n} дн. назад. Зелёный — до 8 дней, жёлтый — 9–14, красный — больше 14.'],
- freshNone:['Погоджених звітів ще немає.','No approved reports yet.','Согласованных отчётов ещё нет.'], fr2:['понад 14 днів','over 14 days','более 14 дней'], fr3:['немає звітів','no reports','нет отчётов'],
+ fr0:['вчасно','on time','вовремя'], fr1:['пропущено один','one missed','пропущен один'],
+ freshTip:['Останній погоджений звіт — {n} дн. тому. Зелений — до 8 днів, жовтий — 9–14, червоний — понад 14.','Last approved report — {n} days ago. Green — up to 8 days, yellow — 9–14, red — over 14.','Последний согласованный отчёт — {n} дн. назад. Зелёный — до 8 дней, жёлтый — 9–14, красный — больше 14.'],   // прежнее правило — пока в приложении; убрать вместе с переходом приложения на дни подачи
+ freshTipSlots:['Останній погоджений звіт — від {d}, пропущено днів подачі: {n}.','Last approved report — of {d}, missed report days: {n}.','Последний согласованный отчёт — от {d}, пропущено дней подачи: {n}.'],
+ freshRuleCur:['Поточні проєкти звітують у понеділок і четвер: зелений — без пропусків, жовтий — пропущено один, червоний — два і більше.','Current projects report on Monday and Thursday: green — none missed, yellow — one missed, red — two or more.','Текущие проекты отчитываются в понедельник и четверг: зелёный — без пропусков, жёлтый — пропущен один, красный — два и больше.'],
+ freshRuleSup:['Проєкти підтримки звітують щочетверга: зелений — без пропусків, жовтий — пропущено один, червоний — два і більше.','Support projects report every Thursday: green — none missed, yellow — one missed, red — two or more.','Проекты поддержки отчитываются каждый четверг: зелёный — без пропусков, жёлтый — пропущен один, красный — два и больше.'],
+ freshPend:['Звіт від {d} — на погодженні PMO.','Report of {d} is awaiting PMO approval.','Отчёт от {d} — на согласовании PMO.'],
+ freshNone:['Погоджених звітів ще немає.','No approved reports yet.','Согласованных отчётов ещё нет.'], fr2:['пропущено два і більше','two or more missed','пропущено два и больше'], fr3:['немає звітів','no reports','нет отчётов'],
  ragCalc:['Загальний стан (розраховується)','Overall health (calculated)','Общее состояние (рассчитывается)'],
  ragRule:['Найгірша з оцінок: хоча б одна червона → червоний; хоча б одна жовта → жовтий; усі зелені → зелений.','The worst rating wins: any red → red; any yellow → yellow; all green → green.','Худшая из оценок: хотя бы одна красная → красный; хотя бы одна жёлтая → жёлтый; все зелёные → зелёный.'],
  errDims:['Оцініть усі три показники: терміни, бюджет, ресурси.','Rate all three: schedule, budget, resources.','Оцените все три показателя: сроки, бюджет, ресурсы.'],
@@ -1155,6 +1166,7 @@ const VAL = {
  'Планування':['Планування','Planning','Планирование'],
  'Реалізація':['Реалізація','Execution','Реализация'],
  'Призупинено':['Призупинено','On hold','Приостановлен'],
+ 'Підтримка':['Підтримка','Support','Поддержка'],
  'Скасовано':['Скасовано','Cancelled','Отменён'],
  'Архівний':['Архівний','Archived','Архивный'],
  'Завершено':['Завершено','Completed','Завершён'],
@@ -1254,8 +1266,25 @@ const calcRag = r => { const v = [r.sched, r.budget, r.res]; if (v.some(x => !x)
 // погодження статус-звіту PMO: у картку потрапляє лише погоджений звіт
 const AP_PEND = 'На погодженні', AP_OK = 'Погоджено', AP_RET = 'Повернуто';
 const isApproved = r => r.approval === AP_OK;   // пусто — «На погодженні», как в портале
-const STATUSES = ['Ініціація','Планування','Реалізація','Призупинено','Завершено','Скасовано'];
-const REPORT_STATUSES = ['Ініціація','Планування','Реалізація','Призупинено'];
+const STATUSES = ['Ініціація','Планування','Реалізація','Підтримка','Призупинено','Завершено','Скасовано'];
+const REPORT_STATUSES = ['Ініціація','Планування','Реалізація','Підтримка','Призупинено'];
+/* Підтримка (spec 2026-11-09-support-status): фаза для проєктів, які не завершені, а потребують постійного нагляду.
+   Своя вкладка і режим головної; статус-звіт — раз на тиждень (четвер), у поточних проєктів — понеділок і четвер. */
+const SUPPORT = 'Підтримка';
+const isSupport = p => !!p && p.status === SUPPORT;
+const kindOf = p => isSupport(p) ? 'support' : 'project';
+const REPORT_DAYS = {project:[1, 4], support:[4]};   // дні подачі: 1 — понеділок, 4 — четвер
+const isoDow = s => new Date(Date.parse(s + 'T12:00:00Z')).getUTCDay();
+const isoAdd = (s, n) => new Date(Date.parse(s + 'T12:00:00Z') + n * DAY).toISOString().slice(0, 10);
+/** Пропущені дні подачі: дні подачі S, де останній погоджений звіт < S < сьогодні (у сам день подачі ще не пропущено). */
+function missedSlots(last, today, kind){
+  if (!last) return null;
+  const days = REPORT_DAYS[kind] || REPORT_DAYS.project; let n = 0;
+  for (let d = isoAdd(last, 1); d < today; d = isoAdd(d, 1)) if (days.includes(isoDow(d))) n++;
+  return n;
+}
+/** Свіжість звіту: na — погоджених немає; g — без пропусків; y — пропущено один; r — два і більше. */
+const freshLevel = (last, today, kind) => { const m = missedSlots(last, today, kind); return m === null ? 'na' : m === 0 ? 'g' : m === 1 ? 'y' : 'r'; };
 const TYPES = ['Стратегічний','Звичайний'];
 const PRIOS = ['1 — Високий','2 — Середній','3 — Низький'];
 const DEPTS = ['ІТ','HR та кадрове адміністрування','Розрахунок зарплати','Продажі','Фінанси','Операції','Юридичний'];
@@ -1341,6 +1370,8 @@ const canApprove = () => isPMO() || VIEWER === ME;
 
 /* ================= Demo seed ================= */
 function buildSeed(){
+ // підтримка звітує щочетверга: SINCE_THU — днів від останнього четверга (0 — сьогодні четвер)
+ const SINCE_THU = (TODAY.getDay() + 3) % 7, SOON = iso(new Date(TODAY.getTime() + 20 * DAY));
  const P = [
  {id:1,code:'PRJ-001',title:'Впровадження Twenty CRM',type:'Стратегічний',pm:ME,owner:'Сергій Литвиненко',product:'Дмитро Савчук',dept:'ІТ',status:'Реалізація',prio:'1 — Високий',progress:45,start:'2026-03-02',golive:'2026-12-01',plan:'2026-12-15',fc:'2027-01-29',budget:1800000,actual:950000,ago:3,hist:'GGYYYY',decision:'Затвердити перенесення запуску на кінець січня 2027',note:'Інтеграція з 1С відстає на 3 тижні, запуск у продакшн переноситься',
   cm:[[62,'Олег Коваленко','Узгоджено перелік полів для міграції клієнтів'],[33,ME,'Підрядник підтвердив команду з 4 людей'],[3,ME,'Запит на перенесення go-live винесено на правління']],
@@ -1361,7 +1392,13 @@ function buildSeed(){
   ch:[[34,'Тетяна Кравець','Пріоритет — впровадження CRM',[['status','Реалізація','Призупинено'],['fc','2026-10-01','2027-04-30']]]]},
  {id:8,code:'PRJ-008',title:'Електронний кадровий документообіг',type:'Звичайний',pm:'Марина Ткаченко',owner:'Тетяна Кравець',product:'Анна Лисенко',dept:'HR та кадрове адміністрування',status:'Завершено',prio:'2 — Середній',progress:100,start:'2025-11-03',golive:'2026-07-01',plan:'2026-08-31',fc:'2026-08-28',budget:500000,actual:478000,ago:27,hist:'GGGGGG',note:'Проєкт закрито, систему передано в експлуатацію',
   cm:[[27,'Марина Ткаченко','Акт приймання підписано']],
-  ch:[[27,'Марина Ткаченко','Приймання підписано',[['status','Реалізація','Завершено'],['progress','95','100']]]], arch:27}
+  ch:[[27,'Марина Ткаченко','Приймання підписано',[['status','Реалізація','Завершено'],['progress','95','100']]]], arch:27},
+ {id:9,code:'PRJ-009',title:'Підтримка HR-порталу самообслуговування',type:'Звичайний',pm:'Марина Ткаченко',owner:'Тетяна Кравець',product:'Анна Лисенко',dept:'HR та кадрове адміністрування',status:'Підтримка',prio:'2 — Середній',progress:100,start:'2025-09-01',golive:'2026-03-02',plan:'2027-06-30',fc:'2027-06-30',budget:120000,actual:38000,ago:SINCE_THU,step:7,hist:'GGGGYG',note:'Закрито 6 звернень, оновлено сертифікат входу',
+  cm:[[SINCE_THU + 1,'Тетяна Кравець','Дякую, звернення закриваються вчасно']],
+  ch:[[60,'Марина Ткаченко','Систему запущено, далі — підтримка',[['status','Реалізація','Підтримка']]]]},
+ {id:10,code:'PRJ-010',title:'Супровід обміну 1С з банками',type:'Стратегічний',pm:'Андрій Мельник',owner:'Олена Гнатюк',product:'Олег Коваленко',dept:'Фінанси',status:'Підтримка',prio:'1 — Високий',progress:100,start:'2025-06-02',golive:'2025-12-01',plan:SOON,fc:SOON,budget:200000,actual:171000,ago:SINCE_THU + 7,step:7,hist:'GYYR',note:'Збої обміну з банком після оновлення API',decision:'Продовжити період підтримки на 2027 рік',
+  cm:[[SINCE_THU + 8,'Андрій Мельник','Банк змінив формат виписки, готуємо виправлення']],
+  ch:[[45,'Андрій Мельник','Обмін запущено, далі — супровід',[['status','Реалізація','Підтримка']]]]}
  ];
  const POOL = {G:['Роботи йдуть за планом','Контрольну точку пройдено вчасно','Етап прийнято замовником'],
   Y:['Відставання з інтеграції на 1–2 тижні','Затримка погодження вимог','Бракує ресурсу розробника 1С'],
@@ -1373,7 +1410,9 @@ function buildSeed(){
   [1,'Нестабільний обмін даними з 1С','Ризик',4,4,'Олег Коваленко','В роботі','2026-10-15',"Зниження (пом'якшення)"],[1,'Опір менеджерів переходу на CRM','Ризик',3,3,ME,'Відкрито','2026-11-01'],
   [2,'Повторний злам сайтів до завершення міграції','Проблема',5,4,'Андрій Мельник','В роботі','2026-09-30','Зниження (пом\'якшення)'],[5,'Зміна форми звітності з ЄСВ','Ризик',3,5,'Наталія Шевчук','Відкрито','2026-11-15','Прийняття'],
   [3,'Низька активність працівників на об’єктах','Ризик',2,3,'Ірина Бондаренко','Відкрито','2026-10-20'],[4,'Ліцензії Fabric дорожчі за бюджет','Ризик',2,2,ME,'Відкрито','2026-11-10'],
-  [7,'Немає власника з боку HR','Проблема',4,3,'Марина Ткаченко','Відкрито','2026-10-05'],[8,'Недостатня якість скан-копій','Проблема',2,2,'Марина Ткаченко','Закрито','2026-07-30']];
+  [7,'Немає власника з боку HR','Проблема',4,3,'Марина Ткаченко','Відкрито','2026-10-05'],
+  [10,'Збій обміну виписками після оновлення API банку','Проблема',5,4,'Андрій Мельник','В роботі',iso(new Date(TODAY.getTime() + 5 * DAY))],[10,'Закінчується договір підтримки з інтегратором','Ризик',3,4,'Олена Гнатюк','Відкрито',SOON,'Уникнення'],
+  [9,'Застарілий сертифікат входу','Проблема',2,2,'Марина Ткаченко','Закрито','2026-10-20'],[8,'Недостатня якість скан-копій','Проблема',2,2,'Марина Ткаченко','Закрито','2026-07-30']];
  const TEAM = {
   1:[{n:'Дмитро Савчук', role:'Бізнес-замовник', topics:'Вимоги, пріоритети беклогу, приймання етапів'},
      {n:'Олег Коваленко', role:'Архітектор', topics:'Інтеграція з 1С, міграція даних'},
@@ -1396,7 +1435,7 @@ function buildSeed(){
   const reports = h.map((c, i) => {
    const latest = i === n - 1, rag = RL[c];
    const dm = {G:['Зелений','Зелений','Зелений','Зелений'], Y:['Жовтий','Зелений','Зелений','Жовтий'], R:['Червоний','Червоний','Зелений','Жовтий']}[c];
-   return {id:uid() + i, date:iso(daysAgo(p.ago + (n - 1 - i) * 14)), rag, sched:dm[0], budget:dm[1], res:dm[3],
+   return {id:uid() + i, date:iso(daysAgo(p.ago + (n - 1 - i) * (p.step || 14))), rag, sched:dm[0], budget:dm[1], res:dm[3],
     progress: Math.round(p.progress * (i + 1) / n), title: latest && p.note ? p.note : POOL[c][(p.id + i) % 3],
     done: DONE[(p.id + i) % 5], next: NEXT[(p.id + i) % 5], issues: ISS[c], author: p.pm,
     decision: !!(latest && p.decision), decisionText: latest && p.decision ? p.decision : '', approval:'Погоджено'};
@@ -1492,6 +1531,8 @@ const isActive = p => !isArch(p);
 const visAll = () => PROJ.filter(canSee);
 const visP = () => visAll().filter(p => !isArch(p));
 const visArch = () => visAll().filter(isArch);
+const visCur = () => visP().filter(p => !isSupport(p));   // «Поточні проєкти» — активні, крім підтримки
+const visSup = () => visP().filter(isSupport);            // «Проєкти підтримки»
 const repsOf = p => (p.reports || []).map(r => Object.assign({}, r, {pid:p.id, d:D(r.date), rag:calcRag(r)})).sort((a, b) => a.d - b.d);
 const visR = () => visAll().flatMap(repsOf);
 const visK = () => visP().flatMap(p => (p.risks || []).map(k => Object.assign({}, k, {pid:p.id})));
@@ -1514,13 +1555,16 @@ const byOrder = (a, b) => (a.type === b.type ? 0 : a.type === 'Стратегі�
 /* ================= Renderers ================= */
 const ragHtml = v => v ? `<span class="pill" style="--c:${RC[v]}"><span class="dot sm"></span>${tv(v)}</span>`
   : `<span class="pill" style="--c:var(--na)"><span class="dot sm"></span>${t('notRated')}</span>`;
-const STC = {'Ініціація':'#5856d6','Планування':'var(--theme)','Реалізація':'var(--g)','Призупинено':'var(--y)','Скасовано':'var(--na)','Архівний':'var(--na)','Завершено':'var(--g)','Відкрито':'var(--y)','В роботі':'var(--theme)','Закрито':'var(--g)'};
+const STC = {'Ініціація':'#5856d6','Планування':'var(--theme)','Реалізація':'var(--g)','Підтримка':'#0a8f8a','Призупинено':'var(--y)','Скасовано':'var(--na)','Архівний':'var(--na)','Завершено':'var(--g)','Відкрито':'var(--y)','В роботі':'var(--theme)','Закрито':'var(--g)'};
 // статус проєкту чи ризику — кольорова пілюля без крапки (крапка — у стану RAG)
 const statusPill = v => v ? `<span class="pill st" style="--c:${STC[v] || 'var(--na)'}">${esc(tv(v))}</span>` : '<span class="muted">—</span>';
 const apBadge = v => { v = v || AP_PEND; return `<span class="pill ap" style="--c:${v === AP_OK ? 'var(--g)' : v === AP_RET ? 'var(--r)' : 'var(--y)'}"><span class="dot sm"></span>${esc(tv(v))}</span>`; };
 const dotOnly = v => `<span class="dot sm" title="${v || '—'}" style="background:${v ? RC[v] : 'var(--na)'}"></span>`;
 const barHtml = v => `<span class="prog" role="img" aria-label="${v}%"><span class="track"><i style="width:${Math.min(v,100)}%;background:${v >= 100 ? 'var(--g)' : 'var(--theme)'}"></i></span><b>${v}%</b></span>`;
-const freshColor = d => !d ? 'var(--na)' : age(d) > 14 ? 'var(--r)' : age(d) > 8 ? 'var(--y)' : 'var(--g)';
+// свіжість — за днями подачі категорії проєкту (missedSlots); дата — подання останнього погодженого звіту
+const pFresh = p => freshLevel(p.lastUpdate || '', iso(TODAY), kindOf(p));
+const FRESH_C = {g:'var(--g)', y:'var(--y)', r:'var(--r)', na:'var(--na)'};
+const freshColor = p => FRESH_C[pFresh(p)];
 // #29: дата отчёта «на погодженні» по проекту (если есть)
 const pendDate = p => { const r = (p.reports || []).find(x => x.approval === AP_PEND); return r ? D(r.date) : null; };
 // метка погодження самого нового отчёта (по дате, затем по порядку подачи) — колонка «Звіт», главная, плитки (latestReport приложения)
@@ -1529,8 +1573,11 @@ const lastRep = p => (p.reports || []).reduce((r, x) => (!r || x.date >= r.date 
 const apTip = r => t('apSubTip').replace('{date}', r.created ? fmtDT(new Date(r.created)) : fmt(D(r.date))).replace('{who}', r.author || '—');
 const apMark = p => { const r = lastRep(p); if (!r) return ''; const v = r.approval || AP_PEND; return `<span class="rep-ap" title="${esc(apTip(r))}">${apBadge(v)}${v !== AP_OK ? `<span class="muted">${fmt(D(r.date))}</span>` : ''}</span>`; };
 // подсказка к точке свежести: сколько дней последнему погодженому отчёту и что значат цвета
-const freshTip = d => esc(d ? t('freshTip').replace('{n}', age(d)) : t('freshNone'));
-const freshHtml = p => { const d = lastUpd(p); return `<span class="rag" title="${freshTip(d)}"><span class="dot sm" style="background:${freshColor(d)}"></span>${d ? fmt(d) : `<span class="muted">${t('noReports')}</span>`}</span>`; };
+// подсказка к точке свежести: дни подачи категории, сколько пропущено, отчёт на погодженні (если есть)
+const freshTip = p => { const d = lastUpd(p), pend = pendDate(p), m = missedSlots(p.lastUpdate || '', iso(TODAY), kindOf(p));
+  return esc((d ? t('freshTipSlots').replace('{d}', fmt(d)).replace('{n}', m) : t('freshNone')) + ' ' + t(isSupport(p) ? 'freshRuleSup' : 'freshRuleCur')
+    + (pend ? ' ' + t('freshPend').replace('{d}', fmt(pend)) : '')); };
+const freshHtml = p => { const d = lastUpd(p); return `<span class="rag" title="${freshTip(p)}"><span class="dot sm" style="background:${freshColor(p)}"></span>${d ? fmt(d) : `<span class="muted">${t('noReports')}</span>`}</span>`; };
 // срок риска: просроченный у открытого — красным (таблица и карточка на телефоне, #114)
 const riskDueHtml = k => { const d = D(k.due); return d < TODAY && k.status !== 'Закрито' ? `<span class="late">${fmt(d)}</span>` : fmt(d); };
 const planHtml = p => { const d = D(p.plan); if (!d) return ''; return d < TODAY && isActive(p) ? `<span class="late">${fmt(d)}</span>` : fmt(d); };
@@ -1613,15 +1660,27 @@ const PV = {
   problem:{t:'Проблемні', f:p => isActive(p) && (p.rag === 'Червоний' || p.rag === 'Жовтий')},
   mine:{t:'Мої проєкти (усі)', f:p => participants(p).includes(VIEWER)},   // #36: усі ролі
   pm:{t:'Я PM', f:p => p.pm === VIEWER},
-  stale:{t:'Немає свіжого звіту', f:p => isActive(p) && (!lastUpd(p) || age(lastUpd(p)) > 14)},
+  stale:{t:'Немає свіжого звіту', f:p => isActive(p) && ['r', 'na'].includes(pFresh(p))},   // пропущено два дні подачі і більше або звітів немає
   late:{t:'Прострочені', f:p => isActive(p) && !!D(p.plan) && D(p.plan) < TODAY}
 };
 // вигляди архіву: без умов активності
+// «Проєкти підтримки» — ті самі представлення, що й у «Поточні проєкти» (свіжість — за четвергами, kindOf)
+const SV = PV;
 const AV = {all:{t:'Усі проєкти', f:() => true}, done:{t:'Завершені', f:p => p.status === 'Завершено'}, cancelled:{t:'Скасовані', f:p => p.status === 'Скасовано'}, strat:{t:'Стратегічні', f:p => p.type === 'Стратегічний'}, mine:{t:'Мої проєкти (усі)', f:p => participants(p).includes(VIEWER)}, pm:{t:'Я PM', f:p => p.pm === VIEWER}};
-const RV = {all:{t:'Усі звіти', f:() => true}, decision:{t:'Потребують рішення', f:r => r.decision && latestReportIds(visR()).has(r.id)}, awaiting:{t:'Очікують погодження', f:r => (r.approval || AP_PEND) === AP_PEND}};   // как портал: пусто — на погодженні
-const KV = {open:{t:'Відкриті', f:k => k.status !== 'Закрито'}, high:{t:'Високі ризики та проблеми', f:k => k.status !== 'Закрито' && k.p * k.i >= 15}, all:{t:'Усі елементи', f:() => true}, archived:{t:'Ризики архівних проєктів', f:() => true, arch:true}};
-const state = {rmCell:null, page:'home', pv:'all', rv:'all', kv:'open', av:'all', fv:'all', homeMode:'tiles', projMode:'tiles', archmode:'list', panel:null};
+const RV = {all:{t:'Усі звіти', f:() => true}, decision:{t:'Потребують рішення', f:r => r.decision && latestReportIds(visR()).has(r.id)}, awaiting:{t:'Очікують погодження', f:r => (r.approval || AP_PEND) === AP_PEND},
+  curAwaiting:{t:'Поточні — очікують погодження', f:r => !isSupport(pById(r.pid)) && (r.approval || AP_PEND) === AP_PEND},
+  curDecision:{t:'Поточні — потребують рішення', f:r => !isSupport(pById(r.pid)) && r.decision && latestReportIds(visR()).has(r.id)},
+  support:{t:'Проєкти підтримки', f:r => isSupport(pById(r.pid))},
+  supAwaiting:{t:'Підтримка — очікують погодження', f:r => isSupport(pById(r.pid)) && (r.approval || AP_PEND) === AP_PEND},
+  supDecision:{t:'Підтримка — потребують рішення', f:r => isSupport(pById(r.pid)) && r.decision && latestReportIds(visR()).has(r.id)}};   // как портал: пусто — на погодженні
+const KV = {open:{t:'Відкриті', f:k => k.status !== 'Закрито'}, high:{t:'Високі ризики та проблеми', f:k => k.status !== 'Закрито' && k.p * k.i >= 15}, all:{t:'Усі елементи', f:() => true}, archived:{t:'Ризики архівних проєктів', f:() => true, arch:true},
+  curOpen:{t:'Поточні — відкриті', f:k => k.status !== 'Закрито' && !isSupport(pById(k.pid))},
+  curHigh:{t:'Поточні — високі ризики та проблеми', f:k => k.status !== 'Закрито' && k.p * k.i >= 15 && !isSupport(pById(k.pid))},
+  support:{t:'Підтримка — відкриті', f:k => k.status !== 'Закрито' && isSupport(pById(k.pid))},
+  supIssues:{t:'Підтримка — відкриті проблеми', f:k => k.status !== 'Закрито' && k.type === 'Проблема' && isSupport(pById(k.pid))}};
+const state = {rmCell:null, page:'home', homeSeg:'cur', pv:'all', sv:'all', rv:'all', kv:'open', av:'all', fv:'all', homeMode:'tiles', projMode:'tiles', archmode:'list', panel:null};
 // режим «Список / Плитки» запоминается (как портал: pmo-projmode, pmo-archmode); «Архів» по умолчанию — список
+try { if (localStorage.getItem('pmo-homeseg') === 'sup') state.homeSeg = 'sup'; } catch(e) {}
 try { if (localStorage.getItem('pmo-projmode') === 'list') state.projMode = 'list'; if (localStorage.getItem('pmo-archmode') === 'tiles') state.archmode = 'tiles'; } catch(e) {}
 
 /* ================= Tiles ================= */
@@ -1632,7 +1691,7 @@ function tile(p){
     <div class="tile-t">${esc(p.title)}</div>
     <div class="tile-prog"><div class="pl">${statusPill(p.status)}<b>${p.progress}%</b></div><div class="track"><i style="width:${Math.min(p.progress,100)}%;background:${pc}"></i></div></div>
     <div class="tile-upd">${p.archivedAt ? `<div class="ul">${t('archivedAt')}: ${fmt(D(p.archivedAt))}</div>`
-      : `<div class="ul"><span class="dot sm" title="${freshTip(d)}" style="background:${freshColor(d)}"></span>${t('latestUpd')} · ${d ? fmt(d) : t('noReports')}${apMark(p)}</div>`}
+      : `<div class="ul"><span class="dot sm" title="${freshTip(p)}" style="background:${freshColor(p)}"></span>${t('latestUpd')} · ${d ? fmt(d) : t('noReports')}${apMark(p)}</div>`}
       <div class="tx">${esc(p.lastReport) || '<span class="muted">—</span>'}</div></div>
     <div class="tile-f">${(p.links || []).length ? `<span><a class="loop" href="${esc(p.links[0].u)}" target="_blank" rel="noopener">${esc(p.links[0].t)} ↗</a>${p.links.length > 1 ? `<span class="muted"> +${p.links.length - 1}</span>` : ''}</span>` : '<span></span>'}
       ${p.pm ? `<span class="tile-pm" title="${t('pmRole')}: ${esc(p.pm)} · ${esc(email(p.pm))}">${avatar(p.pm)}<b>${esc(p.pm)}</b></span>` : ''}</div>
@@ -1649,6 +1708,7 @@ const LUC = {
   projects:'<path d="M20 17a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.9a2 2 0 0 1-1.69-.9l-.81-1.2a2 2 0 0 0-1.67-.9H8a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2Z"/><path d="M2 8v11a2 2 0 0 0 2 2h14"/>',
   reports:'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>',
   risks:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  support:'<circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/>',
   archive:'<rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
   feedback:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M13 8H7"/><path d="M17 12H7"/>',
   issue:'<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
@@ -1674,7 +1734,7 @@ const modeSwitch = key => `<span class="seg" role="group">
 
 /* ================= Charts ================= */
 function donut(){
-  const act = visP().filter(isActive), c = {'Зелений':0,'Жовтий':0,'Червоний':0, none:0};
+  const act = homeP(), c = {'Зелений':0,'Жовтий':0,'Червоний':0, none:0};
   act.forEach(p => c[p.rag || 'none']++);
   const segs = [['Зелений','var(--g)'],['Жовтий','var(--y)'],['Червоний','var(--r)'],['none','var(--na)']];
   const R = 76, C = 2 * Math.PI * R, total = act.length || 1; let off = 0, arcs = '';
@@ -1688,10 +1748,12 @@ function donut(){
 }
 function dynamics(){
   const pts = [];
+  const step = homeSup() ? 7 : 14;   // підтримка звітує щотижня — зрізи щотижня
   for (let k = 6; k >= 0; k--){
-    const tt = daysAgo(k * 14), c = {'Зелений':0,'Жовтий':0,'Червоний':0,'':0};
+    const tt = daysAgo(k * step), c = {'Зелений':0,'Жовтий':0,'Червоний':0,'':0};
     // кожен проєкт, що вже існував на дату зрізу (і ще не в архіві): стан останнього погодженого звіту; немає звіту — сірий
-    visAll().forEach(p => {
+    // режим головної: поточні — без проєктів, які зараз на підтримці (рішення 09.11); підтримка — лише вони
+    visAll().filter(p => homeSup() ? isSupport(p) : !isSupport(p)).forEach(p => {
       const cr = (p.changes || []).find(x => x.kind === 'create'); if (cr && iso(new Date(cr.date)) > iso(tt)) return;
       // завершённые и отменённые — до даты архивации (иначе фактической, иначе последнего отчёта); даты нет — в архиве всегда (как кольцо)
       const on = D(p.archivedAt) || D(p.ae) || lastUpd(p); if (isArch(p) && (!on || tt >= on)) return;
@@ -1714,7 +1776,7 @@ function dynamics(){
       g += `<rect x="${x}" y="${y1}" width="${bw}" height="${Math.max(h - 2, 1)}" rx="5" fill="${k ? RC[k] : 'var(--na)'}"><title>${fmt(p.tt)}: ${k ? tv(k) : t('notRated')} — ${v}</title></rect>`;
       g += `<text x="${x + bw / 2}" y="${y1 + h / 2 + 3}" text-anchor="middle" font-size="11" font-weight="600" fill="${k ? '#fff' : 'var(--text)'}">${v}</text>`; });
     g += `<text x="${x + bw / 2}" y="${H - 10}" text-anchor="middle" font-size="11" fill="var(--text-2)">${i === pts.length - 1 ? t('today') : fmtShort(p.tt)}</text>`; });
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('wpDyn')}">${g}</svg><p class="hint">${t('dynHint')}</p>`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${t(homeSup() ? 'wpSupDyn' : 'wpDyn')}">${g}</svg><p class="hint">${t('dynHint')}</p>`;
 }
 
 /* ================= Data table: two-line rows, sort, filter, column chooser ================= */
@@ -1760,7 +1822,7 @@ const CARDS = {
   feedback:r => `<button class="mcard" data-act="fbopen" data-id="${r.id}"><span class="mc-h"><b>#${r.id} · ${fmtDT(new Date(r.created))}</b>${fbBadge(r.status)}</span><span class="mc-m">${r.author ? esc(r.author) : '—'}${r.screen ? ' · ' + esc(fbScreenLabel(r.screen)) : ''}</span><span class="mc-t">${esc(r.text)}</span></button>`
 };
 const ragLabel = v => `<span class="ilabel">${ragDot(v)}${v ? esc(tv(v)) : t('notRated')}</span>`;
-const freshBucket = d => !d ? '3' : age(d) > 14 ? '2' : age(d) > 8 ? '1' : '0';
+const freshBucket = p => ({g:'0', y:'1', r:'2', na:'3'})[pFresh(p)];
 // #73: погодження самого нового отчёта в фильтре колонки «Звіт» (apBucket приложения)
 const apBucket = p => { const r = lastRep(p); return !r ? 'a4' : r.approval === AP_RET ? 'a3' : r.approval === AP_PEND ? 'a2' : 'a1'; };
 const AP_BUCKET = {a1:AP_OK, a2:AP_PEND, a3:AP_RET};
@@ -1792,7 +1854,7 @@ const PDEF = {
   rag:{l:() => t('cHealth'), main:p => ragDot(p.rag), sort:p => ragOrder(p.rag), filter:p => p.rag || '', flabel:ragLabel, cls:'w-ico w-min'},
   // точка — свежесть последнего погодженого отчёта; ниже — погодження самого нового отчёта
   repDate:{l:() => t('cRepDate'), main:p => { const d = lastUpd(p);
-    return `<span class="rag" title="${freshTip(d)}"><span class="dot sm" style="background:${freshColor(d)}"></span>${d ? fmt(d) : t('noReports')}</span>${apMark(p)}`; }, sort:p => p.lastUpdate || '', filter:p => [freshBucket(lastUpd(p)), apBucket(p)], flabel:repLabel},
+    return `<span class="rag" title="${freshTip(p)}"><span class="dot sm" style="background:${freshColor(p)}"></span>${d ? fmt(d) : t('noReports')}</span>${apMark(p)}`; }, sort:p => p.lastUpdate || '', filter:p => [freshBucket(p), apBucket(p)], flabel:repLabel},
   repAge:{l:() => t('cRepAge'), main:p => lastUpd(p) ? String(age(lastUpd(p))) : '<span class="muted">—</span>', sort:p => lastUpd(p) ? age(lastUpd(p)) : '', cls:'num'},
   progress:{l:() => fl('progress'), main:p => barHtml(p.progress), sort:p => p.progress},
   start:{l:() => t('cStart2'), main:p => dateCell(p.start), sort:p => p.start || ''},
@@ -1856,6 +1918,7 @@ const KDEF = {
   due:{l:() => fl('kDue'), main:riskDueHtml, sort:k => k.due}
 };
 TDEFS.projects = PDEF; TDEFAULTS.projects = ['strat','prio','title','pm','status','rag','repDate','progress','plan','update'];
+TDEFS.support = PDEF; TDEFAULTS.support = TDEFAULTS.projects.slice();
 TDEFS.archive = PDEF; TDEFAULTS.archive = ['strat','prio','title','status','pm','owner','archived','ae','plan','budget','actual'];
 TDEFS.reports = RDEF; TDEFAULTS.reports = ['strat','prio','proj','date','rag','sched','budget','res','title','author','approval','decision'];   // как в приложении (defs.tsx)
 TDEFS.risks = KDEF; TDEFAULTS.risks = ['strat','prio','proj','title','type','score','strategy','owner','status','due'];   // как в приложении: стратегия реагування
@@ -2005,22 +2068,41 @@ function stateScreen(){
   return null;
 }
 /* ================= Home analytics (видимі проєкти без архіву; без бюджетних сум) ================= */
+const homeSup = () => state.homeSeg === 'sup';
+const inSeg = p => !!p && (homeSup() ? isSupport(p) : !isSupport(p));
+const homeP = () => homeSup() ? visSup() : visCur();
+const homeK = () => visK().filter(k => inSeg(pById(k.pid)));
+const homeSwitch = () => `<div class="seg home-seg" style="margin:0 0 16px" role="group" aria-label="${t('dash')}">
+  <button data-act="homeseg" data-v="cur" aria-pressed="${!homeSup()}">${t('homeCur')} <b>${visCur().length}</b></button>
+  <button data-act="homeseg" data-v="sup" aria-pressed="${homeSup()}">${t('homeSup')} <b>${visSup().length}</b></button></div>`;
 const goBtn = (page, view, inner, cls) => `<button class="${cls}" data-act="goview" data-page="${page}" data-view="${view}">${inner}</button>`;
 function kpiStrip(){
-  const act = visP().filter(isActive), m = act.length;
-  const fresh = act.filter(p => lastUpd(p) && age(lastUpd(p)) <= 14).length, pct = m ? Math.round(fresh / m * 100) : 0;
-  const high = visK().filter(KV.high.f).length, late = act.filter(PV.late.f).length;
+  const act = homeP(), m = act.length;
+  // «Звіт вчасно» — без пропущених днів подачі (поточні — пн і чт, підтримка — чт)
+  const fresh = act.filter(p => pFresh(p) === 'g').length, pct = m ? Math.round(fresh / m * 100) : 0;
+  const high = homeK().filter(KV.high.f).length, late = act.filter(PV.late.f).length;
   const tile = (n, label, sub, bad, page, view) => goBtn(page, view, `<b>${n}</b><span class="kl">${label}</span>${sub ? `<small>${sub}</small>` : ''}`, 'kpi' + (bad ? ' bad' : ''));
+  const awaiting = visR().filter(r => (r.approval || AP_PEND) === AP_PEND && isActive(pById(r.pid)) && inSeg(pById(r.pid))).length;
+  if (homeSup()){
+    const issues = homeK().filter(k => k.type === 'Проблема' && k.status !== 'Закрито'), soon = iso(new Date(TODAY.getTime() + 30 * DAY));
+    const ending = act.filter(p => p.plan && p.plan >= iso(TODAY) && p.plan <= soon).length;
+    return `<div class="kpis">
+    ${tile(m, t('kpiSupport'), '', false, 'support', 'all')}
+    ${tile(m ? pct + '%' : '—', t('kpiFresh'), t('kpiFreshSub').replace('{n}', fresh).replace('{m}', m), m > 0 && pct < 70, 'support', 'stale')}
+    ${canApprove() ? tile(awaiting, t('viewAwaiting'), '', awaiting > 0, 'reports', 'supAwaiting') : ''}
+    ${tile(issues.length, t('kpiIssues'), t('kpiIssuesSub').replace('{n}', issues.filter(k => k.p * k.i >= 15).length), issues.length > 0, 'risks', 'supIssues')}
+    ${tile(late, t('kpiSupEnd'), t('kpiSupEndSub').replace('{n}', ending), late > 0, 'support', 'late')}</div>`;
+  }
   return `<div class="kpis">
     ${tile(m, t('kpiActive'), '', false, 'projects', 'all')}
     ${tile(m ? pct + '%' : '—', t('kpiFresh'), t('kpiFreshSub').replace('{n}', fresh).replace('{m}', m), m > 0 && pct < 70, 'projects', 'stale')}
-    ${canApprove() ? (n => tile(n, t('viewAwaiting'), '', n > 0, 'reports', 'awaiting'))(visR().filter(r => (r.approval || AP_PEND) === AP_PEND && !isArch(pById(r.pid))).length) : ''}
-    ${tile(high, t('kpiHigh'), '', high > 0, 'risks', 'high')}
+    ${canApprove() ? tile(awaiting, t('viewAwaiting'), '', awaiting > 0, 'reports', 'curAwaiting') : ''}
+    ${tile(high, t('kpiHigh'), '', high > 0, 'risks', 'curHigh')}
     ${tile(late, t('kpiLate'), '', late > 0, 'projects', 'late')}</div>`;
 }
 const lvlColor = s => s >= 15 ? 'var(--r)' : s >= 8 ? 'var(--y)' : 'var(--g)';
 function riskMap(){
-  const open = visK().filter(KV.open.f), cnt = (pp, ii) => open.filter(k => k.p === pp && k.i === ii);
+  const open = homeK().filter(KV.open.f), cnt = (pp, ii) => open.filter(k => k.p === pp && k.i === ii);
   let cells = '';
   for (let pp = 5; pp >= 1; pp--){
     cells += `<span class="rm-ax">${pp}</span>`;
@@ -2035,7 +2117,7 @@ function riskMap(){
   return `<div class="rmap"><span class="rm-y">${t('cProb')}</span><div class="rm-grid">${cells}</div></div>${list}`;
 }
 function deptBars(key = 'dept'){
-  const act = visP().filter(isActive), g = {};
+  const act = homeP(), g = {};
   act.forEach(p => { const k = p[key] || '—'; (g[k] = g[k] || []).push(p); });
   const rows = Object.entries(g).sort((a, b) => Number(a[0] === '—') - Number(b[0] === '—') || b[1].length - a[1].length || a[0].localeCompare(b[0], 'uk'));   // «—» — в конце
   if (!rows.length) return `<p class="empty">${t('emptyProblem')}</p>`;   // как портал
@@ -2049,24 +2131,31 @@ function deptBars(key = 'dept'){
 const planMoves = p => (p.changes || []).filter(c => c.kind === 'report' || c.kind === 'key').reduce((n, c) => n + (c.diffs || []).filter(d => d.f === 'plan').length, 0);
 function slipsTable(){
   const C = (l, r, cls) => ({l:() => l, r, cls});
-  const rows = visP().filter(p => isActive(p) && D(p.fc) && D(p.plan) && D(p.fc) > D(p.plan))
+  const rows = visCur().filter(p => isActive(p) && D(p.fc) && D(p.plan) && D(p.fc) > D(p.plan))
     .map(p => ({p, dd:Math.round((D(p.fc) - D(p.plan)) / DAY), mv:planMoves(p)})).sort((a, b) => b.dd - a.dd || b.mv - a.mv || a.p.id - b.p.id).slice(0, 3);
   return table([C(fl('rProj'), x => pLink(x.p)), C(fl('plan'), x => fmt(D(x.p.plan)), 'fit'), C(fl('fc'), x => fmt(D(x.p.fc)), 'fit'),
     C(t('cSlip'), x => `<span class="late">+${x.dd} ${t('days')}</span>`, 'num fit'), C(t('cMoves'), x => String(planMoves(x.p)), 'num fit')], rows, {empty:t('emptySlips')});
 }
 function launchTable(){
   const C = (l, r, cls) => ({l:() => l, r, cls}), until = new Date(TODAY.getTime() + 7 * DAY);
-  const rows = visP().filter(p => isActive(p) && D(p.golive) && D(p.golive) >= TODAY && D(p.golive) <= until).sort((a, b) => D(a.golive) - D(b.golive) || a.id - b.id);
+  const rows = visCur().filter(p => isActive(p) && D(p.golive) && D(p.golive) >= TODAY && D(p.golive) <= until).sort((a, b) => D(a.golive) - D(b.golive) || a.id - b.id);
   return table([C(fl('golive'), p => fmt(D(p.golive)), 'fit'), C(fl('rProj'), pLink), C(t('cHealth'), p => ragDot(p.rag), 'c-ico'), C(fl('pm'), p => person(p.pm))], rows, {empty:t('emptyLaunch')});
+}
+// підтримка: період (план завершення) минув або спливає за 30 днів — замість «Зсувів» і «Запусків»
+function supEndTable(){
+  const C = (l, r, cls) => ({l:() => l, r, cls}), soon = iso(new Date(TODAY.getTime() + 30 * DAY));
+  const rows = visSup().filter(p => p.plan && p.plan <= soon).sort((a, b) => a.plan < b.plan ? -1 : a.plan > b.plan ? 1 : a.id - b.id);
+  return table([C(fl('plan'), p => planHtml(p), 'fit'), C(fl('rProj'), pLink), C(t('cHealth'), p => ragDot(p.rag), 'c-ico'), C(fl('pm'), p => person(p.pm))], rows, {empty:t('emptySupEnd')});
 }
 function pageHome(){
   const s = stateScreen(); if (s) return s;
-  const vis = visP().sort(byOrder);   // как портал: стратегічні → пріоритет → назва
+  const sup = homeSup(), pg = sup ? 'support' : 'projects';
+  const vis = homeP().sort(byOrder);   // как портал: стратегічні → пріоритет → назва
   const prob = vis.filter(PV.problem.f).sort((a, b) => (a.rag === 'Червоний' ? 0 : 1) - (b.rag === 'Червоний' ? 0 : 1));
   const stale = vis.filter(PV.stale.f).sort(staleFirst);
   const latest = latestReportIds(visR());   // #132: запрос рішення — только из последнего отчёта проекта
-  const dec = visR().filter(r => r.decision && latest.has(r.id) && !isArch(pById(r.pid))).sort((a, b) => b.d - a.d);
-  const openAll = visK().filter(k => KV.open.f(k) && !isArch(pById(k.pid))).sort((a, b) => b.p * b.i - a.p * a.i), open = openAll.slice(0, 6);
+  const dec = visR().filter(r => r.decision && latest.has(r.id) && !isArch(pById(r.pid)) && inSeg(pById(r.pid))).sort((a, b) => b.d - a.d);
+  const openAll = homeK().filter(k => KV.open.f(k) && !isArch(pById(k.pid))).sort((a, b) => b.p * b.i - a.p * a.i), open = openAll.slice(0, 6);
   const C = (l, r, cls) => ({l:() => l, r, cls});
   const S = {l:stratHead, r:p => stratCell(p.type), cls:'c-ico'}, PR = {l:prioHead, r:p => prioIconT(p.prio), cls:'c-ico'};
   const SR = {l:stratHead, r:x => stratCell(pById(x.pid).type), cls:'c-ico'}, PRR = {l:prioHead, r:x => prioIconT(PP(x.pid)), cls:'c-ico'};
@@ -2075,26 +2164,35 @@ function pageHome(){
   const staleCols = [S, PR, C(fl('title'), pLink), C(fl('pm'), p => person(p.pm)), C(fl('last'), p => freshHtml(p) + apMark(p)), C(t('cStatusOnly'), p => statusPill(p.status))];
   const decCols = [SR, PRR, C(fl('rProj'), r => pLink(pById(r.pid))), C(fl('rDate'), r => fmt(r.d)), C(fl('rDecText'), r => esc(r.decisionText), 'wide'), C(fl('rAuthor'), r => person(r.author))];
   const riskCols = [SR, PRR, C(fl('rProj'), k => pLink(pById(k.pid))), C(fl('kTitle'), k => esc(k.title), 'wide'), C(fl('kType'), k => esc(tv(k.type))), C(fl('kScore'), k => scoreHtml(k.p * k.i)), C(fl('kOwner'), k => person(k.owner)), KC.due];
-  return `${hero(t('dash'), t('visible') + vis.length, true)}
+  return `${hero(t('dash'), t('visible') + visP().length, true)}
+  ${homeSwitch()}
   ${kpiStrip()}
-  <div class="grid2">${wp(t('wpHealth'), donut())}${wp(t('wpDyn'), dynamics())}</div>
-  <div class="grid2">${wp(t('wpRiskMap'), riskMap(), ['risks','open'])}<div class="stack2">${wp(t('wpDept'), deptBars())}${wp(t('wpCountry'), deptBars('country'))}</div></div>
-  <div class="grid2">${wp(t('wpSlips'), slipsTable())}${wp(t('wpLaunch'), launchTable())}</div>
+  <div class="grid2">${wp(t(sup ? 'wpSupHealth' : 'wpHealth'), donut())}${wp(t(sup ? 'wpSupDyn' : 'wpDyn'), dynamics())}</div>
+  <div class="grid2">${wp(t('wpRiskMap'), riskMap(), ['risks', sup ? 'support' : 'curOpen'])}<div class="stack2">${wp(t('wpDept'), deptBars())}${wp(t('wpCountry'), deptBars('country'))}</div></div>
+  ${sup ? `<div class="dash">${wp(t('wpSupEnd'), supEndTable(), ['support','late'])}</div>` : `<div class="grid2">${wp(t('wpSlips'), slipsTable())}${wp(t('wpLaunch'), launchTable())}</div>`}
   <div class="dash">
-    ${wp(t('wpProblem'), table(probCols, prob, {empty:t('emptyProblem')}), ['projects','problem'])}
-    ${wp(t('wpStale'), table(staleCols, stale, {empty:t('emptyStale')}), ['projects','stale'])}
-    ${wp(t('wpDecision'), table(decCols, dec, {empty:t('emptyDecision')}), ['reports','decision'])}
-    ${wp(t('wpRisks'), table(riskCols, open, {empty:t('emptyRisks')}) + (openAll.length > open.length ? `<p class="hint">${t('shown')} ${open.length} ${t('of')} ${openAll.length}</p>` : ''), ['risks','open'])}
+    ${wp(t('wpProblem'), table(probCols, prob, {empty:t('emptyProblem')}), [pg,'problem'])}
+    ${wp(t('wpStale'), table(staleCols, stale, {empty:t('emptyStale')}), [pg,'stale'])}
+    ${wp(t('wpDecision'), table(decCols, dec, {empty:t('emptyDecision')}), ['reports', sup ? 'supDecision' : 'curDecision'])}
+    ${wp(t('wpRisks'), table(riskCols, open, {empty:t('emptyRisks')}) + (openAll.length > open.length ? `<p class="hint">${t('shown')} ${open.length} ${t('of')} ${openAll.length}</p>` : ''), ['risks', sup ? 'support' : 'curOpen'])}
   </div>`;
 }
 const viewSel = (views, cur, key) => `<label class="viewsel" title="${t('viewsNote')}">${t('view')}
   <select data-act="view" data-key="${key}">${Object.entries(views).map(([k, v]) => `<option value="${k}"${k === cur ? ' selected' : ''}>${esc(tv(v.t))}</option>`).join('')}</select></label>`;
 function pageProjects(){
   const s = stateScreen(); if (s) return s.replace(t('dash'), t('navProjects'));
-  const v = PV[state.pv], rows = visP().filter(v.f).sort(state.pv === 'stale' ? staleFirst : newestFirst);
+  const v = PV[state.pv], rows = visCur().filter(v.f).sort(state.pv === 'stale' ? staleFirst : newestFirst);
   const inner = state.projMode === 'tiles' ? tiles(rows) : dataTable('projects', rows);
-  return `${hero(t('navProjects'), t('visible') + visP().length, true)}
+  return `${hero(t('navProjects'), t('visible') + visCur().length, true)}
   <div class="listcard"><div class="cmdbar">${modeSwitch('projMode')}<span class="spacer"></span>${viewSel(PV, state.pv, 'pv')}${state.projMode === 'list' ? gearBtn('projects') : ''}</div>${inner}</div>
+  <p class="hint">${t('hintProjects')}</p>`;
+}
+function pageSupport(){
+  const s = stateScreen(); if (s) return s.replace(t('dash'), t('navSupport'));
+  const v = SV[state.sv] || SV.all, all = visSup(), rows = all.filter(v.f).sort(state.sv === 'stale' ? staleFirst : newestFirst);
+  const inner = !all.length ? `<p class="empty">${t('emptySupport')}</p>` : state.projMode === 'tiles' ? tiles(rows) : dataTable('support', rows);
+  return `${hero(t('navSupport'), t('supportSub') + ' · ' + all.length)}
+  <div class="listcard"><div class="cmdbar">${modeSwitch('projMode')}<span class="spacer"></span>${viewSel(SV, state.sv, 'sv')}${state.projMode === 'list' ? gearBtn('support') : ''}</div>${inner}</div>
   <p class="hint">${t('hintProjects')}</p>`;
 }
 function pageArchive(){
@@ -2120,7 +2218,7 @@ function pageRisks(){
   <div class="listcard"><div class="cmdbar">${visP().some(p => isActive(p) && canEditP(p)) ? `<button class="cmd primary" data-act="newrisk">${iconPlus}${t('newRisk')}</button>` : ''}<span class="spacer"></span>${viewSel(KV, state.kv, 'kv')}${gearBtn('risks')}</div>${dataTable('risks', rows)}</div>
   <p class="hint">${t('hintRisks')}</p>`;
 }
-const PAGES = {home:pageHome, projects:pageProjects, reports:pageReports, risks:pageRisks, archive:pageArchive, feedback:() => pageFeedback()};
+const PAGES = {home:pageHome, projects:pageProjects, support:pageSupport, reports:pageReports, risks:pageRisks, archive:pageArchive, feedback:() => pageFeedback()};
 const main = document.getElementById('main');
 const foot = document.getElementById('foot');
 
@@ -2129,7 +2227,7 @@ function renderChrome(){
   document.title = t('siteTitle');
   document.getElementById('siteName').textContent = t('siteTitle');
   document.getElementById('siteSub').textContent = 'SharePoint · Microsoft 365';
-  const nav = {home:'navHome', projects:'navProjects', reports:'navReports', risks:'navRisks', archive:'navArchive', feedback:'navFeedback'};
+  const nav = {home:'navHome', projects:'navProjects', support:'navSupport', reports:'navReports', risks:'navRisks', archive:'navArchive', feedback:'navFeedback'};
   const hb = document.getElementById('help'); if (hb) { hb.title = t('help'); hb.setAttribute('aria-label', t('help')); }
   document.querySelectorAll('.nav button').forEach(b => { const l = t(nav[b.dataset.page]); b.innerHTML = `<span class="ni">${lucide(b.dataset.page)}</span><span class="nl">${esc(l)}</span>`; b.title = l; b.setAttribute('aria-label', l); if (b.dataset.page === state.page) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   document.querySelectorAll('[data-act=lang]').forEach((b, i) => b.setAttribute('aria-pressed', i === LI));
@@ -3615,12 +3713,13 @@ document.addEventListener('click', e => {
     BACK_TO = a === 'openp' || a === 'comments' ? null : fromCard || (a === 'repopen' || (a === 'riskopen' && el.dataset.src !== 'list') ? id : null);
   }
   // вкладка в шапке — всегда её вид по умолчанию и без фильтров колонок (#23, #24); показатели главной (goview) ставят свой вид
-  if (a === 'nav'){ BACK_TO = null; state.page = el.dataset.page; state.rmCell = null; Object.assign(state, {pv:'all', rv:'all', kv:'open', av:'all', fv:'all'}); Object.keys(TS).forEach(k => { TS[k].filters = {}; }); TW = {}; closePop(); closePanel(); render(); window.scrollTo(0, 0); }
+  if (a === 'nav'){ BACK_TO = null; state.page = el.dataset.page; state.rmCell = null; Object.assign(state, {pv:'all', sv:'all', rv:'all', kv:'open', av:'all', fv:'all'}); Object.keys(TS).forEach(k => { TS[k].filters = {}; }); TW = {}; closePop(); closePanel(); render(); window.scrollTo(0, 0); }
   else if (a === 'wreset'){ const k = el.dataset.key; if (TS[k]) { TS[k].w = {}; tSave(k); } closePop(); rerenderMain(); }
   // другой язык — другие ширины текста: закреплённые ширины колонок замеряются заново
   else if (a === 'lang'){ LI = +el.dataset.i; try { localStorage.setItem('pmo-lang', String(LI)); } catch(e) {} TW = {}; render(); if (POP && POP.kind === 'user') renderPop(); }
   else if (a === 'theme'){ THEME = el.dataset.t; try { localStorage.setItem('pmo-theme', THEME); } catch(e) {} applyTheme(); renderChrome(); if (POP && POP.kind === 'user') renderPop(); }
-  else if (a === 'goview'){ state.page = el.dataset.page; state.rmCell = null; Object.keys(TS).forEach(k => { TS[k].filters = {}; }); state[{projects:'pv', reports:'rv', risks:'kv', archive:'av'}[state.page]] = el.dataset.view; render(); window.scrollTo(0, 0); }
+  else if (a === 'goview'){ state.page = el.dataset.page; state.rmCell = null; Object.keys(TS).forEach(k => { TS[k].filters = {}; }); state[{projects:'pv', support:'sv', reports:'rv', risks:'kv', archive:'av'}[state.page]] = el.dataset.view; render(); window.scrollTo(0, 0); }
+  else if (a === 'homeseg'){ state.homeSeg = el.dataset.v === 'sup' ? 'sup' : 'cur'; state.rmCell = null; try { localStorage.setItem('pmo-homeseg', state.homeSeg); } catch(e) {} rerenderMain(); }
   else if (a === 'mode'){ state[el.dataset.key] = el.dataset.mode; try { const k = {projMode:'pmo-projmode', archmode:'pmo-archmode'}[el.dataset.key]; if (k) localStorage.setItem(k, el.dataset.mode); } catch(e) {} rerenderMain(); }
   else if (a === 'openp') projectPanel(id, false);
   else if (a === 'comments') projectPanel(id, true);

@@ -1,0 +1,13 @@
+{
+  "_doc": "Категория проекта по фазе (spec 2026-11-09-support-status): «Підтримка» — вкладка «Проєкти підтримки», режим главной «Проєкти підтримки», отчёт по четвергам; архив — «Завершено» / «Скасовано» (archive.json); остальные — «Поточні проєкти». Підтримка — активный проект (права PM как обычно). Проверяют прототип (spfx/test/prototypeSupport.test.ts); приложение и синхронизация — при их доработке.",
+  "cases": [
+    { "status": "Ініціація", "kind": "project", "archived": false },
+    { "status": "Планування", "kind": "project", "archived": false },
+    { "status": "Реалізація", "kind": "project", "archived": false },
+    { "status": "Підтримка", "kind": "support", "archived": false },
+    { "status": "Призупинено", "kind": "project", "archived": false },
+    { "status": "Завершено", "kind": "project", "archived": true },
+    { "status": "Скасовано", "kind": "project", "archived": true },
+    { "status": "", "kind": "project", "archived": false }
+  ]
+}
