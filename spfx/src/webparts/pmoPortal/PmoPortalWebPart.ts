@@ -9,6 +9,9 @@ import { aiPref } from './ai/aiPref';
 
 /** Портфель проєктів: приложение по прототипу prototype/pmo-prototype.html. */
 export default class PmoPortalWebPart extends BaseClientSideWebPart<{}> {
+  // веб-часть уже снята со страницы: отложенный renderApp (после ответа MSAL) не создаёт корень React заново
+  private disposed = false;
+
   public render(): void {
     if (isAuthResponse(window.location.hash, window.location.search)) {
       // возврат в эту же вкладку со входа с переходом на страницу (телефон): MSAL разбирает ответ, затем — приложение
@@ -34,6 +37,7 @@ export default class PmoPortalWebPart extends BaseClientSideWebPart<{}> {
   }
 
   private renderApp(): void {
+    if (this.disposed) return;
     const pc = this.context.pageContext;
     const admin = pc.web.permissions.hasPermission(SPPermission.manageWeb);
     // всем, кроме администраторов сайта (право «Керування веб-сайтом»), прячем штатные полосы SharePoint:
@@ -49,6 +53,7 @@ export default class PmoPortalWebPart extends BaseClientSideWebPart<{}> {
   }
 
   protected onDispose(): void {
+    this.disposed = true;
     disposeRoot(this.domElement);
   }
 }

@@ -8,7 +8,7 @@ const main = readdirSync(dist).filter(f => /^pmo-portal-web-part_[0-9a-f]+\.js$/
 if (main.length !== 1) { console.error(`check-bundle: ожидался один pmo-portal-web-part_*.js в dist/, найдено ${main.length}`); process.exit(1); }
 const js = readFileSync(join(dist, main[0]), 'utf8');
 const errs = [];
-if (/:global\b/.test(js)) errs.push('в CSS осталась обёртка :global — браузер отбросит правила (проверьте config/sass.json, preserveIcssExports)');
-if (!js.includes('.pmo-app{--theme')) errs.push('в бандле нет переменных темы .pmo-app{--theme… — стили не собраны');
+if (/:global\s*[{.#\[]/.test(js)) errs.push('в CSS осталась обёртка :global — браузер отбросит правила (проверьте config/sass.json, preserveIcssExports)');
+if (!/\.pmo-app\s*\{\s*--theme/.test(js)) errs.push('в бандле нет переменных темы .pmo-app{--theme… — стили не собраны');
 if (errs.length) { console.error('check-bundle:\n  ' + errs.join('\n  ')); process.exit(1); }
 console.log(`check-bundle: ${main[0]} — стили на месте`);
