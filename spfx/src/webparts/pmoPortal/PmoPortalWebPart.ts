@@ -1,8 +1,8 @@
 import * as React from 'react';
-import * as ReactDom from 'react-dom';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 import { SPPermission } from '@microsoft/sp-page-context';
 import { App } from './components/App';
+import { renderInto, disposeRoot } from './components/reactRoot';
 import { SpRepo } from './data/SpRepo';
 import { isAuthResponse, aiRedirecting, AI_RETURN_KEY } from './ai/aiConfig';
 import { aiPref } from './ai/aiPref';
@@ -44,11 +44,11 @@ export default class PmoPortalWebPart extends BaseClientSideWebPart<{}> {
       document.head.appendChild(st);
     }
     const repo = new SpRepo(this.context.spHttpClient, pc.web.absoluteUrl, pc.web.serverRelativeUrl, pc.user.email);
-    ReactDom.render(React.createElement(App, { repo, culture: pc.cultureInfo.currentUICultureName,
-      userName: pc.user.displayName, userEmail: pc.user.email, webUrl: pc.web.absoluteUrl, admin }), this.domElement);
+    renderInto(this.domElement, React.createElement(App, { repo, culture: pc.cultureInfo.currentUICultureName,
+      userName: pc.user.displayName, userEmail: pc.user.email, webUrl: pc.web.absoluteUrl, admin }));
   }
 
   protected onDispose(): void {
-    ReactDom.unmountComponentAtNode(this.domElement);
+    disposeRoot(this.domElement);
   }
 }

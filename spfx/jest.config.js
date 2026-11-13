@@ -4,6 +4,8 @@
 process.env.TZ = 'Europe/Kyiv';
 module.exports = {
   testEnvironment: 'node',
+  // React 18: тесты с рендером объявляют, что действия идут через act() — иначе React предупреждает на каждом обновлении
+  globals: { IS_REACT_ACT_ENVIRONMENT: true },
   roots: ['<rootDir>/test'],
   transform: { '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.jest.json' }] }
 };
