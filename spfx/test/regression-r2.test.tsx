@@ -1,7 +1,8 @@
 /** @jest-environment jsdom */
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act, Simulate } from 'react-dom/test-utils';
+import { act } from 'react';
+import { Simulate } from 'react-dom/test-utils';
+import { renderInto, disposeRoot } from '../src/webparts/pmoPortal/components/reactRoot';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
 import { makeT } from '../src/webparts/pmoPortal/i18n/i18n';
 import { T } from '../src/webparts/pmoPortal/i18n/strings';
@@ -18,8 +19,8 @@ const ctx: any = { ...tt, lang: 0, today: '2026-10-04', me: 'pm@x', webUrl: '', 
   openForm() { /* */ }, repo: {}, canCreate: false, reload: async () => undefined, toast() { /* */ } };
 let root: HTMLDivElement;
 beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); localStorage.clear(); });
-afterEach(() => { ReactDOM.unmountComponentAtNode(root); root.remove(); });
-const mount = (el: React.ReactElement, c: any = ctx): void => { act(() => { ReactDOM.render(<AppCtx.Provider value={c}>{el}</AppCtx.Provider>, root); }); };
+afterEach(() => { act(() => { disposeRoot(root); }); root.remove(); });
+const mount = (el: React.ReactElement, c: any = ctx): void => { act(() => { renderInto(root, <AppCtx.Provider value={c}>{el}</AppCtx.Provider>); }); };
 
 // #31: открытая страница сама проверяет свежесть — при возврате на вкладку и раз в 5 минут; перечитывает, только если данные изменились
 describe('#31 страница обновляется сама', () => {
@@ -31,7 +32,7 @@ describe('#31 страница обновляется сама', () => {
     jest.useFakeTimers();
     let nLoad = 0, nStamp = 0;
     const repo = { loadAll: async () => { nLoad++; return emptyData; }, stamp: async () => stamps[Math.min(nStamp++, stamps.length - 1)] };
-    await act(async () => { ReactDOM.render(<App repo={repo} culture="uk-UA" userName="PM" userEmail="pm@x" webUrl="" />, root); await Promise.resolve(); await Promise.resolve(); });
+    await act(async () => { renderInto(root, <App repo={repo} culture="uk-UA" userName="PM" userEmail="pm@x" webUrl="" />); await Promise.resolve(); await Promise.resolve(); });
     return { loads: () => nLoad, stamps: () => nStamp };
   };
   const flush = async (): Promise<void> => { await act(async () => { for (let i = 0; i < 5; i++) await Promise.resolve(); }); };
@@ -82,7 +83,7 @@ describe('#29 колонка «Звіт» и плитка: отчёт на по�
     mount(<>{projectDefs(x, false).cols.repDate.cell(proj(p))}</>);
     const txt = root.textContent || '';
     want.forEach(s => expect(txt).toContain(s));
-    ReactDOM.unmountComponentAtNode(root);
+    act(() => { disposeRoot(root); });
     mount(<Tiles rows={[proj(p)]} />);
     want.forEach(s => expect(root.querySelector('.tile-upd')!.textContent).toContain(s));
   });
@@ -134,10 +135,10 @@ test('#49 меню колонок: ↓ переставляет колонку, 
   act(() => { (rowB.querySelector('button[aria-label="↓"]') as HTMLElement).click(); });
   expect(heads()).toEqual(['A', 'C', 'B']);
   expect(JSON.parse(localStorage.getItem('pmo-table6-ord49') as string).cols).toEqual(['a', 'c', 'b']);
-  ReactDOM.unmountComponentAtNode(root);
+  act(() => { disposeRoot(root); });
   mount(<DataTable tkey="ord49" defs={defs} rows={[{ id: 1, a: 'a' }]} />);
   expect(heads()).toEqual(['A', 'C', 'B']);                       // после перезагрузки — тот же порядок
-  ReactDOM.unmountComponentAtNode(root);
+  act(() => { disposeRoot(root); });
   mount(<DataTable tkey="other49" defs={defs} rows={[{ id: 1, a: 'a' }]} />);
   expect(heads()).toEqual(['A', 'B', 'C']);                       // другой список — свой порядок
 });
@@ -158,7 +159,7 @@ describe('форма статус-отчёта (компонент)', () => {
     mount(<ReportForm data={data(two)} projectId={7} onCancel={() => undefined} />);
     expect(root.querySelector('select#f-p')).toBeNull();
     expect(root.querySelector('.fixedval')!.textContent).toBe('Проєкт R');
-    ReactDOM.unmountComponentAtNode(root);
+    act(() => { disposeRoot(root); });
     mount(<ReportForm data={data(two)} projectId={0} onCancel={() => undefined} />);
     expect(root.querySelector('select#f-p')).not.toBeNull();
   });
@@ -182,7 +183,7 @@ describe('форма статус-отчёта (компонент)', () => {
       await act(async () => { Simulate.submit(root.querySelector('form') as HTMLFormElement); await Promise.resolve(); });
       expect(created).toEqual([]);
       expect(root.querySelector('p.err, .err')!.textContent).toContain('на погодженні');
-      ReactDOM.unmountComponentAtNode(root);
+      act(() => { disposeRoot(root); });
     }
   });
   test('#52 «Завершено» — 100 и поле закрыто; другой статус — прежнее значение и поле открыто; «Скасовано» — без изменений', () => {
@@ -266,7 +267,7 @@ describe('#32 риски архивных проектов', () => {
   const rows = (view: string): string[] => {
     mount(<Risks data={data} />, { ...ctx, views: { risks: view } });
     const r = Array.from(root.querySelectorAll('tbody tr')).map(tr => tr.textContent || '');
-    ReactDOM.unmountComponentAtNode(root); return r;
+    act(() => { disposeRoot(root); }); return r;
   };
   test('вид «Ризики архівних проєктів» — только риски архива; остальные виды — без них', () => {
     const a = rows('archived'); expect(a.length).toBe(1); expect(a[0]).toContain('Ризик 2');

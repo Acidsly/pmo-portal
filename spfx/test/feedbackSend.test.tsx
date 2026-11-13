@@ -1,7 +1,8 @@
 /** @jest-environment jsdom */
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act, Simulate } from 'react-dom/test-utils';
+import { act } from 'react';
+import { Simulate } from 'react-dom/test-utils';
+import { renderInto, disposeRoot } from '../src/webparts/pmoPortal/components/reactRoot';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
 import { FeedbackForm } from '../src/webparts/pmoPortal/panels/FeedbackForm';
 import { retryNet, isNetError, NET_RETRY } from '../src/webparts/pmoPortal/logic/ui';
@@ -21,7 +22,7 @@ test('сетевой сбой — повтор (до двух раз); отве�
 
 let root: HTMLDivElement;
 beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); });
-afterEach(() => { ReactDOM.unmountComponentAtNode(root); root.remove(); });
+afterEach(() => { act(() => { disposeRoot(root); }); root.remove(); });
 const flush = async (): Promise<void> => { for (let i = 0; i < 10; i++) await act(async () => { await new Promise(r => setTimeout(r, 0)); }); };
 
 test('создание прошло, скриншот — нет: понятная ошибка; повторное «Надіслати» — тот же отзыв, догружается только скриншот; затем список перечитан', async () => {
@@ -30,7 +31,7 @@ test('создание прошло, скриншот — нет: понятна
     attach: async (_l: string, id: number, name: string) => { if (attachFails-- > 0) throw net(); attached.push(id + ':' + name); } };
   const ctx: any = { ...makeT(0), lang: 0, me: 'pm@x', repo, reload: async () => { reloads++; }, toast() { /* */ } };
   // скриншот — как после вставки (у формы своё состояние; кладём через paste нельзя в jsdom — подменяем shrinkImage)
-  act(() => { ReactDOM.render(<AppCtx.Provider value={ctx}><FeedbackForm screen="#home" onCancel={() => { closed++; }} /></AppCtx.Provider>, root); });
+  act(() => { renderInto(root, <AppCtx.Provider value={ctx}><FeedbackForm screen="#home" onCancel={() => { closed++; }} /></AppCtx.Provider>); });
   act(() => { Simulate.change(root.querySelector('#fb-t') as HTMLTextAreaElement, { target: { value: 'Не працює' } } as any); });
   const input = root.querySelector('input[type=file]') as HTMLInputElement;
   const file = new File(['x'], 'shot.png', { type: 'image/png' });

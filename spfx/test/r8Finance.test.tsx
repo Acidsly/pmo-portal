@@ -2,8 +2,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act, Simulate } from 'react-dom/test-utils';
+import { act } from 'react';
+import { Simulate } from 'react-dom/test-utils';
+import { renderInto, disposeRoot } from '../src/webparts/pmoPortal/components/reactRoot';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
 import { ReportForm } from '../src/webparts/pmoPortal/panels/ReportForm';
 import { RiskForm } from '../src/webparts/pmoPortal/panels/RiskForm';
@@ -24,8 +25,8 @@ const pj = (x: any = {}): any => ({ id: 1, code: 'PRJ-001', title: 'Проєкт
 const data = (projects: any[]): any => ({ projects, reports: [], risks: [], comments: [], changes: [], team: [], approvals: [], canCreate: true, canApprove: false });
 let root: HTMLDivElement;
 beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); });
-afterEach(() => { ReactDOM.unmountComponentAtNode(root); root.remove(); });
-const mount = (el: React.ReactElement): void => { act(() => { ReactDOM.render(<AppCtx.Provider value={ctx}>{el}</AppCtx.Provider>, root); }); };
+afterEach(() => { act(() => { disposeRoot(root); }); root.remove(); });
+const mount = (el: React.ReactElement): void => { act(() => { renderInto(root, <AppCtx.Provider value={ctx}>{el}</AppCtx.Provider>); }); };
 const $ = (s: string): HTMLElement => root.querySelector(s) as HTMLElement;
 const naRadio = (): HTMLInputElement | null => root.querySelector('input[name="budget"][value="Не оцінено"]');
 
@@ -119,7 +120,7 @@ test('#121: PMO бачить «Не оцінено» обраною у форм�
     schedule: 'Зелений', budget: 'Не оцінено', resources: 'Жовтий', status: 'Планування', type: '', progress: null, start: '', goLive: '', planEnd: '', forecastEnd: '',
     actualCost: null, budgetPlan: null, forecastCost: null, keyReason: '', done: '', next: '', issues: '', decision: false, decisionText: '', approvedBy: null, approvedAt: '', approvalNote: '' };
   const d = { ...data([pj()]), reports: [r], canApprove: true };
-  await act(async () => { ReactDOM.render(<AppCtx.Provider value={ctx}><ReportView data={d} report={r} onCancel={() => undefined} /></AppCtx.Provider>, root); });
+  await act(async () => { renderInto(root, <AppCtx.Provider value={ctx}><ReportView data={d} report={r} onCancel={() => undefined} /></AppCtx.Provider>); });
   expect((root.querySelector('input[name="ap-b"][value="Не оцінено"]') as HTMLInputElement).checked).toBe(true);
 });
 test('#121: «Не оцінено» є серед значень поля «Бюджет» у Deploy-PMO.ps1 (лише додається)', () => {

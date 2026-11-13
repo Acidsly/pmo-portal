@@ -1,7 +1,7 @@
 /** @jest-environment jsdom */
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act } from 'react-dom/test-utils';
+import { act } from 'react';
+import { renderInto, disposeRoot } from '../src/webparts/pmoPortal/components/reactRoot';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
 import { Header } from '../src/webparts/pmoPortal/components/Header';
 import { useAiSwitch } from '../src/webparts/pmoPortal/ai/useAiSwitch';
@@ -16,7 +16,7 @@ const tt = makeT(0);
 let root: HTMLDivElement;
 let calls: number; let result: AiEnableFail | null; let resumes: boolean[]; let saved: any[];
 beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); localStorage.clear(); sessionStorage.clear(); calls = 0; result = null; resumes = []; saved = []; });
-afterEach(() => { ReactDOM.unmountComponentAtNode(root); root.remove(); });
+afterEach(() => { act(() => { disposeRoot(root); }); root.remove(); });
 const flush = async (): Promise<void> => { for (let i = 0; i < 4; i++) await act(async () => { await new Promise(r => setTimeout(r, 0)); }); };
 
 const Harness: React.FC<{ pilot: boolean; store?: AiStore }> = p => {
@@ -26,7 +26,7 @@ const Harness: React.FC<{ pilot: boolean; store?: AiStore }> = p => {
       onTheme={() => undefined} onHelp={() => undefined} ai={ai} />
     <p id="state">{ai ? String(ai.on) : 'none'}</p></AppCtx.Provider>;
 };
-const mount = (pilot = true, store?: AiStore): void => { act(() => { ReactDOM.render(<Harness pilot={pilot} store={store} />, root); }); };
+const mount = (pilot = true, store?: AiStore): void => { act(() => { renderInto(root, <Harness pilot={pilot} store={store} />); }); };
 const storeOf = (row: boolean, prefs: AiStore['prefs']): AiStore => ({ row, prefs, save: async x => { saved.push(x); } });
 const $ = (s: string): HTMLElement => document.querySelector(s) as HTMLElement;
 const click = (el: Element | null): void => { act(() => { (el as HTMLElement).click(); }); };
@@ -60,7 +60,7 @@ describe('переключатель «Помічник ШІ»', () => {
     expect([aiPref.on('pm@x'), aiPref.consented('pm@x')]).toEqual([true, true]);
     expect($('#me-pop').textContent).toContain(T.aiSwitchOn[0]);
     // новая загрузка страницы — включён
-    ReactDOM.unmountComponentAtNode(root); mount();
+    act(() => { disposeRoot(root); }); mount();
     expect($('#state').textContent).toBe('true');
     click($('.me')); click(sw());
     expect([sw().getAttribute('aria-checked'), aiPref.on('pm@x'), $('#state').textContent]).toEqual(['false', false, 'false']);
@@ -105,7 +105,7 @@ describe('переключатель у человека', () => {
     await act(async () => { btn(T.aiAllow[0]).click(); }); await flush();
     click(sw()); await flush();
     expect(saved).toEqual([{ on: true, ok: true }, { on: false, ok: true }]);
-    ReactDOM.unmountComponentAtNode(root); saved = [];
+    act(() => { disposeRoot(root); }); saved = [];
     mount(true, storeOf(false, null)); click($('.me')); click(sw()); await flush();
     expect([$('#state').textContent, saved]).toEqual(['true', []]);
   });
@@ -123,7 +123,7 @@ describe('переключатель у человека', () => {
     aiPref.setPending('pm@x', true);
     mount(true); await flush();
     expect($('#state').textContent).toBe('true');
-    act(() => { ReactDOM.render(<Harness pilot store={storeOf(true, { on: false, ok: true })} />, root); }); await flush();
+    act(() => { renderInto(root, <Harness pilot store={storeOf(true, { on: false, ok: true })} />); }); await flush();
     expect([$('#state').textContent, saved]).toEqual(['true', [{ on: true, ok: true }]]);
   });
   test('включил сейчас — строка, загруженная раньше («выключено»), не откатывает', async () => {
@@ -144,7 +144,7 @@ describe('переключатель у человека', () => {
     const H: React.FC = () => { const ai = useAiSwitch('pm@x', true, () => hang ? new Promise(() => undefined) : Promise.resolve(null));
       return <AppCtx.Provider value={{ ...tt, lang: 0 } as any}><Header page="home" lang={0} theme="light" userName="PM" userEmail="pm@x" onPage={() => undefined}
         onLang={() => undefined} onTheme={() => undefined} onHelp={() => undefined} ai={ai} /></AppCtx.Provider>; };
-    act(() => { ReactDOM.render(<H />, root); });
+    act(() => { renderInto(root, <H />); });
     click($('.me')); click(sw()); await act(async () => { btn(T.aiAllow[0]).click(); }); await flush();
     expect(sw().hasAttribute('disabled')).toBe(true);
     const e = new Event('pageshow') as any; e.persisted = true;

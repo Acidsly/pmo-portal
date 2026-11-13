@@ -2,8 +2,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act, Simulate } from 'react-dom/test-utils';
+import { act } from 'react';
+import { Simulate } from 'react-dom/test-utils';
+import { renderInto, disposeRoot } from '../src/webparts/pmoPortal/components/reactRoot';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
 import { ReportForm } from '../src/webparts/pmoPortal/panels/ReportForm';
 import { ReportView } from '../src/webparts/pmoPortal/panels/ReportView';
@@ -67,15 +68,15 @@ const risk = (x: any = {}): any => ({ id: 3, projectId: 1, title: 'Затрим�
 const data = (projects: any[], reports: any[] = [], risks: any[] = []): any => ({ projects, reports, risks, comments: [], changes: [], team: [], approvals: [], canCreate: true, canApprove: false });
 let root: HTMLDivElement;
 beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); guard = null; });
-afterEach(() => { ReactDOM.unmountComponentAtNode(root); root.remove(); jest.restoreAllMocks(); });
-const mount = (el: React.ReactElement): void => { act(() => { ReactDOM.render(<AppCtx.Provider value={ctx}>{el}</AppCtx.Provider>, root); }); };
+afterEach(() => { act(() => { disposeRoot(root); }); root.remove(); jest.restoreAllMocks(); });
+const mount = (el: React.ReactElement): void => { act(() => { renderInto(root, <AppCtx.Provider value={ctx}>{el}</AppCtx.Provider>); }); };
 const $ = (s: string): HTMLElement => root.querySelector(s) as HTMLElement;
 const type = (s: string, v: string): void => { act(() => { Simulate.change($(s), { target: { value: v } } as any); }); };
 
 test('#118: ризик архівного проєкту — причина «проєкт в архіві», а не «лише PM»', () => {
   mount(<RiskForm data={data([pj({ status: 'Завершено' })], [], [risk()])} projectId={1} riskId={3} onCancel={() => undefined} />);
   expect($('#k-ro').textContent).toBe('🔒 ' + tt.t('riskArchived'));
-  ReactDOM.unmountComponentAtNode(root);
+  act(() => { disposeRoot(root); });
   mount(<RiskForm data={data([pj({ canEdit: false })], [], [risk()])} projectId={1} riskId={3} onCancel={() => undefined} />);
   expect($('#k-ro').textContent).toBe('🔒 ' + tt.t('readOnly'));
 });
@@ -133,7 +134,7 @@ describe('форма звіту', () => {
     ask.mockReturnValue(true);
     act(() => { Simulate.click(Array.from(root.querySelectorAll('.actions .btn')).filter(b => b.textContent === tt.t('cancel'))[0]); });
     expect(closed).toBe(1);
-    act(() => { ReactDOM.unmountComponentAtNode(root); }); expect(guard).toBeNull();   // форма закрыта — вопрос снят
+    act(() => { disposeRoot(root); }); expect(guard).toBeNull();   // форма закрыта — вопрос снят
   });
   test('#120: «План виконано повністю» — поле «Не зроблено…» закрите, значення «Усе виконано», без обов’язковості', () => {
     const rep = { id: 9, projectId: 1, date: '2026-10-16', approval: 'Погоджено', applied: true, next: 'Розпочати планування' };
@@ -178,7 +179,7 @@ describe('перегляд звіту (#135, #136)', () => {
   const r2 = R({ id: 2, date: '2026-10-30', next: 'Новий план', notDone: 'Планування не розпочато' });
   const txt = (s: string): string => ($(s).textContent || '').replace(/[  ]/g, ' ');
   test('#135: суми, яких звіт не змінював, — на дату звіту з попереднього погодженого; #136 «Планувалось» — план попереднього з датою', async () => {
-    await act(async () => { ReactDOM.render(<AppCtx.Provider value={ctx}><ReportView data={data([pj({ budget: 500, actualCost: 110 })], [r1, r2])} report={r2} onCancel={() => undefined} /></AppCtx.Provider>, root); });
+    await act(async () => { renderInto(root, <AppCtx.Provider value={ctx}><ReportView data={data([pj({ budget: 500, actualCost: 110 })], [r1, r2])} report={r2} onCancel={() => undefined} /></AppCtx.Provider>); });
     expect(txt('#rv-budgetPlan')).toContain('400 $');
     expect(txt('#rv-actualCost')).toContain('50 $');
     expect(txt('#rv-forecastCost')).toContain('—');
@@ -186,13 +187,13 @@ describe('перегляд звіту (#135, #136)', () => {
     expect(txt('#rv-plan')).toContain('16.10.2026');
   });
   test('#135: перший звіт без змінених сум — з картки (пізніше не змінювались); #136 — плану немає', async () => {
-    await act(async () => { ReactDOM.render(<AppCtx.Provider value={ctx}><ReportView data={data([pj({ budget: 500, actualCost: 110 })], [r2])} report={r2} onCancel={() => undefined} /></AppCtx.Provider>, root); });
+    await act(async () => { renderInto(root, <AppCtx.Provider value={ctx}><ReportView data={data([pj({ budget: 500, actualCost: 110 })], [r2])} report={r2} onCancel={() => undefined} /></AppCtx.Provider>); });
     expect(txt('#rv-budgetPlan')).toContain('500 $'); expect(txt('#rv-actualCost')).toContain('110 $');
     expect($('#rv-plan')).toBeNull();
   });
   test('#120: «Усе виконано» у «Не зроблено…» — перекладом мовою інтерфейсу', async () => {
     const en = { ...ctx, ...makeT(1), lang: 1 }; setValueLang(1);   // как App: значения — на языке интерфейса
-    await act(async () => { ReactDOM.render(<AppCtx.Provider value={en}><ReportView data={data([pj()], [R({ id: 3, date: '2026-10-30', notDone: PLAN_ALL_DONE })])} report={R({ id: 3, date: '2026-10-30', notDone: PLAN_ALL_DONE })} onCancel={() => undefined} /></AppCtx.Provider>, root); });
+    await act(async () => { renderInto(root, <AppCtx.Provider value={en}><ReportView data={data([pj()], [R({ id: 3, date: '2026-10-30', notDone: PLAN_ALL_DONE })])} report={R({ id: 3, date: '2026-10-30', notDone: PLAN_ALL_DONE })} onCancel={() => undefined} /></AppCtx.Provider>); });
     expect(root.textContent).toContain('All done'); setValueLang(0);
   });
 });

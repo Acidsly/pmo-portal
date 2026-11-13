@@ -1,7 +1,8 @@
 /** @jest-environment jsdom */
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act, Simulate } from 'react-dom/test-utils';
+import { act } from 'react';
+import { Simulate } from 'react-dom/test-utils';
+import { renderInto, disposeRoot } from '../src/webparts/pmoPortal/components/reactRoot';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
 import { makeT } from '../src/webparts/pmoPortal/i18n/i18n';
 import { Home } from '../src/webparts/pmoPortal/pages/Home';
@@ -20,8 +21,8 @@ const ctx = (): any => ({ ...tt, lang: 0, today: '2026-11-12', me: 'pm@x', webUr
   repo: { loadChanges: async () => [], jobTitle: async () => '' }, canCreate: true, reload: async () => undefined, toast() { /* */ } });
 let root: HTMLDivElement;
 beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); localStorage.clear(); views = { ...DEFAULT_VIEWS }; went = []; });
-afterEach(() => { ReactDOM.unmountComponentAtNode(root); root.remove(); });
-const mount = (el: React.ReactElement): void => { act(() => { ReactDOM.render(<AppCtx.Provider value={ctx()}>{el}</AppCtx.Provider>, root); }); };
+afterEach(() => { act(() => { disposeRoot(root); }); root.remove(); });
+const mount = (el: React.ReactElement): void => { act(() => { renderInto(root, <AppCtx.Provider value={ctx()}>{el}</AppCtx.Provider>); }); };
 const pr = (x: any): any => ({ code: 'PRJ', status: 'Реалізація', type: 'Звичайний', priority: '2 — Середній', progress: 40, actualCost: 0, start: '2026-03-02', goLive: '',
   planEnd: '2027-12-01', forecastEnd: '', archivedAt: '', budget: 0, rag: 'Зелений', department: 'ІТ', country: 'Україна', lastUpdate: '2026-11-12', lastReport: '', lastComment: '',
   canEdit: true, manager: { id: 1, email: 'pm@x', name: 'PM' }, owner: null, stakeholders: [], team: [], links: [], description: '', pending: false, parent: null, lastRep: null, ...x });

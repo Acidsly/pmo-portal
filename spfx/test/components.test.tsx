@@ -1,7 +1,8 @@
 /** @jest-environment jsdom */
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act, Simulate } from 'react-dom/test-utils';
+import { act } from 'react';
+import { Simulate } from 'react-dom/test-utils';
+import { renderInto, disposeRoot } from '../src/webparts/pmoPortal/components/reactRoot';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
 import { MoneyIn, PeoplePicker, DateIn, badDateIn } from '../src/webparts/pmoPortal/components/fields';
 import { DataTable } from '../src/webparts/pmoPortal/components/DataTable';
@@ -26,8 +27,8 @@ const ctx = { ...tt, lang: 0, today: '2026-10-04', me: 'pm@x', webUrl: '', views
   openForm() { /* */ }, repo: {}, canCreate: false, reload: async () => undefined, toast() { /* */ } } as any;
 let root: HTMLDivElement;
 beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); localStorage.clear(); });
-afterEach(() => { ReactDOM.unmountComponentAtNode(root); root.remove(); });
-const mount = (el: React.ReactElement): void => { act(() => { ReactDOM.render(<AppCtx.Provider value={ctx}>{el}</AppCtx.Provider>, root); }); };
+afterEach(() => { act(() => { disposeRoot(root); }); root.remove(); });
+const mount = (el: React.ReactElement): void => { act(() => { renderInto(root, <AppCtx.Provider value={ctx}>{el}</AppCtx.Provider>); }); };
 
 describe('#41 / #45 поле суммы MoneyIn', () => {
   const Host: React.FC<{ init: number; seen: number[] }> = ({ init, seen }) => {
@@ -125,7 +126,7 @@ describe('DataTable: #35 / #49 ширина колонок, #58 карточки
   test('#103: «Оновити дані» — перечитывает данные, повторно не нажать, пока идёт; затем «Дані оновлено»', async () => {
     let n = 0, done: () => void = () => undefined; const toasts: string[] = [];
     const c2 = { ...ctx, reload: () => { n++; return new Promise<void>(r => { done = r; }); }, toast: (m: string) => toasts.push(m) };
-    act(() => { ReactDOM.render(<AppCtx.Provider value={c2 as any}><DataTable tkey="t9" defs={defs} rows={rows} /></AppCtx.Provider>, root); });
+    act(() => { renderInto(root, <AppCtx.Provider value={c2 as any}><DataTable tkey="t9" defs={defs} rows={rows} /></AppCtx.Provider>); });
     const b = root.querySelector('#dt-refresh') as HTMLButtonElement;
     expect(b.getAttribute('aria-label')).toBe('Оновити дані');
     act(() => { b.click(); }); act(() => { b.click(); });
@@ -306,7 +307,7 @@ describe('#43 «Змінити PM / власника» — только PMO', ()
     const repo = { searchPeople: async () => [{ id: 0, email: 'New@x', name: 'Новий PM' }], fresh: async () => ({ project: pr, pending: [], assigns: 0 }),
       createIn: async (...a: any[]) => { calls.push(a); return 9; } };
     const c2 = { ...ctx, repo, reload: async () => undefined, toast() { /* */ }, openProject() { /* */ } };
-    act(() => { ReactDOM.render(<AppCtx.Provider value={c2}><AssignForm data={data()} projectId={5} onCancel={() => undefined} /></AppCtx.Provider>, root); });
+    act(() => { renderInto(root, <AppCtx.Provider value={c2}><AssignForm data={data()} projectId={5} onCancel={() => undefined} /></AppCtx.Provider>); });
     const submit = async (): Promise<void> => { await act(async () => { Simulate.submit(root.querySelector('form') as HTMLFormElement); await Promise.resolve(); }); };
     await submit(); expect(root.textContent).toContain('Оберіть нового PM, нового власника або нову країну.');
     await pick('a-pm', 'Нов');
@@ -324,7 +325,7 @@ describe('#43 «Змінити PM / власника» — только PMO', ()
       createIn: async (...a: any[]) => { calls.push(a); return 9; } };
     const c2 = { ...ctx, repo, reload: async () => undefined, toast() { /* */ }, openProject() { /* */ } };
     const d0 = data({ country: 'Україна' } as any);
-    act(() => { ReactDOM.render(<AppCtx.Provider value={c2}><AssignForm data={d0} projectId={5} onCancel={() => undefined} /></AppCtx.Provider>, root); });
+    act(() => { renderInto(root, <AppCtx.Provider value={c2}><AssignForm data={d0} projectId={5} onCancel={() => undefined} /></AppCtx.Provider>); });
     const submit = async (): Promise<void> => { await act(async () => { Simulate.submit(root.querySelector('form') as HTMLFormElement); await Promise.resolve(); }); };
     act(() => { Simulate.change(root.querySelector('#a-note') as HTMLTextAreaElement, { target: { value: 'Країна' } } as any); });
     act(() => { Simulate.change(root.querySelector('#a-country') as HTMLSelectElement, { target: { value: 'Україна' } } as any); });
@@ -339,19 +340,19 @@ describe('#43 «Змінити PM / власника» — только PMO', ()
     for (const d of [{ ...data(), canApprove: false }, data({ status: 'Завершено' }), data({ status: 'Скасовано' }), data({ assignPending: true })]) {
       mount(<AssignForm data={d} projectId={5} onCancel={() => undefined} />);
       expect(root.querySelector('form')).toBeNull();
-      ReactDOM.unmountComponentAtNode(root);
+      act(() => { disposeRoot(root); });
     }
   });
   test('архив «Скасовано» / «Завершено»: форма карточки по прямой ссылке — только просмотр', () => {
     for (const st of ['Скасовано', 'Завершено']) {
       mount(<ProjectForm data={data({ canEdit: true, status: st })} project={{ ...pr, canEdit: true, status: st } as any} onCancel={() => undefined} />);
       expect(root.querySelector('form')).toBeNull(); expect(root.textContent).toContain('Проєкт в архіві: лише перегляд.');
-      ReactDOM.unmountComponentAtNode(root);
+      act(() => { disposeRoot(root); });
     }
   });
   test('#96: правка карточки без «Мета та опис» — звёздочка, подсказка, ошибка у поля, запись не уходит; введённое остаётся', async () => {
     const saved: any[] = []; const c2 = { ...ctx, repo: { ...ctx.repo, update: async (...a: any[]) => { saved.push(a); } } };
-    act(() => { ReactDOM.render(<AppCtx.Provider value={c2}><ProjectForm data={data({ canEdit: true })} project={{ ...pr, canEdit: true, description: '' } as any} onCancel={() => undefined} /></AppCtx.Provider>, root); });
+    act(() => { renderInto(root, <AppCtx.Provider value={c2}><ProjectForm data={data({ canEdit: true })} project={{ ...pr, canEdit: true, description: '' } as any} onCancel={() => undefined} /></AppCtx.Provider>); });
     const label = root.querySelector('label[for="f-desc"]') as HTMLElement;
     expect(label.textContent).toBe('Мета та опис *');
     expect(root.textContent).toContain('Коротко опишіть мету проєкту та очікуваний результат.');
@@ -377,7 +378,7 @@ describe('#43 «Змінити PM / власника» — только PMO', ()
 test('#46 / #48: ссылка из истории открывает отчёт или риск', () => {
   const opened: string[] = [];
   const c2 = { ...ctx, openForm: (f: string, id: number) => opened.push(`${f}@${id}`) };
-  act(() => { ReactDOM.render(<AppCtx.Provider value={c2}><RefLink r={{ type: 'report', id: 12 }} pid={5} /><RefLink r={{ type: 'risk', id: 7 }} pid={5} /></AppCtx.Provider>, root); });
+  act(() => { renderInto(root, <AppCtx.Provider value={c2}><RefLink r={{ type: 'report', id: 12 }} pid={5} /><RefLink r={{ type: 'risk', id: 7 }} pid={5} /></AppCtx.Provider>); });
   const b = root.querySelectorAll('.chg-ref');
   expect(Array.from(b).map(x => x.textContent)).toEqual(['Відкрити звіт →', 'Відкрити ризик →']);
   act(() => { (b[0] as HTMLElement).click(); (b[1] as HTMLElement).click(); });
@@ -397,18 +398,18 @@ describe('сповіщення: колокольчик и панель', () => {
     onTheme={() => undefined} onHelp={() => undefined} bell={bell} />);
   test('шапка: число новых и покачивание только при новых; больше 99 — «99+»', () => {
     head({ unread: 3, onOpen: () => undefined }); expect(root.querySelector('#bell .dot-new')!.textContent).toBe('3'); expect(root.querySelector('#bell')!.className).toContain('has');
-    ReactDOM.unmountComponentAtNode(root);
+    act(() => { disposeRoot(root); });
     head({ unread: 12, onOpen: () => undefined }); expect(root.querySelector('#bell .dot-new')!.textContent).toBe('12');   // не «9+»: число видно, пока до 99
-    ReactDOM.unmountComponentAtNode(root);
+    act(() => { disposeRoot(root); });
     head({ unread: 120, onOpen: () => undefined }); expect(root.querySelector('#bell .dot-new')!.textContent).toBe('99+');
-    ReactDOM.unmountComponentAtNode(root);
+    act(() => { disposeRoot(root); });
     head({ unread: 0, onOpen: () => undefined }); expect(root.querySelector('#bell')).not.toBeNull(); expect(root.querySelector('#bell .dot-new')).toBeNull();
     expect(root.querySelector('#bell')!.className).not.toContain('has');
   });
   test('панель: мои новые события выделены; открытие панели ничего не пишет; нажатие открывает событие и отмечает его; «Позначити все прочитаним» — метки растут', async () => {
     const marked: any[] = []; const opened: string[] = [];
     const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } }, reload: async () => undefined };
-    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 20, readCmId: 5 })} onOpen={(f, id) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    await act(async () => { renderInto(root, <AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 20, readCmId: 5 })} onOpen={(f, id) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>); await Promise.resolve(); });
     const items = Array.from(root.querySelectorAll('.ntf-i:not(.rel-n)'));
     expect(items.length).toBe(1);   // подача отчёта — только PMO; PM видит комментарий
     expect(items[0].className).toContain('new');
@@ -425,7 +426,7 @@ describe('сповіщення: колокольчик и панель', () => {
   test('открыл уже прочитанное событие — ничего не пишется, «Нових» нет', async () => {
     const marked: any[] = []; const opened: string[] = [];
     const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } }, reload: async () => undefined };
-    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 30, readCmId: 7 })} onOpen={(f, id) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    await act(async () => { renderInto(root, <AppCtx.Provider value={c2}><NotifyPanel data={data({ id: 1, readId: 30, readCmId: 7 })} onOpen={(f, id) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>); await Promise.resolve(); });
     expect(root.querySelector('#ntf-n')).toBeNull();
     await act(async () => { (root.querySelector('.ntf-i:not(.rel-n)') as HTMLElement).click(); await Promise.resolve(); });
     expect(opened).toEqual(['@1']); expect(marked).toEqual([]);
@@ -433,7 +434,7 @@ describe('сповіщення: колокольчик и панель', () => {
   test('строки «Прочитане» ещё нет — подсказка, ничего не пишется', async () => {
     const marked: any[] = [];
     const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async (m: any) => { marked.push(m); } } };
-    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data(null)} onOpen={() => undefined} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    await act(async () => { renderInto(root, <AppCtx.Provider value={c2}><NotifyPanel data={data(null)} onOpen={() => undefined} onCancel={() => undefined} /></AppCtx.Provider>); await Promise.resolve(); });
     expect(root.textContent).toContain('Сповіщення з\'являться протягом 15 хвилин.');
     expect(root.querySelector('#ntf-all')).toBeNull();
     expect(marked).toEqual([]);
@@ -454,7 +455,7 @@ describe('отзыв: «попередній / наступний» по пор�
     expect(root.querySelector('.fb-nav')!.textContent).toContain('№3');
     act(() => { (root.querySelector('#fb-prev') as HTMLElement).click(); (root.querySelector('#fb-next') as HTMLElement).click(); });
     expect(go).toEqual([5, 9]);
-    ReactDOM.unmountComponentAtNode(root);
+    act(() => { disposeRoot(root); });
     mount(<FeedbackView row={fb(5)} admin={false} order={[5, 3, 9]} onGo={n => go.push(n)} onCancel={() => undefined} />);
     expect((root.querySelector('#fb-prev') as HTMLButtonElement).disabled).toBe(true);
     expect((root.querySelector('#fb-next') as HTMLButtonElement).disabled).toBe(false);
@@ -474,10 +475,10 @@ describe('метка погодження в колонке «Звіт»', () =>
   test('«Погоджено» — без даты; «Повернуто» и «На погодженні» — с датой отчёта; нет отчётов — пусто', () => {
     mount(<RepMark r={{ approval: 'Погоджено', date: '2026-09-25' }} />);
     expect(root.querySelector('.rep-ap .pill')!.textContent).toBe('Погоджено'); expect(root.querySelector('.rep-ap .muted')).toBeNull();
-    ReactDOM.unmountComponentAtNode(root);
+    act(() => { disposeRoot(root); });
     mount(<RepMark r={{ approval: 'Повернуто', date: '2026-10-01' }} />);
     expect(root.textContent).toContain('Повернуто'); expect(root.querySelector('.rep-ap .muted')!.textContent).toBe(new Date('2026-10-01T12:00:00Z').toLocaleDateString('uk-UA'));
-    ReactDOM.unmountComponentAtNode(root);
+    act(() => { disposeRoot(root); });
     mount(<RepMark r={null} />); expect(root.querySelector('.rep-ap')).toBeNull();
   });
 });
@@ -505,14 +506,14 @@ describe('метка сущности бокового окна', () => {
       mount(<EntTag kind={k} />);
       const e = root.querySelector('.ent') as HTMLElement;
       expect(e.textContent).toBe(l); expect(e.className).toContain('ent-' + k); colors.add(e.style.getPropertyValue('--c'));
-      ReactDOM.unmountComponentAtNode(root);
+      act(() => { disposeRoot(root); });
     }
     expect(colors.size).toBe(want.length);
   });
   test('окна: отчёт и сповіщення', async () => {
     const c2 = { ...ctx, me: 'pm@x', repo: { markRead: async () => undefined }, reload: async () => undefined };
     const d = { projects: [{ id: 1, code: 'PRJ-001', title: 'П1', status: 'Реалізація', manager: { email: 'pm@x', name: 'PM' }, owner: null, team: [], stakeholders: [] }], risks: [], reports: [], comments: [], recent: [], canApprove: false, notify: null } as any;
-    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={d} onOpen={() => undefined} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    await act(async () => { renderInto(root, <AppCtx.Provider value={c2}><NotifyPanel data={d} onOpen={() => undefined} onCancel={() => undefined} /></AppCtx.Provider>); await Promise.resolve(); });
     expect((root.querySelector('.ph .ent') as HTMLElement).textContent).toBe('Сповіщення');
   });
 });
@@ -568,7 +569,7 @@ describe('#62 / #69 сохранение отчёта: дата подання �
     const bodies: any[] = [];
     const c2 = { ...ctx, me: 'pm@x', reload: async () => undefined, openProject() { /* */ },
       repo: { fresh: async () => ({ project: pr, etag: '"1"', owner: false, pending: [], lastApprovedDate: '2026-09-01' }), createIn: async (_l: string, _id: number, b: any) => { bodies.push(b); } } };
-    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><ReportForm data={data} projectId={5} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    await act(async () => { renderInto(root, <AppCtx.Provider value={c2}><ReportForm data={data} projectId={5} onCancel={() => undefined} /></AppCtx.Provider>); await Promise.resolve(); });
     for (const n of ['sched', 'budget', 'res']) act(() => { Simulate.change(root.querySelector(`input[name="${n}"][value="Зелений"]`) as HTMLInputElement); });
     act(() => { Simulate.change(root.querySelector('#f-t') as HTMLInputElement, { target: { value: 'Резюме' } } as any); });
     await act(async () => { Simulate.submit(root.querySelector('form') as HTMLFormElement); await new Promise(r => setTimeout(r, 0)); });
@@ -586,7 +587,7 @@ describe('раунд 5: отзывы 81–88', () => {
     const el = root.querySelector('.rep-ap') as HTMLElement;
     const dt = new Date('2026-10-08T14:04:00Z');
     expect(el.title).toBe(`Подано ${dt.toLocaleDateString('uk-UA')} ${dt.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })} · Дарина Д`);
-    ReactDOM.unmountComponentAtNode(root);
+    act(() => { disposeRoot(root); });
     mount(<RepMark r={{ approval: 'Повернуто', date: '2026-10-01' }} />);
     expect((root.querySelector('.rep-ap') as HTMLElement).title).toBe('Подано 01.10.2026 · —');
     const css = require('fs').readFileSync(require('path').join(__dirname, '../src/webparts/pmoPortal/theme/prototype.scss'), 'utf8');
@@ -670,7 +671,7 @@ describe('#90 версия портала и «Що змінилося»', () =>
     let opened = 0; mount(<Help onCancel={() => undefined} onOverview={() => undefined} onReleases={() => { opened++; }} />);
     expect((root.querySelector('#rel-ver') as HTMLElement).textContent).toContain(`Версія ${pkg.solution.version} · ${RELEASES[0][0].date}`);
     act(() => { Simulate.click(root.querySelector('#rel-open') as HTMLElement); }); expect(opened).toBe(1);
-    ReactDOM.unmountComponentAtNode(root);
+    act(() => { disposeRoot(root); });
     const fb: number[] = []; mount(<Releases onBack={() => undefined} onCancel={() => undefined} onFeedback={(n: number) => fb.push(n)} />);
     // #95: технические выпуски подряд — один блок, блоков меньше, чем выпусков; вверху — текущая версия; первый содержательный — раскрыт
     expect(root.querySelectorAll('.rel-i').length).toBeLessThan(RELEASES[0].length);
@@ -696,7 +697,7 @@ describe('колокольчик: отзыв и выпуск в панели', (
     const now = new Date().toISOString();
     const d: any = { projects: [], risks: [], reports: [], comments: [], recent: [], canApprove: false, notify: { id: 1, readId: 0, readCmId: 0, seen: [] },
       feedbackRows: [{ id: 84, created: '', author: '', screen: '', text: '', status: 'Зроблено', answer: 'Готово, див. 1.7.2.7', shots: 0, mine: true, files: [], decidedAt: now }] };
-    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NP data={d} onOpen={(f: string, id: number) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    await act(async () => { renderInto(root, <AppCtx.Provider value={c2}><NP data={d} onOpen={(f: string, id: number) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>); await Promise.resolve(); });
     const f = root.querySelector('.ntf-i.fb-n') as HTMLElement;
     expect(f.textContent).toContain('Ваш відгук #84'); expect(f.textContent).toContain('Відгук розглянуто'); expect(f.textContent).toContain('Зроблено'); expect(f.textContent).toContain('Готово, див. 1.7.2.7');
     await act(async () => { f.click(); await Promise.resolve(); });
@@ -741,8 +742,8 @@ describe('#91 / #92 запись реестра в приложении', () => 
 // #102: «Відгуки» на телефоне — карточки (на широком экране их прячет CSS, видна таблица)
 test('#102: «Відгуки» — карточки: №, дата, статус, автор, экран, текст; нажатие открывает отзыв', () => {
   const opened: string[] = []; const c2 = { ...ctx, openForm: (f: string) => opened.push(f) };
-  act(() => { ReactDOM.render(<AppCtx.Provider value={c2}><Feedback data={{ feedbackRows: [{ id: 12, created: '2026-10-16T09:30:00Z', author: 'Марина', text: 'Не видно кнопки',
-    status: 'Прийнято', answer: '', shots: 0, files: [], screen: '#reports', mine: false }] } as any} /></AppCtx.Provider>, root); });
+  act(() => { renderInto(root, <AppCtx.Provider value={c2}><Feedback data={{ feedbackRows: [{ id: 12, created: '2026-10-16T09:30:00Z', author: 'Марина', text: 'Не видно кнопки',
+    status: 'Прийнято', answer: '', shots: 0, files: [], screen: '#reports', mine: false }] } as any} /></AppCtx.Provider>); });
   const m = root.querySelector('.mcards .mcard') as HTMLElement;
   ['#12', 'Прийнято', 'Марина', 'Статус-звіти', 'Не видно кнопки'].forEach(x => expect(m.textContent).toContain(x));
   act(() => { m.click(); }); expect(opened).toEqual(['fb:12']);
@@ -761,7 +762,7 @@ describe('пошук людей: зовнішній e-mail поза органі
   test('нічого не знайдено — підказка «Не знайдено в організації»; знайдено — список без підказки', async () => {
     await type('evgeniyk@gmail.com', []);
     expect(root.querySelector('.picker-none')!.textContent).toBe(tt.t('pickerNone'));
-    ReactDOM.unmountComponentAtNode(root);
+    act(() => { disposeRoot(root); });
     await type('Dovh', [{ id: 0, name: 'Denys Dovhobrod', email: 'd@x', login: 'i:0#.f|membership|d@x' }]);
     expect(root.querySelector('.picker-none')).toBeNull();
     expect(root.querySelectorAll('.picker-list .pop-row').length).toBe(1);

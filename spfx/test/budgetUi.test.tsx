@@ -1,7 +1,7 @@
 /** @jest-environment jsdom */
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act } from 'react-dom/test-utils';
+import { act } from 'react';
+import { renderInto, disposeRoot } from '../src/webparts/pmoPortal/components/reactRoot';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
 import { ProjectForm } from '../src/webparts/pmoPortal/panels/ProjectForm';
 import { ProjectCard } from '../src/webparts/pmoPortal/panels/ProjectCard';
@@ -21,18 +21,18 @@ const pj = (x: any = {}): any => ({ id: 1, code: 'PRJ-001', title: 'Проєкт
   progress: 40, start: '', goLive: '', planEnd: '', forecastEnd: '', archivedAt: '', actualCost: 71000, lastUpdate: '', lastReport: '', lastComment: '', pending: false, parent: null, ...x });
 let root: HTMLDivElement;
 beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); });
-afterEach(() => { ReactDOM.unmountComponentAtNode(root); root.remove(); });
-const mount = (el: React.ReactElement): void => { act(() => { ReactDOM.render(<AppCtx.Provider value={ctx}>{el}</AppCtx.Provider>, root); }); };
+afterEach(() => { act(() => { disposeRoot(root); }); root.remove(); });
+const mount = (el: React.ReactElement): void => { act(() => { renderInto(root, <AppCtx.Provider value={ctx}>{el}</AppCtx.Provider>); }); };
 const data = (p: any, reports: any[] = []): any => ({ projects: [p], reports, risks: [], comments: [], changes: [], team: [], approvals: [], canCreate: true, canApprove: true });
 const txt = (): string => (root.textContent || '').replace(/[  ]/g, ' ');
 
 test('карточка: прогноз витрат и перевитрата «+25 000 $ (26%)»; економія — «−»; без прогнозу — порожньо', async () => {
-  await act(async () => { ReactDOM.render(<AppCtx.Provider value={ctx}><ProjectCard project={pj()} data={data(pj())} repo={ctx.repo} onClose={() => undefined} /></AppCtx.Provider>, root); });
+  await act(async () => { renderInto(root, <AppCtx.Provider value={ctx}><ProjectCard project={pj()} data={data(pj())} repo={ctx.repo} onClose={() => undefined} /></AppCtx.Provider>); });
   expect(txt()).toContain('Прогноз витрат на завершення');
   expect(txt()).toContain('120 000 $');
   expect(txt()).toContain('+25 000 $ (26%)');
-  ReactDOM.unmountComponentAtNode(root);
-  await act(async () => { ReactDOM.render(<AppCtx.Provider value={ctx}><ProjectCard project={pj({ forecastCost: 90000 })} data={data(pj({ forecastCost: 90000 }))} repo={ctx.repo} onClose={() => undefined} /></AppCtx.Provider>, root); });
+  act(() => { disposeRoot(root); });
+  await act(async () => { renderInto(root, <AppCtx.Provider value={ctx}><ProjectCard project={pj({ forecastCost: 90000 })} data={data(pj({ forecastCost: 90000 }))} repo={ctx.repo} onClose={() => undefined} /></AppCtx.Provider>); });
   expect(txt()).toContain('−5 000 $');
 });
 test('форма карточки: бюджет — только чтение с подсказкой; у нового проекта — поле ввода', () => {
@@ -40,7 +40,7 @@ test('форма карточки: бюджет — только чтение с
   expect(root.querySelector('#f-bud')).toBeNull();
   expect((root.querySelector('#f-bud-fixed') as HTMLElement).textContent!.replace(/[  ]/g, ' ')).toBe('95 000 $');
   expect(txt()).toContain('Бюджет (план) змінюється статус-звітом');
-  ReactDOM.unmountComponentAtNode(root);
+  act(() => { disposeRoot(root); });
   mount(<ProjectForm data={data(pj())} onCancel={() => undefined} />);
   expect(root.querySelector('#f-bud')).not.toBeNull();
 });
@@ -48,7 +48,7 @@ test('просмотр отчёта на погодженні: бюджет і �
   const r: any = { id: 7, projectId: 1, date: '2026-10-21', title: 'Звіт', approval: 'На погодженні', applied: false, author: { id: 1, email: 'pm@x', name: 'PM' },
     schedule: 'Зелений', budget: 'Жовтий', resources: 'Зелений', status: 'Реалізація', type: '', progress: null, start: '', goLive: '', planEnd: '', forecastEnd: '', actualCost: null,
     budgetPlan: 110000, forecastCost: 130000, notDone: 'UAT не зроблено', keyReason: 'Ліцензія', done: '', next: '', issues: '', decision: false, decisionText: '' };
-  await act(async () => { ReactDOM.render(<AppCtx.Provider value={ctx}><ReportView data={data(pj(), [r])} report={r} onCancel={() => undefined} /></AppCtx.Provider>, root); });
+  await act(async () => { renderInto(root, <AppCtx.Provider value={ctx}><ReportView data={data(pj(), [r])} report={r} onCancel={() => undefined} /></AppCtx.Provider>); });
   const s = txt();
   expect(s).toMatch(/Бюджет \(план\)\s*95 000 \$→110 000 \$/);
   expect(s).toMatch(/Прогноз витрат на завершення\s*120 000 \$→130 000 \$/);
@@ -59,7 +59,7 @@ test('колонка «Прогноз витрат»: сумма; не зада�
   const col: any = (defs as any).cols ? (defs as any).cols.fcost : (defs as any).fcost;
   expect(col).toBeDefined();
   mount(<>{col.cell(pj())}</>); expect(txt()).toBe('120 000 $');
-  ReactDOM.unmountComponentAtNode(root);
+  act(() => { disposeRoot(root); });
   mount(<>{col.cell(pj({ forecastCost: null }))}</>); expect(txt()).toBe('—');
   expect(col.sort(pj())).toBe(120000);
 });

@@ -1,7 +1,8 @@
 /** @jest-environment jsdom */
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act, Simulate } from 'react-dom/test-utils';
+import { act } from 'react';
+import { Simulate } from 'react-dom/test-utils';
+import { renderInto, disposeRoot } from '../src/webparts/pmoPortal/components/reactRoot';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
 import { CountriesPanel } from '../src/webparts/pmoPortal/panels/CountriesPanel';
 import { ProjectForm } from '../src/webparts/pmoPortal/panels/ProjectForm';
@@ -36,9 +37,9 @@ beforeEach(() => {
     canCreate: true, reload: async () => undefined, toast: jest.fn(), setCloseGuard() { /* */ }, repo: repo() };
   root = document.createElement('div'); document.body.appendChild(root);
 });
-afterEach(() => { act(() => { ReactDOM.unmountComponentAtNode(root); }); root.remove(); setExtraValues({}); setValueLang(0); });
+afterEach(() => { act(() => { disposeRoot(root); }); root.remove(); setExtraValues({}); setValueLang(0); });
 const flush = async (): Promise<void> => { await act(async () => { await new Promise(r => setTimeout(r, 0)); }); };
-const mount = async (el: React.ReactElement): Promise<void> => { act(() => { ReactDOM.render(<AppCtx.Provider value={ctx}>{el}</AppCtx.Provider>, root); }); await flush(); };
+const mount = async (el: React.ReactElement): Promise<void> => { act(() => { renderInto(root, <AppCtx.Provider value={ctx}>{el}</AppCtx.Provider>); }); await flush(); };
 const $ = (s: string): any => root.querySelector(s);
 const type = (s: string, v: string): void => { act(() => { Simulate.change($(s), { target: { value: v } } as any); }); };
 const submit = async (): Promise<void> => { await act(async () => { Simulate.submit($('#co-form')); }); await flush(); };
@@ -117,7 +118,7 @@ test('форми: у виборі — активні країни довідни
   const d = data({ countries: countryList([...names(), { id: 4, name: 'Молдова', en: 'Moldova', ru: 'Молдова', order: 40, active: true }]) });
   await mount(<ProjectForm data={d} onCancel={() => undefined} />);
   expect(Array.from(root.querySelectorAll('#f-country option')).map((o: any) => o.value)).toEqual(['', 'Україна', 'Польща', 'Молдова']);
-  act(() => { ReactDOM.unmountComponentAtNode(root); });
+  act(() => { disposeRoot(root); });
   await mount(<AssignForm data={d} projectId={1} onCancel={() => undefined} />);
   expect(Array.from(root.querySelectorAll('#a-country option')).map((o: any) => o.value)).toEqual(['', 'Україна', 'Польща', 'Молдова', 'Грузія']);
 });

@@ -1,7 +1,8 @@
 /** @jest-environment jsdom */
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act, Simulate } from 'react-dom/test-utils';
+import { act } from 'react';
+import { Simulate } from 'react-dom/test-utils';
+import { renderInto, disposeRoot } from '../src/webparts/pmoPortal/components/reactRoot';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
 import { ProjectForm } from '../src/webparts/pmoPortal/panels/ProjectForm';
 import { ProjectCard } from '../src/webparts/pmoPortal/panels/ProjectCard';
@@ -24,8 +25,10 @@ const projects = [pj(1, 0), pj(2, 1), pj(3, 2), pj(4, 0, { status: 'Заверш
 const data: any = { projects, reports: [], risks: [], comments: [], changes: [], team: [], canCreate: true, canApprove: true };
 let root: HTMLDivElement;
 beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); opened.length = 0; });
-afterEach(() => { ReactDOM.unmountComponentAtNode(root); root.remove(); });
-const mount = (el: React.ReactElement): void => { act(() => { ReactDOM.render(<AppCtx.Provider value={ctx}>{el}</AppCtx.Provider>, root); }); };
+afterEach(() => { act(() => { disposeRoot(root); }); root.remove(); });
+const mount = (el: React.ReactElement): void => { act(() => { renderInto(root, <AppCtx.Provider value={ctx}>{el}</AppCtx.Provider>); }); };
+// карточка после монтирования дочитывает журнал (repo.loadChanges): дожидаемся внутри act — иначе обновление придёт вне act
+const settle = async (): Promise<void> => { await act(async () => { await Promise.resolve(); }); };
 const options = (): string[] => Array.from((root.querySelector('#f-parent') as HTMLSelectElement).options).map(o => o.textContent || '');
 
 describe('форма проекта', () => {
@@ -50,8 +53,9 @@ describe('форма проекта', () => {
 });
 
 describe('карточка', () => {
-  test('родитель — ссылкой, дочерние — списком; нажатие открывает проект', () => {
+  test('родитель — ссылкой, дочерние — списком; нажатие открывает проект', async () => {
     mount(<ProjectCard project={projects[1]} data={data} repo={ctx.repo} onClose={() => undefined} />);
+    await settle();
     const sec = root.querySelector('#card-parent') as HTMLElement;
     expect(sec.textContent).toContain('Батьківський проєктPRJ-001 · Проєкт 1');
     expect(sec.textContent).toContain('Дочірні проєкти (1)PRJ-003 · Проєкт 3');
@@ -59,12 +63,14 @@ describe('карточка', () => {
     act(() => { (sec.querySelectorAll('button.link')[1] as HTMLElement).click(); });
     expect(opened).toEqual([1, 3]);
   });
-  test('родитель не виден — название без ссылки; нет связей — блока нет', () => {
+  test('родитель не виден — название без ссылки; нет связей — блока нет', async () => {
     mount(<ProjectCard project={pj(5, 0, { parent: { id: 99, title: 'Чужий проєкт' } })} data={data} repo={ctx.repo} onClose={() => undefined} />);
+    await settle();
     expect((root.querySelector('#card-parent') as HTMLElement).querySelector('button')).toBeNull();
     expect((root.querySelector('#card-parent') as HTMLElement).textContent).toContain('Чужий проєкт');
-    ReactDOM.unmountComponentAtNode(root);
+    act(() => { disposeRoot(root); });
     mount(<ProjectCard project={projects[3]} data={data} repo={ctx.repo} onClose={() => undefined} />);
+    await settle();
     expect(root.querySelector('#card-parent')).toBeNull();
   });
 });
