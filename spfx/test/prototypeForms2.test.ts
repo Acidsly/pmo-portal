@@ -9,13 +9,14 @@ const HTML = fs.readFileSync(path.join(__dirname, '../../prototype/pmo-prototype
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type W = any;
 let w: W;
-/** Прототип в jsdom. day (ГГГГ-ММ-ДД) — «сегодня» прототипа: демо-данные заданы «N дней назад», а свежесть отчёта
- *  считается по дням подачи (пн, чт), поэтому тест, где важна свежесть, не должен зависеть от дня запуска. */
-async function boot(day?: string): Promise<W> {
+/** Прототип в jsdom. day (ГГГГ-ММ-ДД) — «сегодня» прототипа, at — время (ЧЧ:ММ, по умолчанию 10:00); часы идут дальше
+ *  от этой точки. Демо-данные заданы «N дней назад», свежесть отчёта считается по дням подачи (пн, чт), «Новий випуск»
+ *  в колокольчике — по дате выпуска 09:00: тест, где это важно, не должен зависеть от дня и часа запуска. */
+async function boot(day?: string, at = '10:00'): Promise<W> {
   const win0 = new JSDOM(HTML, { runScripts: 'dangerously', pretendToBeVisual: true, url: 'https://pmo.test/', beforeParse(win: W) {
     if (day) {
-      const RealDate = win.Date; const base = new RealDate(day + 'T10:00:00').getTime();
-      win.Date = class extends RealDate { constructor(...a: unknown[]) { if (a.length) super(...a); else super(base); } static now(): number { return base; } };
+      const RealDate = win.Date; const shift = new RealDate(`${day}T${at}:00`).getTime() - RealDate.now();
+      win.Date = class extends RealDate { constructor(...a: unknown[]) { if (a.length) super(...a); else super(RealDate.now() + shift); } static now(): number { return RealDate.now() + shift; } };
     }
     win.matchMedia = () => ({ matches: false, addEventListener() { /* */ }, removeEventListener() { /* */ }, addListener() { /* */ } });
     win.HTMLElement.prototype.scrollIntoView = function (): void { /* */ }; win.scrollTo = () => undefined; } }).window;
@@ -244,6 +245,11 @@ describe('#46 / #48 события отчётов и рисков в истор�
 });
 
 describe('сповіщення: колокольчик в прототипе', () => {
+  // «сегодня» — день последнего выпуска «Що змінилося», 12:00: выпуск (09:00 того дня) уже был до открытия страницы и не
+  // «новый». Иначе в день выпуска до 09:00 он новый, и счёт колокольчика зависел от часа запуска (упал 14.11.2026 в 00:40)
+  const LAST_REL = ((/^## [\d.]+ · (\d\d)\.(\d\d)\.(\d{4})/m.exec(fs.readFileSync(path.join(__dirname, '../../docs/RELEASES.uk.md'), 'utf8')) || []) as string[]);
+  beforeEach(async () => { w.close(); w = await boot(`${LAST_REL[3]}-${LAST_REL[2]}-${LAST_REL[1]}`, '12:00'); });
+  test('день последнего выпуска найден в docs/RELEASES.uk.md', () => { expect(LAST_REL.length).toBe(4); });
   const asUser = (n: string): void => { const b = w.document.createElement('button'); b.dataset.act = 'asuser'; b.dataset.n = n; w.document.body.appendChild(b); b.click(); b.remove(); };
   const dot = (): boolean => !!q('#bell .dot-new');
   const comment = (pid: number, txt: string): void => {
