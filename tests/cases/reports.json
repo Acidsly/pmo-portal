@@ -277,6 +277,42 @@
       "returned": [
         5
       ]
+    },
+    {
+      "name": "#160 єдиний звіт із прийнятим рішенням — не повертається",
+      "pm": "pm@x",
+      "archived": false,
+      "pending": [
+        {
+          "id": 5,
+          "date": "2026-11-05",
+          "author": "pm@x",
+          "created": "2026-11-05T08:33:00Z",
+          "decided": true
+        }
+      ],
+      "returned": []
+    },
+    {
+      "name": "#160 однаковий час подання: порядок за номером — вирішений перший, другий залишається",
+      "pm": "pm@x",
+      "archived": false,
+      "pending": [
+        {
+          "id": 8,
+          "date": "2026-11-13",
+          "author": "pm@x",
+          "created": "2026-11-13T14:35:00Z"
+        },
+        {
+          "id": 7,
+          "date": "2026-11-13",
+          "author": "pm@x",
+          "created": "2026-11-13T14:35:00Z",
+          "decided": true
+        }
+      ],
+      "returned": []
     }
   ],
   "apply": [
