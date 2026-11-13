@@ -24,7 +24,7 @@
 
 ### Что делает разработчик (один раз, Mac)
 
-1. Claude (вкладка Code) → **Local** → папка клона репозитория. Попросить: «Проверь и установи зависимости по CONTRIBUTING.md»: git, Homebrew, `brew install powershell node@22`, `Install-Module PnP.PowerShell -Scope CurrentUser`.
+1. Claude (вкладка Code) → **Local** → папка клона репозитория. Попросить: «Проверь и установи зависимости по CONTRIBUTING.md»: git, Homebrew, `brew install powershell node@26`, `Install-Module PnP.PowerShell -Scope CurrentUser`.
 2. При первом запуске принять плагин **superpowers** (предложит `.claude/settings.json`).
 3. `cp config/environments.dev.example.json config/environments.json`, вписать ClientId PMO Dev; файл `PMO Dev.pfx` → `certs/`.
 4. Пароль сертификата — в «Связку ключей»: `security add-generic-password -a "$USER" -s PMO_DEV_CERT_PASSWORD -w`.

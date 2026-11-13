@@ -384,7 +384,7 @@ flowchart LR
 
 ## 6. Додаток SPFx
 
-SPFx 1.23.2, React 17.0.1, TypeScript ~5.8, збірка Heft 1.2.17 під Node 22. Одна веб-частина `PmoPortalWebPart` на сторінці `SitePages/Portal.aspx` (`SingleWebPartAppPage`); маніфест підтримує `SharePointWebPart`, `SharePointFullPage`, `TeamsPersonalApp`, `TeamsTab`.
+SPFx 1.24.1, React 18.3.1 (корінь React — `components/reactRoot.ts`), TypeScript ~5.8, збірка Heft 1.3.2 під Node 26 LTS; стилі — `config/sass.json` (`preserveIcssExports: false`), збірка перевіряє бандл `tools/check-bundle.mjs`. Одна веб-частина `PmoPortalWebPart` на сторінці `SitePages/Portal.aspx` (`SingleWebPartAppPage`); маніфест підтримує `SharePointWebPart`, `SharePointFullPage`, `TeamsPersonalApp`, `TeamsTab`.
 
 ### 6.1. Шари
 
@@ -491,7 +491,7 @@ SDK агентів (@microsoft/agents-copilotstudio-client) ──► агент
 flowchart LR
     subgraph RG["rg-pmo-automation, Germany West Central"]
         AA["Automation account aa-pmo-sync<br/>системна керована ідентичність"]
-        RT["Runtime PowerShell-7.6-PnP<br/>PowerShell 7.6 + PnP.PowerShell 3.4.1"]
+        RT["Runtime PowerShell-7.6-PnP35<br/>PowerShell 7.6 + PnP.PowerShell 3.5.0"]
         RB["Runbook PMO-Sync<br/>runbooks/Invoke-PMOSync.ps1"]
         WH["Runbook PMO-WhoAmI<br/>перевірка прав"]
         VAR["Зашифрована змінна<br/>pmo-managers-test"]
@@ -508,7 +508,7 @@ flowchart LR
 
 | Крок | Скрипт | Що робить |
 |---|---|---|
-| Ресурси | `scripts/New-PMOAutomation.ps1` | група ресурсів, обліковий запис з керованою ідентичністю (ролей Azure їй не видається), runtime PowerShell 7.6 (`-PsVersion`; з 22.10.2026 — усі runbook, тест і прод; підтримка 7.4 закінчується 10.11.2026) з PnP.PowerShell 3.4.1 з PowerShell Gallery, зашифрована змінна кешу |
+| Ресурси | `scripts/New-PMOAutomation.ps1` | група ресурсів, обліковий запис з керованою ідентичністю (ролей Azure їй не видається), runtime PowerShell 7.6 (`-PsVersion`; з 22.10.2026 — усі runbook, тест і прод; підтримка 7.4 закінчується 10.11.2026) з PnP.PowerShell 3.5.0 (runtime `PowerShell-7.6-PnP35`, з листопада 2026) з PowerShell Gallery, зашифрована змінна кешу |
 | Права | `scripts/Grant-PMOAutomation.ps1` (виконує адміністратор тенанта) | ролі програми Sites.Selected і Graph User.Read.All сервісному суб'єкту ідентичності; FullControl лише на сайт порталу (вхід програмою PMO Deploy) |
 | Збірка | `scripts/Build-Runbook.ps1` | `Invoke-PMOSync.ps1` + вміст `PMO.Common.ps1` замість рядка підключення → `runbooks/Invoke-PMOSync.ps1`; перший рядок — відбиток вихідників `sha256:<12 символів>`; без `$PSScriptRoot` |
 | Публікація | `scripts/Publish-Runbook.ps1 -Env test\|prod` | `test` → `PMO-Sync-Test` (можна з гілки), `prod` → `PMO-Sync` (лише з `main`, що збігається з `origin/main`); звіряє зібраний файл з вихідниками, створює чи оновлює runbook у runtime, вмикає докладний журнал, публікує і звіряє опублікований текст |

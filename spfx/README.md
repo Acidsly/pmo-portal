@@ -1,6 +1,6 @@
 # pmo-portal — додаток SPFx порталу «PPM — Портфель проєктів»
 
-Веб-частина `PmoPortalWebPart` (SPFx 1.23.2, React 17.0.1, TypeScript ~5.8, Heft 1.2.17, Node 22) на сторінці `SitePages/Portal.aspx` (`SingleWebPartAppPage`), пакет `pmo-portal.sppkg`. Працює від імені користувача через SharePoint REST. Архітектура — [../docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md#6-додаток-spfx), модель даних — [../docs/DATA-MODEL.md](../docs/DATA-MODEL.md), еталон інтерфейсу — `../prototype/pmo-prototype.html`.
+Веб-частина `PmoPortalWebPart` (SPFx 1.24.1, React 18.3.1, TypeScript ~5.8, Heft 1.3.2, Node 26 LTS) на сторінці `SitePages/Portal.aspx` (`SingleWebPartAppPage`), пакет `pmo-portal.sppkg`. Працює від імені користувача через SharePoint REST. Архітектура — [../docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md#6-додаток-spfx), модель даних — [../docs/DATA-MODEL.md](../docs/DATA-MODEL.md), еталон інтерфейсу — `../prototype/pmo-prototype.html`.
 
 ## Будова
 
@@ -23,7 +23,7 @@
 
 ## Команди
 
-З кореня репозиторію, під Node 22 (`scripts/spfx.sh` підставляє `node@22` з Homebrew):
+З кореня репозиторію, під Node 26 (`scripts/spfx.sh` підставляє `node@26` з Homebrew):
 
 ```bash
 scripts/spfx.sh npm ci

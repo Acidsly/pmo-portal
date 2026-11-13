@@ -22,7 +22,7 @@
 | `scripts/Set-FeedbackAnswers.ps1` | Разбор отзывов: статусы, ответы, отзывы из писем (`-Action feedback-answers`, файл `config/feedback-answers.json` вне git) |
 | `copilot/` | Помощник ИИ отчёта (пилот): агент Copilot Studio, тема Fallback, тексты prompt «Чернетка» / «Перевірка» — [copilot/README.md](copilot/README.md); после правки prompt — «Набір перевірок» |
 | `spfx/` | Приложение SPFx (React) по прототипу: `logic/` — правила с тестами, `data/` — чтение SharePoint, `components/`, `pages/`. Спецификация и планы — `docs/superpowers/` |
-| `scripts/spfx.sh` | Команды в `spfx/` под Node 22: `scripts/spfx.sh npm run test:unit`, `scripts/spfx.sh npm run build` |
+| `scripts/spfx.sh` | Команды в `spfx/` под Node 26: `scripts/spfx.sh npm run test:unit`, `scripts/spfx.sh npm run build` |
 | `scripts/Deploy-App.ps1` | Установка приложения на сайт (`-Env test -Action app`): каталог приложений сайта, страница `Portal` на весь экран — главная |
 | `scripts/Build-Runbook.ps1`, `scripts/Publish-Runbook.ps1` | Сборка runbook `runbooks/Invoke-PMOSync.ps1` (совпадение с исходниками проверяет `tests/Test-Scripts.ps1`) и публикация в `aa-pmo-sync`: `-Env test` → `PMO-Sync-Test` (из ветки), `-Env prod` → `PMO-Sync` (только из `main` при выпуске) |
 | `scripts/Set-AzureSchedule.ps1` | Расписания Azure Automation (каждые 15 минут, воскресенье 3:00 — пересчёт прав) и письмо при сбое; `-SiteUrl` обязателен |
