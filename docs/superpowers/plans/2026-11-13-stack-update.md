@@ -68,7 +68,7 @@
 
 **Files:** ничего не меняется (заметки — в scratchpad сессии).
 
-- [ ] **Step 1: Ветка от свежего main**
+- [x] **Step 1: Ветка от свежего main**
 
 ```bash
 export SCRATCH=<каталог scratchpad сессии>   # задать в каждой новой оболочке; всё временное — только туда
@@ -76,7 +76,7 @@ git fetch origin && git switch -c change/stack-2026-11 origin/main
 ```
 Проверить: `grep -n '"version"' spfx/config/package-solution.json` — версия уже с «Підтримкою» (1.7.12.x). Если нет — стоп, выпуск ещё не слит.
 
-- [ ] **Step 2: Исходные показатели**
+- [x] **Step 2: Исходные показатели**
 
 ```bash
 scripts/spfx.sh npm ci
@@ -90,7 +90,7 @@ pwsh -NoLogo -File tests/Test-Scripts.ps1
 ```
 Сохранить копию `pmo-portal.sppkg` в scratchpad — известный рабочий пакет для отката.
 
-- [ ] **Step 3: Отчёт об обновлении и проект для сравнения**
+- [x] **Step 3: Отчёт об обновлении и проект для сравнения**
 
 ```bash
 cd spfx && npx -p @pnp/cli-microsoft365@latest m365 spfx project upgrade --toVersion 1.24.1 --output md > "$SCRATCH/upgrade-report.md"
@@ -111,7 +111,7 @@ mkdir "$SCRATCH/spfx-1241" && cd "$SCRATCH/spfx-1241" && npx -p yo -p @microsoft
 
 **Interfaces:** Produces — проект собирается на SPFx 1.24.1 / React 18.3.1; рендер пока прежний (`ReactDom.render` в React 18 работает с предупреждением) — его меняет Task 2.
 
-- [ ] **Step 1: Версии в package.json (до установки)**
+- [x] **Step 1: Версии в package.json (до установки)**
 
 ```bash
 cd spfx
@@ -124,7 +124,7 @@ npm pkg set "resolutions.@types/react=^18.3.0"
 `resolutions` — механизм Yarn, npm его не применяет: строка остаётся только ради совпадения с шаблоном. `engines.node` на этом этапе не трогаем (сборка пока на Node 22, диапазон `>=22.14.0 < 23.0.0` верен) — его меняет Task 5.
 `@rushstack/heft` — в `devDependencies` **и** в `overrides` поставить версию из шаблона (Task 0, Step 3). Остальные сборочные зависимости (`typescript`, `eslint`, `@types/webpack-env`, `css-loader`) — привести к шаблону, только если шаблон отличается; `typescript` выше `~5.8` не поднимать.
 
-- [ ] **Step 2: Установка и проверка дерева**
+- [x] **Step 2: Установка и проверка дерева**
 
 ```bash
 scripts/spfx.sh npm install
@@ -132,18 +132,18 @@ scripts/spfx.sh npm ls react react-dom @types/react @types/react-dom
 ```
 Ожидается: у проекта `react@18.3.1`, `react-dom@18.3.1`, **одна** версия `@types/react` 18.x (без дубля 17.x; если дубль есть — добавить `overrides.@types/react` = `^18.3.0` и переустановить), без `invalid` / `ERESOLVE`. Собственные вложенные `react@17.0.1` у пакетов `@microsoft/sp-*` — допустимы, не подменять (так сказано в руководстве Microsoft). Конфликт пиров — разобраться с конкретной библиотекой, не `--force`.
 
-- [ ] **Step 3: Применить отличия конфигурации**
+- [x] **Step 3: Применить отличия конфигурации**
 
 Пройти `upgrade-report.md` и сравнение с шаблоном: каждое отличие в `config/*.json`, `tsconfig.json`, `eslint.config.js` либо перенести, либо записать, почему не нужно (наши настройки: `config/webpack-patch.*`, `tsconfig.jest.json`, свой `jest.config.js` — сохранить). В `.yo-rc.json`: `"version": "1.24.1"`.
 
-- [ ] **Step 4: Типы — явное `children`**
+- [x] **Step 4: Типы — явное `children`**
 
 ```bash
 scripts/spfx.sh npx tsc --noEmit -p tsconfig.json 2>&1 | tee "$SCRATCH/tsc-18.txt" | tail -40
 ```
 Для каждой ошибки вида `Property 'children' does not exist on type …` — добавить в пропсы компонента `children?: React.ReactNode` (обязательное `children: React.ReactNode`, если компонент без содержимого не имеет смысла). Без `any`, приведений и `@ts-ignore`. Другие ошибки типов (`ReactNode`, JSX) — сначала `scripts/spfx.sh npm explain @types/react` (две версии типов?), потом правка.
 
-- [ ] **Step 5: Тесты и сборка**
+- [x] **Step 5: Тесты и сборка**
 
 ```bash
 scripts/spfx.sh npm run test:unit 2>&1 | tail -8
@@ -151,7 +151,7 @@ scripts/spfx.sh npm run build 2>&1 | tail -20
 ```
 Ожидается: то же число тестов, все проходят (в выводе допустимы предупреждения `ReactDOM.render is no longer supported` и об `act` из `react-dom/test-utils` — уйдут в Task 2–3); сборка даёт `pmo-portal.sppkg`. Тест упал — причина в поведении React 18, а не в рендере? Тогда `superpowers:systematic-debugging`; ожидание не менять.
 
-- [ ] **Step 6: Коммит**
+- [x] **Step 6: Коммит**
 
 ```bash
 git add spfx/package.json spfx/package-lock.json spfx/.yo-rc.json spfx/src spfx/config spfx/tsconfig.json
@@ -177,7 +177,7 @@ export function disposeRoot(container: Element): void;                          
 ```
 Ими пользуются веб-часть и (Task 3) все тесты с рендером.
 
-- [ ] **Step 1: Тест, который падает**
+- [x] **Step 1: Тест, который падает**
 
 `spfx/test/reactRoot.test.tsx`:
 ```tsx
@@ -238,12 +238,12 @@ test('два контейнера — два независимых корня',
   globals: { IS_REACT_ACT_ENVIRONMENT: true },
 ```
 
-- [ ] **Step 2: Убедиться, что падает**
+- [x] **Step 2: Убедиться, что падает**
 
 Run: `scripts/spfx.sh npx jest test/reactRoot.test.tsx`
 Expected: FAIL — `Cannot find module '../src/webparts/pmoPortal/components/reactRoot'`.
 
-- [ ] **Step 3: Реализация**
+- [x] **Step 3: Реализация**
 
 `spfx/src/webparts/pmoPortal/components/reactRoot.ts`:
 ```ts
@@ -269,19 +269,19 @@ export function disposeRoot(container: Element): void {
 }
 ```
 
-- [ ] **Step 4: Убедиться, что проходит**
+- [x] **Step 4: Убедиться, что проходит**
 
 Run: `scripts/spfx.sh npx jest test/reactRoot.test.tsx`
 Expected: PASS, 4 теста, без предупреждений React в выводе.
 
-- [ ] **Step 5: Веб-часть**
+- [x] **Step 5: Веб-часть**
 
 В `spfx/src/webparts/pmoPortal/PmoPortalWebPart.ts`:
 - строку `import * as ReactDom from 'react-dom';` заменить на `import { renderInto, disposeRoot } from './components/reactRoot';`
 - в `renderApp()`: `ReactDom.render(React.createElement(App, { … }), this.domElement);` → `renderInto(this.domElement, React.createElement(App, { … }));` (пропсы без изменений);
 - `onDispose()`: `ReactDom.unmountComponentAtNode(this.domElement);` → `disposeRoot(this.domElement);`
 
-- [ ] **Step 6: Сборка и коммит**
+- [x] **Step 6: Сборка и коммит**
 
 ```bash
 scripts/spfx.sh npm run build 2>&1 | tail -15
@@ -301,7 +301,7 @@ git commit -m "Стек: рендер React 18 — один корень на к
 
 **Interfaces:** Consumes — `renderInto(container, element)`, `disposeRoot(container)` из Task 2.
 
-- [ ] **Step 1: Тест-сторож (падает)**
+- [x] **Step 1: Тест-сторож (падает)**
 
 `spfx/test/react18-guard.test.ts`:
 ```ts
@@ -341,7 +341,7 @@ test('сторож видит файлы (не пустой обход)', () => 
 Run: `scripts/spfx.sh npx jest test/react18-guard.test.ts` → FAIL со списком 16 файлов тестов.
 (Порог `100` сверить с фактом: `find spfx/src spfx/test -name '*.ts' -o -name '*.tsx' | wc -l`; поставить число чуть ниже фактического.)
 
-- [ ] **Step 2: Перевести файлы тестов (в каждом из 16 — одинаково)**
+- [x] **Step 2: Перевести файлы тестов (в каждом из 16 — одинаково)**
 
 | Было | Стало |
 |---|---|
@@ -356,7 +356,7 @@ Run: `scripts/spfx.sh npx jest test/react18-guard.test.ts` → FAIL со спи�
 
 Больше ничего в тестах не менять: ни ожидания, ни сценарии. Если файл использует из `react-dom` что-то ещё (`createPortal`) — оставить именованный импорт только этого.
 
-- [ ] **Step 3: Прогон и разбор**
+- [x] **Step 3: Прогон и разбор**
 
 ```bash
 scripts/spfx.sh npm run test:unit 2>&1 | tee "$SCRATCH/jest-18.txt" | tail -12
@@ -366,11 +366,11 @@ grep -cE "Warning:|not wrapped in act|is no longer supported|deprecated" "$SCRAT
 - Тест упал: вероятные причины — обновление состояния после `await` теперь объединяется (нужно дождаться внутри `await act(async () => { … })`), или эффект срабатывает позже. Править **способ ожидания** в тесте (обернуть действие в `act`, дождаться промиса), не ожидаемое значение. Если падение показывает реальное изменение поведения компонента — это находка: стоп, `superpowers:systematic-debugging`, сообщить пользователю.
 - Предупреждение `not wrapped in act` — действие теста вне `act`: обернуть.
 
-- [ ] **Step 4: Проверить, что сторож ловит**
+- [x] **Step 4: Проверить, что сторож ловит**
 
 Временно вернуть `ReactDOM.render` в один тест → `react18-guard` падает с именем файла → вернуть обратно. Записать в итог как доказательство.
 
-- [ ] **Step 5: Сборка и коммит**
+- [x] **Step 5: Сборка и коммит**
 
 ```bash
 scripts/spfx.sh npm run build 2>&1 | tail -15
@@ -392,7 +392,7 @@ done
 
 **Files:** Modify `spfx/package.json`, `spfx/package-lock.json`.
 
-- [ ] **Step 1: Обновить**
+- [x] **Step 1: Обновить**
 
 ```bash
 cd spfx
@@ -401,11 +401,11 @@ cd .. && scripts/spfx.sh npm install && scripts/spfx.sh npm update @fluentui/rea
 ```
 Перед этим прочитать заметки о выпусках `@azure/msal-browser` 5.23–5.29 (https://github.com/AzureAD/microsoft-authentication-library-for-js/releases) на изменения всплывающего окна, `redirect-bridge` и кэша — их использует `ai/aiAgent`. Есть изменение поведения — оставить 5.22.0 и записать причину.
 
-- [ ] **Step 2: Пересмотреть `overrides`**
+- [x] **Step 2: Пересмотреть `overrides`**
 
 Для каждой строки `overrides` (`follow-redirects`, `launch-editor`, `postcss-selector-parser`, `qs`, `shell-quote`, `source-map-js`, `uuid`): временно убрать → `npm install` → `npm audit`. Уязвимость не вернулась — строку удалить (SPFx 1.24.1 сам принёс исправление); вернулась — оставить. Итог — таблицей «пакет → оставлен / убран / почему».
 
-- [ ] **Step 3: Аудит, тесты, сборка, коммит**
+- [x] **Step 3: Аудит, тесты, сборка, коммит**
 
 ```bash
 scripts/spfx.sh npm audit --omit=dev 2>&1 | tail -6
@@ -423,7 +423,7 @@ git commit -m "Стек: msal-browser 5.29.1, клиент Copilot Studio 1.10.1
 
 **Files:** Modify `scripts/spfx.sh`, `.github/workflows/validate.yml`, `spfx/.yo-rc.json`, `spfx/package.json` (`engines`).
 
-- [ ] **Step 1: Собрать на Node 22 — эталон, и проверить, что сборка воспроизводима**
+- [x] **Step 1: Собрать на Node 22 — эталон, и проверить, что сборка воспроизводима**
 
 ```bash
 scripts/spfx.sh npm run build >/dev/null 2>&1 && (cd spfx/dist && shasum -a 256 * | sort -k2) > "$SCRATCH/dist-node22.txt"
@@ -432,7 +432,7 @@ diff "$SCRATCH/dist-node22.txt" "$SCRATCH/dist-node22-b.txt" && echo "сборк
 ```
 Два прогона на одном Node различаются — сравнение с Node 26 ничего не докажет: записать это и в Step 4 сравнение пропустить.
 
-- [ ] **Step 2: `scripts/spfx.sh` — Node 26**
+- [x] **Step 2: `scripts/spfx.sh` — Node 26**
 
 ```bash
 #!/usr/bin/env bash
@@ -447,13 +447,13 @@ exec "$@"
 ```
 Перед правкой: `brew install node@26` и `"$(brew --prefix node@26)/bin/node" -v` → `v26.13.x` или новее (не `alpha`). `node@22` не удалять до конца выпуска.
 
-- [ ] **Step 3: Остальное**
+- [x] **Step 3: Остальное**
 
 - `.github/workflows/validate.yml`: `node-version: 22` → `node-version: 26` (оба задания).
 - `spfx/package.json`: `"engines": { "node": ">=26.0.0 <27.0.0" }` (единственная правка `engines` в плане).
 - `spfx/.yo-rc.json`: `"nodeVersion"` — фактический вывод `node -v` без `v`.
 
-- [ ] **Step 4: Чистая установка, тесты, сборка, сравнение**
+- [x] **Step 4: Чистая установка, тесты, сборка, сравнение**
 
 ```bash
 # 1) тот же node_modules, другой Node — чистое сравнение
@@ -468,7 +468,7 @@ pwsh -NoLogo -File tests/Test-Scripts.ps1
 ```
 Ожидается: тесты и сборка проходят под Node 26 — это главный критерий; `package-lock.json` после `npm ci` не изменён (`git status`). Если сборка воспроизводима (Step 1), а `diff` не пуст — разобраться, в чём отличие, и записать вывод (это повод посмотреть, а не автоматический провал).
 
-- [ ] **Step 5: Коммит**
+- [x] **Step 5: Коммит**
 
 ```bash
 git add scripts/spfx.sh .github/workflows/validate.yml spfx/package.json spfx/.yo-rc.json
@@ -606,6 +606,26 @@ grep -rnE "1\.23\.2|React 17|17\.0\.1|Node(\.js)? ?22|node@22|22\.14|3\.4\.1|Pow
   4. проверка здоровья: расписания ↔ runbook, `PMO-WhoAmI` на обоих сайтах, письмо при сбое, версии приложения на тесте и проде, срок сертификатов приложений Entra ID (в портале Entra, файлы `certs/` не читать).
 - [ ] **Step 4: Уборка (после недели работы прода без сбоев, после «да»):** удалить среду `PowerShell-7.6-PnP` в Azure; `brew uninstall node@22`; `Uninstall-Module PnP.PowerShell -RequiredVersion 3.4.1`.
 - [ ] **Step 5:** обновить память `stack-update-routine` (новая исходная точка и даты) и `docs/ROADMAP.md`.
+
+## Ход выполнения
+
+**13.11.2026 — Task 0–5 выполнены заранее** (решение владельца: подготовка до выпуска 1.7.12), в рабочей копии `.claude/worktrees/stack-2026-11`, ветка `change/stack-2026-11` от `change/support-status` (после слияния 1.7.12 в `main` — `git rebase origin/main`). На сайты и в Azure ничего не выкладывалось, ветка не запушена.
+
+Итоги: 1944 теста проходят (+6 новых), сборка проходит, предупреждений линтера 11 (как было), предупреждений React в тестах 0; `npm audit` 34 (было 40), в рабочих зависимостях — только цепочка `zod`; бандл на Node 26 побайтно равен бандлу на Node 22; манифест веб-части ссылается на React 18.3.1 от SharePoint.
+
+Отклонения от плана:
+- **Ошибок типов `children` не оказалось** (0 ошибок `tsc`) — правок компонентов не потребовалось.
+- **Heft 1.3.2: линтер сборки стал проверять `test/`** и падал (тесты вне программы сборки) — в `eslint.config.js` добавлено `ignores: ['test/**']`; прежде линтер их не видел, поведение то же.
+- **`support.test.tsx`, тест плиток главной:** кликал по узлам DOM, размонтированным предыдущим шагом цикла; React 17 это допускал, React 18 — нет. Плитка теперь берётся из текущего DOM; ожидания не менялись.
+- **`parentUi.test.tsx`:** карточка проекта дочитывает журнал после монтирования — тесты ждут это внутри `act` (предупреждение было и на React 17).
+- **Отчёт CLI for Microsoft 365 и запуск генератора не делались:** вместо этого прочитан шаблон из пакета `@microsoft/generator-sharepoint@1.24.1` (`lib/common/dependencies.json`, шаблоны конфигурации) — без запуска стороннего кода. Отличие конфигурации одно: `watchOptions` для Copilot-компонентов, нам не нужно.
+- **`@types/react`:** шаблон закрепляет 18.2.79, руководство Microsoft — `^18.3.0`; взято `^18.3.0` (установлено 18.3.31).
+- **`overrides`:** убраны `follow-redirects`, `launch-editor`, `postcss-selector-parser`, `shell-quote`, `source-map-js` (не нужны с 1.24.1); оставлены `qs`, `uuid`; добавлена `serialize-javascript` из шаблона; `follow-redirects` 1.16.3 и `body-parser` 1.20.9 — обновлением в своих диапазонах.
+- **`msal-browser` 5.29.1:** ломающих изменений в журнале нет, но 5.23–5.29 меняют всплывающее окно (`pocd`), очистку адреса после возврата и одновременные тихие запросы — вход «Помічник ШІ» (окно и переход на iPhone) обязательно проверить на тесте (Task 7).
+- **Homebrew:** отдельной формулы `node@26` пока нет — это псевдоним формулы `node` (26.13.1); `scripts/spfx.sh` через `brew --prefix node@26` работает.
+- **Node 26:** в выводе Jest одно предупреждение самого Node (`ExperimentalWarning: localStorage is not available…`) — не React, на тесты не влияет.
+
+Не относится к обновлению стека: тест прототипа `prototypeForms2.test.ts` «#73 фильтр колонки „Звіт“» падает и на исходной ветке `change/support-status` (до любых правок этой ветки) — зависит от текущей даты.
 
 ## Откат
 
