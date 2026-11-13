@@ -92,7 +92,9 @@ describe('главная: два режима', () => {
     mount(<Home data={DATA()} />);
     const tiles = kpi().filter(x => !/%|—/.test(x.n));
     expect(tiles.length).toBeGreaterThanOrEqual(4);
-    for (const x of tiles) {
+    for (let i = 0; i < tiles.length; i++) {
+      // плитку берём из текущего DOM: после возврата на главную прежние узлы размонтированы (React 18 по ним не кликает)
+      const x = kpi().filter(t => !/%|—/.test(t.n))[i];
       went = [];
       act(() => { Simulate.click(x.el); });
       const [page, view] = went[0];
