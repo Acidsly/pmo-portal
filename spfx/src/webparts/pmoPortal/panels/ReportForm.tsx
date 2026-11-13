@@ -24,7 +24,7 @@ import { Lucide } from '../components/LucideIcons';
 import { aiAction } from '../logic/aiFlow';
 import { useReportAi } from './useReportAi';
 
-const REPORT_STATUSES = ['Ініціація', 'Планування', 'Реалізація', 'Призупинено'];
+const REPORT_STATUSES = ['Ініціація', 'Планування', 'Реалізація', 'Підтримка', 'Призупинено'];
 const TYPES = ['Стратегічний', 'Звичайний'];
 
 /** Новый статус-отчёт (reportForm прототипа, строки 1470–1550): подстановка показателей, живой стан, причина при смене показателей. */

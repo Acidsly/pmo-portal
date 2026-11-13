@@ -7,11 +7,11 @@ import { AppCtx } from '../components/ctx';
 import { PortalData, SpRepo } from '../data/SpRepo';
 import { Project, Person, ChangeEntry } from '../data/types';
 import { calcRag } from '../logic/rag';
-import { isArch, isPlanLate, forecastDelta, budgetUse, budgetLevel, freshness, riskScore } from '../logic/status';
+import { isArch, isPlanLate, forecastDelta, budgetUse, budgetLevel, projectFresh, riskScore } from '../logic/status';
 import { ofProject } from '../logic/views';
 import { toEvents, editLogEvents } from '../logic/changes';
 import { parseAccess, AccessRow } from '../logic/access';
-import { Avatar, RagPill, RagDot, Progress, Score, fmtDate, money, freshColor, ApBadge, StatusPill, fmtDT } from '../components/Bits';
+import { Avatar, RagPill, RagDot, Progress, Score, fmtDate, money, freshColor, freshTip, ApBadge, StatusPill, fmtDT } from '../components/Bits';
 import { Plus } from '../components/Icons';
 import { commentBody } from '../data/write';
 import { Err, errText, guardText } from '../components/fields';
@@ -190,7 +190,7 @@ export const ProjectCard: React.FC<{ project: Project; data: PortalData; repo: S
 
     <div className="sec"><h3>{t('secMoney')}</h3><div className="group">
       <Kv k={fl('progress')}><Progress v={p.progress} /></Kv>
-      <Kv k={fl('last')}><span className="rag"><span className="dot sm" style={{ background: freshColor(freshness(p.lastUpdate, today)) }} />{p.lastUpdate ? fmtDate(p.lastUpdate) : <span className="muted">{t('noReports')}</span>}</span></Kv>
+      <Kv k={fl('last')}><span className="rag" title={freshTip(t, p, today)}><span className="dot sm" style={{ background: freshColor(projectFresh(p, today)) }} />{p.lastUpdate ? fmtDate(p.lastUpdate) : <span className="muted">{t('noReports')}</span>}</span></Kv>
       <Kv k={fl('budget')}>{money(p.budget)}</Kv>
       {/* 1.7.7: прогноз витрат и отклонение от бюджета */}
       <Kv k={fl('fcost')}>{p.forecastCost ? <>{money(p.forecastCost)}{fcostDev(p)}</> : ''}</Kv>

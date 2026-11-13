@@ -44,7 +44,7 @@ foreach ($f in Get-ChildItem (Join-Path $root "scripts"), (Join-Path $root "test
 }
 
 Write-Host "2. JSON-файлы"
-foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/parent.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/money.json", "tests/cases/last-plan.json", "tests/cases/assignments.json", "tests/cases/history.json", "tests/cases/notify-state.json", "tests/cases/archive.json", "tests/cases/feedback-decided.json", "tests/cases/archive-migration.json", "tests/cases/stakeholders.json", "config/focus-group.example.json")) {
+foreach ($f in @("config/environments.example.json", "tests/cases/rag.json", "tests/cases/dates.json", "tests/cases/card-edit.json", "tests/cases/parent.json", "tests/cases/acl.json", "tests/cases/approval.json", "tests/cases/folders.json", "tests/cases/state.json", "tests/cases/reports.json", "tests/cases/editlog.json", "tests/cases/lock.json", "tests/cases/cache.json", "tests/cases/report-form.json", "tests/cases/apply.json", "tests/cases/money.json", "tests/cases/last-plan.json", "tests/cases/assignments.json", "tests/cases/history.json", "tests/cases/notify-state.json", "tests/cases/archive.json", "tests/cases/fresh.json", "tests/cases/kind.json", "tests/cases/feedback-decided.json", "tests/cases/archive-migration.json", "tests/cases/stakeholders.json", "config/focus-group.example.json")) {
     try { $null = Get-Content -Raw (Join-Path $root $f) | ConvertFrom-Json; Ok $f } catch { Bad "$f $_" }
 }
 
@@ -86,7 +86,7 @@ foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/stakeholders.json
 }
 
 Write-Host "3c. Папки проектов: роли, заморозка архива, перенос записей (tests/cases/folders.json)"
-foreach ($n in @("Test-ArchivedStatus", "Norm", "Get-FeedbackDecidedAt", "Get-FolderName", "Test-RowPlacement", "Get-FolderRole", "Get-GroupFolderRole", "Get-AclMark", "Get-ArchPrefix", "Test-ArchiveFrozen", "Get-RowAction")) {
+foreach ($n in @("Test-ArchivedStatus", "Test-SupportStatus", "Get-MissedSlots", "Norm", "Get-FeedbackDecidedAt", "Get-FolderName", "Test-RowPlacement", "Get-FolderRole", "Get-GroupFolderRole", "Get-AclMark", "Get-ArchPrefix", "Test-ArchiveFrozen", "Get-RowAction")) {
     $fn = $syncAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $n }, $true) | Select-Object -First 1
     if ($fn) { Invoke-Expression $fn.Extent.Text } else { Bad "нет функции $n" }
 }
@@ -113,6 +113,15 @@ $fdc = Get-Content -Raw (Join-Path $root "tests/cases/feedback-decided.json") | 
 foreach ($c in $fdc.cases) {
     $r = Get-FeedbackDecidedAt $c.old $c.new ([datetime]::Parse($fdc.now, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::AdjustToUniversal))
     if ($r -eq $c.out) { Ok "розглянуто: $($c.name)" } else { Bad "розглянуто: $($c.name) -> $r, ожидалось $($c.out)" }
+}
+Write-Host "3c00. Підтримка и свежесть по дням подачи (Test-SupportStatus, Get-MissedSlots; tests/cases/kind.json, fresh.json)"
+foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/kind.json") | ConvertFrom-Json).cases) {
+    $k = if (Test-SupportStatus $c.status) { "support" } else { "project" }
+    if ($k -eq $c.kind -and (Test-ArchivedStatus $c.status) -eq $c.archived) { Ok "категорія: «$($c.status)» -> $k" } else { Bad "категорія: «$($c.status)» -> $k, ожидалось $($c.kind)" }
+}
+foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/fresh.json") | ConvertFrom-Json).cases) {
+    $m = Get-MissedSlots $c.last $c.today $c.kind
+    if ($m -eq $c.missed) { Ok "свіжість: $($c.name)" } else { Bad "свіжість: $($c.name) -> $m, ожидалось $($c.missed)" }
 }
 Write-Host "3c0. Архив: «Завершено» / «Скасовано» (Test-ArchivedStatus, tests/cases/archive.json)"
 foreach ($c in (Get-Content -Raw (Join-Path $root "tests/cases/archive.json") | ConvertFrom-Json).cases) {

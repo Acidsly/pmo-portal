@@ -1,4 +1,4 @@
-# Собрано: scripts/Build-Runbook.ps1, исходники sha256:2010a485c432 — не править, правьте scripts/
+# Собрано: scripts/Build-Runbook.ps1, исходники sha256:fb38d7d04ce3 — не править, правьте scripts/
 #Requires -Version 7.2
 #Requires -Modules PnP.PowerShell
 <#
@@ -178,6 +178,20 @@ $STATE_DATES = @("pmStart", "pmGoLive", "pmPlanEnd", "pmForecastEnd", "pmArchive
 # Проект в архиве: «Завершено» или «Скасовано» (векторы tests/cases/archive.json, те же — isArch приложения);
 # «Архівний» — прежнее значение, понимается до миграции (Deploy-PMO.ps1, раздел миграции архива)
 function Test-ArchivedStatus([string]$status) { return $status -in @("Завершено", "Скасовано", "Архівний") }
+# 1.7.12 «Підтримка» (SPEC 5.2): активный проект в этой фазе — проект підтримки (векторы tests/cases/kind.json — те же, что isSupport приложения)
+function Test-SupportStatus([string]$status) { return $status -eq "Підтримка" }
+# Пропущенные дни подачи статус-отчёта (SPEC правило 7, векторы tests/cases/fresh.json — те же, что missedSlots приложения и прототипа):
+# дни подачи S, где $last < S < $today (поточні — пн и чт, підтримка — чт); отчётов нет — $null. Сейчас — зеркало правила для векторов
+# (напоминания и дайджест считают дни — известный долг, SPEC раздел 9).
+function Get-MissedSlots([string]$last, [string]$today, [string]$kind) {
+    if (-not $last) { return $null }
+    $days = if ($kind -eq "support") { @([DayOfWeek]::Thursday) } else { @([DayOfWeek]::Monday, [DayOfWeek]::Thursday) }
+    $d = [datetime]::ParseExact($last, "yyyy-MM-dd", [Globalization.CultureInfo]::InvariantCulture).AddDays(1)
+    $end = [datetime]::ParseExact($today, "yyyy-MM-dd", [Globalization.CultureInfo]::InvariantCulture)
+    $n = 0
+    while ($d -lt $end) { if ($days -contains $d.DayOfWeek) { $n++ }; $d = $d.AddDays(1) }
+    return $n
+}
 # «Розглянуто» отзыва для колокольчика автора (fpDecidedAt, векторы tests/cases/feedback-decided.json): сменились статус или ответ
 # и статус не «Новий» — сейчас; прежняя строка без отметки и уже разобранный отзыв — давняя дата (вне окна колокольчика: о старых разборах
 # не сповіщаем — решение 12.10.2026); иначе «keep» — не трогать.
@@ -492,6 +506,9 @@ function Get-PendingReturns($pending, [string]$pm, [string[]]$ownerList, [bool]$
         if ($archived) { $out += [ordered]@{ id = [int]$r.id; note = "Проєкт в архіві — звіт не застосовується." }; continue }
         if ($r.author -ne $pm -and -not (Test-Trusted $r.author $ownerList)) { $out += [ordered]@{ id = [int]$r.id; note = "Змінився PM проєкту — новий PM подає актуальний звіт." }; continue }
         if ($keep) { $out += [ordered]@{ id = [int]$r.id; note = "По проєкту вже є звіт на погодженні від $(([datetime]$keep.date).ToString("dd.MM.yyyy")) — новий можна подати після рішення PMO." }; continue }
+        # #160: по отчёту уже есть действующее решение PMO, которое перенесётся в этом же запуске, — место «на погодженні»
+        # он не занимает: следующий отчёт PM (поданный после решения, до синхронизации) не возвращается
+        if ($r.decided) { continue }
         $keep = $r
     }
     return , $out
@@ -1045,13 +1062,26 @@ if ($HAS_PA) {
 # ---------------------------------------------------------------------------
 # 0b. Автоматический возврат отчётов «на погодженні» (до решений PMO): проект в архиве, сменился PM, второй отчёт по проекту.
 # ---------------------------------------------------------------------------
+$approvals = Select-Placed (Get-ItemsIfExists $L_AP $HAS_AP) $L_AP "apProject"
 if ($HAS_AP) {
+    # #160: ещё не перенесённые решения PMO по отчётам (доверенные — как в разделе 0) — чтобы отчёт с уже принятым решением
+    # не считался «на погодженні» при возврате «второго отчёта по проекту»
+    $NEWAP = @{}
+    foreach ($a in (@($approvals) | Where-Object { $_ } | Where-Object { $_["apApplied"] -ne $true })) {
+        $lk = $a["apReport"]; if (-not $lk) { continue }
+        $whoT = Who $a["Author"]; $who = WhoMail $whoT
+        $tr = $whoT -eq "app" -or ($who -and $PMO_EMAILS -contains $who) -or (Test-Trusted $whoT $OWNER_EMAILS)
+        if (-not $NEWAP.ContainsKey($lk.LookupId)) { $NEWAP[$lk.LookupId] = @() }
+        $NEWAP[$lk.LookupId] += @{ id = $a.Id; decision = (Norm $a["apDecision"]); s = (Norm $a["apSchedule"]); b = (Norm $a["apBudget"]); r = (Norm $a["apResources"])
+                                   note = [string]$a["apNote"]; project = $(if ($a["apProject"]) { $a["apProject"].LookupId } else { 0 }); trusted = [bool]$tr }
+    }
     $byProj = @{}
     foreach ($r in $reports) {
         if ($r["srApplied"] -eq $true -or (Norm $r["srApproval"]) -notin @("", "На погодженні")) { continue }
         $lk = $r["srProject"]; if (-not $lk) { continue }
         if (-not $byProj.ContainsKey($lk.LookupId)) { $byProj[$lk.LookupId] = @() }
-        $byProj[$lk.LookupId] += [ordered]@{ id = $r.Id; date = (DateOnly $r["srDate"]); author = (Who $r["Author"]); created = $r["Created"].ToUniversalTime().ToString("o"); item = $r }
+        $dec = $NEWAP[$r.Id] -and (Get-EffectiveApproval @{ s = (Norm $r["srSchedule"]); b = (Norm $r["srBudget"]); r = (Norm $r["srResources"]); project = $lk.LookupId } $NEWAP[$r.Id])
+        $byProj[$lk.LookupId] += [ordered]@{ id = $r.Id; date = (DateOnly $r["srDate"]); author = (Who $r["Author"]); created = $r["Created"].ToUniversalTime().ToString("o"); decided = [bool]$dec; item = $r }
     }
     foreach ($projId in $byProj.Keys) {
         $p = $PROJ[$projId]; if (-not $p) { continue }
@@ -1073,7 +1103,6 @@ if ($HAS_AP) {
 # ---------------------------------------------------------------------------
 $REPBYID = @{}; foreach ($r in $reports) { $REPBYID[$r.Id] = $r }
 $RAGF = [ordered]@{ s = "srSchedule"; b = "srBudget"; r = "srResources" }
-$approvals = Select-Placed (Get-ItemsIfExists $L_AP $HAS_AP) $L_AP "apProject"
 foreach ($a in (@($approvals) | Where-Object { $_ } | Where-Object { $_["apApplied"] -ne $true } | Sort-Object Id)) {
     $lk = $a["apReport"]; $r = if ($lk) { $REPBYID[$lk.LookupId] } else { $null }
     $whoT = Who $a["Author"]; $who = WhoMail $whoT

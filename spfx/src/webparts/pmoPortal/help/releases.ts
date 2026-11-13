@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.12.0",
+   "date": "12.11.2026",
+   "html": "<p><b>Нове</b></p>\n<ul>\n<li><b>Проєкти підтримки.</b> Нова фаза проєкту «Підтримка» — для проєктів, які не завершені, а потребують постійного нагляду: помилки, обслуговування. PM переводить проєкт у підтримку статус-звітом (фаза «Підтримка», причина), PMO погоджує. Окрема вкладка <b>«Проєкти підтримки»</b>, статус-звіт — щочетверга.</li>\n<li><b>Головна: два режими</b> — перемикач «Поточні проєкти / Проєкти підтримки». Кожен режим рахує лише свої проєкти; у підтримки — відкриті проблеми і період підтримки, що минув або спливає за 30 днів.</li>\n</ul>\n<p><b>Змінено</b></p>\n<ul>\n<li>Вкладки «Проєкти» і «Архів» тепер «Поточні проєкти» (без підтримки) і «Архівні проєкти».</li>\n<li><b>Свіжість звіту — за днями подачі:</b> поточні проєкти — понеділок і четвер, підтримка — четвер. Зелений — без пропусків, жовтий — пропущено один день подачі, червоний — два і більше. Показник «Зі свіжим звітом» став «Звіт вчасно».</li>\n<li>Показники головної ведуть у представлення своєї категорії («Поточні — очікують погодження», «Підтримка — відкриті проблеми» тощо): число на плитці збігається зі списком.</li>\n</ul>\n<p><b>Перевірте повторно</b></p>\n<ul>\n<li>Колір крапки в колонці «Звіт» і список «Немає свіжого звіту» — після випуску частина проєктів може стати жовтою або червоною: нове правило суворіше.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.11.2",
    "date": "09.11.2026",
    "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Заголовки таблиць: воронка фільтра завжди праворуч від назви колонки — і у вузьких колонках («Стан», «Терміни», «Бюджет», «Ресурси»), рядок заголовків рівний.</li>\n</ul>"
@@ -330,6 +335,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.12.0",
+   "date": "12.11.2026",
+   "html": "<p><b>New</b></p>\n<ul>\n<li><b>Support projects.</b> A new project phase \"Support\" — for projects that are not finished but need ongoing care: bugs, maintenance. The PM moves a project to support with a status report (phase \"Support\", reason), the PMO approves. A separate <b>\"Support projects\"</b> tab; status report — every Thursday.</li>\n<li><b>Home: two modes</b> — the \"Current projects / Support projects\" switch. Each mode counts only its own projects; support shows open issues and support periods that ended or end within 30 days.</li>\n</ul>\n<p><b>Changed</b></p>\n<ul>\n<li>The \"Projects\" and \"Archive\" tabs are now \"Current projects\" (without support) and \"Archived projects\".</li>\n<li><b>Report freshness follows report days:</b> current projects — Monday and Thursday, support — Thursday. Green — none missed, yellow — one report day missed, red — two or more. The \"With a recent report\" figure is now \"Report on time\".</li>\n<li>Home figures open the view of their own category (\"Current — awaiting approval\", \"Support — open issues\" and others): the number on the tile matches the list.</li>\n</ul>\n<p><b>Check again</b></p>\n<ul>\n<li>The dot colour in the \"Report\" column and the \"No recent report\" list — after the release some projects may turn yellow or red: the new rule is stricter.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.11.2",
    "date": "09.11.2026",
    "html": "<p><b>Changed</b></p>\n<ul>\n<li>Table headers: the filter funnel is always to the right of the column name, narrow columns (Health, Schedule, Budget, Resources) included — the header row is even.</li>\n</ul>"
@@ -656,6 +666,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.12.0",
+   "date": "12.11.2026",
+   "html": "<p><b>Новое</b></p>\n<ul>\n<li><b>Проекты поддержки.</b> Новая фаза проекта «Поддержка» — для проектов, которые не завершены, но требуют постоянного надзора: ошибки, обслуживание. PM переводит проект в поддержку статус-отчётом (фаза «Поддержка», причина), PMO согласует. Отдельная вкладка <b>«Проекты поддержки»</b>, статус-отчёт — каждый четверг.</li>\n<li><b>Главная: два режима</b> — переключатель «Текущие проекты / Проекты поддержки». Каждый режим считает только свои проекты; у поддержки — открытые проблемы и период поддержки, который истёк или истекает за 30 дней.</li>\n</ul>\n<p><b>Изменено</b></p>\n<ul>\n<li>Вкладки «Проекты» и «Архив» теперь «Текущие проекты» (без поддержки) и «Архивные проекты».</li>\n<li><b>Свежесть отчёта — по дням подачи:</b> текущие проекты — понедельник и четверг, поддержка — четверг. Зелёный — без пропусков, жёлтый — пропущен один день подачи, красный — два и больше. Показатель «Со свежим отчётом» стал «Отчёт вовремя».</li>\n<li>Показатели главной ведут в представление своей категории («Текущие — ожидают согласования», «Поддержка — открытые проблемы» и др.): число на плитке совпадает со списком.</li>\n</ul>\n<p><b>Проверьте повторно</b></p>\n<ul>\n<li>Цвет точки в колонке «Звіт» и список «Нет свежего отчёта» — после выпуска часть проектов может стать жёлтой или красной: новое правило строже.</li>\n</ul>"
+  },
   {
    "ver": "1.7.11.2",
    "date": "09.11.2026",

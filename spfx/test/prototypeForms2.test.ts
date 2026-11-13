@@ -9,13 +9,21 @@ const HTML = fs.readFileSync(path.join(__dirname, '../../prototype/pmo-prototype
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type W = any;
 let w: W;
-beforeEach(async () => {
-  w = new JSDOM(HTML, { runScripts: 'dangerously', pretendToBeVisual: true, url: 'https://pmo.test/', beforeParse(win: W) {
+/** Прототип в jsdom. day (ГГГГ-ММ-ДД) — «сегодня» прототипа: демо-данные заданы «N дней назад», а свежесть отчёта
+ *  считается по дням подачи (пн, чт), поэтому тест, где важна свежесть, не должен зависеть от дня запуска. */
+async function boot(day?: string): Promise<W> {
+  const win0 = new JSDOM(HTML, { runScripts: 'dangerously', pretendToBeVisual: true, url: 'https://pmo.test/', beforeParse(win: W) {
+    if (day) {
+      const RealDate = win.Date; const base = new RealDate(day + 'T10:00:00').getTime();
+      win.Date = class extends RealDate { constructor(...a: unknown[]) { if (a.length) super(...a); else super(base); } static now(): number { return base; } };
+    }
     win.matchMedia = () => ({ matches: false, addEventListener() { /* */ }, removeEventListener() { /* */ }, addListener() { /* */ } });
     win.HTMLElement.prototype.scrollIntoView = function (): void { /* */ }; win.scrollTo = () => undefined; } }).window;
-  for (let i = 0; i < 20 && !w.document.querySelector('[data-act="lang"]'); i++) await new Promise(r => setTimeout(r, 0));
-  w.document.querySelector('[data-act="lang"][data-i="0"]').click();
-});
+  for (let i = 0; i < 20 && !win0.document.querySelector('[data-act="lang"]'); i++) await new Promise(r => setTimeout(r, 0));
+  win0.document.querySelector('[data-act="lang"][data-i="0"]').click();
+  return win0;
+}
+beforeEach(async () => { w = await boot(); });
 afterEach(() => { if (w) w.close(); });
 const q = (s: string): W => w.document.querySelector(s);
 const ev = (el: W, t: string): void => { el.dispatchEvent(new w.Event(t, { bubbles: true })); };
@@ -304,7 +312,7 @@ describe('прототип: метка погодження в колонке «
     // подсказка к точке свежести — у каждой ячейки «Звіт»
     const rags = Array.from(w.document.querySelectorAll('#main table .rag[title]')) as any[];
     expect(rags.length).toBeGreaterThanOrEqual(marks.length);   // и без отчётов — подсказка «ще немає»
-    expect(rags.some(r => /дн\. тому/.test(r.getAttribute('title')))).toBe(true);
+    expect(rags.some(r => /пропущено днів подачі/.test(r.getAttribute('title')))).toBe(true);
   });
 });
 
@@ -329,12 +337,16 @@ test('шапка: название — своей строкой, ниже ме�
   expect(ov).not.toMatch(/\.top-in \{ flex-wrap: nowrap/);  // название и меню в одну строку — не помещается
 });
 
-test('#73 фильтр колонки «Звіт»: свежесть и погодження; «Погоджено» — только такие проекты', () => {
+// день подачи (чт 12.11.2026) и день после него (пт 13.11.2026): в пятницу «свежих» в демо-данных нет — тест падал 4 дня в неделю
+for (const [day, fresh] of [['2026-11-12', true], ['2026-11-13', false]] as [string, boolean][])
+test(`#73 фильтр колонки «Звіт» (${day}): свежесть и погодження; «Погоджено» — только такие проекты`, async () => {
+  w.close(); w = await boot(day);
   q('[data-act="nav"][data-page="projects"]').click();
   q('[data-act="mode"][data-key="projMode"][data-mode="list"]').click();
   q('[data-act="tfilter"][data-col="repDate"]').click();
   const vals = Array.from(w.document.querySelectorAll('#pop [data-pv]')).map((x: W) => x.dataset.pv);
-  expect(vals).toEqual(expect.arrayContaining(['0', 'a1']));
+  expect(vals).toEqual(expect.arrayContaining(['1', 'a1']));
+  expect(vals.includes('0')).toBe(fresh);
   expect(w.document.querySelector('#pop').textContent).toContain('Погоджено');
   const cb = q('#pop [data-pv="a1"]'); cb.checked = true; ev(cb, 'change');
   const marks = Array.from(w.document.querySelectorAll('#main table tbody tr')).map((tr: W) => (tr.querySelector('.rep-ap') || { textContent: '' }).textContent);

@@ -12,6 +12,7 @@ import { Panel } from './Panel';
 import { Home } from '../pages/Home';
 import { Projects } from '../pages/Projects';
 import { Archive } from '../pages/Archive';
+import { Support } from '../pages/Support';
 import { Reports } from '../pages/Reports';
 import { Risks } from '../pages/Risks';
 import { ProjectCard } from '../panels/ProjectCard';
@@ -44,11 +45,14 @@ export interface AppProps { repo: SpRepo; culture: string; userName: string; use
   /** Администратор сайта (право «Керування веб-сайтом»): ставит статусы и ответы на отзывы. */
   admin?: boolean; }
 
+const readHomeSeg = (): 'cur' | 'support' => { try { return localStorage.getItem('pmo-homeseg') === 'sup' ? 'support' : 'cur'; } catch { return 'cur'; } };
+
 /** Корень приложения: язык, тема, маршрут, данные; весь CSS прототипа действует внутри .pmo-app. */
 export const App: React.FC<AppProps> = p => {
   const [lang, setLang] = React.useState<Lang>(readLang() ?? langFromCulture(p.culture));
   const [theme, setTheme] = React.useState<Theme>(readTheme());
-  const [route, setRoute] = React.useState<Route>(() => parse(window.location.hash, DEFAULT_VIEWS));
+  // 1.7.12: режим главной запоминается в браузере (pmo-homeseg, как в прототипе)
+  const [route, setRoute] = React.useState<Route>(() => parse(window.location.hash, { ...DEFAULT_VIEWS, home: readHomeSeg() }));
   const [data, setData] = React.useState<PortalData | undefined>(undefined);
   // колокольчик: есть ли новые для меня события — пересчёт только при новых данных
   const bellUnread = React.useMemo(() => (data ? notifyState(data, p.userEmail, lang).unread : 0), [data, p.userEmail, lang]);
@@ -137,6 +141,7 @@ export const App: React.FC<AppProps> = p => {
   const pageEl = !data ? null
     : route.page === 'home' ? <Home data={data} />
     : route.page === 'projects' ? <Projects data={data} />
+    : route.page === 'support' ? <Support data={data} />
     : route.page === 'archive' ? <Archive data={data} />
     : route.page === 'feedback' ? <Feedback data={data} />
     : route.page === 'reports' ? <Reports data={data} /> : <Risks data={data} />;

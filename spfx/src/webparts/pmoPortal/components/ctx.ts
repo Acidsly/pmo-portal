@@ -1,10 +1,12 @@
 import * as React from 'react';
 import { Lang } from '../i18n/i18n';
-import { ProjectView, ReportView, RiskView, ArchiveView } from '../logic/views';
+import { ProjectView, ReportView, RiskView, ArchiveView, SupportView } from '../logic/views';
 import { SpRepo } from '../data/SpRepo';
 
-export type Page = 'home' | 'projects' | 'reports' | 'risks' | 'archive' | 'feedback';
-export interface Views { projects: ProjectView; reports: ReportView; risks: RiskView; archive: ArchiveView; }
+export type Page = 'home' | 'projects' | 'support' | 'reports' | 'risks' | 'archive' | 'feedback';
+/** Режим главной (1.7.12): поточні проєкти или проєкти підтримки. */
+export type HomeView = 'cur' | 'support';
+export interface Views { home: HomeView; projects: ProjectView; support: SupportView; reports: ReportView; risks: RiskView; archive: ArchiveView; }
 export interface Ctx {
   t(k: string): string; fl(k: string): string; lang: Lang; today: string;
   /** e-mail текущего пользователя (представление «Мої проєкти»). */

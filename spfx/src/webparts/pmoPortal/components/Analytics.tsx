@@ -1,18 +1,24 @@
 import * as React from 'react';
 import { tv } from '../i18n/values';
-import { Kpis, DeptRow } from '../logic/analytics';
+import { Kpis, DeptRow, SupportKpis } from '../logic/analytics';
 import { Risk, Project } from '../data/types';
 import { riskScore, scoreLevel } from '../logic/status';
 import { Score } from './Bits';
 
 /** Полоса показателей главной (kpiStrip прототипа): число, подпись, подсказка; клик — отфильтрованный список. */
-export const KpiStrip: React.FC<{ k: Kpis; pmo: boolean; t(k: string): string; go(page: string, view: string): void }> = ({ k, pmo, t, go }) => {
-  const tiles: { n: string; label: string; sub?: string; bad: boolean; on(): void }[] = [
-    { n: String(k.active), label: t('kpiActive'), bad: false, on: () => go('projects', 'all') },
-    { n: k.active ? k.freshPct + '%' : '—', label: t('kpiFresh'), sub: t('kpiFreshSub').replace('{n}', String(k.fresh)).replace('{m}', String(k.active)),
-      bad: k.active > 0 && k.freshPct < 70, on: () => go('projects', 'stale') },
-    ...(pmo ? [{ n: String(k.awaiting), label: t('viewAwaiting'), bad: k.awaiting > 0, on: () => go('reports', 'awaiting') }] : []),
-    { n: String(k.highRisks), label: t('kpiHigh'), bad: k.highRisks > 0, on: () => go('risks', 'high') },
+/** Полоса показателей (kpiStrip прототипа). 1.7.12: sup — режим «Проєкти підтримки» (свои показатели); каждый ведёт в представление
+ *  своей категории — число на плитке = строки списка (prototypeSupport.test.ts, components.test.tsx). */
+export const KpiStrip: React.FC<{ k: Kpis; pmo: boolean; t(k: string): string; go(page: string, view: string): void; sup?: SupportKpis }> = ({ k, pmo, t, go, sup }) => {
+  const fresh = { n: k.active ? k.freshPct + '%' : '—', label: t('kpiFresh'), sub: t('kpiFreshSub').replace('{n}', String(k.fresh)).replace('{m}', String(k.active)),
+    bad: k.active > 0 && k.freshPct < 70, on: () => go(sup ? 'support' : 'projects', 'stale') };
+  const tiles: { n: string; label: string; sub?: string; bad: boolean; on(): void }[] = sup ? [
+    { n: String(k.active), label: t('kpiSupport'), bad: false, on: () => go('support', 'all') }, fresh,
+    ...(pmo ? [{ n: String(k.awaiting), label: t('viewAwaiting'), bad: k.awaiting > 0, on: () => go('reports', 'supAwaiting') }] : []),
+    { n: String(sup.issues), label: t('kpiIssues'), sub: t('kpiIssuesSub').replace('{n}', String(sup.issuesHigh)), bad: sup.issues > 0, on: () => go('risks', 'supIssues') },
+    { n: String(k.overdue), label: t('kpiSupEnd'), sub: t('kpiSupEndSub').replace('{n}', String(sup.ending)), bad: k.overdue > 0, on: () => go('support', 'late') }] : [
+    { n: String(k.active), label: t('kpiActive'), bad: false, on: () => go('projects', 'all') }, fresh,
+    ...(pmo ? [{ n: String(k.awaiting), label: t('viewAwaiting'), bad: k.awaiting > 0, on: () => go('reports', 'curAwaiting') }] : []),
+    { n: String(k.highRisks), label: t('kpiHigh'), bad: k.highRisks > 0, on: () => go('risks', 'curHigh') },
     { n: String(k.overdue), label: t('kpiLate'), bad: k.overdue > 0, on: () => go('projects', 'late') }];
   return <div className="kpis">{tiles.map((x, i) => <button key={i} className={'kpi' + (x.bad ? ' bad' : '')} onClick={x.on}>
     <b>{x.n}</b><span className="kl">{x.label}</span>{x.sub ? <small>{x.sub}</small> : null}</button>)}</div>;

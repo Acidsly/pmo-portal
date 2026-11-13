@@ -483,11 +483,15 @@ describe('метка погодження в колонке «Звіт»', () =>
 });
 
 describe('подсказка к точке свежести в колонке «Звіт»', () => {
-  test('дни с последнего погодженого отчёта и значение цветов; без отчётов — «ще немає»', () => {
-    expect(freshTip(tt.t, '2026-09-25', '2026-10-08')).toBe('Останній погоджений звіт — 13 дн. тому. Зелений — до 8 днів, жовтий — 9–14, червоний — понад 14.');
-    expect(freshTip(tt.t, '', '2026-10-08')).toBe('Погоджених звітів ще немає.');
-    mount(<FreshDate iso="2026-09-25" fresh="y" none="—" tip={freshTip(tt.t, '2026-09-25', '2026-10-08')} />);
-    expect(root.querySelector('.rag')!.getAttribute('title')).toContain('13 дн. тому');
+  // 1.7.12: дата, пропущенные дни подачи, правило категории и отчёт на погодженні
+  test('пропущенные дни подачи и правило категории; без отчётов — «ще немає»; отчёт на погодженні', () => {
+    const cur = { lastUpdate: '2026-11-05', status: 'Реалізація', lastRep: null };
+    expect(freshTip(tt.t, cur, '2026-11-10')).toBe('Останній погоджений звіт — від 05.11.2026, пропущено днів подачі: 1. Поточні проєкти звітують у понеділок і четвер: зелений — без пропусків, жовтий — пропущено один, червоний — два і більше.');
+    expect(freshTip(tt.t, { ...cur, lastUpdate: '' }, '2026-11-10')).toMatch(/^Погоджених звітів ще немає\. Поточні проєкти звітують/);
+    expect(freshTip(tt.t, { ...cur, status: 'Підтримка' }, '2026-11-10')).toMatch(/пропущено днів подачі: 0\. Проєкти підтримки звітують щочетверга/);
+    expect(freshTip(tt.t, { ...cur, lastRep: { approval: 'На погодженні', date: '2026-11-09' } }, '2026-11-10')).toMatch(/Звіт від 09\.11\.2026 — на погодженні PMO\.$/);
+    mount(<FreshDate iso="2026-11-05" fresh="y" none="—" tip={freshTip(tt.t, cur, '2026-11-10')} />);
+    expect(root.querySelector('.rag')!.getAttribute('title')).toContain('пропущено днів подачі: 1');
   });
 });
 
@@ -518,7 +522,7 @@ describe('меню: значки разделов (Lucide)', () => {
     mount(<Header page="projects" lang={0} theme="light" userName="PM" userEmail="pm@x" onPage={() => undefined} onLang={() => undefined}
       onTheme={() => undefined} onHelp={() => undefined} onFeedback={() => undefined} />);
     const bs = Array.from(root.querySelectorAll('.nav button')) as HTMLElement[];
-    expect(bs.map(b => b.dataset.page)).toEqual(['home', 'projects', 'reports', 'risks', 'archive', 'feedback']);
+    expect(bs.map(b => b.dataset.page)).toEqual(['home', 'projects', 'support', 'archive', 'reports', 'risks', 'feedback']);   // 1.7.12: три вкладки проектов
     for (const b of bs) {
       expect(b.querySelector('.ni svg')).not.toBeNull();
       expect(b.querySelector('.nl')!.textContent).toBe(b.getAttribute('title'));

@@ -15,12 +15,12 @@ export function donutCounts(projects: Project[]): DonutCounts {
   return { g: n('Зелений'), y: n('Жовтий'), r: n('Червоний'), none: n(''), total: act.length };
 }
 
-/** 7 срезов через 14 дней (последний — сегодня): каждый проект, который уже существовал на дату среза и ещё не был в архиве, —
+/** 7 срезов через step дней (14; у проєктів підтримки — 7, 1.7.12; последний — сегодня): каждый проект, который уже существовал на дату среза и ещё не был в архиве, —
  *  по последнему (погодженому) отчёту на эту дату; без отчёта — «не оцінено». Последний срез (сегодня) — по карточке, как кольцо «Портфель за станом» (#117). */
-export function snapshots(projects: Project[], reports: StatusReport[], today: string): Snapshot[] {
+export function snapshots(projects: Project[], reports: StatusReport[], today: string, step = 14): Snapshot[] {
   const out: Snapshot[] = [];
   for (let k = 6; k >= 0; k--) {
-    const tt = addDays(today, -14 * k);
+    const tt = addDays(today, -step * k);
     const c = { g: 0, y: 0, r: 0, na: 0 };
     for (const p of projects) {
       // завершённые и отменённые — до даты архивации учитываются, с неё — нет; дата — архивации, иначе фактическая, иначе последнего отчёта;

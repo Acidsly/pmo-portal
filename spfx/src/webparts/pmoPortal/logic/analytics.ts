@@ -1,5 +1,5 @@
 import { Project, StatusReport, Risk, ChangeEntry } from '../data/types';
-import { isActive, freshness, isPlanLate, forecastDelta, riskScore } from './status';
+import { isActive, projectFresh, isPlanLate, forecastDelta, riskScore } from './status';
 import { AP_PENDING } from './approval';
 
 /** Аналитика главной — всё по видимым пользователю проектам без архива (правила задачи 7 раунда 2). */
@@ -9,16 +9,31 @@ export const isHighRisk = (k: Risk): boolean => isOpen(k) && riskScore(k.probabi
 export const isAwaiting = (r: StatusReport): boolean => (r.approval || AP_PENDING) === AP_PENDING;
 
 export interface Kpis { active: number; fresh: number; freshPct: number; awaiting: number; highRisks: number; overdue: number; }
-/** Полоса показателей: активні; частка зі свіжим звітом (≤ 14 днів); очікують погодження; високі ризики (відкриті, ≥ 15); прострочені (план минув, проєкт відкритий). */
+/** Полоса показателей: активні; «Звіт вчасно» — частка без пропущених днів подачі (1.7.12); очікують погодження; високі ризики (відкриті, ≥ 15); прострочені (план минув, проєкт відкритий). */
 export function kpis(projects: Project[], reports: StatusReport[], risks: Risk[], today: string): Kpis {
   const act = projects.filter(p => isActive(p.status));
   const ids: Record<number, boolean> = {}; projects.forEach(p => { ids[p.id] = true; });
-  const fresh = act.filter(p => { const f = freshness(p.lastUpdate, today); return f === 'g' || f === 'y'; }).length;
+  const fresh = act.filter(p => projectFresh(p, today) === 'g').length;
   return { active: act.length, fresh, freshPct: act.length ? Math.round(fresh / act.length * 100) : 0,
     awaiting: reports.filter(r => ids[r.projectId] && isAwaiting(r)).length,
     highRisks: risks.filter(k => ids[k.projectId] && isHighRisk(k)).length,
     overdue: projects.filter(p => isPlanLate(p.planEnd, p.status, today)).length };
 }
+
+/** 1.7.12 режим «Проєкти підтримки»: відкриті проблеми (тип «Проблема») і з них високі (≥ 15); період підтримки (план завершення)
+ *  минув — overdue в kpis; спливає за 30 днів — ending; endingRows — минув або спливає за 30 днів (блок замість «Зсувів» і «Запусків»). */
+export interface SupportKpis { issues: number; issuesHigh: number; ending: number; }
+export function supportKpis(projects: Project[], risks: Risk[], today: string): SupportKpis {
+  const ids: Record<number, boolean> = {}; projects.forEach(p => { ids[p.id] = true; });
+  const iss = risks.filter(k => ids[k.projectId] && isOpen(k) && k.type === 'Проблема'), soon = addDays(today, 30);
+  return { issues: iss.length, issuesHigh: iss.filter(k => riskScore(k.probability, k.impact) >= 15).length,
+    ending: projects.filter(p => isActive(p.status) && !!p.planEnd && p.planEnd >= today && p.planEnd <= soon).length };
+}
+export const supportEnding = (projects: Project[], today: string): Project[] => {
+  const soon = addDays(today, 30);
+  return projects.filter(p => isActive(p.status) && !!p.planEnd && p.planEnd <= soon)
+    .sort((a, b) => (a.planEnd < b.planEnd ? -1 : a.planEnd > b.planEnd ? 1 : a.id - b.id));
+};
 
 /** Карта ризиків: m[ймовірність-1][вплив-1] — відкриті ризики видимих проєктів. */
 export function riskMatrix(projects: Project[], risks: Risk[]): Risk[][][] {

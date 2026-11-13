@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { AppCtx } from '../components/ctx';
 import { PortalData } from '../data/SpRepo';
-import { isArch, isActive, newestFirst } from '../logic/status';
+import { isArch, isActive, isSupport, newestFirst } from '../logic/status';
 import { KV, riskInView } from '../logic/views';
 import { DataTable } from '../components/DataTable';
 import { riskDefs, riskCard } from '../components/defs';
@@ -12,7 +12,7 @@ import { Hero, ViewSel, useDefsCtx } from './common';
 export const Risks: React.FC<{ data: PortalData }> = ({ data }) => {
   const c = React.useContext(AppCtx); const { t } = c;
   const x = useDefsCtx(data);
-  const rows = data.risks.filter(k => x.byId[k.projectId] && riskInView(c.views.risks, k, isArch(x.byId[k.projectId].status)))
+  const rows = data.risks.filter(k => x.byId[k.projectId] && riskInView(c.views.risks, k, isArch(x.byId[k.projectId].status), isSupport(x.byId[k.projectId].status)))
     .sort(newestFirst);   // новые сверху; по оценке — сортировкой колонки
   const canAdd = data.projects.some(p => isActive(p.status) && p.canEdit);
   const add = canAdd ? <button className="cmd primary" onClick={() => c.openForm('risk:new')}><Plus />{t('newRisk')}</button> : null;

@@ -24,8 +24,12 @@ test('отчёты и риски', () => {
   expect(riskView('all', { status: 'Закрито' } as Risk)).toBe(true);
 });
 test('корзины и участники', () => {
-  expect(freshBucket('', today)).toBe('3'); expect(freshBucket('2026-09-20', today)).toBe('0');
-  expect(freshBucket('2026-09-12', today)).toBe('1'); expect(freshBucket('2026-09-01', today)).toBe('2');
+  // 1.7.12: корзины свежести — по дням подачи категории (векторы правила — tests/cases/fresh.json)
+  const cur = (lastUpdate: string): { lastUpdate: string; status: string } => ({ lastUpdate, status: 'Реалізація' });
+  expect(freshBucket(cur(''), '2026-11-09')).toBe('3'); expect(freshBucket(cur('2026-11-05'), '2026-11-09')).toBe('0');
+  expect(freshBucket(cur('2026-11-05'), '2026-11-10')).toBe('1'); expect(freshBucket(cur('2026-11-05'), '2026-11-13')).toBe('2');
+  expect(freshBucket({ lastUpdate: '2026-11-05', status: 'Підтримка' }, '2026-11-12')).toBe('0');   // підтримка — только четверги
+  expect(freshBucket({ lastUpdate: '2026-11-05', status: 'Підтримка' }, '2026-11-13')).toBe('1');
   expect(scoreBucket(15)).toBe('0'); expect(scoreBucket(8)).toBe('1'); expect(scoreBucket(7)).toBe('2');
   expect(participants(P({ manager: { id: 1, name: 'M', email: 'M@x.ua' }, owner: null }))).toEqual(['m@x.ua']);
   expect(ofProject([{ projectId: 1, n: 'a' }, { projectId: 2, n: 'b' }], 2).map(x => x.n)).toEqual(['b']);
