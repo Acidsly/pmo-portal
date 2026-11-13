@@ -6,7 +6,7 @@
     "node": ">=26.0.0 <27.0.0"
   },
   "scripts": {
-    "build": "heft test --clean --production && heft package-solution --production",
+    "build": "heft test --clean --production && heft package-solution --production && node tools/check-bundle.mjs",
     "clean": "heft clean",
     "eject-webpack": "heft eject-webpack",
     "start": "heft start --clean",

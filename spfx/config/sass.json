@@ -1,5 +1,10 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/heft/v0/heft-sass-plugin.schema.json",
 
-  "extends": "@microsoft/spfx-web-build-rig/profiles/default/config/sass.json"
+  "extends": "@microsoft/spfx-web-build-rig/profiles/default/config/sass.json",
+
+  // SPFx 1.24 включил preserveIcssExports: CSS уходит в сборку с `:global`, а наши стили — обычные .scss
+  // (prototype.scss, overrides.scss в обёртке :global { … }), их модульная обработка не проходит, и браузер
+  // отбрасывает все правила. false — как в 1.23: обёртка снимается при компиляции. Проверка — tools/check-bundle.mjs.
+  "preserveIcssExports": false
 }
