@@ -15,10 +15,12 @@
 #>
 param(
     [Parameter(Mandatory)][ValidateSet("test", "prod")][string]$Env,
-    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "refresh", "renumber", "renumber-dryrun", "feedback-answers", "whois", "acl-export", "app", "feedback", "probe-formvalues", "perm-check", "aa-whoami")][string]$Action,
+    [Parameter(Mandatory)][ValidateSet("deploy", "sync", "sync-dryrun", "reminders", "rebuild-permissions", "seed", "refresh", "renumber", "renumber-dryrun", "feedback-answers", "whois", "acl-export", "app", "feedback", "probe-formvalues", "perm-check", "aa-whoami", "project")][string]$Action,
     [switch]$ConfirmProduction,
     # deploy: CEO стран из config/countries-<env>.json — по файлу, поверх того, что ввёл PMO (только владелец, по решению)
     [switch]$ForceCeo,
+    # для -Action project: часть названия проекта или его код (PRJ-…)
+    [string]$Title,
     # для -Action whois: e-mail человека, чей доступ проверить
     [string]$Email,
     # для -Action acl-export: куда сохранить выгрузку прав (JSON)
@@ -92,6 +94,12 @@ if ($Action -eq "feedback") {
     $a = Get-Auth $cfg.Deploy
     $a.SiteUrl = $siteUrl; $a.File = Join-Path $root "config/feedback-answers.json"
     & (Join-Path $PSScriptRoot "Set-FeedbackAnswers.ps1") @a
+} elseif ($Action -eq "project") {
+    # диагностика проекта (только чтение): карточка, эталон, отчёты, решения PMO, призначення, журнал
+    if (-not $Title) { throw "Для -Action project укажите -Title (часть названия или код PRJ-…)." }
+    $a = Get-Auth $cfg.Sync
+    $a.SiteUrl = $siteUrl; $a.Title = $Title
+    & (Join-Path $PSScriptRoot "Show-Project.ps1") @a
 } elseif ($Action -eq "whois") {
     # диагностика доступа человека (только чтение): Entra ID, руководитель, подчинённые, группы сайта, роли в проектах
     if (-not $Email) { throw "Для -Action whois укажите -Email." }

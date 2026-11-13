@@ -1,5 +1,6 @@
 /** Правила погодження и применения статус-отчётов — те же, что Invoke-PMOSync.ps1 (Get-PendingReturns, Get-ApplyAction). Векторы tests/cases/reports.json. */
-export interface PendingRep { id: number; date: string; author: string; created: string; }
+/** decided — по отчёту уже есть действующее решение PMO, ещё не перенесённое синхронизацией (#160). */
+export interface PendingRep { id: number; date: string; author: string; created: string; decided?: boolean; }
 export interface ReturnRow { id: number; note: string; }
 // доверенный автор: приложение («app») или владелец сайта; пустой e-mail — не доверенный (как Test-Trusted синхронизации)
 const trusted = (email: string, owners: string[]): boolean => email === 'app' || (!!email && owners.indexOf(email) >= 0);
@@ -13,6 +14,8 @@ export function pendingReturns(pending: PendingRep[], pm: string, owners: string
     if (archived) { out.push({ id: r.id, note: 'Проєкт в архіві — звіт не застосовується.' }); continue; }
     if (r.author !== pm && !trusted(r.author, owners)) { out.push({ id: r.id, note: 'Змінився PM проєкту — новий PM подає актуальний звіт.' }); continue; }
     if (keep) { out.push({ id: r.id, note: `По проєкту вже є звіт на погодженні від ${dmy(keep.date)} — новий можна подати після рішення PMO.` }); continue; }
+    // #160: отчёт с уже принятым решением PMO место «на погодженні» не занимает — следующий отчёт не возвращается
+    if (r.decided) continue;
     keep = r;
   }
   return out;

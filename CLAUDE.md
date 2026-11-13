@@ -17,6 +17,7 @@
 | `scripts/Refresh-TestData.ps1` | Освежить демо-данные (`-Action refresh`): свежие погоджені отчёты, сроки рисков |
 | `scripts/Renumber-Projects.ps1` | Единая нумерация PRJ-001… по порядку создания (`-Action renumber` / `renumber-dryrun`); номер нового проекта — только автоматический |
 | `scripts/Show-Person.ps1` | Диагностика доступа человека (`-Action whois -Email …`, только чтение): Entra ID, руководитель, подчинённые, группы сайта, роли и права |
+| `scripts/Show-Project.ps1` | Диагностика проекта (`-Action project -Title …`, только чтение): карточка, эталон, отчёты, решения PMO, призначення, журнал — «почему у проекта такие показатели» |
 | `scripts/Export-ItemAcl.ps1` | Фактические права всех записей портала в JSON (`-Action acl-export -File …`, только чтение) — сверка до / после изменений синхронизации |
 | `scripts/Set-FeedbackAnswers.ps1` | Разбор отзывов: статусы, ответы, отзывы из писем (`-Action feedback-answers`, файл `config/feedback-answers.json` вне git) |
 | `copilot/` | Помощник ИИ отчёта (пилот): агент Copilot Studio, тема Fallback, тексты prompt «Чернетка» / «Перевірка» — [copilot/README.md](copilot/README.md); после правки prompt — «Набір перевірок» |
@@ -55,6 +56,7 @@ pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action feedback-answers   #
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action app          # приложение SPFx (только test)
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action feedback     # выгрузка отзывов в feedback-export/
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action whois -Email <e-mail>        # почему человек не видит портал (только чтение)
+pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action project -Title "<название или PRJ-…>"   # история проекта (только чтение)
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action acl-export -File <файл.json> # фактические права записей (только чтение)
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action rebuild-permissions          # полный пересчёт прав
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env prod -Action sync-dryrun
