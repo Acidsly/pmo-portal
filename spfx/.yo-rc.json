@@ -12,7 +12,7 @@
     "componentDescription": "Портфель проєктів",
     "plusBeta": false,
     "isCreatingSolution": true,
-    "nodeVersion": "22.23.3",
+    "nodeVersion": "26.13.1",
     "sdksVersions": {},
     "version": "1.24.1",
     "libraryName": "pmo-portal",
