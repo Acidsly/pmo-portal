@@ -1,7 +1,8 @@
 /** @jest-environment jsdom */
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act, Simulate } from 'react-dom/test-utils';
+import { act } from 'react';
+import { Simulate } from 'react-dom/test-utils';
+import { renderInto, disposeRoot } from '../src/webparts/pmoPortal/components/reactRoot';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
 import { makeT } from '../src/webparts/pmoPortal/i18n/i18n';
 import { ReportForm } from '../src/webparts/pmoPortal/panels/ReportForm';
@@ -32,11 +33,11 @@ const ctxFor = (me: string, project = pr): any => ({ ...tt, lang: 0, today: '202
   repo: { loadChanges: async () => [], siteLocalTime: async () => '2026-10-14T02:30:00',
     fresh: async () => ({ project, etag: '"1"', owner: false, pending: [], lastApprovedDate: '2026-09-01' }), createIn: async (_l: string, _id: number, b: any) => { bodies.push(b); }, create: async (l: string, b: any) => { created.push({ l, b }); return 1; } } });
 beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); mockAgent.replies = []; mockAgent.allows = []; mockAgent.asked = []; mockAgent.hold = null; mockAgent.mode = 'popup'; mockAgent.tokenErr = ''; mockAgent.hows = []; mockAgent.signIns = []; bodies = []; created = []; localStorage.clear(); });
-afterEach(() => { ReactDOM.unmountComponentAtNode(root); root.remove(); });
+afterEach(() => { act(() => { disposeRoot(root); }); root.remove(); });
 
 const flush = async (): Promise<void> => { for (let i = 0; i < 6; i++) await act(async () => { await new Promise(r => setTimeout(r, 0)); }); };
 const open = async (me = 'pm@x', d: any = data, project = pr): Promise<void> => {
-  await act(async () => { ReactDOM.render(<AppCtx.Provider value={ctxFor(me, project)}><ReportForm data={d} projectId={5} onCancel={() => undefined} /></AppCtx.Provider>, root); });
+  await act(async () => { renderInto(root, <AppCtx.Provider value={ctxFor(me, project)}><ReportForm data={d} projectId={5} onCancel={() => undefined} /></AppCtx.Provider>); });
   await flush();
 };
 const $ = (s: string): HTMLElement => root.querySelector(s) as HTMLElement;
@@ -107,7 +108,7 @@ describe('помощник ИИ в форме отчёта', () => {
 
   test('язык интерфейса EN — ИИ получает lang «en», пункты портала по-английски', async () => {
     const late = { id: 7, projectId: 5, title: 'Server down', type: 'Ризик', probability: 1, impact: 1, status: 'Відкрито', due: '2026-10-01', mitigation: 'Fix' };
-    await act(async () => { ReactDOM.render(<AppCtx.Provider value={{ ...ctxFor('pm@x'), lang: 1 }}><ReportForm data={{ ...data, risks: [late] }} projectId={5} onCancel={() => undefined} /></AppCtx.Provider>, root); });
+    await act(async () => { renderInto(root, <AppCtx.Provider value={{ ...ctxFor('pm@x'), lang: 1 }}><ReportForm data={{ ...data, risks: [late] }} projectId={5} onCancel={() => undefined} /></AppCtx.Provider>); });
     await flush(); fill();
     mockAgent.replies.push({ text: '{"items":[]}' });
     await submit();
@@ -130,7 +131,7 @@ describe('помощник ИИ в форме отчёта', () => {
     mockAgent.replies.push(err);
     await submit();
     expect(created.length).toBe(1);
-    ReactDOM.unmountComponentAtNode(root); localStorage.clear();
+    act(() => { disposeRoot(root); }); localStorage.clear();
     await open('pm@x', { ...data, feedback: false }); fill();
     mockAgent.replies.push(err);
     await submit();
@@ -142,7 +143,7 @@ describe('помощник ИИ в форме отчёта', () => {
     let release: () => void = () => undefined; mockAgent.hold = new Promise<void>(r => { release = r; });
     mockAgent.replies.push({ text: 'An error has occurred.\nError code: AIModelActionBadRequest' });
     await submit();
-    act(() => { ReactDOM.unmountComponentAtNode(root); });
+    act(() => { disposeRoot(root); });
     await act(async () => { release(); }); await flush();
     expect(created.length).toBe(0);
   });
@@ -240,7 +241,7 @@ describe('помощник ИИ в форме отчёта', () => {
 describe('поле ИИ в просмотре отчёта', () => {
   const rep = (o: any): any => ({ ...data.reports[0], id: 3, author: { email: 'pm@x', name: 'PM' }, approval: 'Погоджено', approvedBy: null, approvedAt: '', approvalNote: '', ...o });
   const view = async (r: any): Promise<void> => {
-    await act(async () => { ReactDOM.render(<AppCtx.Provider value={ctxFor('boss@x')}><ReportView data={{ ...data, reports: [r], approvals: [] }} report={r} onCancel={() => undefined} /></AppCtx.Provider>, root); });
+    await act(async () => { renderInto(root, <AppCtx.Provider value={ctxFor('boss@x')}><ReportView data={{ ...data, reports: [r], approvals: [] }} report={r} onCancel={() => undefined} /></AppCtx.Provider>); });
   };
   test('#98: ответственный PM (автор отчёта) — под заголовком', async () => {
     await view(rep({}));

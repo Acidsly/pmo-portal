@@ -3,6 +3,11 @@ export interface Release { ver: string; date: string; html: string; }
 export const RELEASES: [Release[], Release[], Release[]] = [
  [
   {
+   "ver": "1.7.13.0",
+   "date": "14.11.2026",
+   "html": "<p><b>Змінено</b></p>\n<ul>\n<li>Технічне оновлення: новіші версії складових порталу (SharePoint Framework 1.24, React 18). Для користувачів нічого не змінилося — якщо щось працює інакше, ніж раніше, напишіть відгук.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.12.0",
    "date": "12.11.2026",
    "html": "<p><b>Нове</b></p>\n<ul>\n<li><b>Проєкти підтримки.</b> Нова фаза проєкту «Підтримка» — для проєктів, які не завершені, а потребують постійного нагляду: помилки, обслуговування. PM переводить проєкт у підтримку статус-звітом (фаза «Підтримка», причина), PMO погоджує. Окрема вкладка <b>«Проєкти підтримки»</b>, статус-звіт — щочетверга.</li>\n<li><b>Головна: два режими</b> — перемикач «Поточні проєкти / Проєкти підтримки». Кожен режим рахує лише свої проєкти; у підтримки — відкриті проблеми і період підтримки, що минув або спливає за 30 днів.</li>\n</ul>\n<p><b>Змінено</b></p>\n<ul>\n<li>Вкладки «Проєкти» і «Архів» тепер «Поточні проєкти» (без підтримки) і «Архівні проєкти».</li>\n<li><b>Свіжість звіту — за днями подачі:</b> поточні проєкти — понеділок і четвер, підтримка — четвер. Зелений — без пропусків, жовтий — пропущено один день подачі, червоний — два і більше. Показник «Зі свіжим звітом» став «Звіт вчасно».</li>\n<li>Показники головної ведуть у представлення своєї категорії («Поточні — очікують погодження», «Підтримка — відкриті проблеми» тощо): число на плитці збігається зі списком.</li>\n</ul>\n<p><b>Перевірте повторно</b></p>\n<ul>\n<li>Колір крапки в колонці «Звіт» і список «Немає свіжого звіту» — після випуску частина проєктів може стати жовтою або червоною: нове правило суворіше.</li>\n</ul>"
@@ -335,6 +340,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
  ],
  [
   {
+   "ver": "1.7.13.0",
+   "date": "14.11.2026",
+   "html": "<p><b>Changed</b></p>\n<ul>\n<li>Technical update: newer versions of the portal's components (SharePoint Framework 1.24, React 18). Nothing changes for users — if something works differently than before, please send feedback.</li>\n</ul>"
+  },
+  {
    "ver": "1.7.12.0",
    "date": "12.11.2026",
    "html": "<p><b>New</b></p>\n<ul>\n<li><b>Support projects.</b> A new project phase \"Support\" — for projects that are not finished but need ongoing care: bugs, maintenance. The PM moves a project to support with a status report (phase \"Support\", reason), the PMO approves. A separate <b>\"Support projects\"</b> tab; status report — every Thursday.</li>\n<li><b>Home: two modes</b> — the \"Current projects / Support projects\" switch. Each mode counts only its own projects; support shows open issues and support periods that ended or end within 30 days.</li>\n</ul>\n<p><b>Changed</b></p>\n<ul>\n<li>The \"Projects\" and \"Archive\" tabs are now \"Current projects\" (without support) and \"Archived projects\".</li>\n<li><b>Report freshness follows report days:</b> current projects — Monday and Thursday, support — Thursday. Green — none missed, yellow — one report day missed, red — two or more. The \"With a recent report\" figure is now \"Report on time\".</li>\n<li>Home figures open the view of their own category (\"Current — awaiting approval\", \"Support — open issues\" and others): the number on the tile matches the list.</li>\n</ul>\n<p><b>Check again</b></p>\n<ul>\n<li>The dot colour in the \"Report\" column and the \"No recent report\" list — after the release some projects may turn yellow or red: the new rule is stricter.</li>\n</ul>"
@@ -666,6 +676,11 @@ export const RELEASES: [Release[], Release[], Release[]] = [
   }
  ],
  [
+  {
+   "ver": "1.7.13.0",
+   "date": "14.11.2026",
+   "html": "<p><b>Изменено</b></p>\n<ul>\n<li>Техническое обновление: более новые версии составляющих портала (SharePoint Framework 1.24, React 18). Для пользователей ничего не изменилось — если что-то работает иначе, чем раньше, напишите отзыв.</li>\n</ul>"
+  },
   {
    "ver": "1.7.12.0",
    "date": "12.11.2026",

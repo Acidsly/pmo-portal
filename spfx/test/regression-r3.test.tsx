@@ -2,8 +2,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act, Simulate } from 'react-dom/test-utils';
+import { act } from 'react';
+import { Simulate } from 'react-dom/test-utils';
+import { renderInto, disposeRoot } from '../src/webparts/pmoPortal/components/reactRoot';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
 import { DataTable } from '../src/webparts/pmoPortal/components/DataTable';
 import { TableDefs, projectDefs } from '../src/webparts/pmoPortal/components/defs';
@@ -23,8 +24,8 @@ const ctx: any = { ...tt, lang: 0, today: '2026-10-04', me: 'pm@x', webUrl: '', 
   openForm() { /* */ }, repo: { loadChanges: async () => [], jobTitle: async () => '' }, canCreate: true, reload: async () => undefined, toast() { /* */ } };
 let root: HTMLDivElement;
 beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); localStorage.clear(); });
-afterEach(() => { ReactDOM.unmountComponentAtNode(root); root.remove(); });
-const mount = (el: React.ReactElement): void => { act(() => { ReactDOM.render(<AppCtx.Provider value={ctx}>{el}</AppCtx.Provider>, root); }); };
+afterEach(() => { act(() => { disposeRoot(root); }); root.remove(); });
+const mount = (el: React.ReactElement): void => { act(() => { renderInto(root, <AppCtx.Provider value={ctx}>{el}</AppCtx.Provider>); }); };
 const $ = (s: string): HTMLElement => root.querySelector(s) as HTMLElement;
 const typeDate = (id: string, v: string): void => { act(() => { Simulate.change($('#' + id), { target: { value: v } } as any); }); };
 const dmy = (iso: string): string => iso.split('-').reverse().join('.');
@@ -149,7 +150,7 @@ test('#63 все переключатели форм отчёта и риска 
   };
   mount(<ReportForm data={data([pr()])} projectId={5} onCancel={() => undefined} />);
   expect(check()).toBeGreaterThanOrEqual(9);   // три оценки по 3 + тип
-  ReactDOM.unmountComponentAtNode(root);
+  act(() => { disposeRoot(root); });
   mount(<RiskForm data={data([pr()])} projectId={5} riskId={0} onCancel={() => undefined} />);
   expect(check()).toBeGreaterThanOrEqual(2 + 5 + 5 + 4);   // тип, вероятность, влияние, стратегия
   // стили приложения (= прототипа): выбранный — рамка и ✓, наведение — только у невыбранных и доступных, недоступно — бледно
@@ -241,7 +242,7 @@ describe('#78 «Статус» проекта — «Фаза проєкту» в
 test('#83 форма проекта: под командой — права обновятся в течение ~15 минут (у нового проекта — нет)', () => {
   mount(<ProjectForm data={data([pr()])} project={pr()} onCancel={() => undefined} />);
   expect(root.textContent).toContain(T.accessRecalc[0]);
-  ReactDOM.unmountComponentAtNode(root);
+  act(() => { disposeRoot(root); });
   mount(<ProjectForm data={data([pr()])} onCancel={() => undefined} />);
   expect(root.textContent).not.toContain(T.accessRecalc[0]);
 });

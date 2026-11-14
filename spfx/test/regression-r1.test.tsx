@@ -2,8 +2,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act, Simulate } from 'react-dom/test-utils';
+import { act } from 'react';
+import { Simulate } from 'react-dom/test-utils';
+import { renderInto, disposeRoot } from '../src/webparts/pmoPortal/components/reactRoot';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
 import { PeoplePicker, DateIn } from '../src/webparts/pmoPortal/components/fields';
 import { DataTable } from '../src/webparts/pmoPortal/components/DataTable';
@@ -30,8 +31,8 @@ const ctxFor = (lang: number): A => ({ ...makeT(lang as A), lang, today: '2026-1
 const ctx = ctxFor(0);
 let root: HTMLDivElement;
 beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); localStorage.clear(); });
-afterEach(() => { ReactDOM.unmountComponentAtNode(root); root.remove(); });
-const mount = (el: React.ReactElement, c: A = ctx): void => { act(() => { ReactDOM.render(<AppCtx.Provider value={c}>{el}</AppCtx.Provider>, root); }); };
+afterEach(() => { act(() => { disposeRoot(root); }); root.remove(); });
+const mount = (el: React.ReactElement, c: A = ctx): void => { act(() => { renderInto(root, <AppCtx.Provider value={c}>{el}</AppCtx.Provider>); }); };
 const person = (email: string, name = email): A => ({ id: 1, name, email });
 
 describe('#8: Enter в поле выбора людей выбирает человека и не отправляет форму', () => {
@@ -145,7 +146,7 @@ describe('#18 / #25: карточка — «Посилання» и «Коман
   test('карточка: все ссылки проекта с подписями, в новой вкладке; таблица команды — учасник, роль, з яких питань', async () => {
     const data: A = { projects: [P], reports: [], risks: [], comments: [], approvals: [], team };
     const repo: A = { jobTitle: async () => '', loadChanges: async () => [], fresh: async () => ({ project: { canEdit: false } }) };
-    await act(async () => { ReactDOM.render(<AppCtx.Provider value={ctx}><ProjectCard project={P} data={data} repo={repo} onClose={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    await act(async () => { renderInto(root, <AppCtx.Provider value={ctx}><ProjectCard project={P} data={data} repo={repo} onClose={() => undefined} /></AppCtx.Provider>); await Promise.resolve(); });
     const as = Array.from(root.querySelectorAll('.lnk-sec a')) as HTMLAnchorElement[];
     expect(as.map(a => a.getAttribute('href'))).toEqual(links.map(l => l.u));
     as.forEach((a, i) => { expect(a.textContent).toContain(links[i].t); expect(newTab(a)).toBe(true); });

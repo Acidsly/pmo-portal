@@ -58,7 +58,7 @@
 
 ## Установка
 
-Нужны PowerShell 7.4+ (рекомендуется 7.6: поддержка 7.4 заканчивается 10.11.2026; скрипты проверяют 7.2, но PnP.PowerShell 3.x требует 7.4), модуль PnP.PowerShell 3.x, Node 22 (`brew install node@22`, для приложения SPFx), для Azure Automation — модули Az.Accounts, Az.Resources, Az.Automation, для PDF планов тестирования (`docs/testing/build.mjs`) — Google Chrome. Права глобального администратора или администратора SharePoint.
+Нужны PowerShell 7.4+ (рекомендуется 7.6: поддержка 7.4 заканчивается 10.11.2026; скрипты проверяют 7.2, но PnP.PowerShell 3.x требует 7.4), модуль PnP.PowerShell 3.x, Node 26 LTS (`brew install node@26`, для приложения SPFx), для Azure Automation — модули Az.Accounts, Az.Resources, Az.Automation, для PDF планов тестирования (`docs/testing/build.mjs`) — Google Chrome. Права глобального администратора или администратора SharePoint.
 
 ```powershell
 Install-Module PnP.PowerShell -Scope CurrentUser
@@ -152,7 +152,7 @@ Install-Module Az.Accounts, Az.Resources, Az.Automation -Scope CurrentUser   # �
 
 Где запускать:
 - **Azure Automation** (рабочий режим; вход `Connect-AzAccount … -UseDeviceAuthentication`, модули Az.Accounts, Az.Resources, Az.Automation):
-  1. `scripts/New-PMOAutomation.ps1 [-Wait]` — группа `rg-pmo-automation`, учётная запись `aa-pmo-sync` (Germany West Central) с системной управляемой учётной записью, среда PowerShell 7.6 `PowerShell-7.6-PnP` с PnP.PowerShell 3.4.1 (`-PsVersion`; с 22.10.2026 в ней все runbook — `PMO-Sync`, `PMO-Sync-Test`, `PMO-WhoAmI`; прежняя `PowerShell-7.4-PnP` больше не используется, её можно удалить в портале; в Azure среда 7.6 пока выполняет PowerShell 7.6.0-preview.5), зашифрованная переменная кэша `pmo-managers-<env>` (`-CacheEnvs`, по умолчанию `test`);
+  1. `scripts/New-PMOAutomation.ps1 [-Wait]` — группа `rg-pmo-automation`, учётная запись `aa-pmo-sync` (Germany West Central) с системной управляемой учётной записью, среда PowerShell 7.6 `PowerShell-7.6-PnP35` с PnP.PowerShell 3.5.0 (с обновления стека, ноябрь 2026; прежняя `PowerShell-7.6-PnP` с 3.4.1 — для отката, пока прод не переведён; `-PsVersion`; с 22.10.2026 в ней все runbook — `PMO-Sync`, `PMO-Sync-Test`, `PMO-WhoAmI`; прежняя `PowerShell-7.4-PnP` больше не используется, её можно удалить в портале; в Azure среда 7.6 пока выполняет PowerShell 7.6.0-preview.5), зашифрованная переменная кэша `pmo-managers-<env>` (`-CacheEnvs`, по умолчанию `test`);
   2. `scripts/Grant-PMOAutomation.ps1 -SiteUrl <сайт> -DeployClientId <PMO Deploy>` (глобальный администратор) — Sites.Selected, User.Read.All и FullControl только на сайт портала (для второго сайта — с `-SkipAppRoles`);
   3. `scripts/Build-Runbook.ps1` → коммит → `scripts/Publish-Runbook.ps1 -Env test|prod`;
   4. `scripts/Set-AzureSchedule.ps1` (см. выше).
@@ -293,13 +293,13 @@ New-ApplicationAccessPolicy -AppId <PMO Sync> -PolicyScopeGroupId "PMO Sync send
 
 ## Приложение SPFx
 
-Интерфейс из прототипа реализует приложение SPFx в папке `spfx/` (SPFx 1.23.2, React 17): главная, «Проєкти» (плитки и таблица с сортировкой, фильтрами и выбором колонок), «Статус-звіти», «Ризики та проблеми», «Архів» и карточка проекта в выдвижной панели (история изменений, комментарии, матрица состояний, отчёты, риски). Адрес `#вкладка/представление/id/форма` открывает нужную вкладку, карточку или форму.
+Интерфейс из прототипа реализует приложение SPFx в папке `spfx/` (SPFx 1.24.1, React 18.3.1): главная, «Проєкти» (плитки и таблица с сортировкой, фильтрами и выбором колонок), «Статус-звіти», «Ризики та проблеми», «Архів» и карточка проекта в выдвижной панели (история изменений, комментарии, матрица состояний, отчёты, риски). Адрес `#вкладка/представление/id/форма` открывает нужную вкладку, карточку или форму.
 
 Формы приложения — как в прототипе: новый проект и правка карточки, статус-отчёт (подстановка текущих показателей, живой расчёт стану, причина обязательна при смене статуса, типа или дат), риск (создание, правка, просмотр без прав) и комментарий. Приложение записывает от имени пользователя отчёты, риски, комментарии, новые проекты и правку карточки без ключевых показателей; ключевые показатели, журнал и права — синхронизация. Правка карточки кладёт «было / стало» в скрытое поле `pmEditLog`; синхронизация переносит его в журнал «Зміни показників» (вид «Редагування картки») и очищает. Сохранённое сразу видно в приложении, в стандартных списках — после ближайшей синхронизации. Оно работает с теми же списками от имени пользователя, поэтому каждый видит только свои проекты. Новые статус-отчёты сразу видны в карточке: приложение накладывает их по тем же правилам, что синхронизация, а в списки их переносит синхронизация.
 
 Сборка и установка:
 ```bash
-brew install node@22                                     # один раз; системный Node не меняется
+brew install node@26                                     # один раз; системный Node не меняется
 scripts/spfx.sh npm ci                                   # зависимости
 scripts/spfx.sh npm run test:unit                        # модульные тесты логики
 pwsh -NoLogo -File scripts/Invoke-Env.ps1 -Env test -Action app   # сборка и установка на тестовый сайт

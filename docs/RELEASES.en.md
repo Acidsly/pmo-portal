@@ -1,5 +1,10 @@
 # What's new
 
+## 1.7.13.0 · 14.11.2026
+
+**Changed**
+- Technical update: newer versions of the portal's components (SharePoint Framework 1.24, React 18). Nothing changes for users — if something works differently than before, please send feedback.
+
 ## 1.7.12.0 · 12.11.2026
 
 **New**

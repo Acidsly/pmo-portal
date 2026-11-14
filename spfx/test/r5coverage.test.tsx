@@ -1,7 +1,7 @@
 /** @jest-environment jsdom */
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act } from 'react-dom/test-utils';
+import { act } from 'react';
+import { renderInto, disposeRoot } from '../src/webparts/pmoPortal/components/reactRoot';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
 import { makeT } from '../src/webparts/pmoPortal/i18n/i18n';
 import { mapReport } from '../src/webparts/pmoPortal/data/map';
@@ -20,7 +20,7 @@ const ctx: any = { ...tt, lang: 0, today: '2026-10-12', me: 'b@x', webUrl: '', v
   openForm() { /* */ }, repo: {}, canCreate: false, reload: async () => undefined, toast() { /* */ } };
 let root: HTMLDivElement;
 beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); });
-afterEach(() => { ReactDOM.unmountComponentAtNode(root); root.remove(); });
+afterEach(() => { act(() => { disposeRoot(root); }); root.remove(); });
 const person = (email: string, name = email): any => ({ id: 1, name, email });
 
 describe('«Відгуки — загальні»: чтение', () => {
@@ -60,7 +60,7 @@ describe('карточка проекта', () => {
   const mountCard = async (n: number): Promise<void> => {
     const data: any = { projects: [P], reports: Array.from({ length: n }, (_, i) => rep(i + 1, `2026-09-${String(10 + i).padStart(2, '0')}`)), risks: [], comments: [], approvals: [], team: [] };
     const repo: any = { jobTitle: async () => '', loadChanges: async () => journal, fresh: async () => ({ project: { canEdit: false } }) };
-    await act(async () => { ReactDOM.render(<AppCtx.Provider value={ctx}><ProjectCard project={P} data={data} repo={repo} onClose={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); await Promise.resolve(); });
+    await act(async () => { renderInto(root, <AppCtx.Provider value={ctx}><ProjectCard project={P} data={data} repo={repo} onClose={() => undefined} /></AppCtx.Provider>); await Promise.resolve(); await Promise.resolve(); });
   };
   const sec = (h: string): HTMLElement => Array.from(root.querySelectorAll('.sec')).find(s => (s.querySelector('h3') as HTMLElement).textContent!.indexOf(h) === 0) as HTMLElement;
   test('#82 «Статус-звіти»: три последних, «Показати всі звіти (N)» — все, «Згорнути» — снова три; до трёх — без кнопки', async () => {
@@ -71,7 +71,7 @@ describe('карточка проекта', () => {
     act(() => { b.click(); }); expect(sec('Статус-звіти').querySelectorAll('.rep').length).toBe(5);
     expect((sec('Статус-звіти').querySelector('button.more') as HTMLElement).textContent).toBe('Згорнути');
     act(() => { (sec('Статус-звіти').querySelector('button.more') as HTMLElement).click(); }); expect(sec('Статус-звіти').querySelectorAll('.rep').length).toBe(3);
-    ReactDOM.unmountComponentAtNode(root);
+    act(() => { disposeRoot(root); });
     await mountCard(3); expect(sec('Статус-звіти').querySelector('button.more')).toBeNull();
   });
   test('#84 «Історія змін»: служебные отметки команды не показываются; событие из одних отметок — скрыто', async () => {
@@ -92,7 +92,7 @@ describe('#84 колокольчик: «Вас додано до команди�
       recent: [{ id: 2, projectId: 7, date: now, who: person('pm@x', 'PM'), kind: 'Редагування картки', field: 'pmTeam', from: '', to: 'B — Аналітик', reason: '' },
         { id: 3, projectId: 7, date: now, who: person('pm@x', 'PM'), kind: 'Редагування картки', field: 'teamIn', from: '', to: 'b@x', reason: '' }] };
     const c2 = { ...ctx, repo: { markRead: async () => undefined } };
-    await act(async () => { ReactDOM.render(<AppCtx.Provider value={c2}><NotifyPanel data={data} onOpen={(f: string, id: number) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>, root); await Promise.resolve(); });
+    await act(async () => { renderInto(root, <AppCtx.Provider value={c2}><NotifyPanel data={data} onOpen={(f: string, id: number) => opened.push(`${f}@${id}`)} onCancel={() => undefined} /></AppCtx.Provider>); await Promise.resolve(); });
     const it = Array.from(root.querySelectorAll('.ntf-i')).find(x => x.textContent!.indexOf('Вас додано до команди') >= 0) as HTMLElement;
     expect(it).toBeTruthy(); expect(it.textContent).toContain('PRJ-007 · П'); expect(it.textContent).toContain('Ваша роль: Аналітик');
     expect(it.querySelector('.diffs')).toBeNull();

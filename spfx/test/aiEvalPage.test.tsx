@@ -1,7 +1,7 @@
 /** @jest-environment jsdom */
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act } from 'react-dom/test-utils';
+import { act } from 'react';
+import { renderInto, disposeRoot } from '../src/webparts/pmoPortal/components/reactRoot';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
 import { AiEvalPage } from '../src/webparts/pmoPortal/panels/AiEvalPage';
 import { makeT } from '../src/webparts/pmoPortal/i18n/i18n';
@@ -22,9 +22,9 @@ jest.mock('../src/webparts/pmoPortal/ai/aiAgent', () => ({
 const cases = (evalCases as any).cases as { kind: string }[];
 let root: HTMLDivElement;
 beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); mock.sent = []; mock.values = 0; mock.fail = ''; });
-afterEach(() => { ReactDOM.unmountComponentAtNode(root); root.remove(); });
+afterEach(() => { act(() => { disposeRoot(root); }); root.remove(); });
 const flush = async (): Promise<void> => { for (let i = 0; i < 200; i++) await act(async () => { await new Promise(r => setTimeout(r, 0)); }); };
-const mount = (): void => { act(() => { ReactDOM.render(<AppCtx.Provider value={{ ...makeT(0), lang: 0, me: 'pm@x', toast() { /* */ } } as any}><AiEvalPage onCancel={() => undefined} /></AppCtx.Provider>, root); }); };
+const mount = (): void => { act(() => { renderInto(root, <AppCtx.Provider value={{ ...makeT(0), lang: 0, me: 'pm@x', toast() { /* */ } } as any}><AiEvalPage onCancel={() => undefined} /></AppCtx.Provider>); }); };
 const btn = (text: string): HTMLButtonElement => Array.from(root.querySelectorAll('button')).filter(b => b.textContent === text)[0] as HTMLButtonElement;
 
 test('«Лише «Перевірка»» — только её случаи; карточка согласия подтверждена сама; строка на случай и итог', async () => {

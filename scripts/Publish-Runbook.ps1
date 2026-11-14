@@ -18,7 +18,7 @@ param(
     [ValidateSet("test", "prod")][string]$Env,
     [string]$ResourceGroup = "rg-pmo-automation",
     [string]$Account = "aa-pmo-sync",
-    [string]$RuntimeName = "PowerShell-7.6-PnP"
+    [string]$RuntimeName = "PowerShell-7.6-PnP35"
 )
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot

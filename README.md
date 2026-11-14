@@ -44,26 +44,26 @@ flowchart LR
 | Шар | Технологія | Версія / джерело |
 |---|---|---|
 | Платформа даних | SharePoint Online (Microsoft 365), сайт-комунікація, мова uk-UA + en-US, ru-RU | — |
-| Інтерфейс | SharePoint Framework (SPFx), веб-частина на сторінці `SingleWebPartAppPage` | 1.23.2 (`spfx/package.json`) |
-| | React, React DOM | 17.0.1 |
+| Інтерфейс | SharePoint Framework (SPFx), веб-частина на сторінці `SingleWebPartAppPage` | 1.24.1 (`spfx/package.json`) |
+| | React, React DOM | 18.3.1 (корінь — `components/reactRoot.ts`) |
 | | TypeScript | ~5.8 (встановлено 5.8.3) |
-| | Збірка: Heft, `@microsoft/spfx-web-build-rig` | Heft 1.2.17, rig 1.23.2 |
+| | Збірка: Heft, `@microsoft/spfx-web-build-rig` | Heft 1.3.2, rig 1.24.1 |
 | | Стилі: SCSS, згенерований із прототипу (`theme/prototype.scss`) | — |
 | | Fluent UI React | ^8.106.4 — у залежностях, у коді додатку не імпортується |
 | Доступ до даних у додатку | SharePoint REST через `SPHttpClient` (`@microsoft/sp-http`), запис у папку — `AddValidateUpdateItemUsingPath`, конкурентність — `If-Match` | — |
 | Тести додатку | Jest + ts-jest | 29.7.0 / 29.2.5 |
-| Лінтер | ESLint + `@microsoft/eslint-config-spfx` | 9.37.0 / 1.23.2 |
-| Середовище збірки | Node.js | 22 (`>=22.14.0 <23`; `scripts/spfx.sh`, `brew install node@22`) |
+| Лінтер | ESLint + `@microsoft/eslint-config-spfx` | 9.37.0 / 1.24.1 |
+| Середовище збірки | Node.js | 26 LTS (`>=26 <27`; `scripts/spfx.sh`, `brew install node@26`) |
 | Скрипти | PowerShell | 7.2+ локально (`#Requires -Version 7.2`, рекомендовано 7.6); 7.6 в Azure Automation (з 22.10.2026) |
-| | PnP.PowerShell (CSOM, REST, Graph через `Invoke-PnPGraphMethod`) | 3.x; в Azure — 3.4.1 |
+| | PnP.PowerShell (CSOM, REST, Graph через `Invoke-PnPGraphMethod`) | 3.x; в Azure — 3.5.0 |
 | | Az.Accounts, Az.Resources, Az.Automation | лише для налаштування Azure Automation з Mac |
 | Оргструктура | Microsoft Graph v1.0: `users/{id}/manager`, `users/{id}`; `sendMail` для нагадувань | — |
 | Ідентичність | Entra ID: застосунки PMO Deploy, PMO Automation, PMO Sync; системна керована ідентичність `aa-pmo-sync` | `scripts/Register-PMOApps.ps1`, `scripts/New-PMOAutomation.ps1` |
-| Розклад | Azure Automation (runtime `PowerShell-7.6-PnP`, runbook `PMO-Sync` — прод, `PMO-Sync-Test` — тест, Germany West Central) | робочі запуски з 04.10.2026 |
+| Розклад | Azure Automation (runtime `PowerShell-7.6-PnP35` (PnP.PowerShell 3.5.0; попереднє `PowerShell-7.6-PnP` — для відкату до переведення проду), runbook `PMO-Sync` — прод, `PMO-Sync-Test` — тест, Germany West Central) | робочі запуски з 04.10.2026 |
 | | launchd на macOS (`scripts/Set-MacSchedule.ps1`) | запасний варіант (робочі запуски — в Azure Automation з 04.10.2026) |
 | Моніторинг | Azure Monitor: метрика `TotalJob` (Status = Failed) → група дій `ag-pmo-sync` → лист | `scripts/Set-AzureSchedule.ps1` |
 | Документи PDF | Google Chrome без вікна (`--headless=new --print-to-pdf`) | `docs/testing/build.mjs` |
-| CI | GitHub Actions (Node 22, `actions/checkout@v7`, `actions/setup-node@v7`): `Test-Scripts.ps1`, Jest, збірка `.sppkg` | `.github/workflows/validate.yml` |
+| CI | GitHub Actions (Node 26, `actions/checkout@v7`, `actions/setup-node@v7`): `Test-Scripts.ps1`, Jest, збірка `.sppkg` | `.github/workflows/validate.yml` |
 
 ## Структура репозиторію
 
@@ -93,7 +93,7 @@ flowchart LR
 | `scripts/Test-FormValues.ps1` | Перевірка форматів запису в папку проєкту (службовий список на тесті) |
 | `scripts/Export-Feedback.ps1` | Вивантаження відгуків фокус-групи в `feedback-export/` (поза git) |
 | `scripts/Set-FeedbackAnswers.ps1` | Статуси й відповіді на відгуки (файл `config/feedback-answers.json` поза git) |
-| `scripts/spfx.sh` | Команди в `spfx/` під Node 22 |
+| `scripts/spfx.sh` | Команди в `spfx/` під Node 26 |
 | `tests/Test-Scripts.ps1` | Перевірки без доступу до SharePoint |
 | `tests/cases/` | Спільні тест-вектори PowerShell і Jest |
 | `config/*.example.json` | Зразки конфігурації середовищ і фокус-групи |
@@ -121,7 +121,7 @@ flowchart LR
 
 ## Швидкий старт
 
-Потрібні PowerShell 7.2+, модуль PnP.PowerShell і Node 22 (`brew install node@22`). Докладно — [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+Потрібні PowerShell 7.2+, модуль PnP.PowerShell і Node 26 (`brew install node@26`). Докладно — [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ```bash
 cp config/environments.example.json config/environments.json   # заповнити; файл не потрапляє в git

@@ -1,14 +1,17 @@
 import * as React from 'react';
-import * as ReactDom from 'react-dom';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 import { SPPermission } from '@microsoft/sp-page-context';
 import { App } from './components/App';
+import { renderInto, disposeRoot } from './components/reactRoot';
 import { SpRepo } from './data/SpRepo';
 import { isAuthResponse, aiRedirecting, AI_RETURN_KEY } from './ai/aiConfig';
 import { aiPref } from './ai/aiPref';
 
 /** Портфель проєктів: приложение по прототипу prototype/pmo-prototype.html. */
 export default class PmoPortalWebPart extends BaseClientSideWebPart<{}> {
+  // веб-часть уже снята со страницы: отложенный renderApp (после ответа MSAL) не создаёт корень React заново
+  private disposed = false;
+
   public render(): void {
     if (isAuthResponse(window.location.hash, window.location.search)) {
       // возврат в эту же вкладку со входа с переходом на страницу (телефон): MSAL разбирает ответ, затем — приложение
@@ -34,6 +37,7 @@ export default class PmoPortalWebPart extends BaseClientSideWebPart<{}> {
   }
 
   private renderApp(): void {
+    if (this.disposed) return;
     const pc = this.context.pageContext;
     const admin = pc.web.permissions.hasPermission(SPPermission.manageWeb);
     // всем, кроме администраторов сайта (право «Керування веб-сайтом»), прячем штатные полосы SharePoint:
@@ -44,11 +48,12 @@ export default class PmoPortalWebPart extends BaseClientSideWebPart<{}> {
       document.head.appendChild(st);
     }
     const repo = new SpRepo(this.context.spHttpClient, pc.web.absoluteUrl, pc.web.serverRelativeUrl, pc.user.email);
-    ReactDom.render(React.createElement(App, { repo, culture: pc.cultureInfo.currentUICultureName,
-      userName: pc.user.displayName, userEmail: pc.user.email, webUrl: pc.web.absoluteUrl, admin }), this.domElement);
+    renderInto(this.domElement, React.createElement(App, { repo, culture: pc.cultureInfo.currentUICultureName,
+      userName: pc.user.displayName, userEmail: pc.user.email, webUrl: pc.web.absoluteUrl, admin }));
   }
 
   protected onDispose(): void {
-    ReactDom.unmountComponentAtNode(this.domElement);
+    this.disposed = true;
+    disposeRoot(this.domElement);
   }
 }

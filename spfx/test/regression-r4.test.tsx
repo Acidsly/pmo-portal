@@ -4,8 +4,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act, Simulate } from 'react-dom/test-utils';
+import { act } from 'react';
+import { Simulate } from 'react-dom/test-utils';
+import { renderInto, disposeRoot } from '../src/webparts/pmoPortal/components/reactRoot';
 import { AppCtx } from '../src/webparts/pmoPortal/components/ctx';
 import { DateIn, badDateIn } from '../src/webparts/pmoPortal/components/fields';
 import { riskCard, riskDefs } from '../src/webparts/pmoPortal/components/defs';
@@ -22,8 +23,8 @@ const ctx = { ...tt, lang: 0, today: '2026-10-04', me: 'pm@x', webUrl: '', views
   openForm() { /* */ }, repo: {}, canCreate: true, reload: async () => undefined, toast() { /* */ } } as any;   // eslint-disable-line @typescript-eslint/no-explicit-any
 let root: HTMLDivElement;
 beforeEach(() => { root = document.createElement('div'); document.body.appendChild(root); localStorage.clear(); });
-afterEach(() => { ReactDOM.unmountComponentAtNode(root); root.remove(); });
-const mount = (el: React.ReactElement, c: any = ctx): void => { act(() => { ReactDOM.render(<AppCtx.Provider value={c}>{el}</AppCtx.Provider>, root); }); };   // eslint-disable-line @typescript-eslint/no-explicit-any
+afterEach(() => { act(() => { disposeRoot(root); }); root.remove(); });
+const mount = (el: React.ReactElement, c: any = ctx): void => { act(() => { renderInto(root, <AppCtx.Provider value={c}>{el}</AppCtx.Provider>); }); };   // eslint-disable-line @typescript-eslint/no-explicit-any
 const $ = <T extends Element = HTMLInputElement>(s: string): T => root.querySelector(s) as unknown as T;
 const change = (el: Element, value: string): void => { act(() => { Simulate.change(el, { target: { value } } as any); }); };   // eslint-disable-line @typescript-eslint/no-explicit-any
 const SRC = path.join(__dirname, '../src/webparts/pmoPortal');
@@ -129,7 +130,7 @@ describe('#114 термін ризику: картка на телефоні = �
     const k = { ...base, status, due } as any;   // eslint-disable-line @typescript-eslint/no-explicit-any
     mount(<>{riskCard(x)(k)}</>);
     const card = !!root.querySelector('.mc-m .late');
-    ReactDOM.unmountComponentAtNode(root);
+    act(() => { disposeRoot(root); });
     mount(<>{riskDefs(x).cols.due.cell(k)}</>);
     const cell = !!root.querySelector('.late');
     expect([card, cell]).toEqual([late, late]);
